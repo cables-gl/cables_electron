@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
+
+    <script src="ui/js/talkerapi.js"></script>
+    <script src="js/scripts.editor.js"></script>
+    <script src="js/electronapi.js"></script>
+
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            padding: 0px;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        .hide {
+            display: none;
+        }
+    </style>
+    <title>cables</title>
+</head>
+<body>
+
+<iframe id="editorIframe"
+        allow="clipboard-read;clipboard-write;geolocation;camera;microphone;midi;usb;serial;xr-spatial-tracking;ambient-light-sensor;"
+        allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"
+        style="width:100%;height:100%;border:0px;position:absolute"></iframe>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function (event) {
+        const editorIframe = document.getElementById("editorIframe");
+        let src = "ui/index.html" + window.location.search;
+        if (window.location.hash) {
+            src = src + window.location.hash;
+        }
+        editorIframe.src = src;
+
+        window.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "hashchange") {
+                window.location.hash = event.data.data;
+            }
+        }, false);
+
+        window.addEventListener("hashchange", (event) => {
+            const patchIframe = document.getElementById("editorIframe");
+            if (patchIframe) {
+                patchIframe.contentWindow.postMessage({"type": "hashchange", "data": window.location.hash}, "*");
+            }
+        }, false);
+        new CABLES.ElectronEditor(
+            {
+                config: {
+                    "urlCables": "https://dev.cables.local",
+                    "urlSandbox": "https://devsandbox.cables.local",
+                    "user": {},
+                    "usersettings": {
+                        "settings": {
+                            "introCompleted": true,
+                            "showTipps": false
+                        }
+                    },
+                    "isDevEnv": true,
+                    "env": "dev",
+                    "patchId": "6554fc4bfbc39c37b6e4c08a",
+                    "patchVersion": "",
+                    "socketcluster": {},
+                    "remoteClient": false,
+                    "buildInfo": "{}"
+                }
+            });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "env": "electron",
+  "path": {
+    "ops": "../cables/src/ops/",
+    "assets": "../cables_api/public/assets/",
+    "libs": "../cables_api/public/libs/",
+    "corelibs": "../cables_api/public/libs_core/",
+    "userops": "../cables/src/ops/users/",
+    "teamops": "../cables/src/ops/teams/",
+    "extensionops": "../cables/src/ops/extensions/",
+    "patchops": "../cables/src/ops/patches/"
+  }
+}

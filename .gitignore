@@ -1,0 +1,22 @@
+gen/
+
+.DS_Store
+package-lock.json
+.vscode
+
+# misc
+.DS_Store
+.idea/
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+#Node modules folder
+node_modules
