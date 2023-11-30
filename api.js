@@ -32,13 +32,13 @@ export default class ElectronApi
         });
     }
 
-    getCoreOpsCode(data)
+    async getCoreOpsCode(data)
     {
         const opDocs = doc.getOpDocs(true, true);
         return opsUtil.buildCode(cables.getCoreOpsPath(), null, opDocs, true, true);
     }
 
-    getProjectOpsCode(data)
+    getProjectOpsCode()
     {
         const project = {};
         const opDocs = doc.getOpDocs(true, true);
@@ -213,7 +213,7 @@ export default class ElectronApi
     {
     }
 
-    async getOpDocsAll(data)
+    async getOpDocsAll()
     {
         const opDocs = doc.getOpDocs(true, true);
         const cleanDocs = doc.makeReadable(opDocs);
