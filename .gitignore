@@ -20,3 +20,6 @@ Thumbs.db
 
 #Node modules folder
 node_modules
+patches/
+api/
+ui/

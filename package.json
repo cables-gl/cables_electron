@@ -1,17 +1,31 @@
 {
   "name": "cables_offline",
   "version": "0.0.1",
+  "author": "undefined development",
   "description": "current templates for the different exe-exports in cables.gl",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:cables-gl/cables_electron.git"
+  },
   "main": "main.js",
+  "engines": {
+    "node": "18.14.2"
+  },
   "type": "module",
   "scripts": {
     "start": "electron .",
-    "dev": "cross-env node watch.js",
+    "build": "gulp build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
+    "@elastic/elasticsearch": "7.17.0",
+    "pmx": "1.6.7",
+    "geoip-lite": "1.4.7",
+    "discord-webhook-node": "1.1.8",
+    "xml-writer": "1.7.0",
+    "basename": "0.1.2",
+    "fs-extra": "11.1.0",
     "electron": "28.0.0-beta.8",
     "eslint": "7.32.0",
     "eslint-config-airbnb-base": "15.0.0",
@@ -24,7 +38,6 @@
     "uuid-v4": "0.1.0"
   },
   "devDependencies": {
-    "concurrently": "4.1.1",
-    "cross-env": "5.2.0"
+    "gulp": "4.0.2"
   }
 }

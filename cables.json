@@ -1,13 +1,25 @@
 {
   "env": "electron",
   "path": {
-    "ops": "../cables/src/ops/",
-    "assets": "../cables_api/public/assets/",
-    "libs": "../cables_api/public/libs/",
-    "corelibs": "../cables_api/public/libs_core/",
-    "userops": "../cables/src/ops/users/",
-    "teamops": "../cables/src/ops/teams/",
-    "extensionops": "../cables/src/ops/extensions/",
-    "patchops": "../cables/src/ops/patches/"
-  }
+    "api": "../cables_api/src/",
+    "ops": "../../cables/src/ops/",
+    "assets": "../../cables_api/public/assets/",
+    "libs": "../../cables_api/public/libs/",
+    "corelibs": "../../cables_api/public/libs_core/",
+    "userops": "../../cables/src/ops/users/",
+    "teamops": "../../cables/src/ops/teams/",
+    "extensionops": "../../cables/src/ops/extensions/",
+    "patchops": "../../cables/src/ops/patches/"
+  },
+  "apiDependencies": [
+    "cables.js",
+    "utils/_loggable.js",
+    "utils/doc_util.js",
+    "utils/helper_util.js",
+    "utils/logger.js",
+    "utils/ops_util.js",
+    "utils/subpatchop_util.js",
+    "utils/teams_util.js",
+    "utils/util.js"
+  ]
 }

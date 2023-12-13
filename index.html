@@ -31,6 +31,8 @@
         style="width:100%;height:100%;border:0px;position:absolute"></iframe>
 
 <script>
+    const store = window.electronAPI.store();
+    console.log("STORE", store);
     document.addEventListener('DOMContentLoaded', function (event) {
         const editorIframe = document.getElementById("editorIframe");
         let src = "ui/index.html" + window.location.search;
@@ -56,20 +58,18 @@
                 config: {
                     "urlCables": "cables://",
                     "urlSandbox": "cables://",
-                    "user": {},
-                    "usersettings": {
-                        "settings": {
-                            "introCompleted": true,
-                            "showTipps": false
-                        }
-                    },
+                    "user": { "id": "localhorst"},
+                    "usersettings": { "settings": store.userSettings },
                     "isDevEnv": true,
                     "env": "dev",
-                    "patchId": "6554fc4bfbc39c37b6e4c08a",
+                    "patchId": "",
                     "patchVersion": "",
                     "socketcluster": {},
                     "remoteClient": false,
-                    "buildInfo": "{}"
+                    "buildInfo": "{}",
+                    "patchConfig": {
+                        "prefixAssetPath": store.currentPatchDir
+                    }
                 }
             });
     });

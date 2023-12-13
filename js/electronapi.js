@@ -1,20 +1,31 @@
 var CABLES = CABLES || {};
 
-CABLES.ElectronEditor = function (params) {
+CABLES.ElectronEditor = function (params)
+{
     const frame = document.getElementById("editorIframe");
     CABLES.talker = new CABLES.TalkerAPI(frame.contentWindow);
     CABLES.patchId = params.config.patchId;
     CABLES.patchVersion = params.config.patchVersion;
 
-    CABLES.talker.addEventListener("requestPatchData", function (data, next) {
+    CABLES.talker.addEventListener("requestPatchData", function (data, next)
+    {
         if (next) next(params.config);
     });
 
-    CABLES.talker.addEventListener("sendBrowserInfo", function (data, next) {
+    CABLES.talker.addEventListener("sendBrowserInfo", function (data, next)
+    {
         if (next) next(platform);
     });
 
+    CABLES.talker.addEventListener(
+        "gotoPatch",
+        (options) =>
+        {
+            window.location.reload();
+        });
+
     const talkerTopics = [
+        "getOpInfo",
         "getCoreOpsCode",
         "getProjectOpsCode",
         "patchCreateBackup",
@@ -59,13 +70,15 @@ CABLES.ElectronEditor = function (params) {
         "checkProjectUpdated"
     ];
 
-    talkerTopics.forEach((talkerTopic) => {
-        CABLES.talker.addEventListener(talkerTopic, function (data, next) {
+    talkerTopics.forEach((talkerTopic) =>
+    {
+        CABLES.talker.addEventListener(talkerTopic, function (data, next)
+        {
             console.log(talkerTopic + " electron");
-            window.electronAPI.talkerMessage(talkerTopic, data).then(function (r) {
+            window.electronAPI.talkerMessage(talkerTopic, data).then(function (r)
+            {
                 next(null, r);
             });
         });
     });
-
-}
+};
