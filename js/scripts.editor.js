@@ -1,1 +1,0 @@
-../../cables_api/public/js/scripts.editor.js

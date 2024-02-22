@@ -1,42 +1,128 @@
-import { ipcMain } from "electron";
+import { app, ipcMain, protocol } from "electron";
 import fs from "fs";
 import path from "path";
 import marked from "marked";
 import jsonfile from "jsonfile";
 import crypto from "crypto";
 import pako from "pako";
-import opsUtil from "./api/utils/ops_util.js";
-import cables from "./api/cables.js";
-import doc from "./api/utils/doc_util.js";
-import helper from "./api/utils/helper_util.js";
-import SubPatchOpUtil from "./api/utils/subpatchop_util.js";
+import cables from "../cables.js";
+import opsUtil from "../utils/electron_ops_util.js";
+import doc from "../utils/electron_doc_util.js";
+import helper from "../utils/electron_helper_util.js";
+import subPatchOpUtil from "../utils/electron_subpatchop_util.js";
+import Store from "../electron_store.js";
+import logger from "../utils/electron_logger.js";
 
-export default class ElectronApi
+protocol.registerSchemesAsPrivileged([{ "scheme": "cables", "privileges": { "bypassCSP": true, "supportFetchAPI": true } }]);
+
+class ElectronEndpoint
 {
-    constructor(store)
+    constructor()
     {
-        this._log = console;
+        const store = new Store(path.join(app.getPath("userData"), "patches"));
+        this._log = logger;
         this._store = store;
+        this._store.set("currentUser", this.getCurrentUser());
     }
 
     init()
     {
         ipcMain.handle("talkerMessage", async (event, cmd, data) =>
         {
-            this._log.info("[electron] calling", cmd);
-            let response = null;
-            if (!cmd) return null;
-            if (typeof this[cmd] === "function")
-            {
-                response = this[cmd](data);
-            }
-            return response;
+            return this.talkerMessage(cmd, data);
         });
 
         ipcMain.on("store", (event, cmd, data) =>
         {
             event.returnValue = this._store.data;
         });
+
+        global.handleTalkerMessage = this.talkerMessage;
+        protocol.handle("cables", (request) =>
+        {
+            const url = new URL(request.url);
+            const urlPath = url.pathname;
+            if (urlPath.startsWith("/api/corelib/"))
+            {
+                const libName = urlPath.split("/", 4)[3];
+                const libCode = this.getCoreLibCode(libName);
+                return new Response(libCode, {
+                    "headers": { "content-type": "application/javascript" }
+                });
+            }
+            else if (urlPath.startsWith("/api/lib/"))
+            {
+                const libName = urlPath.split("/", 4)[3];
+                const libCode = this.getLibCode(libName);
+                return new Response(libCode, {
+                    "headers": { "content-type": "application/javascript" }
+                });
+            }
+            else if (urlPath === "/api/errorReport")
+            {
+                return new Response(JSON.stringify({ "success": true }));
+            }
+            else if (urlPath === "/api/changelog")
+            {
+                return new Response(JSON.stringify({ "ts": Date.now(), "items": [] }), {
+                    "headers": { "content-type": "application/json" }
+                });
+            }
+            else if (urlPath === "/api/ping")
+            {
+                return new Response(JSON.stringify({ "maintenance": false }), {
+                    "headers": { "content-type": "application/json" }
+                });
+            }
+            else if (urlPath.startsWith("/api/ops/code/project"))
+            {
+                return this.getProjectOpsCode().then((code) =>
+                {
+                    return new Response(code, {
+                        "headers": { "content-type": "application/json" }
+                    });
+                });
+            }
+            else if (urlPath.startsWith("/api/ops/code"))
+            {
+                return this.getCoreOpsCode().then((code) =>
+                {
+                    return new Response(code, {
+                        "headers": { "content-type": "application/javascript" }
+                    });
+                });
+            }
+            else if (urlPath.startsWith("/api/op/"))
+            {
+                let opName = urlPath.split("/", 4)[3];
+                if (opsUtil.isOpId(opName))
+                {
+                    opName = opsUtil.getOpNameById(opName);
+                }
+                const opCode = this.apiGetOpCode({ "opName": opName });
+                return new Response(opCode, {
+                    "headers": { "content-type": "application/javascript" }
+                });
+            }
+            else
+            {
+                return new Response("", {
+                    "headers": { "content-type": "application/javascript" }
+                });
+            }
+        });
+    }
+
+    async talkerMessage(cmd, data)
+    {
+        this._log.info("calling", cmd);
+        let response = null;
+        if (!cmd) return null;
+        if (typeof this[cmd] === "function")
+        {
+            response = this[cmd](data);
+        }
+        return response;
     }
 
     getOpInfo(data)
@@ -77,19 +163,22 @@ export default class ElectronApi
 
     async getProjectOpsCode()
     {
-        const project = JSON.parse(fs.readFileSync(this._store.getPatchFile()));
+        const project = this.getCurrentProject();
         const opDocs = doc.getOpDocs(true, true);
         let code = "";
         if (project.ops)
         {
             let missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-
-            const subpatchopUtil = new SubPatchOpUtil();
-            const ops = subpatchopUtil.getOpsUsedInBlueprints(project);
+            const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId == obj.opId; }) === index; });
             code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, opDocs);
+            const opsJs = path.join(this._store.getCurrentPatchDir(), "/js/ops.js");
+            if (fs.existsSync(opsJs))
+            {
+                code += fs.readFileSync(opsJs);
+            }
             return code;
         }
         else
@@ -125,7 +214,7 @@ export default class ElectronApi
         }
         else
         {
-            this._log.error("[apiUpdateProject] body does not contain patch data");
+            this._log.error("body does not contain patch data");
         }
 
         // filter imported ops, so we do not save these to the database
@@ -160,8 +249,9 @@ export default class ElectronApi
         const patchPath = this._store.getPatchFile();
         if (patchPath)
         {
-            const patch = fs.readFileSync(patchPath);
-            return JSON.parse(patch.toString("utf-8"));
+            let patch = fs.readFileSync(patchPath);
+            patch = JSON.parse(patch.toString("utf-8"));
+            return patch;
         }
         else
         {
@@ -174,6 +264,7 @@ export default class ElectronApi
 
     async newPatch(data)
     {
+        const currentUser = this.getCurrentUser();
         let name = data.name || "new offline project";
         this._log.info("project", "created", name);
         const id = this._generateRandomId();
@@ -182,8 +273,8 @@ export default class ElectronApi
             "_id": id,
             "name": name,
             "shortId": "sh0r7Id",
-            "userId": "localhorst",
-            "cachedUsername": "electron",
+            "userId": currentUser._id,
+            "cachedUsername": currentUser.username,
             "created": new Date(),
             "updated": new Date(),
             "visibility": "public",
@@ -281,6 +372,7 @@ export default class ElectronApi
 
     async getAllProjectOps()
     {
+        const currentUser = this.getCurrentUser();
         const project = JSON.parse(fs.readFileSync(this._store.getPatchFile()));
 
         let opDocs = [];
@@ -301,55 +393,15 @@ export default class ElectronApi
         });
 
         // add all userops of the current user
-        // if (currentUser) projectNamespaces.push(opsUtil.getUserNamespace(currentUser.username));
-
-        // add all the userops of the patchcreator
-        // res.startTime("addOwnerOps");
-        // const patchOwner = await User.findOne({ "_id": project.userId });
-        // if (patchOwner) projectNamespaces.push(opsUtil.getUserNamespace(patchOwner.username));
-        // res.endTime("addOwnerOps");
-
-        // add all the userops of all the collaborators
-        // res.startTime("addCollaboratorOps");
-        // let userid = null;
-        // if (currentUser && currentUser._id) userid = currentUser._id;
-        // const collaboratorIds = [];
-        // let projectUsers = project.users || [];
-        // for (let i = 0; i < projectUsers.length; i++)
-        // {
-        //     const collaboratorId = projectUsers[i];
-        //     if (collaboratorId !== userid)
-        //     {
-        //         collaboratorIds.push(collaboratorId);
-        //     }
-        // }
-        // const collaborators = await User.find({ "_id": { "$in": collaboratorIds } });
-        // if (collaborators)
-        // {
-        //     collaborators.forEach((collaborator) =>
-        //     {
-        //         projectNamespaces.push(opsUtil.getUserNamespace(collaborator.username));
-        //     });
-        // }
-        // res.endTime("addCollaboratorOps");
+        projectNamespaces.push(opsUtil.getUserNamespace(currentUser.username));
 
         // add all the patchops of the current patch
         const patchOps = opsUtil.getPatchOpsNamespaceForProject(project);
         if (patchOps) projectNamespaces.push(patchOps);
 
-        // add all collections (teamops/extensions/patchops) used in project
-        /// res.startTime("collectionNames");
-        /// const extensionNames = projectsUtil.getCollectionNamespacesUsedInProject(project);
-        /// projectNamespaces = projectNamespaces.concat(extensionNames);
-        /// res.endTime("collectionNames");
-
-        // add all ops used in blueprints, recursively
-        //
         // now we should have all the ops that are used in the project, walk blueprints
         // recursively to get their opdocs
-        // res.startTime("blueprintOps");
-        const subpatchopUtil = new SubPatchOpUtil();
-        const bpOps = subpatchopUtil.getOpsUsedInBlueprints(project);
+        const bpOps = subPatchOpUtil.getOpsUsedInSubPatches(project);
         bpOps.forEach((bpOp) =>
         {
             const opName = opsUtil.getOpNameById(bpOp.opId);
@@ -371,23 +423,13 @@ export default class ElectronApi
 
         // get opdocs for all the collected ops
         opDocs = opsUtil.addOpDocsForCollections(projectNamespaces, opDocs);
+        opDocs.forEach((opDoc) => { opDoc.usedInProject = true; });
 
-        opDocs.forEach((opDoc) =>
-        {
-            if (usedOpIds.includes(opDoc.id)) opDoc.usedInProject = true;
-        });
+        opsUtil.addPermissionsToOps(opDocs, currentUser, [], project);
+        opsUtil.addVersionInfoToOps(opDocs);
 
-        // opsUtil.addPermissionsToOps(opDocs, currentUser, teams, project);
         opDocs = doc.makeReadable(opDocs);
         return opDocs;
-
-        // Team.findTeamsWithNamespaceForUser(currentUser).then((teams) =>
-        // {
-        //     opsUtil.addPermissionsToOps(opDocs, currentUser, teams, project);
-        //     res.endTime("addPermissions");
-        //     opDocs = doc.makeReadable(opDocs);
-        //     this.successRaw(res, opDocs);
-        // });
     }
 
     getAllOps()
@@ -535,55 +577,86 @@ export default class ElectronApi
         };
     }
 
-    getOpCode(data)
+    apiGetOpCode(params)
     {
-        const opName = opsUtil.getOpNameById(data.opname);
-        const currentProject = JSON.parse(fs.readFileSync(this._store.getPatchFile()));
+        const opName = params.opName;
         let code = "";
-
-        const subpatchopUtil = new SubPatchOpUtil();
-        const attachmentOps = subpatchopUtil.getBlueprintAttachment(opName);
-        const bpOps = subpatchopUtil.getOpsUsedInBlueprints(attachmentOps);
-        let opNames = [];
-        for (let i = 0; i < bpOps.length; i++)
+        const currentProject = this.getCurrentProject();
+        try
         {
-            const bpOp = bpOps[i];
-            const bpOpName = opsUtil.getOpNameById(bpOp.opId);
-            if (opsUtil.isCoreOp(bpOpName) && !opsUtil.isOpOldVersion(bpOpName)) continue;
-            if (currentProject && currentProject.ops && currentProject.ops.some((projectOp) => { return projectOp.opId === bpOp.opId; })) continue;
-            opNames.push(bpOpName);
-        }
-
-        if (opsUtil.isExtension(opName) || opsUtil.isTeamNamespace(opName))
-        {
-            const collectionName = opsUtil.getCollectionNamespace(opName);
-            opNames = opNames.concat(opsUtil.getCollectionOpNames(collectionName));
-        }
-        else
-        {
-            opNames.push(opName);
-        }
-        const opDocs = [];
-        const ops = [];
-        opNames.forEach((name) =>
-        {
-            const opDoc = doc.getDocForOp(name);
-            if (opDoc)
+            const attachmentOps = opsUtil.getSubPatchOpAttachment(opName);
+            const bpOps = subPatchOpUtil.getOpsUsedInSubPatches(attachmentOps);
+            if (!bpOps)
             {
-                opDocs.push(opDoc);
-                ops.push({ "objName": opDoc.name, "opId": opDoc.id });
+                return code;
             }
             else
             {
-                this._log.error("OPDOCS NOT FOUND FOR", name);
+                let opNames = [];
+                for (let i = 0; i < bpOps.length; i++)
+                {
+                    const bpOp = bpOps[i];
+                    const bpOpName = opsUtil.getOpNameById(bpOp.opId);
+                    if (opsUtil.isCoreOp(bpOpName) && (!opsUtil.isOpOldVersion(bpOpName) && !opsUtil.isDeprecated(bpOpName))) continue;
+                    if (currentProject && currentProject.ops && currentProject.ops.some((projectOp) => { return projectOp.opId === bpOp.opId; })) continue;
+                    opNames.push(bpOpName);
+                }
+
+                if (opsUtil.isExtension(opName) || opsUtil.isTeamNamespace(opName))
+                {
+                    const collectionName = opsUtil.getCollectionNamespace(opName);
+                    opNames = opNames.concat(opsUtil.getCollectionOpNames(collectionName));
+                }
+                else
+                {
+                    opNames.push(opName);
+                }
+
+                const ops = [];
+                opNames.forEach((name) =>
+                {
+                    ops.push({
+                        "objName": name,
+                        "opId": opsUtil.getOpIdByObjName(name)
+                    });
+                });
+                code = opsUtil.buildFullCode(ops, "none");
+                return code;
             }
-        });
-        code = opsUtil.buildFullCode(ops, "none", opDocs);
-        return code;
+        }
+        catch (e)
+        {
+            return code;
+        }
+    }
+
+    getOpCode(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opId || data.opname);
+        console.log("getOpCode", data, opName);
+        if (opsUtil.opExists(opName))
+        {
+            let code = opsUtil.getOpCode(opName);
+            return {
+                "name": opName,
+                "id": data.opId,
+                "code": code
+            };
+        }
+        else
+        {
+            let code = "//empty file...";
+            return {
+                "name": opName,
+                "id": null,
+                "code": code
+            };
+        }
     }
 
     getBlueprintOps()
     {
+        return { "data": { "ops": [] } };
     }
 
     formatOpCode(data)
@@ -728,6 +801,14 @@ export default class ElectronApi
         }
     }
 
+    getChangelog(data)
+    {
+        const obj = {};
+        obj.items = [];
+        obj.ts = Date.now();
+        return obj;
+    }
+
     _generateRandomId()
     {
         // https://gist.github.com/solenoid/1372386
@@ -737,4 +818,25 @@ export default class ElectronApi
             return (Math.random() * 16 | 0).toString(16);
         }).toLowerCase();
     }
+
+    getCurrentUser()
+    {
+        const username = "steamtest";
+        return {
+            "username": username,
+            "_id": this._generateRandomId(),
+            "profile_theme": "dark",
+            "isStaff": false,
+            "usernameLowercase": username.toLowerCase(),
+            "isAdmin": false,
+            "theme": "dark",
+            "created": Date.now()
+        };
+    }
+
+    getCurrentProject()
+    {
+        return JSON.parse(fs.readFileSync(this._store.getPatchFile()));
+    }
 }
+export default new ElectronEndpoint();

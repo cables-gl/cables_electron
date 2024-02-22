@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
+    <script>
+        window.nodeRequire = require;
+        delete window.require;
+        delete window.exports;
+        delete window.module;
+    </script>
     <script src="ui/js/talkerapi.js"></script>
-    <script src="js/scripts.editor.js"></script>
-    <script src="js/electronapi.js"></script>
-
+    <script src="public/js/scripts.standalone.js"></script>
     <style>
         body {
             background-color: #222;
             color: white;
-            padding: 0px;
-            margin: 0px;
+            padding: 0;
+            margin: 0;
             overflow: hidden;
-        }
-
-        .hide {
-            display: none;
         }
     </style>
     <title>cables</title>
@@ -30,9 +28,11 @@
         allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"
         style="width:100%;height:100%;border:0px;position:absolute"></iframe>
 
-<script>
-    const store = window.electronAPI.store();
-    console.log("STORE", store);
+<script type="module">
+    const { ipcRenderer } = nodeRequire("electron");
+    window.ipcRenderer = ipcRenderer;
+    const store = ipcRenderer.sendSync("store");
+
     document.addEventListener('DOMContentLoaded', function (event) {
         const editorIframe = document.getElementById("editorIframe");
         let src = "ui/index.html" + window.location.search;
@@ -53,12 +53,13 @@
                 patchIframe.contentWindow.postMessage({"type": "hashchange", "data": window.location.hash}, "*");
             }
         }, false);
-        new CABLES.ElectronEditor(
+
+        new web.StandaloneEditor(
             {
                 config: {
                     "urlCables": "cables://",
                     "urlSandbox": "cables://",
-                    "user": { "id": "localhorst"},
+                    "user": store.currentUser,
                     "usersettings": { "settings": store.userSettings },
                     "isDevEnv": true,
                     "env": "dev",

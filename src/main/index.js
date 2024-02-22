@@ -1,16 +1,15 @@
-import { app, BrowserWindow, protocol, Menu, dialog } from "electron";
+import { app, BrowserWindow, Menu, dialog } from "electron";
 import path from "path";
 import fs from "fs";
-import ElectronApi from "./api.js";
-import Store from "./store.js";
+import electronEndpoints from "../endpoints/electron_endpoint.js";
+import logger from "../utils/electron_logger.js";
+import Store from "../electron_store.js";
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let editorWindow;
 
-const store = new Store(path.join(app.getAppPath(), "patches"));
-
-protocol.registerSchemesAsPrivileged([{ "scheme": "cables", "privileges": { "bypassCSP": true, "supportFetchAPI": true } }]);
-
+logger.info("STARTING");
+const store = new Store(path.join(app.getPath("userData"), "patches"));
 const createWindow = () =>
 {
     let patchFile = null;
@@ -26,8 +25,16 @@ const createWindow = () =>
         "width": 1920,
         "height": 1080,
         "webPreferences": {
-            "preload": path.join(app.getAppPath(), "preload.cjs"),
-            "nodeIntegration": true
+            "nodeIntegration": true,
+            "nodeIntegrationInWorker": true,
+            "nodeIntegrationInSubFrames": true,
+            "contextIsolation": false,
+            "sandbox": false,
+            "webSecurity": false,
+            "allowRunningInsecureContent": true,
+            "plugins": true,
+            "experimentalFeatures": true,
+            "v8CacheOptions": "none"
         }
     });
     editorWindow.switchPatch = (newPatchFile) =>
@@ -40,7 +47,7 @@ const createWindow = () =>
         store.setCurrentPatchDir(newPatchDir);
         editorWindow.reload();
     };
-    // editorWindow.webContents.openDevTools();
+    editorWindow.webContents.openDevTools();
     editorWindow.loadFile("index.html").then(() =>
     {
         if (!patchFile)
@@ -104,7 +111,6 @@ const createMenu = () =>
                 },
                 {
                     "label": "Toggle fullscreen",
-                    "accelerator": "Escape",
                     click()
                     {
                         if (editorWindow.isFullScreen())
@@ -148,75 +154,7 @@ const createMenu = () =>
 
 app.whenReady().then(() =>
 {
-    const api = new ElectronApi(store);
-    api.init();
-
-    protocol.handle("cables", (request) =>
-    {
-        console.log("CALL", request.url);
-        const url = new URL(request.url);
-        const urlPath = url.pathname;
-        if (urlPath.startsWith("/api/corelib/"))
-        {
-            const libName = urlPath.split("/", 4)[3];
-            const libCode = api.getCoreLibCode(libName);
-            return new Response(libCode, {
-                "headers": { "content-type": "application/javascript" }
-            });
-        }
-        else if (urlPath.startsWith("/api/lib/"))
-        {
-            const libName = urlPath.split("/", 4)[3];
-            const libCode = api.getLibCode(libName);
-            return new Response(libCode, {
-                "headers": { "content-type": "application/javascript" }
-            });
-        }
-        else if (urlPath === "/api/changelog")
-        {
-            return new Response(JSON.stringify({ "ts": Date.now(), "items": [] }), {
-                "headers": { "content-type": "application/json" }
-            });
-        }
-        else if (urlPath === "/api/ping")
-        {
-            return new Response(JSON.stringify({ "maintenance": false }), {
-                "headers": { "content-type": "application/json" }
-            });
-        }
-        else if (urlPath.startsWith("/api/ops/code/project"))
-        {
-            return api.getProjectOpsCode().then((code) =>
-            {
-                return new Response(code, {
-                    "headers": { "content-type": "application/json" }
-                });
-            });
-        }
-        else if (urlPath.startsWith("/api/ops/code"))
-        {
-            return api.getCoreOpsCode().then((code) =>
-            {
-                return new Response(code, {
-                    "headers": { "content-type": "application/javascript" }
-                });
-            });
-        }
-        else if (urlPath.startsWith("/api/op/"))
-        {
-            const opId = urlPath.split("/", 4)[3];
-            const opCode = api.getOpCode({ "opname": opId });
-            return new Response(opCode, {
-                "headers": { "content-type": "application/javascript" }
-            });
-        }
-        else
-        {
-            return new Response("", {
-                "headers": { "content-type": "application/javascript" }
-            });
-        }
-    });
+    electronEndpoints.init();
 
     createWindow();
     createMenu();

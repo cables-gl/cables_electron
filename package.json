@@ -1,5 +1,5 @@
 {
-  "name": "cables_offline",
+  "name": "cables_standalone",
   "version": "0.0.1",
   "author": "undefined development",
   "description": "current templates for the different exe-exports in cables.gl",
@@ -7,37 +7,85 @@
     "type": "git",
     "url": "git@github.com:cables-gl/cables_electron.git"
   },
-  "main": "main.js",
+  "license": "MIT",
+  "main": "src/main/index.js",
+  "type": "module",
   "engines": {
     "node": "18.14.2"
   },
-  "type": "module",
   "scripts": {
     "start": "electron .",
     "build": "gulp build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "electron-builder --dir",
+    "p": "electron-builder --dir --config -c.mac.identity=null",
+    "dist": "electron-builder"
   },
-  "license": "MIT",
+  "build": {
+    "productName": "cables.gl standalone",
+    "appId": "gl.cables.standalone",
+    "files": [
+      "**/*",
+      "!gen/",
+      "!.nvmrc",
+      "!gulpfile.js",
+      "!webpack.*.config.js"
+    ],
+    "extraResources": [
+      {
+        "from": "../cables/src/ops/base/",
+        "to": "cables/src/ops/base/"
+      },
+      {
+        "from": "../cables_api/public/libs/",
+        "to": "public/libs/"
+      },
+      {
+        "from": "../cables_api/public/libs/",
+        "to": "public/libs_core/"
+      },
+      {
+        "from": "../shared/client",
+        "to": "shared/client"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "nodeVersion": "18.14.2",
+    "electronLanguages": "en"
+  },
   "dependencies": {
     "@elastic/elasticsearch": "7.17.0",
-    "pmx": "1.6.7",
-    "geoip-lite": "1.4.7",
-    "discord-webhook-node": "1.1.8",
-    "xml-writer": "1.7.0",
     "basename": "0.1.2",
-    "fs-extra": "11.1.0",
-    "electron": "28.0.0-beta.8",
+    "cables-shared": "file:../shared",
+    "discord-webhook-node": "1.1.8",
     "eslint": "7.32.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.27.5",
-    "pako": "2.1.0",
+    "ffmpeg": "^0.0.4",
+    "fs-extra": "11.1.0",
+    "geoip-lite": "1.4.7",
+    "http-server": "^14.1.1",
     "jsonfile": "6.1.0",
     "marked": "1.2.9",
     "mkdirp": "2.1.3",
     "moment": "2.29.4",
-    "uuid-v4": "0.1.0"
+    "node-osc": "^9.1.0",
+    "pako": "2.1.0",
+    "path-browserify": "^1.0.1",
+    "pmx": "1.6.7",
+    "sanitize-filename": "1.6.3",
+    "source-map-support": "^0.5.16",
+    "uuid-v4": "0.1.0",
+    "xml-writer": "1.7.0"
   },
   "devDependencies": {
-    "gulp": "4.0.2"
+    "electron": "29.0.0",
+    "electron-builder": "24.12.0",
+    "git-repo-info": "2.1.1",
+    "gulp": "4.0.2",
+    "webpack": "5.75.0",
+    "webpack-stream": "7.0.0"
   }
 }

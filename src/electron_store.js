@@ -2,11 +2,15 @@ import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
 
-class Store
+export default class ElectronStore
 {
     constructor(storageDir)
     {
-        this.MAIN_CONFIG_NAME = "cables-electron-preferences";
+        if (storageDir && !fs.existsSync(storageDir))
+        {
+            mkdirp.sync(storageDir);
+        }
+        this.MAIN_CONFIG_NAME = "cables-standalone-preferences";
         this.APIKEY_FIELD = "apiKey";
         this.PATCHFILE_FIELD = "patchFile";
         this.CURRENTPATCHDIR_FIELD = "currentPatchDir";
@@ -46,8 +50,9 @@ class Store
     {
         if (this.data && this.data.hasOwnProperty(this.STORAGEDIR_FIELD) && this.data[this.STORAGEDIR_FIELD])
         {
+            console.log(this.STORAGEDIR_FIELD, this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
             const userDataPath = path.join(this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
-            this.data = Store.parseDataFile(userDataPath, this.opts.defaults);
+            this.data = ElectronStore.parseDataFile(userDataPath, this.opts.defaults);
         }
     }
 
@@ -84,11 +89,14 @@ class Store
 
     getCurrentPatchDir()
     {
-        return this.get(this.CURRENTPATCHDIR_FIELD);
+        let value = this.get(this.CURRENTPATCHDIR_FIELD);
+        if (value && !value.endsWith("/")) value += "/";
+        return value;
     }
 
     setCurrentPatchDir(value)
     {
+        if (value && !value.endsWith("/")) value += "/";
         this.set(this.CURRENTPATCHDIR_FIELD, value);
     }
 
@@ -181,6 +189,3 @@ class Store
         }
     }
 }
-
-export default Store;
-
