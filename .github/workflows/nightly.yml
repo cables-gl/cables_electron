@@ -38,10 +38,13 @@ jobs:
           path: 'cables_electron/'
       - name: files
         run: ls
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
       - name: install nodejs
         uses: actions/setup-node@v1
         with:
-          node-version: '18.14.2'
+          node-version: '${{ steps.nvm.outputs.NVMRC }}'
       - name: install dependencies
         run: npm install
       - name: build standalone
