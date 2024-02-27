@@ -5,13 +5,14 @@ import marked from "marked";
 import jsonfile from "jsonfile";
 import crypto from "crypto";
 import pako from "pako";
+import mkdirp from "mkdirp";
 import cables from "../cables.js";
-import opsUtil from "../utils/electron_ops_util.js";
-import doc from "../utils/electron_doc_util.js";
-import helper from "../utils/electron_helper_util.js";
-import subPatchOpUtil from "../utils/electron_subpatchop_util.js";
-import Store from "../electron_store.js";
-import logger from "../utils/electron_logger.js";
+import logger from "../utils/logger.js";
+import doc from "../utils/doc_util.js";
+import helper from "../utils/helper_util.js";
+import opsUtil from "../utils/ops_util.js";
+import subPatchOpUtil from "../utils/subpatchop_util.js";
+import store from "./electron_store.js";
 
 protocol.registerSchemesAsPrivileged([{ "scheme": "cables", "privileges": { "bypassCSP": true, "supportFetchAPI": true } }]);
 
@@ -19,7 +20,6 @@ class ElectronEndpoint
 {
     constructor()
     {
-        const store = new Store(path.join(app.getPath("userData"), "patches"));
         this._log = logger;
         this._store = store;
         this._store.set("currentUser", this.getCurrentUser());
@@ -115,7 +115,6 @@ class ElectronEndpoint
 
     async talkerMessage(cmd, data)
     {
-        this._log.info("calling", cmd);
         let response = null;
         if (!cmd) return null;
         if (typeof this[cmd] === "function")
@@ -172,23 +171,14 @@ class ElectronEndpoint
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-            missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId == obj.opId; }) === index; });
+            missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId === obj.opId; }) === index; });
             code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, opDocs);
-            const opsJs = path.join(this._store.getCurrentPatchDir(), "/js/ops.js");
-            if (fs.existsSync(opsJs))
-            {
-                code += fs.readFileSync(opsJs);
-            }
             return code;
         }
         else
         {
             return code;
         }
-    }
-
-    patchCreateBackup()
-    {
     }
 
     savePatch(patch)
@@ -286,17 +276,6 @@ class ElectronEndpoint
         return project;
     }
 
-    saveProjectAs()
-    {
-    }
-
-    saveScreenshot()
-    {
-    }
-
-    setProjectName()
-    {
-    }
 
     getBuildInfo()
     {
@@ -333,30 +312,6 @@ class ElectronEndpoint
                 }
             }
         };
-    }
-
-    getFilelist()
-    {
-    }
-
-    fileConvert()
-    {
-    }
-
-    getFileDetails()
-    {
-    }
-
-    getLibraryFileInfo()
-    {
-    }
-
-    deleteFile()
-    {
-    }
-
-    createFile()
-    {
     }
 
     fileUploadStr(data)
@@ -432,9 +387,6 @@ class ElectronEndpoint
         return opDocs;
     }
 
-    getAllOps()
-    {
-    }
 
     async getOpDocsAll()
     {
@@ -513,17 +465,14 @@ class ElectronEndpoint
         return result;
     }
 
-    getCollectionOpDocs()
-    {
-    }
-
-    opCreate()
-    {
-    }
-
     saveOpCode(data)
     {
         const opName = opsUtil.getOpNameById(data.opname);
+        const opDir = opsUtil.getOpSourceDir(opName);
+        if (!fs.existsSync(opDir))
+        {
+            mkdirp.sync(opDir);
+        }
         const fn = opsUtil.getOpAbsoluteFileName(opName);
         this._log.info("save op ", opName, fn);
 
@@ -695,64 +644,12 @@ class ElectronEndpoint
         }
     }
 
-    opSaveLayout()
-    {
-    }
-
-    opAddLib()
-    {
-    }
-
-    opRemoveLib()
-    {
-    }
-
-    opAddCoreLib()
-    {
-    }
-
-    opRemoveCoreLib()
-    {
-    }
-
-    opClone()
-    {
-    }
-
-    opAttachmentAdd()
-    {
-    }
-
-    opAttachmentGet()
-    {
-    }
-
-    opAttachmentDelete()
-    {
-    }
-
-    opAttachmentSave()
-    {
-    }
-
     saveUserSettings(data)
     {
         if (data && data.settings)
         {
             this._store.setUserSettings(data.settings);
         }
-    }
-
-    checkOpName()
-    {
-    }
-
-    setIconUnsaved()
-    {
-    }
-
-    setIconSaved()
-    {
     }
 
     checkProjectUpdated(data)
@@ -808,6 +705,13 @@ class ElectronEndpoint
         obj.ts = Date.now();
         return obj;
     }
+
+    opAttachmentSave(data)
+    {
+        opsUtil.updateAttachment(data.opname, data.name, data.content, false);
+        return true;
+    }
+
 
     _generateRandomId()
     {

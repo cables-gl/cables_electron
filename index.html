@@ -33,7 +33,7 @@
     window.ipcRenderer = ipcRenderer;
     const store = ipcRenderer.sendSync("store");
 
-    document.addEventListener('DOMContentLoaded', function (event) {
+    document.addEventListener('DOMContentLoaded', () => {
         const editorIframe = document.getElementById("editorIframe");
         let src = "ui/index.html" + window.location.search;
         if (window.location.hash) {
@@ -47,7 +47,7 @@
             }
         }, false);
 
-        window.addEventListener("hashchange", (event) => {
+        window.addEventListener("hashchange", () => {
             const patchIframe = document.getElementById("editorIframe");
             if (patchIframe) {
                 patchIframe.contentWindow.postMessage({"type": "hashchange", "data": window.location.hash}, "*");

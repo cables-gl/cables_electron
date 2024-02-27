@@ -1,13 +1,7 @@
-import { BaseLogger } from "cables-shared";
-import electronUtilProvider from "./electron_util_provider.js";
+import { utilProvider, SharedLogger } from "cables-shared";
 
-class ElectronLogger extends BaseLogger
+class Logger extends SharedLogger
 {
-    get utilName()
-    {
-        return electronUtilProvider.LOGGER_NAME;
-    }
-
     debug(...args)
     {
         this._logConsole("standalone - " + this._initiator, "debug", this._getContext(), args);
@@ -25,6 +19,7 @@ class ElectronLogger extends BaseLogger
 
     info(...args)
     {
+        // eslint-disable-next-line no-caller
         this._logConsole("standalone - " + this._initiator, "info", this._getContext(), args);
     }
 
@@ -49,4 +44,4 @@ class ElectronLogger extends BaseLogger
     }
 }
 
-export default new ElectronLogger(electronUtilProvider);
+export default new Logger(utilProvider);

@@ -1,15 +1,15 @@
 import { app, BrowserWindow, Menu, dialog } from "electron";
 import path from "path";
 import fs from "fs";
-import electronEndpoints from "../endpoints/electron_endpoint.js";
-import logger from "../utils/electron_logger.js";
-import Store from "../electron_store.js";
+import electronEndpoints from "./electron_endpoint.js";
+import logger from "../utils/logger.js";
+import store from "./electron_store.js";
+import doc from "../utils/doc_util.js";
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let editorWindow;
 
 logger.info("STARTING");
-const store = new Store(path.join(app.getPath("userData"), "patches"));
 const createWindow = () =>
 {
     let patchFile = null;
@@ -40,21 +40,27 @@ const createWindow = () =>
     editorWindow.switchPatch = (newPatchFile) =>
     {
         store.setPatchFile(newPatchFile);
-        const pathParts = newPatchFile.split(path.sep);
-        pathParts.pop();
-        pathParts.pop();
-        let newPatchDir = pathParts.join("/");
+        let newPatchDir = path.dirname(newPatchFile);
         store.setCurrentPatchDir(newPatchDir);
-        editorWindow.reload();
+        doc.rebuildOpCaches(() =>
+        {
+            editorWindow.reload();
+        }, ["core", "teams", "extensions", "users", "patches"]);
     };
-    editorWindow.webContents.openDevTools();
-    editorWindow.loadFile("index.html").then(() =>
+    if (patchFile)
     {
-        if (!patchFile)
+        doc.rebuildOpCaches(() =>
+        {
+            editorWindow.loadFile("index.html");
+        }, ["core", "teams", "extensions", "users", "patches"]);
+    }
+    else
+    {
+        editorWindow.loadFile("index.html").then(() =>
         {
             openPatchDialog();
-        }
-    });
+        });
+    }
 };
 
 const openPatchDialog = () =>
@@ -89,6 +95,8 @@ const openPatchDialog = () =>
 
 const createMenu = () =>
 {
+    let devToolsAcc = "CmdOrCtrl+Shift+I";
+    if (process.platform === "darwin") devToolsAcc = "CmdOrCtrl+Option+I";
     let menu = Menu.buildFromTemplate([
         {
             "label": "Menu",
@@ -121,6 +129,14 @@ const createMenu = () =>
                         {
                             editorWindow.setFullScreen(true);
                         }
+                    }
+                },
+                {
+                    "label": "Open Dev-Tools",
+                    "accelerator": devToolsAcc,
+                    click()
+                    {
+                        editorWindow.webContents.toggleDevTools();
                     }
                 },
                 {

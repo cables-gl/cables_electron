@@ -2,12 +2,8 @@
   "env": "electron",
   "path": {
     "ops": "../../cables/src/ops/",
-    "userops": "cables/src/ops/users/",
-    "teamops": "cables/src/ops/teams/",
-    "extensionops": "cables/src/ops/extensions/",
-    "patchops": "cables/src/ops/patches/",
     "assets": "../public/assets/",
-    "libs": "../../public/libs/",
-    "corelibs": "../../public/libs_core/"
+    "libs": "../public/libs/",
+    "corelibs": "../public/libs_core/"
   }
 }

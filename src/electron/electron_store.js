@@ -1,8 +1,9 @@
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
+import { app } from "electron";
 
-export default class ElectronStore
+class ElectronStore
 {
     constructor(storageDir)
     {
@@ -58,7 +59,6 @@ export default class ElectronStore
 
     get(key)
     {
-        this.refresh();
         if (!this.data)
         {
             return null;
@@ -73,6 +73,7 @@ export default class ElectronStore
         if (!silent)
         {
             fs.writeFileSync(configFileName, JSON.stringify(this.data));
+            this.refresh();
         }
     }
 
@@ -189,3 +190,5 @@ export default class ElectronStore
         }
     }
 }
+export default new ElectronStore(path.join(app.getPath("userData"), "settings"));
+

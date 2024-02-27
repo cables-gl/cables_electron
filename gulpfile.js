@@ -7,8 +7,8 @@ import webpack from "webpack-stream";
 import compiler from "webpack";
 import webpackStandaloneConfig from "./webpack.standalone.config.js";
 
-let configLocation = "./src/cables.json";
-if (process.env.npm_config_apiconfig) configLocation = "./src/cables_env_" + process.env.npm_config_apiconfig + ".json";
+let configLocation = "./cables.json";
+if (process.env.npm_config_apiconfig) configLocation = "./cables_env_" + process.env.npm_config_apiconfig + ".json";
 
 if (!fs.existsSync(configLocation))
 {
@@ -39,8 +39,12 @@ function getBuildInfo()
 
 function _api_copy()
 {
-    const apiPath = path.join(config.path.api, "/src/base/");
-    return gulp.src("../cables_api/src/utils/base/*/**", { "base": apiPath }).pipe(gulp.dest("api/"));
+    return gulp.src("../cables_api/public/libs/**").pipe(gulp.dest("public/libs/"));
+}
+
+function _core_copy()
+{
+    return gulp.src("../cables/build/libs/**").pipe(gulp.dest("public/libs_core/"));
 }
 
 function _ui_copy()
@@ -87,6 +91,8 @@ function _editor_scripts_webpack(done)
 gulp.task("build", gulp.series(
     gulp.parallel(
         _editor_scripts_webpack,
+        _core_copy,
+        _api_copy,
         _ui_copy
     ),
 ));
