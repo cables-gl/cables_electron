@@ -24,12 +24,21 @@ jobs:
           repository: "pandrr/cables"
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: 'cables/'
       - name: checkout cables ui
         uses: actions/checkout@v4
         with:
           repository: "undev-studio/cables_ui"
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: 'cables_ui/'
+      - name: checkout cables standalone
+        uses: actions/checkout@v4
+        with:
+          repository: "cables-gl/cables_electron"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: 'cables_electron/'
       - name: install nodejs
         uses: actions/setup-node@v1
         with:
