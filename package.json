@@ -18,8 +18,7 @@
     "build": "gulp build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "pack": "electron-builder --dir",
-    "p": "electron-builder --config -c.mac.identity=null",
-    "dist": "electron-builder"
+    "dist": "electron-builder -mwl --config -c.mac.identity=null"
   },
   "build": {
     "productName": "cables",
