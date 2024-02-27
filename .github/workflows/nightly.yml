@@ -1,0 +1,59 @@
+name: nightly dev build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+env:
+  releaseName: ${{ github.run_id }}.${{ github.run_number }}
+
+jobs:
+  mac:
+    runs-on: macOS-latest
+    steps:
+      - name: checkout cables_dev
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_dev"
+          ref: "master"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+      - name: checkout cables
+        uses: actions/checkout@v4
+        with:
+          repository: "pandrr/cables"
+          ref: "develop"
+      - name: checkout cables ui
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_ui"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+      - name: install nodejs
+        uses: actions/setup-node@v1
+        with:
+          node-version: '18.14.2'
+      - name: install dependencies
+        run: npm install
+      - name: build standalone
+        run: ./hook_standalone.sh
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+        tag_name: osx-${{ env.releaseName }}
+        release_name: ${{ env.releaseName }}
+        draft: true
+        prerelease: true
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+         upload_url: ${{ steps.create_release.outputs.upload_url }}
+         asset_path: dist/mac-arm64/cables.app
+         asset_name: cables.app
+         asset_content_type: application/octet-stream
