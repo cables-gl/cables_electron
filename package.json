@@ -18,7 +18,7 @@
     "build": "gulp build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "pack": "electron-builder --dir",
-    "p": "electron-builder --dir --config -c.mac.identity=null",
+    "p": "electron-builder --config -c.mac.identity=null",
     "dist": "electron-builder"
   },
   "build": {
@@ -50,6 +50,7 @@
       }
     ],
     "mac": {
+      "target": ["dmg"],
       "category": "public.app-category.developer-tools"
     },
     "nodeVersion": "18.14.2",

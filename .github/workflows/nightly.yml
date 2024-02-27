@@ -68,6 +68,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
          upload_url: ${{ steps.create_release.outputs.upload_url }}
-         asset_path: cables_electron/dist/mac-arm64/cables.app
-         asset_name: cables.app
+         asset_path: cables_electron/dist/cables-0.0.1-arm64.dmg
+         asset_name: cables-0.0.1-arm64.dmg
          asset_content_type: application/octet-stream
