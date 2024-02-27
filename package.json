@@ -59,10 +59,10 @@
     "pako": "2.1.0",
     "marked": "1.2.9",
     "jsonfile": "6.1.0",
-    "cables-shared": "file:../shared",
-    "electron": "29.0.0"
+    "cables-shared": "file:../shared"
   },
   "devDependencies": {
+    "electron": "29.0.0",
     "electron-builder": "24.12.0",
     "git-repo-info": "2.1.1",
     "gulp": "4.0.2",
