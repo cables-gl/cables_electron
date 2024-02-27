@@ -23,6 +23,7 @@ jobs:
         with:
           repository: "pandrr/cables"
           ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
       - name: checkout cables ui
         uses: actions/checkout@v4
         with:
