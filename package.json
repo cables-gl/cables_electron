@@ -22,7 +22,7 @@
     "dist": "electron-builder"
   },
   "build": {
-    "productName": "cables.gl standalone",
+    "productName": "cables",
     "appId": "gl.cables.standalone",
     "files": [
       "**/*",
