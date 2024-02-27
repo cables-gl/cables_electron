@@ -35,10 +35,9 @@ jobs:
       - name: checkout cables standalone
         uses: actions/checkout@v4
         with:
-          repository: "cables-gl/cables_electron"
-          ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
           path: 'cables_electron/'
+      - name: files
+        run: ls
       - name: install nodejs
         uses: actions/setup-node@v1
         with:
