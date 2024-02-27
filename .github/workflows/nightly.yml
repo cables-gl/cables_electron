@@ -47,8 +47,6 @@ jobs:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
       - name: install dependencies
         run: npm install
-      - name: build standalone
-        run: ./hook_standalone.sh
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
@@ -59,15 +57,9 @@ jobs:
           release_name: ${{ env.releaseName }}
           draft: true
           prerelease: true
+      - name: build standalone
+        run: ./hook_standalone.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: files
         run: ls cables_electron/dist/
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-         upload_url: ${{ steps.create_release.outputs.upload_url }}
-         asset_path: cables_electron/dist/cables-0.0.1-arm64.dmg
-         asset_name: cables-0.0.1-arm64.dmg
-         asset_content_type: application/octet-stream
