@@ -37,11 +37,11 @@
         "to": "cables/src/ops/base/"
       },
       {
-        "from": "../cables_api/public/libs/",
+        "from": "./public/libs/",
         "to": "public/libs/"
       },
       {
-        "from": "../cables_api/public/libs/",
+        "from": "../cables/build/libs/",
         "to": "public/libs_core/"
       },
       {

@@ -49,6 +49,8 @@ jobs:
         run: npm install
       - name: build standalone
         run: ./hook_standalone.sh
+      - name: files
+        run: ls cables_electron/dist/
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0

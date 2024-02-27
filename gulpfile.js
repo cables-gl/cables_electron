@@ -1,6 +1,6 @@
 import gulp from "gulp";
 import fs from "fs";
-import path from "path";
+import mkdirp from "mkdirp";
 import getRepoInfo from "git-repo-info";
 
 import webpack from "webpack-stream";
@@ -39,16 +39,19 @@ function getBuildInfo()
 
 function _api_copy()
 {
+    mkdirp.sync("public/libs");
     return gulp.src("../cables_api/public/libs/**").pipe(gulp.dest("public/libs/"));
 }
 
 function _core_copy()
 {
+    mkdirp.sync("public/libs_core");
     return gulp.src("../cables/build/libs/**").pipe(gulp.dest("public/libs_core/"));
 }
 
 function _ui_copy()
 {
+    mkdirp.sync("ui");
     return gulp.src("../cables_ui/dist/**").pipe(gulp.dest("ui/"));
 }
 
