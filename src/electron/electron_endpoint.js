@@ -710,7 +710,9 @@ class ElectronEndpoint
 
     opAttachmentSave(data)
     {
-        opsUtil.updateAttachment(data.opname, data.name, data.content, false);
+        let opName = data.opname;
+        if (opsUtil.isOpId(data.opname)) opName = opsUtil.getOpNameById(data.opname);
+        const result = opsUtil.updateAttachment(opName, data.name, data.content, false);
         return true;
     }
 
@@ -754,8 +756,18 @@ class ElectronEndpoint
 
     getFileDetails(data)
     {
-        console.log("DATA", data);
         return {};
+    }
+
+    checkOpName(data)
+    {
+        const opDocs = doc.getOpDocs(false, false);
+        const newName = data.namespace + data.v;
+        const sourceName = data.sourceName || null;
+        const currentUser = this.getCurrentUser();
+        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, false);
+        result.checkedName = newName;
+        return result;
     }
 
     getCurrentUser()
@@ -836,6 +848,332 @@ class ElectronEndpoint
             }
         }
         return arr;
+    }
+
+    _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false)
+    {
+        let opNamespace = opsUtil.getNamespace(newName);
+        let availableNamespaces = [];
+        let teamNamespaces = [];
+        let extensionNamespaces = [];
+        teamNamespaces = teamNamespaces.sort((a, b) => { return a.localeCompare(b); });
+        if (currentUser)
+        {
+            if (fromRename) availableNamespaces.push(opsUtil.PREFIX_OPS);
+            availableNamespaces.push(opsUtil.getUserNamespace(currentUser.username));
+        }
+        availableNamespaces = availableNamespaces.concat(teamNamespaces);
+        availableNamespaces = availableNamespaces.concat(extensionNamespaces);
+        availableNamespaces = helper.uniqueArray(availableNamespaces);
+        if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
+
+        let removeOld = newName && !(opsUtil.isExtensionOp(newName) && opsUtil.isCoreOp(newName));
+        const result = {
+            "namespaces": availableNamespaces,
+            "problems": [],
+            "consequences": [],
+            "action": removeOld ? "Rename" : "Copy"
+        };
+
+        if (!newName)
+        {
+            result.problems.push("No name for new op given.");
+            return result;
+        }
+
+        const problems = opsUtil.getOpRenameProblems(newName, oldName, currentUser);
+        const hints = {};
+        const consequences = opsUtil.getOpRenameConsequences(newName, oldName);
+
+        const newNamespace = opsUtil.getNamespace(newName);
+        const existingNamespace = opsUtil.namespaceExists(newNamespace, opDocs);
+        if (!existingNamespace)
+        {
+            hints.new_namespace = "Renaming will create a new namespace " + newNamespace;
+        }
+
+        let newOpDocs = opDocs;
+        if (!opsUtil.isCoreOp(newName)) newOpDocs = doc.getCollectionOpDocs(newName, currentUser);
+
+        const nextOpName = opsUtil.getNextVersionOpName(newName, newOpDocs);
+        const nextShort = opsUtil.getOpShortName(nextOpName);
+        let nextVersion = null;
+        let suggestVersion = false;
+
+        if (problems.target_exists)
+        {
+            suggestVersion = true;
+        }
+
+        if (!ignoreVersionGap)
+        {
+            const wantedVersion = opsUtil.getVersionFromOpName(newName);
+            const currentHighest = opsUtil.getHighestVersionNumber(newName, newOpDocs);
+
+            const versionTolerance = currentHighest ? 1 : 2;
+            if ((wantedVersion - versionTolerance) > currentHighest)
+            {
+                hints.version_gap = "Gap in version numbers!";
+                suggestVersion = true;
+            }
+        }
+
+        if (problems.illegal_ops || problems.illegal_references)
+        {
+            suggestVersion = false;
+        }
+
+        if (!fromRename && oldName)
+        {
+            const hierarchyProblem = opsUtil.getNamespaceHierarchyProblem(oldName, newName);
+            if (hierarchyProblem)
+            {
+                problems.bad_op_hierarchy = hierarchyProblem;
+                suggestVersion = false;
+            }
+        }
+
+        if (suggestVersion)
+        {
+            const text = "Try creating a new version <a class='button-small versionSuggestion' data-short-name='" + nextShort + "'>" + nextOpName + "</a>";
+            nextVersion = {
+                "fullName": nextOpName,
+                "namespace": opsUtil.getNamespace(nextOpName),
+                "shortName": nextShort
+            };
+            if (problems.target_exists)
+            {
+                problems.version_suggestion = text;
+            }
+            else
+            {
+                hints.version_suggestion = text;
+            }
+        }
+
+        result.problems = Object.values(problems);
+        result.hints = Object.values(hints);
+        result.consequences = Object.values(consequences);
+        if (nextVersion) result.nextVersion = nextVersion;
+        return result;
+    }
+
+    getRecentPatches()
+    {
+        return [];
+    }
+
+    opCreate(data)
+    {
+        let opName = data.opname;
+        const currentUser = this.getCurrentUser();
+        let parts = opName.split(".");
+        if (parts[0] === "Ops" && parts[1] === "User")
+        {
+            parts[2] = currentUser.usernameLowercase;
+        }
+
+        opName = parts.join(".");
+
+        const result = {};
+        const fn = opsUtil.getOpAbsoluteFileName(opName);
+        const basePath = opsUtil.getOpAbsolutePath(opName);
+
+        mkdirp.sync(basePath);
+
+        const newJson = opsUtil.getOpDefaults(opName, currentUser);
+        const changelogMessages = [];
+        changelogMessages.push("created op");
+
+        const opId = newJson.id;
+        const code = data.code || "// your new op\n// have a look at the documentation at: \n// https://cables.gl/docs/5_writing_ops/coding_ops";
+        fs.writeFileSync(fn, code);
+
+        if (data.layout)
+        {
+            const obj = newJson;
+            obj.layout = data.layout;
+            if (obj.layout && obj.layout.name) delete obj.layout.name;
+            result.layout = obj.layout;
+        }
+
+        if (data.libs)
+        {
+            const newLibNames = data.libs;
+            newJson.libs = newLibNames;
+            result.libs = newLibNames;
+            changelogMessages.push(" updated libs: " + newLibNames.join(","));
+        }
+
+        if (data.coreLibs)
+        {
+            result.coreLibs = [];
+            const newCoreLibNames = data.coreLibs;
+            newJson.coreLibs = newCoreLibNames;
+            result.coreLibs = newCoreLibNames;
+            changelogMessages.push(" updated core libs: " + newCoreLibNames.join(","));
+        }
+
+        jsonfile.writeFileSync(opsUtil.getOpJsonPath(opName), newJson, {
+            "encoding": "utf-8",
+            "spaces": 4
+        });
+
+        let attProblems = null;
+        if (data.attachments)
+        {
+            result.attachments = {};
+            attProblems = opsUtil.updateAttachments(opName, data.attachments);
+            result.attachments = opsUtil.getAttachments(opName);
+        }
+
+        if (changelogMessages.length > 0)
+        {
+            opsUtil.addOpChangeLogMessages(currentUser, opName, changelogMessages, "");
+        }
+
+        doc.updateOpDocs(opName);
+        doc.addOpToLookup(opId, opName);
+
+        if (!attProblems)
+        {
+            const response = {
+                "name": opName,
+                "id": opId,
+                "code": code,
+                "opDoc": newJson
+            };
+            if (result.attachments)
+            {
+                const attachmentFiles = opsUtil.getAttachmentFiles(opName);
+                const attachments = {};
+                for (let i = 0; i < attachmentFiles.length; i++)
+                {
+                    const attachmentFile = attachmentFiles[i];
+                    attachments[attachmentFile] = opsUtil.getAttachment(opName, attachmentFile);
+                }
+                response.attachments = attachments;
+            }
+            if (result.coreLibs) response.coreLibs = result.coreLibs;
+            if (result.libs) response.libs = result.libs;
+            return response;
+        }
+        else
+        {
+            return attProblems;
+        }
+    }
+
+    opUpdate(data)
+    {
+        const opName = data.opname;
+        const currentUser = this.getCurrentUser();
+        const opExists = opsUtil.opExists(opName);
+        let rebuildOpDocs = !opExists;
+
+        const updates = data.update;
+        if (updates)
+        {
+            const result = {};
+            const changelogMessages = [];
+            const keys = Object.keys(updates);
+            if (keys.length > 0)
+            {
+                const jsonFile = opsUtil.getOpJsonPath(opName, !opExists);
+                let attProblems = null;
+                for (let i = 0; i < keys.length; i++)
+                {
+                    const key = keys[i];
+                    if (key !== null && key !== undefined)
+                    {
+                        switch (key)
+                        {
+                        case "code":
+                            let code = updates.code;
+                            const format = opsUtil.validateAndFormatOpCode(code);
+                            if (format.error)
+                            {
+                                const {
+                                    line,
+                                    message
+                                } = format.message;
+                                this._log.info({
+                                    line,
+                                    message
+                                });
+                                return;
+                            }
+
+                            const formatedCode = format.formatedCode;
+                            if (opsUtil.existingCoreOp(opName) || data.formatCode)
+                            {
+                                code = formatedCode;
+                            }
+                            result.code = opsUtil.updateOpCode(opName, currentUser, updates.code);
+                            rebuildOpDocs = true;
+                            break;
+                        case "layout":
+                            const obj = jsonfile.readFileSync(jsonFile);
+                            obj.layout = updates.layout;
+                            if (obj.layout && obj.layout.name) delete obj.layout.name;
+                            jsonfile.writeFileSync(jsonFile, obj, {
+                                "encoding": "utf-8",
+                                "spaces": 4
+                            });
+                            result.layout = obj.layout;
+                            rebuildOpDocs = true;
+                            break;
+                        case "attachments":
+                            result.attachments = {};
+                            attProblems = opsUtil.updateAttachments(opName, updates.attachments);
+                            result.attachments = opsUtil.getAttachments(opName);
+                            break;
+                        case "libs":
+                            result.libs = [];
+                            const newLibNames = updates.libs;
+                            opsUtil.updateLibs(opName, newLibNames);
+                            result.libs = opsUtil.getOpLibs(opName);
+                            changelogMessages.push(" updated libs: " + newLibNames.join(","));
+                            rebuildOpDocs = true;
+                            break;
+                        case "coreLibs":
+                            result.coreLibs = [];
+                            const newCoreLibNames = updates.coreLibs;
+                            opsUtil.updateCoreLibs(opName, newCoreLibNames);
+                            result.coreLibs = opsUtil.getOpCoreLibs(opName);
+                            changelogMessages.push(" updated core libs: " + newCoreLibNames.join(","));
+                            rebuildOpDocs = true;
+                            break;
+                        }
+                    }
+                }
+                if (changelogMessages.length > 0)
+                {
+                    opsUtil.addOpChangeLogMessages(currentUser, opName, changelogMessages, "");
+                }
+                if (rebuildOpDocs)
+                {
+                    doc.updateOpDocs(opName);
+                }
+
+                if (!attProblems)
+                {
+                    return { "data": result };
+                }
+                else
+                {
+                    return attProblems;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+        else
+        {
+            return null;
+        }
     }
 }
 export default new ElectronEndpoint();

@@ -63,7 +63,11 @@ export default class ElectronEditor
             "setIconUnsaved",
             "saveScreenshot",
             "getFilelist",
-            "getFileDetails"
+            "getFileDetails",
+            "checkOpName",
+            "getRecentPatches",
+            "opCreate",
+            "opUpdate"
         ];
 
         talkerTopics.forEach((talkerTopic) =>
