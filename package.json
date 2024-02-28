@@ -53,7 +53,15 @@
     ],
     "mac": {
       "identity": null,
-      "target": ["zip"],
+      "target": [
+        {
+          "target": "default",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "category": "public.app-category.developer-tools"
     },
     "win": {
