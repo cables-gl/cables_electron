@@ -1,7 +1,7 @@
 {
   "env": "electron",
   "path": {
-    "ops": "../../cables/src/ops/",
+    "ops": "../ops/",
     "assets": "../public/assets/",
     "libs": "../public/libs/",
     "corelibs": "../public/libs_core/"

@@ -11,10 +11,36 @@ logger.info("starting up cables");
 
 class CablesStandalone extends Cables
 {
+    getAssetPath()
+    {
+        const currentProject = store.getCurrentProjectDir();
+        let assetPath = "";
+        if (!currentProject)
+        {
+            assetPath = path.join(this._writeableDirName, "assets/");
+        }
+        else
+        {
+            assetPath = path.join(currentProject, "assets/");
+        }
+        if (!fs.existsSync(assetPath)) mkdirp.sync(assetPath);
+        return assetPath;
+    }
+
     getGenPath()
     {
-        if (!store.getCurrentPatchDir()) return path.join(this._writeableDirName, "caches/");
-        return path.join(store.getCurrentPatchDir(), "caches/");
+        const currentProject = store.getCurrentProject();
+        let genPath = "";
+        if (!currentProject)
+        {
+            genPath = path.join(this._writeableDirName, "caches/");
+        }
+        else
+        {
+            genPath = path.join(this._writeableDirName, "/gen/", currentProject.shortId, "/");
+        }
+        if (!fs.existsSync(genPath)) mkdirp.sync(genPath);
+        return genPath;
     }
 
     getOpDocsCachePath()
@@ -26,26 +52,20 @@ class CablesStandalone extends Cables
 
     getUserOpsPath()
     {
-        if (!store.getCurrentPatchDir()) return path.join(this.getOpsPath(), "/users/");
-        return path.join(store.getCurrentPatchDir(), "/ops/users/");
+        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/users/");
+        return path.join(store.getCurrentProjectDir(), "/ops/users/");
     }
 
     getTeamOpsPath()
     {
-        if (!store.getCurrentPatchDir()) return path.join(this.getOpsPath(), "/teams/");
-        return path.join(store.getCurrentPatchDir(), "/ops/teams/");
-    }
-
-    getExtensionOpsPath()
-    {
-        if (!store.getCurrentPatchDir()) return path.join(this.getOpsPath(), "/extensions/");
-        return path.join(store.getCurrentPatchDir(), "/ops/extensions/");
+        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/teams/");
+        return path.join(store.getCurrentProjectDir(), "/ops/teams/");
     }
 
     getPatchOpsPath()
     {
-        if (!store.getCurrentPatchDir()) return path.join(this.getOpsPath(), "/patches/");
-        return path.join(store.getCurrentPatchDir(), "/ops/patches/");
+        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/patches/");
+        return path.join(store.getCurrentProjectDir(), "/ops/patches/");
     }
 }
 export default new CablesStandalone(utilProvider, decodeURIComponent(new URL(".", import.meta.url).pathname), app.getPath("userData"));

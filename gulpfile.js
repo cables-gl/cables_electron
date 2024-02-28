@@ -43,10 +43,22 @@ function _api_copy()
     return gulp.src("../cables_api/public/libs/**").pipe(gulp.dest("public/libs/"));
 }
 
-function _core_copy()
+function _corelibs_copy()
 {
     mkdirp.sync("public/libs_core");
     return gulp.src("../cables/build/libs/**").pipe(gulp.dest("public/libs_core/"));
+}
+
+function _core_ops_copy()
+{
+    mkdirp.sync("ops/base/");
+    return gulp.src("../cables/src/ops/base/**").pipe(gulp.dest("ops/base/"));
+}
+
+function _extension_ops_copy()
+{
+    mkdirp.sync("ops/extensions/");
+    return gulp.src("../cables/src/ops/extensions/**").pipe(gulp.dest("ops/extensions/"));
 }
 
 function _ui_copy()
@@ -94,8 +106,16 @@ function _editor_scripts_webpack(done)
 gulp.task("build", gulp.series(
     gulp.parallel(
         _editor_scripts_webpack,
-        _core_copy,
+        _corelibs_copy,
+        _core_ops_copy,
+        _extension_ops_copy,
         _api_copy,
         _ui_copy
+    ),
+));
+
+gulp.task("build:source", gulp.series(
+    gulp.parallel(
+        _editor_scripts_webpack
     ),
 ));

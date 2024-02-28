@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
 import { app } from "electron";
+import helper from "../utils/helper_util.js";
 
 class ElectronStore
 {
@@ -51,7 +52,6 @@ class ElectronStore
     {
         if (this.data && this.data.hasOwnProperty(this.STORAGEDIR_FIELD) && this.data[this.STORAGEDIR_FIELD])
         {
-            console.log(this.STORAGEDIR_FIELD, this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
             const userDataPath = path.join(this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
             this.data = ElectronStore.parseDataFile(userDataPath, this.opts.defaults);
         }
@@ -88,7 +88,7 @@ class ElectronStore
         this.set(this.APIKEY_FIELD, value);
     }
 
-    getCurrentPatchDir()
+    getCurrentProjectDir()
     {
         let value = this.get(this.CURRENTPATCHDIR_FIELD);
         if (value && !value.endsWith("/")) value += "/";
@@ -99,6 +99,59 @@ class ElectronStore
     {
         if (value && !value.endsWith("/")) value += "/";
         this.set(this.CURRENTPATCHDIR_FIELD, value);
+    }
+
+    getCurrentProject()
+    {
+        const file = this.getPatchFile();
+        if (file && fs.existsSync(file))
+        {
+            return JSON.parse(fs.readFileSync(this.getPatchFile()));
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    getNewProject()
+    {
+        const now = Date.now();
+        const currentUser = this.getCurrentUser();
+        const projectId = helper.generateRandomId();
+        const shortId = helper.generateShortId(projectId, now);
+
+        return {
+            "_id": projectId,
+            "shortId": shortId,
+            "name": "new project",
+            "description": "",
+            "userId": currentUser._id,
+            "cachedUsername": currentUser.username,
+            "created": now,
+            "updated": now,
+            "visibility": "private",
+            "ops": [],
+            "settings": {
+                "licence": "none"
+            },
+            "log": []
+        };
+    }
+
+    getCurrentUser()
+    {
+        const username = "standalone";
+        return {
+            "username": username,
+            "_id": helper.generateRandomId(),
+            "profile_theme": "dark",
+            "isStaff": false,
+            "usernameLowercase": username.toLowerCase(),
+            "isAdmin": false,
+            "theme": "dark",
+            "created": Date.now()
+        };
     }
 
     setUserSettings(value)

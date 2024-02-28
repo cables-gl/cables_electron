@@ -1,182 +1,282 @@
 import { app, BrowserWindow, Menu, dialog } from "electron";
 import path from "path";
 import fs from "fs";
+import sanitizeFileName from "sanitize-filename";
+import jsonfile from "jsonfile";
 import electronEndpoints from "./electron_endpoint.js";
 import logger from "../utils/logger.js";
 import store from "./electron_store.js";
 import doc from "../utils/doc_util.js";
 
-// global reference to mainWindow (necessary to prevent window from being garbage collected)
-let editorWindow;
-
 logger.info("STARTING");
-const createWindow = () =>
+
+class ElectronApp
 {
-    let patchFile = null;
-    if (store.getPatchFile())
+    constructor()
     {
-        if (fs.existsSync(store.getPatchFile()))
-        {
-            patchFile = store.getPatchFile();
-        }
+        this.cablesFileExtension = ".cables.json";
+        this.editorWindow = null;
     }
 
-    editorWindow = new BrowserWindow({
-        "width": 1920,
-        "height": 1080,
-        "webPreferences": {
-            "nodeIntegration": true,
-            "nodeIntegrationInWorker": true,
-            "nodeIntegrationInSubFrames": true,
-            "contextIsolation": false,
-            "sandbox": false,
-            "webSecurity": false,
-            "allowRunningInsecureContent": true,
-            "plugins": true,
-            "experimentalFeatures": true,
-            "v8CacheOptions": "none"
+    createWindow()
+    {
+        let patchFile = null;
+        if (store.getPatchFile())
+        {
+            if (fs.existsSync(store.getPatchFile()))
+            {
+                patchFile = store.getPatchFile();
+            }
         }
-    });
-    editorWindow.switchPatch = (newPatchFile) =>
-    {
-        store.setPatchFile(newPatchFile);
-        let newPatchDir = path.dirname(newPatchFile);
-        store.setCurrentPatchDir(newPatchDir);
-        doc.rebuildOpCaches(() =>
-        {
-            editorWindow.reload();
-        }, ["core", "teams", "extensions", "users", "patches"]);
-    };
-    if (patchFile)
-    {
-        doc.rebuildOpCaches(() =>
-        {
-            editorWindow.loadFile("index.html");
-        }, ["core", "teams", "extensions", "users", "patches"]);
-    }
-    else
-    {
-        editorWindow.loadFile("index.html").then(() =>
-        {
-            openPatchDialog();
-        });
-    }
-};
 
-const openPatchDialog = () =>
-{
-    try
-    {
-        dialog.showOpenDialog(
-            editorWindow,
-            {
-                "title": "select patch",
-                "properties": ["openFile"],
-                "filters": [
-                    { "name": "Cables Patches", "extensions": ["json"] },
-                ]
-            }).then((result) =>
-        {
-            if (!result.canceled)
-            {
-                editorWindow.switchPatch(result.filePaths[0]);
+        this.editorWindow = new BrowserWindow({
+            "width": 1920,
+            "height": 1080,
+            "webPreferences": {
+                "nodeIntegration": true,
+                "nodeIntegrationInWorker": true,
+                "nodeIntegrationInSubFrames": true,
+                "contextIsolation": false,
+                "sandbox": false,
+                "webSecurity": false,
+                "allowRunningInsecureContent": true,
+                "plugins": true,
+                "experimentalFeatures": true,
+                "v8CacheOptions": "none"
             }
         });
-    }
-    catch (e)
-    {
-        dialog.showMessageBox(editorWindow, {
-            "type": "error",
-            "title": "error",
-            "message": e.messsage
-        });
-    }
-};
-
-const createMenu = () =>
-{
-    let devToolsAcc = "CmdOrCtrl+Shift+I";
-    if (process.platform === "darwin") devToolsAcc = "CmdOrCtrl+Option+I";
-    let menu = Menu.buildFromTemplate([
+        if (patchFile)
         {
-            "label": "Menu",
-            "submenu": [
+            doc.rebuildOpCaches(() =>
+            {
+                this.editorWindow.loadFile("index.html").then(() =>
                 {
-                    "label": "Open patch",
-                    "accelerator": "CmdOrCtrl+O",
-                    click()
-                    {
-                        openPatchDialog();
-                    }
-                },
+                    this.editorWindow.setTitle("cables - " + store.getCurrentProject().name);
+                });
+            }, ["core", "teams", "extensions", "users", "patches"]);
+        }
+        else
+        {
+            this.editorWindow.loadFile("index.html").then(() =>
+            {
+                this.openPatchDialog();
+            });
+        }
+    }
+
+    openPatchDialog()
+    {
+        try
+        {
+            dialog.showOpenDialog(this.editorWindow, {
+                "title": "select patch",
+                "properties": ["openFile", "openDirectory", "createDirectory"],
+                "filters": [
+                    { "name": "Cables Patches", "extensions": [this.cablesFileExtension] },
+                ]
+            }).then((result) =>
+            {
+                if (!result.canceled)
                 {
-                    "label": "Reload patch",
-                    "accelerator": "CmdOrCtrl+R",
-                    click()
+                    const selectedPath = result.filePaths[0];
+                    const isDir = fs.lstatSync(selectedPath).isDirectory();
+                    if (isDir)
                     {
-                        editorWindow.reload();
-                    }
-                },
-                {
-                    "label": "Toggle fullscreen",
-                    click()
-                    {
-                        if (editorWindow.isFullScreen())
+                        const dirFiles = fs.readdirSync(selectedPath);
+                        const projectFile = dirFiles.find((file) => { return path.basename(file).endsWith(this.cablesFileExtension); });
+                        if (projectFile)
                         {
-                            editorWindow.setFullScreen(false);
+                            this._switchPatch(projectFile);
                         }
                         else
                         {
-                            editorWindow.setFullScreen(true);
+                            this._switchPatch(selectedPath, true);
                         }
                     }
-                },
-                {
-                    "label": "Open Dev-Tools",
-                    "accelerator": devToolsAcc,
-                    click()
+                    else
                     {
-                        editorWindow.webContents.toggleDevTools();
-                    }
-                },
-                {
-                    "label": "Exit",
-                    "accelerator": "CmdOrCtrl+Q",
-                    click()
-                    {
-                        app.quit();
+                        this._switchPatch(selectedPath);
                     }
                 }
-            ]
-        },
-        {
-            "label": "Edit",
-            "submenu": [
-                { "role": "undo" },
-                { "role": "redo" },
-                { "type": "separator" },
-                { "role": "cut" },
-                { "role": "copy" },
-                { "role": "paste" },
-                { "role": "pasteandmatchstyle" },
-                { "role": "delete" },
-                { "role": "selectall" }
-            ]
+                else
+                {
+                    app.quit();
+                }
+            });
         }
-    ]);
+        catch (e)
+        {
+            dialog.showMessageBox(this.editorWindow, {
+                "type": "error",
+                "title": "error",
+                "message": e.messsage
+            });
+        }
+    }
 
-    Menu.setApplicationMenu(menu);
-};
+    openNewPatchDialog()
+    {
+        try
+        {
+            dialog.showOpenDialog(this.editorWindow, {
+                "title": "select workspace directory",
+                "properties": ["openDirectory", "createDirectory"]
+            }).then((result) =>
+            {
+                if (!result.canceled)
+                {
+                    const selectedPath = result.filePaths[0];
+                    const isDir = fs.lstatSync(selectedPath).isDirectory();
+                    if (isDir)
+                    {
+                        const dirFiles = fs.readdirSync(selectedPath);
+                        const projectFile = dirFiles.find((file) => { return path.basename(file).endsWith(this.cablesFileExtension); });
+                        if (projectFile)
+                        {
+                            this._switchPatch(projectFile);
+                        }
+                        else
+                        {
+                            this._switchPatch(selectedPath, true);
+                        }
+                    }
+                    else
+                    {
+                        this.openPatchDialog(selectedPath);
+                    }
+                }
+            });
+        }
+        catch (e)
+        {
+            dialog.showMessageBox(this.editorWindow, {
+                "type": "error",
+                "title": "error",
+                "message": e.messsage
+            });
+        }
+    }
 
+    createMenu()
+    {
+        let devToolsAcc = "CmdOrCtrl+Shift+I";
+        if (process.platform === "darwin") devToolsAcc = "CmdOrCtrl+Option+I";
+        let menu = Menu.buildFromTemplate([
+            {
+                "label": "Menu",
+                "submenu": [
+                    {
+                        "label": "New patch",
+                        "accelerator": "CmdOrCtrl+N",
+                        "click": () =>
+                        {
+                            this.openNewPatchDialog();
+                        }
+                    },
+                    {
+                        "label": "Open patch",
+                        "accelerator": "CmdOrCtrl+O",
+                        "click": () =>
+                        {
+                            this.openPatchDialog();
+                        }
+                    },
+                    {
+                        "label": "Reload patch",
+                        "accelerator": "CmdOrCtrl+R",
+                        "click": () =>
+                        {
+                            this.editorWindow.reload();
+                        }
+                    },
+                    {
+                        "label": "Toggle fullscreen",
+                        "click": () =>
+                        {
+                            if (this.editorWindow.isFullScreen())
+                            {
+                                this.editorWindow.setFullScreen(false);
+                            }
+                            else
+                            {
+                                this.editorWindow.setFullScreen(true);
+                            }
+                        }
+                    },
+                    {
+                        "label": "Open Dev-Tools",
+                        "accelerator": devToolsAcc,
+                        "click": () =>
+                        {
+                            this.editorWindow.webContents.toggleDevTools();
+                        }
+                    },
+                    {
+                        "label": "Exit",
+                        "accelerator": "CmdOrCtrl+Q",
+                        "click": () =>
+                        {
+                            app.quit();
+                        }
+                    }
+                ]
+            },
+            {
+                "label": "Edit",
+                "submenu": [
+                    { "role": "undo" },
+                    { "role": "redo" },
+                    { "type": "separator" },
+                    { "role": "cut" },
+                    { "role": "copy" },
+                    { "role": "paste" },
+                    { "role": "pasteandmatchstyle" },
+                    { "role": "delete" },
+                    { "role": "selectall" }
+                ]
+            }
+        ]);
+
+        Menu.setApplicationMenu(menu);
+    }
+
+    _switchPatch(newPatchFileOrDir, createNewProject = false)
+    {
+        if (createNewProject)
+        {
+            this._createNewCurrentProject(newPatchFileOrDir);
+        }
+        else
+        {
+            store.setPatchFile(newPatchFileOrDir);
+            let newPatchDir = path.dirname(newPatchFileOrDir);
+            store.setCurrentPatchDir(newPatchDir);
+        }
+        doc.rebuildOpCaches(() =>
+        {
+            this.editorWindow.reload();
+            this.editorWindow.setTitle("cables - " + store.getCurrentProject().name);
+        }, ["core", "teams", "extensions", "users", "patches"]);
+    }
+
+    _createNewCurrentProject(newPatchFileOrDir)
+    {
+        const newProject = store.getNewProject();
+        store.setCurrentPatchDir(newPatchFileOrDir);
+        const projectFileName = sanitizeFileName(newProject.name).replace(/ /g, "_") + ".cables.json";
+        const newProjectFile = path.join(store.getCurrentProjectDir(), projectFileName);
+        store.setPatchFile(newProjectFile);
+        jsonfile.writeFileSync(newProjectFile, newProject, { "encoding": "utf-8", "spaces": 4 });
+    }
+}
 app.whenReady().then(() =>
 {
     electronEndpoints.init();
-
-    createWindow();
-    createMenu();
+    electronApp.createWindow();
+    electronApp.createMenu();
     app.on("activate", () =>
     {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        if (BrowserWindow.getAllWindows().length === 0) electronApp.createWindow();
     });
 });
 
@@ -184,3 +284,5 @@ app.on("window-all-closed", () =>
 {
     if (process.platform !== "darwin") app.quit();
 });
+const electronApp = new ElectronApp();
+export default electronApp;

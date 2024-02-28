@@ -20,9 +20,9 @@ Thumbs.db
 
 #Node modules folder
 node_modules
-patches/
-api/
 ui/
 dist/
-gen/
-public/
+public/js/
+public/libs/
+public/libs_core/
+ops/

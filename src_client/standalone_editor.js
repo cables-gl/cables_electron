@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-relative-packages
 import TalkerAPI from "../../shared/client/src/talkerapi.js";
 
 export default class ElectronEditor
@@ -48,6 +49,9 @@ export default class ElectronEditor
             "getLibCode",
             "getChangelog",
             "opAttachmentSave",
+            "setIconSaved",
+            "setIconUnsaved",
+            "saveScreenshot"
         ];
 
         talkerTopics.forEach((talkerTopic) =>

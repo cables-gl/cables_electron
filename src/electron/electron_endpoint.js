@@ -1,4 +1,4 @@
-import { app, ipcMain, protocol } from "electron";
+import { ipcMain, protocol } from "electron";
 import fs from "fs";
 import path from "path";
 import marked from "marked";
@@ -13,6 +13,8 @@ import helper from "../utils/helper_util.js";
 import opsUtil from "../utils/ops_util.js";
 import subPatchOpUtil from "../utils/subpatchop_util.js";
 import store from "./electron_store.js";
+import electronApp from "./main.js";
+import projectsUtil from "../utils/projects_util.js";
 
 protocol.registerSchemesAsPrivileged([{ "scheme": "cables", "privileges": { "bypassCSP": true, "supportFetchAPI": true } }]);
 
@@ -165,7 +167,7 @@ class ElectronEndpoint
         const project = this.getCurrentProject();
         const opDocs = doc.getOpDocs(true, true);
         let code = "";
-        if (project.ops)
+        if (project && project.ops)
         {
             let missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
@@ -237,7 +239,7 @@ class ElectronEndpoint
     getPatch(data)
     {
         const patchPath = this._store.getPatchFile();
-        if (patchPath)
+        if (patchPath && fs.existsSync(patchPath))
         {
             let patch = fs.readFileSync(patchPath);
             patch = JSON.parse(patch.toString("utf-8"));
@@ -258,7 +260,7 @@ class ElectronEndpoint
         let name = data.name || "new offline project";
         this._log.info("project", "created", name);
         const id = this._generateRandomId();
-        const newFile = path.join(this._store.getCurrentPatchDir(), id + ".json");
+        const newFile = path.join(this._store.getCurrentProjectDir(), id + ".json");
         const project = {
             "_id": id,
             "name": name,
@@ -316,7 +318,7 @@ class ElectronEndpoint
 
     fileUploadStr(data)
     {
-        const target = path.join(this._store.getCurrentPatchDir(), "/assets/");
+        const target = cables.getAssetPath();
         if (!data.fileStr) return;
         if (!data.filename)
         {
@@ -328,7 +330,7 @@ class ElectronEndpoint
     async getAllProjectOps()
     {
         const currentUser = this.getCurrentUser();
-        const project = JSON.parse(fs.readFileSync(this._store.getPatchFile()));
+        const project = this.getCurrentProject();
 
         let opDocs = [];
 
@@ -582,7 +584,6 @@ class ElectronEndpoint
     getOpCode(data)
     {
         const opName = opsUtil.getOpNameById(data.opId || data.opname);
-        console.log("getOpCode", data, opName);
         if (opsUtil.opExists(opName))
         {
             let code = opsUtil.getOpCode(opName);
@@ -712,35 +713,39 @@ class ElectronEndpoint
         return true;
     }
 
-
-    _generateRandomId()
+    setIconSaved()
     {
-        // https://gist.github.com/solenoid/1372386
-        let timestamp = (new Date().getTime() / 1000 | 0).toString(16);
-        return timestamp + "xxxxxxxxxxxxxxxx".replace(/[x]/g, function ()
+        let title = electronApp.editorWindow.getTitle();
+        const pos = title.lastIndexOf(" *");
+        let newTitle = title;
+        if (pos !== -1) newTitle = title.substring(0, pos);
+        electronApp.editorWindow.setTitle(newTitle);
+    }
+
+    setIconUnsaved()
+    {
+        const title = electronApp.editorWindow.getTitle();
+        electronApp.editorWindow.setTitle(title + " *");
+    }
+
+    saveScreenshot(data)
+    {
+        const currentProject = this.getCurrentProject();
+        if (!currentProject || !data || !data.screenshot)
         {
-            return (Math.random() * 16 | 0).toString(16);
-        }).toLowerCase();
+            return;
+        }
+        return projectsUtil.saveProjectScreenshot(currentProject, data.screenshot);
     }
 
     getCurrentUser()
     {
-        const username = "steamtest";
-        return {
-            "username": username,
-            "_id": this._generateRandomId(),
-            "profile_theme": "dark",
-            "isStaff": false,
-            "usernameLowercase": username.toLowerCase(),
-            "isAdmin": false,
-            "theme": "dark",
-            "created": Date.now()
-        };
+        return store.getCurrentUser();
     }
 
     getCurrentProject()
     {
-        return JSON.parse(fs.readFileSync(this._store.getPatchFile()));
+        return store.getCurrentProject();
     }
 }
 export default new ElectronEndpoint();
