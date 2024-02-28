@@ -316,7 +316,7 @@ class ElectronEndpoint
         };
     }
 
-    fileUploadStr(data)
+    fileUpload(data)
     {
         const target = cables.getAssetPath();
         if (!data.fileStr) return;
@@ -324,7 +324,7 @@ class ElectronEndpoint
         {
             return;
         }
-        fs.writeFileSync(path.join(target, data.filename), data.fileStr);
+        return fs.writeFileSync(path.join(target, data.filename), data.fileStr);
     }
 
     async getAllProjectOps()
@@ -738,6 +738,19 @@ class ElectronEndpoint
         return projectsUtil.saveProjectScreenshot(currentProject, data.screenshot);
     }
 
+    getFilelist(data)
+    {
+        switch (data.source)
+        {
+        case "patch":
+            return this._getPatchFiles();
+        case "lib":
+            return this._getLibraryFiles();
+        default:
+            return [];
+        }
+    }
+
     getCurrentUser()
     {
         return store.getCurrentUser();
@@ -746,6 +759,126 @@ class ElectronEndpoint
     getCurrentProject()
     {
         return store.getCurrentProject();
+    }
+
+    _getPatchFiles()
+    {
+        const project = this.getCurrentProject();
+        const projectId = project._id;
+        let files = [];
+
+        let arr = [];
+        for (const i in files)
+        {
+            const file = files[i];
+            const f = {};
+            f.t = this._getFileType(file.name);
+            f.n = file.name;
+            f.name = file.name;
+            f._id = file._id;
+            f.suffix = file.suffix;
+            f.d = file.updated.getTime();
+            f.updated = file.updated;
+            f.s = file.size;
+
+            let assetPath = this._getFileAssetLocation(file);
+            const stats = fs.statSync(assetPath);
+            f.s = stats.size;
+
+            f.projectId = file.projectId;
+            f.p = this._getFileAssetUrlPath(file);
+            f.l = 0;
+            f.cachebuster = file.cachebuster;
+            if (file.referenceTo)
+            {
+                f.isReference = true;
+            }
+            else
+            {
+                f.isReference = false;
+            }
+            f.referenceTo = file.referenceTo;
+            f.inProjectId = file.inProjectId;
+            f.inOpId = file.inOpId;
+            f.referenceType = file.referenceType;
+            f.isLibraryFile = !!file.isLibraryFile;
+            f.icon = this._getFileIconName(file);
+            arr.push(f);
+        }
+        return arr;
+    }
+
+    _getLibraryFiles()
+    {
+        return [];
+    }
+
+    _getFileIconName(fileDb)
+    {
+        let icon = "file";
+
+        if (fileDb.type === "SVG") icon = "pen-tool";
+        else if (fileDb.type === "image") icon = "image";
+        else if (fileDb.type === "gltf" || fileDb.type === "3d json") icon = "cube";
+        else if (fileDb.type === "video") icon = "film";
+        else if (fileDb.type === "font") icon = "type";
+        else if (fileDb.type === "JSON") icon = "code";
+        else if (fileDb.type === "audio") icon = "headphones";
+
+        return icon;
+    }
+
+    _getFileAssetUrlPath(file)
+    {
+        if (!file) return "";
+        let assetDir = file.projectId;
+        if (file.isLibraryFile) assetDir = "library";
+        const assetFileName = file.fileName || file.name;
+        return path.join("/assets/", assetDir, assetFileName);
+    }
+
+    _getFileAssetLocation(file)
+    {
+        let assetPath = file.projectId;
+        let fileName = file.fileName || file.name;
+        if (file.isLibraryFile)
+        {
+            assetPath = "library";
+        }
+        return path.join(cables.getAssetPath(), assetPath, fileName);
+    }
+
+    _getFileType(filename)
+    {
+        const FILETYPES =
+            {
+                "image": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".jxl"],
+                "binary": [".bin"],
+                "audio": [".mp3", ".wav", ".ogg", ".aac", ".mid"],
+                "video": [".m4a", ".mp4", ".mpg", ".webm"],
+                "gltf": [".glb"],
+                "3d raw": [".obj", ".fbx", ".3ds", ".ply", ".dae", ".blend", ".md2", ".md3", ".ase"],
+                "JSON": [".json"],
+                "CSS": [".css"],
+                "textfile": [".txt"],
+                "pointcloud": [".pc.txt"],
+                "shader": [".frag", ".vert"],
+                "SVG": [".svg"],
+                "CSV": [".csv"],
+                "XML": [".xml"],
+                "font": [".otf", ".ttf", ".woff", ".woff2"],
+                "mesh sequence": [".seq.zip"],
+                "pointcloud json": [".pc.txt"],
+                "3d json": [".3d.json"],
+                "javascript": [".js"],
+                "ar markers": [".iset", ".fset", ".fset3"]
+            };
+
+        let type = "unknown";
+        for (const k in FILETYPES)
+            for (let j = 0; j < FILETYPES[k].length; j++)
+                if (filename.toLowerCase().endsWith(FILETYPES[k][j])) type = k;
+        return type;
     }
 }
 export default new ElectronEndpoint();
