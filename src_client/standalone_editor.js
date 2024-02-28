@@ -25,6 +25,8 @@ export default class ElectronEditor
             {
                 window.ipcRenderer.invoke("talkerMessage", "fileUpload", options).then((r) =>
                 {
+                    this._talker.send("refreshFileManager");
+                    this._talker.send("fileUpdated", { "filename": options.filename });
                     next(null, r);
                 });
             });
@@ -60,7 +62,8 @@ export default class ElectronEditor
             "setIconSaved",
             "setIconUnsaved",
             "saveScreenshot",
-            "getFilelist"
+            "getFilelist",
+            "getFileDetails"
         ];
 
         talkerTopics.forEach((talkerTopic) =>

@@ -27,6 +27,11 @@ class CablesStandalone extends Cables
         return assetPath;
     }
 
+    getAssetLibraryPath()
+    {
+        return path.join(this.getPublicPath(), "assets/library");
+    }
+
     getGenPath()
     {
         const currentProject = store.getCurrentProject();

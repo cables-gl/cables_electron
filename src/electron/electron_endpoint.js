@@ -324,7 +324,8 @@ class ElectronEndpoint
         {
             return;
         }
-        return fs.writeFileSync(path.join(target, data.filename), data.fileStr);
+        const buffer = Buffer.from(data.fileStr.split(",")[1], "base64");
+        return fs.writeFileSync(path.join(target, data.filename), buffer);
     }
 
     async getAllProjectOps()
@@ -751,6 +752,12 @@ class ElectronEndpoint
         }
     }
 
+    getFileDetails(data)
+    {
+        console.log("DATA", data);
+        return {};
+    }
+
     getCurrentUser()
     {
         return store.getCurrentUser();
@@ -763,54 +770,14 @@ class ElectronEndpoint
 
     _getPatchFiles()
     {
-        const project = this.getCurrentProject();
-        const projectId = project._id;
-        let files = [];
-
-        let arr = [];
-        for (const i in files)
-        {
-            const file = files[i];
-            const f = {};
-            f.t = this._getFileType(file.name);
-            f.n = file.name;
-            f.name = file.name;
-            f._id = file._id;
-            f.suffix = file.suffix;
-            f.d = file.updated.getTime();
-            f.updated = file.updated;
-            f.s = file.size;
-
-            let assetPath = this._getFileAssetLocation(file);
-            const stats = fs.statSync(assetPath);
-            f.s = stats.size;
-
-            f.projectId = file.projectId;
-            f.p = this._getFileAssetUrlPath(file);
-            f.l = 0;
-            f.cachebuster = file.cachebuster;
-            if (file.referenceTo)
-            {
-                f.isReference = true;
-            }
-            else
-            {
-                f.isReference = false;
-            }
-            f.referenceTo = file.referenceTo;
-            f.inProjectId = file.inProjectId;
-            f.inOpId = file.inOpId;
-            f.referenceType = file.referenceType;
-            f.isLibraryFile = !!file.isLibraryFile;
-            f.icon = this._getFileIconName(file);
-            arr.push(f);
-        }
-        return arr;
+        const p = cables.getAssetPath();
+        return this._readAssetDir(0, p, p, "assets/");
     }
 
     _getLibraryFiles()
     {
-        return [];
+        const p = cables.getAssetLibraryPath();
+        return this._readAssetDir(0, p, p, "public/assets/library/");
     }
 
     _getFileIconName(fileDb)
@@ -828,57 +795,47 @@ class ElectronEndpoint
         return icon;
     }
 
-    _getFileAssetUrlPath(file)
+    _readAssetDir(lvl, filePath, origPath, urlPrefix = "")
     {
-        if (!file) return "";
-        let assetDir = file.projectId;
-        if (file.isLibraryFile) assetDir = "library";
-        const assetFileName = file.fileName || file.name;
-        return path.join("/assets/", assetDir, assetFileName);
-    }
-
-    _getFileAssetLocation(file)
-    {
-        let assetPath = file.projectId;
-        let fileName = file.fileName || file.name;
-        if (file.isLibraryFile)
+        const arr = [];
+        const files = fs.readdirSync(filePath);
+        for (const i in files)
         {
-            assetPath = "library";
-        }
-        return path.join(cables.getAssetPath(), assetPath, fileName);
-    }
+            const fullPath = path.join(filePath, "/", files[i]);
+            const urlPath = path.join(urlPrefix, fullPath.substr(origPath.length, fullPath.length - origPath.length));
 
-    _getFileType(filename)
-    {
-        const FILETYPES =
+            if (files[i] && !files[i].startsWith("."))
             {
-                "image": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".jxl"],
-                "binary": [".bin"],
-                "audio": [".mp3", ".wav", ".ogg", ".aac", ".mid"],
-                "video": [".m4a", ".mp4", ".mpg", ".webm"],
-                "gltf": [".glb"],
-                "3d raw": [".obj", ".fbx", ".3ds", ".ply", ".dae", ".blend", ".md2", ".md3", ".ase"],
-                "JSON": [".json"],
-                "CSS": [".css"],
-                "textfile": [".txt"],
-                "pointcloud": [".pc.txt"],
-                "shader": [".frag", ".vert"],
-                "SVG": [".svg"],
-                "CSV": [".csv"],
-                "XML": [".xml"],
-                "font": [".otf", ".ttf", ".woff", ".woff2"],
-                "mesh sequence": [".seq.zip"],
-                "pointcloud json": [".pc.txt"],
-                "3d json": [".3d.json"],
-                "javascript": [".js"],
-                "ar markers": [".iset", ".fset", ".fset3"]
-            };
+                const s = fs.statSync(fullPath);
+                if (s.isDirectory() && fs.readdirSync(fullPath).length > 0)
+                {
+                    arr.push({
+                        "d": true, "n": files[i], "t": "dir", "l": lvl, "c": this._readAssetDir(lvl + 1, path.join(fullPath, "/"), origPath, urlPrefix), "p": urlPath
+                    });
+                }
+                else if (files[i].toLowerCase().endsWith(".fileinfo.json")) continue;
+                else
+                {
+                    let type = "unknown";
+                    if (files[i].endsWith("jpg") || files[i].endsWith("png") || files[i].endsWith("jpeg"))type = "image";
+                    else if (files[i].endsWith("mp3") || files[i].endsWith("ogg") || files[i].endsWith("wav"))type = "audio";
+                    else if (files[i].endsWith("3d.json"))type = "3d json";
+                    else if (files[i].endsWith("json"))type = "json";
+                    else if (files[i].endsWith("mp4"))type = "video";
 
-        let type = "unknown";
-        for (const k in FILETYPES)
-            for (let j = 0; j < FILETYPES[k].length; j++)
-                if (filename.toLowerCase().endsWith(FILETYPES[k][j])) type = k;
-        return type;
+                    const fileData = { "d": false, "n": files[i], "t": type, "l": lvl, "p": urlPath, "type": type, "updated": "bla" };
+                    fileData.icon = this._getFileIconName(fileData);
+                    let stats = fs.statSync(fullPath);
+                    if (stats && stats.mtime)
+                    {
+                        fileData.updated = new Date(stats.mtime).getTime();
+                    }
+
+                    arr.push(fileData);
+                }
+            }
+        }
+        return arr;
     }
 }
 export default new ElectronEndpoint();

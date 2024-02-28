@@ -43,6 +43,17 @@ function _api_copy()
     return gulp.src("../cables_api/public/libs/**").pipe(gulp.dest("public/libs/"));
 }
 
+function _create_ops_dirs(done)
+{
+    fs.rmSync("ops", { "recursive": true, "force": true });
+    mkdirp.sync("ops/base/");
+    mkdirp.sync("ops/extensions/");
+    mkdirp.sync("ops/patches/");
+    mkdirp.sync("ops/teams/");
+    mkdirp.sync("ops/users/");
+    done();
+}
+
 function _corelibs_copy()
 {
     mkdirp.sync("public/libs_core");
@@ -104,6 +115,7 @@ function _editor_scripts_webpack(done)
  * -------------------------------------------------------------------------------------------
  */
 gulp.task("build", gulp.series(
+    _create_ops_dirs,
     gulp.parallel(
         _editor_scripts_webpack,
         _corelibs_copy,
