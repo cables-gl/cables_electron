@@ -50,7 +50,7 @@
       }
     ],
     "mac": {
-      "target": ["dmg"],
+      "target": ["zip"],
       "category": "public.app-category.developer-tools"
     },
     "nodeVersion": "18.14.2",
