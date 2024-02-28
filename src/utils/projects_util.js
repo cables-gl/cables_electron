@@ -1,4 +1,4 @@
-import { utilProvider, SharedProjectsUtil } from "cables-shared";
+import { utilProvider, SharedProjectsUtil } from "cables-shared-api";
 import store from "../electron/electron_store.js";
 
 class ProjectsUtil extends SharedProjectsUtil

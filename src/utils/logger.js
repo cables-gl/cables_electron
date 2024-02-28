@@ -1,4 +1,4 @@
-import { utilProvider, SharedLogger } from "cables-shared";
+import { utilProvider, SharedLogger } from "cables-shared-api";
 
 class Logger extends SharedLogger
 {

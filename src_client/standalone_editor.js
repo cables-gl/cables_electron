@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-relative-packages
-import TalkerAPI from "../../shared/client/src/talkerapi.js";
+import { TalkerAPI } from "cables-shared-client";
 
 export default class ElectronEditor
 {
@@ -10,12 +9,12 @@ export default class ElectronEditor
         this._patchId = params.config.patchId;
         this._patchVersion = params.config.patchVersion;
 
-        this._talker.addEventListener("requestPatchData", function (data, next)
+        this._talker.addEventListener("requestPatchData", (data, next) =>
         {
             if (next) next(params.config);
         });
 
-        this._talker.addEventListener("sendBrowserInfo", function (data, next)
+        this._talker.addEventListener("sendBrowserInfo", (data, next) =>
         {
             if (next) next(platform);
         });
@@ -56,7 +55,7 @@ export default class ElectronEditor
 
         talkerTopics.forEach((talkerTopic) =>
         {
-            this._talker.addEventListener(talkerTopic, function (data, next)
+            this._talker.addEventListener(talkerTopic, (data, next) =>
             {
                 window.ipcRenderer.invoke("talkerMessage", talkerTopic, data).then((r) =>
                 {

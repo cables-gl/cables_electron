@@ -1,4 +1,4 @@
-import { utilProvider, SharedSubPatchOpUtil } from "cables-shared";
+import { utilProvider, SharedSubPatchOpUtil } from "cables-shared-api";
 
 class SubPatchOpUtil extends SharedSubPatchOpUtil {}
 

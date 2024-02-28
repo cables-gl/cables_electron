@@ -1,4 +1,4 @@
-import { utilProvider, SharedOpsUtil } from "cables-shared";
+import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 
 class OpsUtil extends SharedOpsUtil
 {

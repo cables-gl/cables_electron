@@ -1,6 +1,6 @@
 {
   "name": "cables_standalone",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "author": "undefined development",
   "description": "current templates for the different exe-exports in cables.gl",
   "repository": {
@@ -17,8 +17,14 @@
     "start": "electron .",
     "build": "gulp build",
     "build:source": "gulp build:source",
-    "pack": "electron-builder --dir --config -c.mac.identity=null",
-    "dist": "electron-builder -mwl --config -c.mac.identity=null"
+    "pack": "electron-builder -mwl --dir",
+    "pack:mac": "electron-builder -m --dir",
+    "pack:win": "electron-builder -w --dir",
+    "pack:linux": "electron-builder -l --dir",
+    "dist": "electron-builder -mwl",
+    "dist:mac": "electron-builder -m",
+    "dist:win": "electron-builder -w",
+    "dist:linux": "electron-builder -l"
   },
   "build": {
     "productName": "cables",
@@ -33,16 +39,12 @@
     },
     "extraResources": [
       {
-        "from": "../cables/src/ops/base/",
+        "from": "./ops/base/",
         "to": "cables/src/ops/base/"
       },
       {
-        "from": "./public/libs/",
-        "to": "public/libs/"
-      },
-      {
-        "from": "../cables/build/libs/",
-        "to": "public/libs_core/"
+        "from": "./public/",
+        "to": "public/"
       },
       {
         "from": "../shared/client",
@@ -50,8 +52,13 @@
       }
     ],
     "mac": {
+      "identity": null,
       "target": ["zip"],
       "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "verifyUpdateCodeSignature": false,
+      "signAndEditExecutable": false
     },
     "nodeVersion": "18.14.2",
     "electronLanguages": "en"
@@ -61,12 +68,13 @@
     "marked": "1.2.9",
     "mkdirp": "2.1.3",
     "jsonfile": "6.1.0",
-    "cables-shared": "file:../shared",
+    "cables-shared-api": "file:../shared/api",
+    "cables-shared-client": "file:../shared/client",
     "sanitize-filename": "1.6.3"
   },
   "devDependencies": {
-    "electron": "29.0.0",
-    "electron-builder": "24.12.0",
+    "electron": "29.1.0",
+    "electron-builder": "24.13.2",
     "git-repo-info": "2.1.1",
     "gulp": "4.0.2",
     "webpack": "5.75.0",

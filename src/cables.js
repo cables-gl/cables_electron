@@ -1,5 +1,5 @@
 // hallo1234
-import { utilProvider, Cables } from "cables-shared";
+import { utilProvider, Cables } from "cables-shared-api";
 import { app } from "electron";
 import path from "path";
 import fs from "fs";
