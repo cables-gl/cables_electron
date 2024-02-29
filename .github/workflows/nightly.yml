@@ -45,12 +45,16 @@ jobs:
         uses: dcodeIO/setup-node-nvm@master
         with:
             node-version: "${{ steps.nvm.outputs.NVMRC }}"
-      - name: Configure caches
+      - name: Configure electron cache
         uses: actions/cache@v3
         with:
-          path: |
-            ~/Library/Caches/electron-builder
-            ~/mynvm/versions
+          key: electron-builder
+          path: ~/Library/Caches/electron-builder
+      - name: Configure nvm caches
+        uses: actions/cache@v3
+        with:
+          key: nvm
+          path: ~/mynvm/versions
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -62,7 +66,7 @@ jobs:
       - name: build standalone
         run: ./hook_standalone.sh
         env:
-          CSC_LINK: ${{ secrets.APPLE_CERT }}
-          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERT_PASS }}
+          CSC_LINK: "${{ secrets.APPLE_CERT }}"
+          CSC_KEY_PASSWORD: "${{ secrets.APPLE_CERT_PASS }}"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
