@@ -448,7 +448,7 @@ class ElectronEndpoint
 
     getOpDocs(data)
     {
-        const opName = opsUtil.getOpNameById(data.op.opId);
+        const opName = opsUtil.getOpNameById(data.op.opId || data.op.id);
         if (!opName)
         {
             return {};
@@ -854,16 +854,6 @@ class ElectronEndpoint
     {
         let opNamespace = opsUtil.getNamespace(newName);
         let availableNamespaces = [];
-        let teamNamespaces = [];
-        let extensionNamespaces = [];
-        teamNamespaces = teamNamespaces.sort((a, b) => { return a.localeCompare(b); });
-        if (currentUser)
-        {
-            if (fromRename) availableNamespaces.push(opsUtil.PREFIX_OPS);
-            availableNamespaces.push(opsUtil.getUserNamespace(currentUser.username));
-        }
-        availableNamespaces = availableNamespaces.concat(teamNamespaces);
-        availableNamespaces = availableNamespaces.concat(extensionNamespaces);
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
 

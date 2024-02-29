@@ -37,20 +37,6 @@
     "directories": {
       "buildResources": "resources"
     },
-    "extraResources": [
-      {
-        "from": "./ops/",
-        "to": "cables/src/ops/"
-      },
-      {
-        "from": "./public/",
-        "to": "public/"
-      },
-      {
-        "from": "../shared/client",
-        "to": "shared/client"
-      }
-    ],
     "mac": {
       "target": [
         {
