@@ -52,7 +52,6 @@
       }
     ],
     "mac": {
-      "identity": null,
       "target": [
         {
           "target": "dmg",
