@@ -38,6 +38,7 @@
       "buildResources": "resources"
     },
     "mac": {
+      "category": "public.app-category.developer-tools",
       "target": [
         {
           "target": "dmg",
@@ -46,8 +47,7 @@
             "arm64"
           ]
         }
-      ],
-      "category": "public.app-category.developer-tools"
+      ]
     },
     "win": {
       "verifyUpdateCodeSignature": false,
