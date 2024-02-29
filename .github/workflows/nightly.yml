@@ -6,7 +6,7 @@ on:
     - cron: "0 3 * * *"
 
 env:
-  releaseName: nightly-${{ github.run_id }}.${{ github.run_number }}
+  releaseName: ${{ github.run_number }}-dev
 
 jobs:
   mac:
@@ -36,14 +36,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: "cables_electron/"
-      - name: Read .nvmrc
-        id: nvm
-        run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
       - name: install nodejs
-        uses: actions/setup-node@v1
-        with:
-          cache: "npm"
-          node-version: "${{ steps.nvm.outputs.NVMRC }}"
+        uses: dcodeIO/setup-node-nvm@master
       - name: install dependencies
         run: npm install
       - name: Create Release
@@ -52,7 +46,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.releaseName }}
+          tag_name: v${{ env.releaseName }}
           release_name: ${{ env.releaseName }}
           draft: true
           prerelease: true
@@ -60,3 +54,4 @@ jobs:
         run: ./hook_standalone.sh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_VERSION: ${{ env.releaseName }}
