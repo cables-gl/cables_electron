@@ -17,11 +17,11 @@
     "start": "electron .",
     "build": "gulp build",
     "build:source": "gulp build:source",
-    "pack": "electron-builder -ml --dir",
+    "pack": "electron-builder -mwl --dir",
     "pack:mac": "electron-builder -m --dir",
     "pack:win": "electron-builder -w --dir",
     "pack:linux": "electron-builder -l --dir",
-    "dist": "electron-builder -mwl",
+    "dist": "electron-builder -ml",
     "dist:mac": "electron-builder -m",
     "dist:win": "electron-builder -w",
     "dist:linux": "electron-builder -l"
