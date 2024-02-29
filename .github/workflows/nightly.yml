@@ -25,6 +25,13 @@ jobs:
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
           path: "cables/"
+      - name: checkout extensions
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_extensionops"
+          ref: "main"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: "cables/src/ops/extensions"
       - name: checkout cables ui
         uses: actions/checkout@v4
         with:
