@@ -37,12 +37,6 @@ function getBuildInfo()
     });
 }
 
-function _api_copy()
-{
-    mkdirp.sync("public/libs");
-    return gulp.src("../cables_api/public/libs/**").pipe(gulp.dest("public/libs/"));
-}
-
 function _create_ops_dirs(done)
 {
     fs.rmSync("ops", { "recursive": true, "force": true });
@@ -52,6 +46,12 @@ function _create_ops_dirs(done)
     mkdirp.sync("ops/teams/");
     mkdirp.sync("ops/users/");
     done();
+}
+
+function _libs_copy()
+{
+    mkdirp.sync("public/libs");
+    return gulp.src("../shared/libs/**").pipe(gulp.dest("public/libs/"));
 }
 
 function _corelibs_copy()
@@ -121,7 +121,7 @@ gulp.task("build", gulp.series(
         _corelibs_copy,
         _core_ops_copy,
         _extension_ops_copy,
-        _api_copy,
+        _libs_copy,
         _ui_copy
     ),
 ));
