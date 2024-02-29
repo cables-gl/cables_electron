@@ -62,5 +62,7 @@ jobs:
       - name: build standalone
         run: ./hook_standalone.sh
         env:
+          CSC_LINK: ${{ secrets.APPLE_CERT }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERT_PASS }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
