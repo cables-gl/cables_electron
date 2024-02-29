@@ -52,7 +52,8 @@
     "win": {
       "sign": false,
       "verifyUpdateCodeSignature": false,
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "certificateFile": null
     },
     "nodeVersion": "18.14.2",
     "electronLanguages": "en"
