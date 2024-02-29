@@ -63,4 +63,4 @@ jobs:
         run: ./hook_standalone.sh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGE_VERSION: ${{ env.releaseName }}
+          NPM_CONFIG_VERSION: ${{ env.releaseName }}
