@@ -10,7 +10,7 @@ env:
 
 jobs:
   mac:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - name: checkout cables_dev
         uses: actions/checkout@v4
