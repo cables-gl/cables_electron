@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "undev-studio/cables_dev"
-          ref: "master"
+          ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
       - name: checkout cables
         uses: actions/checkout@v4
