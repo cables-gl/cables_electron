@@ -42,10 +42,9 @@ jobs:
         id: nvm
         run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
       - name: install nodejs
-        uses: actions/setup-node@v4
+        uses: dcodeIO/setup-node-nvm@master
         with:
             node-version: "${{ steps.nvm.outputs.NVMRC }}"
-            cache: "npm"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
