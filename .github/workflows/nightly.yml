@@ -36,12 +36,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: "cables_electron/"
+      - name: install python
+        uses: actions/setup-python@v5
+      - name: Read .nvmrc
+        id: nvm
+        run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
       - name: install nodejs
         uses: dcodeIO/setup-node-nvm@master
-      - name: install python
-      - uses: actions/setup-python@v5
-      - name: install dependencies
-        run: npm install
+        with:
+            node-version: "${{ steps.nvm.outputs.NVMRC }}"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.0.0
