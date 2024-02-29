@@ -9,7 +9,7 @@ env:
   releaseName: ${{ github.run_number }}-dev
 
 jobs:
-  mac:
+  build:
     runs-on: macos-14
     steps:
       - name: checkout cables_dev
@@ -38,6 +38,8 @@ jobs:
           path: "cables_electron/"
       - name: install nodejs
         uses: dcodeIO/setup-node-nvm@master
+      - name: install python
+      - uses: actions/setup-python@v5
       - name: install dependencies
         run: npm install
       - name: Create Release
