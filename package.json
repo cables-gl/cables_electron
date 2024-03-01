@@ -21,7 +21,7 @@
     "pack:mac": "electron-builder -m --dir",
     "pack:win": "electron-builder -w --dir",
     "pack:linux": "electron-builder -l --dir",
-    "dist": "electron-builder -ml",
+    "dist": "electron-builder -mwl",
     "dist:mac": "electron-builder -m",
     "dist:win": "electron-builder -w",
     "dist:linux": "electron-builder -l"
