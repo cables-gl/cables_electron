@@ -1,6 +1,7 @@
 {
   "env": "electron",
   "path": {
+    "uiDist": "../ui/",
     "ops": "../ops/",
     "assets": "../public/assets/",
     "libs": "../public/libs/",

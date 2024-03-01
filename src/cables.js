@@ -73,6 +73,12 @@ class CablesStandalone extends Cables
         return path.join(store.getCurrentProjectDir(), "/ops/patches/");
     }
 
+    getProjectOpsPath()
+    {
+        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath());
+        return path.join(store.getCurrentProjectDir(), "/ops/");
+    }
+
     _createDirectories()
     {
         if (!fs.existsSync(this.getGenPath())) mkdirp.sync(this.getGenPath());

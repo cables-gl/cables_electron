@@ -6,6 +6,8 @@ import jsonfile from "jsonfile";
 import crypto from "crypto";
 import pako from "pako";
 import mkdirp from "mkdirp";
+import { addDependency, } from "nypm";
+
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
@@ -25,6 +27,7 @@ class ElectronEndpoint
         this._log = logger;
         this._store = store;
         this._store.set("currentUser", this.getCurrentUser());
+        this._store.set("uiDistPath", cables.getUiDistPath());
     }
 
     init()
@@ -39,7 +42,6 @@ class ElectronEndpoint
             event.returnValue = this._store.data;
         });
 
-        global.handleTalkerMessage = this.talkerMessage;
         protocol.handle("cables", (request) =>
         {
             const url = new URL(request.url);
@@ -1058,112 +1060,44 @@ class ElectronEndpoint
     {
         const opName = data.opname;
         const currentUser = this.getCurrentUser();
-        const opExists = opsUtil.opExists(opName);
-        let rebuildOpDocs = !opExists;
+        return { "data": opsUtil.updateOp(currentUser, opName, data.updates, { "formatCode": data.formatCode }) };
+    }
 
-        const updates = data.update;
-        if (updates)
+    opSaveLayout(data)
+    {
+        const opName = data.opname;
+        const layout = data.layout;
+        return opsUtil.saveLayout(opName, layout);
+    }
+
+    opClone(data)
+    {
+        const newName = data.name;
+        const oldName = data.opname;
+        const currentUser = this.getCurrentUser();
+        return opsUtil.cloneOp(oldName, newName, currentUser);
+    }
+
+    installProjectDependencies(data)
+    {
+        const currentProjectDir = store.getCurrentProjectDir();
+        const opsDir = cables.getProjectOpsPath();
+        const packageFiles = helper.getFilesRecursive(opsDir, "package-lock.json");
+        const fileNames = Object.keys(packageFiles);
+        const toInstall = [];
+        fileNames.forEach((packageFile) =>
         {
-            const result = {};
-            const changelogMessages = [];
-            const keys = Object.keys(updates);
-            if (keys.length > 0)
+            const fileContents = packageFiles[packageFile];
+            const fileJson = JSON.parse(fileContents);
+            const deps = fileJson.packages[""].dependencies;
+            Object.keys(deps).forEach((lib) =>
             {
-                const jsonFile = opsUtil.getOpJsonPath(opName, !opExists);
-                let attProblems = null;
-                for (let i = 0; i < keys.length; i++)
-                {
-                    const key = keys[i];
-                    if (key !== null && key !== undefined)
-                    {
-                        switch (key)
-                        {
-                        case "code":
-                            let code = updates.code;
-                            const format = opsUtil.validateAndFormatOpCode(code);
-                            if (format.error)
-                            {
-                                const {
-                                    line,
-                                    message
-                                } = format.message;
-                                this._log.info({
-                                    line,
-                                    message
-                                });
-                                return;
-                            }
-
-                            const formatedCode = format.formatedCode;
-                            if (opsUtil.existingCoreOp(opName) || data.formatCode)
-                            {
-                                code = formatedCode;
-                            }
-                            result.code = opsUtil.updateOpCode(opName, currentUser, updates.code);
-                            rebuildOpDocs = true;
-                            break;
-                        case "layout":
-                            const obj = jsonfile.readFileSync(jsonFile);
-                            obj.layout = updates.layout;
-                            if (obj.layout && obj.layout.name) delete obj.layout.name;
-                            jsonfile.writeFileSync(jsonFile, obj, {
-                                "encoding": "utf-8",
-                                "spaces": 4
-                            });
-                            result.layout = obj.layout;
-                            rebuildOpDocs = true;
-                            break;
-                        case "attachments":
-                            result.attachments = {};
-                            attProblems = opsUtil.updateAttachments(opName, updates.attachments);
-                            result.attachments = opsUtil.getAttachments(opName);
-                            break;
-                        case "libs":
-                            result.libs = [];
-                            const newLibNames = updates.libs;
-                            opsUtil.updateLibs(opName, newLibNames);
-                            result.libs = opsUtil.getOpLibs(opName);
-                            changelogMessages.push(" updated libs: " + newLibNames.join(","));
-                            rebuildOpDocs = true;
-                            break;
-                        case "coreLibs":
-                            result.coreLibs = [];
-                            const newCoreLibNames = updates.coreLibs;
-                            opsUtil.updateCoreLibs(opName, newCoreLibNames);
-                            result.coreLibs = opsUtil.getOpCoreLibs(opName);
-                            changelogMessages.push(" updated core libs: " + newCoreLibNames.join(","));
-                            rebuildOpDocs = true;
-                            break;
-                        }
-                    }
-                }
-                if (changelogMessages.length > 0)
-                {
-                    opsUtil.addOpChangeLogMessages(currentUser, opName, changelogMessages, "");
-                }
-                if (rebuildOpDocs)
-                {
-                    doc.updateOpDocs(opName);
-                }
-
-                if (!attProblems)
-                {
-                    return { "data": result };
-                }
-                else
-                {
-                    return attProblems;
-                }
-            }
-            else
-            {
-                return null;
-            }
-        }
-        else
-        {
-            return null;
-        }
+                const ver = deps[lib];
+                const semVer = lib + "@" + ver;
+                toInstall.push(addDependency(semVer, { "cwd": currentProjectDir }));
+            });
+        });
+        return Promise.all(toInstall);
     }
 }
 export default new ElectronEndpoint();

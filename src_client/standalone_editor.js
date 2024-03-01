@@ -67,7 +67,9 @@ export default class ElectronEditor
             "checkOpName",
             "getRecentPatches",
             "opCreate",
-            "opUpdate"
+            "opUpdate",
+            "opSaveLayout",
+            "opClone"
         ];
 
         talkerTopics.forEach((talkerTopic) =>

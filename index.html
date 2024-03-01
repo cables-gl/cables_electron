@@ -29,17 +29,49 @@
         style="width:100%;height:100%;border:0px;position:absolute"></iframe>
 
 <script type="module">
-    const { ipcRenderer } = nodeRequire("electron");
-    window.ipcRenderer = ipcRenderer;
-    const store = ipcRenderer.sendSync("store");
+    const path = nodeRequire("path");
+    const electron = nodeRequire("electron");
+    const module = nodeRequire("module");
+    window.ipcRenderer = electron.ipcRenderer; // needed to have ipcRenderer ins standalone_editor.js
+    const store = electron.ipcRenderer.sendSync("store");
 
     document.addEventListener('DOMContentLoaded', () => {
         const editorIframe = document.getElementById("editorIframe");
-        let src = "ui/index.html" + window.location.search;
+        let src = path.join(store.uiDistPath, "index.html") + window.location.search;
         if (window.location.hash) {
             src = src + window.location.hash;
         }
         editorIframe.src = src;
+        editorIframe.onload = () => {
+            const iframeWindow = editorIframe.contentWindow;
+            if(iframeWindow && iframeWindow.loadjs)
+            {
+                const iframeCables = iframeWindow.CABLES;
+                iframeWindow.loadjs.ready("cables_core", (depsNotFound) => {
+                    if(!depsNotFound && (iframeCables && iframeCables.Op)) {
+                        iframeCables.Op.prototype.require = (moduleName) =>
+                        {
+                            if(moduleName === "electron") return electron;
+                            try
+                            {
+                                const modulePath = path.join(store.currentPatchDir, 'node_modules', moduleName);
+                                console.log("trying to load", modulePath);
+                                return window.nodeRequire(modulePath);
+                            } catch (e)
+                            {
+                                console.error("failed to load node module \"" + moduleName + "\" do you need to run `npm install`?");
+                                return "";
+                            }
+                        }
+                    }
+                });
+                iframeWindow.loadjs.ready("cablesuinew", (depsNotFound) => {
+                    iframeCables.CMD.STANDALONE = standaloneCommands.functions;
+                    iframeCables.CMD.commands = iframeCables.CMD.commands.concat(standaloneCommands.commands);
+                });
+            }
+        }
+
 
         window.addEventListener("message", (event) => {
             if (event.data && event.data.type === "hashchange") {

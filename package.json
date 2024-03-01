@@ -52,7 +52,12 @@
       ]
     },
     "win": {
-      "sign": false,
+       "target": {
+           "target": "zip",
+         "arch": [
+               "x64"
+         ]
+     },
       "verifyUpdateCodeSignature": false,
       "signAndEditExecutable": false,
       "certificateFile": null
@@ -66,7 +71,8 @@
     "jsonfile": "6.1.0",
     "cables-shared-api": "file:../shared/api",
     "cables-shared-client": "file:../shared/client",
-    "sanitize-filename": "1.6.3"
+    "sanitize-filename": "1.6.3",
+    "nypm": "0.3.6"
   },
   "devDependencies": {
     "electron": "29.1.0",
