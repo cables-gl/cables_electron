@@ -62,14 +62,6 @@ jobs:
         with:
           key: nvm
           path: ~/mynvm/versions
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ env.releaseName }}
-          draft: true
-          prerelease: true
       - name: build standalone
         run: ./hook_standalone.sh
         env:
