@@ -30,7 +30,6 @@
     "productName": "cables",
     "appId": "gl.cables.standalone",
     "nodeVersion": "18.14.2",
-    "electronLanguages": "en",
     "files": [
       "**/*",
       "!gulpfile.js",
