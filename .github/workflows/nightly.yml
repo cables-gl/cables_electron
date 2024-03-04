@@ -43,7 +43,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'npm'
+          cache: 'npm-linux'
           check-latest: false
       - name: checkout cables standalone
         uses: actions/checkout@v4
@@ -56,11 +56,6 @@ jobs:
           path: |
             ~/.cache/electron
             ~/.cache/electron-builder
-      - name: Configure npm caches
-        uses: actions/cache@v3
-        with:
-          key: npm-linux
-          path: ~/.npm
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh linux
@@ -105,18 +100,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'npm'
+          cache: 'npm-win'
           check-latest: false
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
           key: electron-builder-windows
           path: ~/AppData/Local/electron/Cache/
-      - name: Configure npm caches
-        uses: actions/cache@v3
-        with:
-          key: npm-windows
-          path: ~/AppData/Local/npm
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh win
@@ -161,7 +151,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'npm'
+          cache: 'npm-mac'
           check-latest: false
       - name: Configure electron cache
         uses: actions/cache@v3
@@ -170,11 +160,6 @@ jobs:
           path: |
             ~/Library/Caches/electron
             ~/Library/Caches/electron-builder
-      - name: Configure npm caches
-        uses: actions/cache@v3
-        with:
-          key: npm-mac
-          path: ~/.npm
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh mac
