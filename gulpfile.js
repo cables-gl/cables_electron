@@ -80,6 +80,7 @@ function _ui_copy()
 
 function _editor_scripts_webpack(done)
 {
+    console.log("DIRNAME", __dirname, decodeURIComponent(new URL(".", import.meta.url).pathname));
     return gulp.src(["src_client/index_standalone.js"])
         .pipe(
             webpack(
