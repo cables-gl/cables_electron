@@ -65,6 +65,7 @@ jobs:
           key: nvm
           path: ~/mynvm/versions
       - name: build standalone
+        shell: bash
         run: ./hook_standalone.sh linux
         env:
           SETUP_NODE_NVM_NVM: "/home/runner/mynvm/nvm.sh"
@@ -126,6 +127,7 @@ jobs:
           key: nvm
           path: ~/mynvm/versions
       - name: build standalone
+        shell: bash
         run: ./hook_standalone.sh win
         env:
           SETUP_NODE_NVM_NVM: "/Users/runner/mynvm/nvm.sh"
@@ -187,6 +189,7 @@ jobs:
           key: nvm
           path: ~/mynvm/versions
       - name: build standalone
+        shell: bash
         run: ./hook_standalone.sh mac
         env:
           SETUP_NODE_NVM_NVM: "/Users/runner/mynvm/nvm.sh"
