@@ -83,7 +83,6 @@
     "sanitize-filename": "1.6.3"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.6.0",
     "electron": "29.1.0",
     "electron-builder": "24.13.2",
     "git-repo-info": "2.1.1",
