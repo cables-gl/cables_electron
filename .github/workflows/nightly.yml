@@ -65,7 +65,7 @@ jobs:
       - name: build standalone
         run: ./hook_standalone.sh linux
         env:
-          SETUP_NODE_NVM_NVM: "/Users/runner/mynvm/nvm.sh"
+          SETUP_NODE_NVM_NVM: "/home/runner/mynvm/nvm.sh"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_win:
@@ -104,13 +104,10 @@ jobs:
           path: "cables_electron/"
       - name: install python
         uses: actions/setup-python@v5
-      - name: Read .nvmrc
-        id: nvm
-        run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
       - name: install nodejs
         uses: dcodeIO/setup-node-nvm@master
         with:
-          node-version: "${{ steps.nvm.outputs.NVMRC }}"
+          node-version: "18.14.2"
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
