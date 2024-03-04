@@ -4,6 +4,7 @@ import { app } from "electron";
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
+import { fileURLToPath } from "url";
 import logger from "./utils/logger.js";
 import store from "./electron/electron_store.js";
 
@@ -90,4 +91,4 @@ class CablesStandalone extends Cables
         if (!fs.existsSync(this.getOpLookupFile())) fs.writeFileSync(this.getOpLookupFile(), JSON.stringify({ "names": {}, "ids": {} }));
     }
 }
-export default new CablesStandalone(utilProvider, decodeURIComponent(new URL(".", import.meta.url).pathname), app.getPath("userData"));
+export default new CablesStandalone(utilProvider, fileURLToPath(new URL(".", import.meta.url).pathname), app.getPath("userData"));
