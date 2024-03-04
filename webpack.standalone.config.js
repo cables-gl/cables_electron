@@ -11,7 +11,7 @@ export default (isLiveBuild, buildInfo) =>
             "scripts.standalone.js": [path.join(__dirname, "src_client", "index_standalone.js")]
         },
         "output": {
-            "path": path.join(__dirname, "public", "js"),
+            "path": path.resolve(path.join(__dirname, "public", "js")),
             "filename": "[name]",
         },
         "stats": isLiveBuild,
