@@ -9,7 +9,7 @@ export default (isLiveBuild, buildInfo) =>
         "mode": isLiveBuild ? "production" : "development",
         "devtool": isLiveBuild ? "source-map" : "eval-cheap-module-source-map",
         "entry": {
-            "scripts.standalone.js": [path.join("./src_client", "index_standalone.js")]
+            "scripts.standalone.js": [path.resolve("./src_client", "index_standalone.js")]
         },
         "output": {
             "path": path.resolve("./public", "js"),
