@@ -39,6 +39,11 @@ jobs:
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
           path: "cables_ui/"
+      - name: install nodejs
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
       - name: checkout cables standalone
         uses: actions/checkout@v4
         with:
@@ -118,7 +123,6 @@ jobs:
         shell: bash
         run: ./hook_standalone.sh win
         env:
-          SETUP_NODE_NVM_NVM: D:\a\_actions\dcodeIO\setup-node-nvm\master\mynvm\nvm
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_mac:
@@ -155,15 +159,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: "cables_electron/"
-      - name: Read .nvmrc
-        id: nvm
-        uses: andstor/file-reader-action@v1
-        with:
-          path: ".nvmrc"
       - name: install nodejs
-        uses: dcodeIO/setup-node-nvm@master
+        uses: actions/setup-node@v4
         with:
-            node-version: "${{ steps.nvm.outputs.contents }}"
+          node-version-file: ".nvmrc"
+          cache: 'npm'
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
