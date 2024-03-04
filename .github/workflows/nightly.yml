@@ -52,18 +52,15 @@ jobs:
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
-          key: electron-builder
-          path: ~/Library/Caches/electron-builder
-      - name: Configure nvm caches
-        uses: actions/cache@v3
-        with:
-          key: nvm
-          path: ~/.nvm/versions
+          key: electron-builder-linux
+          path:
+            - ~/.cache/electron
+            - ~/.cache/electron-builder
       - name: Configure npm caches
         uses: actions/cache@v3
         with:
-          key: npm
-          path: ~/.npm/
+          key: npm-linux
+          path: ~/.npm
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh linux
@@ -112,13 +109,13 @@ jobs:
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
-          key: electron-builder
-          path: ~/Library/Caches/electron-builder
-      - name: Configure nvm caches
+          key: electron-builder-windows
+          path: ~/AppData/Local/electron/Cache/
+      - name: Configure npm caches
         uses: actions/cache@v3
         with:
-          key: nvm
-          path: ~/mynvm/versions
+          key: npm-windows
+          path: ~/AppData/Local/npm
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh win
@@ -168,13 +165,15 @@ jobs:
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
-          key: electron-builder
-          path: ~/Library/Caches/electron-builder
-      - name: Configure nvm caches
+          key: electron-builder-mac
+          path:
+            - ~/Library/Caches/electron
+            - ~/Library/Caches/electron-builder
+      - name: Configure npm caches
         uses: actions/cache@v3
         with:
-          key: nvm
-          path: ~/mynvm/versions
+          key: npm-mac
+          path: ~/.npm
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh mac
