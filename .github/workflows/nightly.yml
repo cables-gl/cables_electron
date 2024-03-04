@@ -53,9 +53,9 @@ jobs:
         uses: actions/cache@v3
         with:
           key: electron-builder-linux
-          path:
-            - ~/.cache/electron
-            - ~/.cache/electron-builder
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
       - name: Configure npm caches
         uses: actions/cache@v3
         with:
@@ -166,9 +166,9 @@ jobs:
         uses: actions/cache@v3
         with:
           key: electron-builder-mac
-          path:
-            - ~/Library/Caches/electron
-            - ~/Library/Caches/electron-builder
+          path: |
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
       - name: Configure npm caches
         uses: actions/cache@v3
         with:
