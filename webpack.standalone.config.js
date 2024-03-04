@@ -4,16 +4,15 @@ import webpack from "webpack";
 export default (isLiveBuild, buildInfo) =>
 {
     const __dirname = new URL(".", import.meta.url).pathname;
-    console.log("DIRNAME", __dirname);
+    console.log("DIRNAMES", __dirname, path.join("./src_client", "index.js"), path.resolve("./public", "js"));
     return {
-        "context": __dirname,
         "mode": isLiveBuild ? "production" : "development",
         "devtool": isLiveBuild ? "source-map" : "eval-cheap-module-source-map",
         "entry": {
-            "scripts.standalone.js": [path.resolve(__dirname, "src_client", "index_standalone.js")]
+            "scripts.standalone.js": [path.join("./src_client", "index_standalone.js")]
         },
         "output": {
-            "path": path.resolve(__dirname, "public", "js"),
+            "path": path.resolve("./public", "js"),
             "filename": "[name]",
         },
         "stats": isLiveBuild,
