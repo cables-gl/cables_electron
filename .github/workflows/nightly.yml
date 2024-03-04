@@ -44,6 +44,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
+          check-latest: false
       - name: checkout cables standalone
         uses: actions/checkout@v4
         with:
@@ -105,6 +106,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
+          check-latest: false
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
@@ -122,7 +124,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_mac:
-    if: false
     runs-on: macos-14
     steps:
       - name: checkout cables_dev
@@ -161,6 +162,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: 'npm'
+          check-latest: false
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
