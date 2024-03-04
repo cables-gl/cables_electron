@@ -130,7 +130,7 @@ jobs:
         shell: bash
         run: ./hook_standalone.sh win
         env:
-          SETUP_NODE_NVM_NVM: D:\a\_actions\dcodeIO\setup-node-nvm\master\mynvm\nvm.sh
+          SETUP_NODE_NVM_NVM: D:\a\_actions\dcodeIO\setup-node-nvm\master\mynvm\nvm
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_mac:
