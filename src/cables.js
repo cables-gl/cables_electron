@@ -91,4 +91,4 @@ class CablesStandalone extends Cables
         if (!fs.existsSync(this.getOpLookupFile())) fs.writeFileSync(this.getOpLookupFile(), JSON.stringify({ "names": {}, "ids": {} }));
     }
 }
-export default new CablesStandalone(utilProvider, fileURLToPath(new URL(".", import.meta.url).pathname), app.getPath("userData"));
+export default new CablesStandalone(utilProvider, fileURLToPath(new URL(".", import.meta.url)), app.getPath("userData"));
