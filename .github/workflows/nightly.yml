@@ -47,11 +47,13 @@ jobs:
         uses: actions/setup-python@v5
       - name: Read .nvmrc
         id: nvm
-        run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
+        uses: andstor/file-reader-action@v1
+        with:
+          path: ".nvmrc"
       - name: install nodejs
         uses: dcodeIO/setup-node-nvm@master
         with:
-          node-version: "${{ steps.nvm.outputs.NVMRC }}"
+          node-version: "${{ steps.nvm.outputs.contents }}"
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
@@ -104,10 +106,15 @@ jobs:
           path: "cables_electron/"
       - name: install python
         uses: actions/setup-python@v5
+      - name: Read .nvmrc
+        id: nvm
+        uses: andstor/file-reader-action@v1
+        with:
+          path: ".nvmrc"
       - name: install nodejs
         uses: dcodeIO/setup-node-nvm@master
         with:
-          node-version: "18.14.2"
+          node-version: "${{ steps.nvm.outputs.contents }}"
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
@@ -162,11 +169,13 @@ jobs:
         uses: actions/setup-python@v5
       - name: Read .nvmrc
         id: nvm
-        run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
+        uses: andstor/file-reader-action@v1
+        with:
+          path: ".nvmrc"
       - name: install nodejs
         uses: dcodeIO/setup-node-nvm@master
         with:
-            node-version: "${{ steps.nvm.outputs.NVMRC }}"
+            node-version: "${{ steps.nvm.outputs.contents }}"
       - name: Configure electron cache
         uses: actions/cache@v3
         with:
