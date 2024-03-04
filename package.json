@@ -51,15 +51,22 @@
       ]
     },
     "win": {
-      "target": {
-        "target": "zip",
-        "arch": [
-          "x64"
-        ]
-      },
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "verifyUpdateCodeSignature": false,
-      "signAndEditExecutable": false,
-      "certificateFile": null
+      "signAndEditExecutable": false
     },
     "publish": [
       "github"
