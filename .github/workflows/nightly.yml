@@ -9,7 +9,125 @@ env:
   releaseName: ${{ github.run_number }}-dev
 
 jobs:
-  build:
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout cables_dev
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_dev"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+      - name: checkout cables
+        uses: actions/checkout@v4
+        with:
+          repository: "pandrr/cables"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: "cables/"
+      - name: checkout extensions
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_extensionops"
+          ref: "main"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: "cables/src/ops/extensions"
+      - name: checkout cables ui
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_ui"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: "cables_ui/"
+      - name: checkout cables standalone
+        uses: actions/checkout@v4
+        with:
+          path: "cables_electron/"
+      - name: install python
+        uses: actions/setup-python@v5
+      - name: Read .nvmrc
+        id: nvm
+        run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
+      - name: install nodejs
+        uses: dcodeIO/setup-node-nvm@master
+        with:
+          node-version: "${{ steps.nvm.outputs.NVMRC }}"
+      - name: Configure electron cache
+        uses: actions/cache@v3
+        with:
+          key: electron-builder
+          path: ~/Library/Caches/electron-builder
+      - name: Configure nvm caches
+        uses: actions/cache@v3
+        with:
+          key: nvm
+          path: ~/mynvm/versions
+      - name: build standalone
+        run: ./hook_standalone.sh linux
+        env:
+          SETUP_NODE_NVM_NVM: "/Users/runner/mynvm/nvm.sh"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_VERSION: ${{ env.releaseName }}
+  build_win:
+    runs-on:windows-latest
+  steps:
+    - name: checkout cables_dev
+      uses: actions/checkout@v4
+      with:
+        repository: "undev-studio/cables_dev"
+        ref: "develop"
+        token: ${{ SECRETS.STANDALONE_TOKEN }}
+    - name: checkout cables
+      uses: actions/checkout@v4
+      with:
+        repository: "pandrr/cables"
+        ref: "develop"
+        token: ${{ SECRETS.STANDALONE_TOKEN }}
+        path: "cables/"
+    - name: checkout extensions
+      uses: actions/checkout@v4
+      with:
+        repository: "undev-studio/cables_extensionops"
+        ref: "main"
+        token: ${{ SECRETS.STANDALONE_TOKEN }}
+        path: "cables/src/ops/extensions"
+    - name: checkout cables ui
+      uses: actions/checkout@v4
+      with:
+        repository: "undev-studio/cables_ui"
+        ref: "develop"
+        token: ${{ SECRETS.STANDALONE_TOKEN }}
+        path: "cables_ui/"
+    - name: checkout cables standalone
+      uses: actions/checkout@v4
+      with:
+        path: "cables_electron/"
+    - name: install python
+      uses: actions/setup-python@v5
+    - name: Read .nvmrc
+      id: nvm
+      run: echo "NVMRC=`cat .nvmrc`" >> $GITHUB_OUTPUT
+    - name: install nodejs
+      uses: dcodeIO/setup-node-nvm@master
+      with:
+        node-version: "${{ steps.nvm.outputs.NVMRC }}"
+    - name: Configure electron cache
+      uses: actions/cache@v3
+      with:
+        key: electron-builder
+        path: ~/Library/Caches/electron-builder
+    - name: Configure nvm caches
+      uses: actions/cache@v3
+      with:
+        key: nvm
+        path: ~/mynvm/versions
+    - name: build standalone
+      run: ./hook_standalone.sh win
+      env:
+        SETUP_NODE_NVM_NVM: "/Users/runner/mynvm/nvm.sh"
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPM_CONFIG_VERSION: ${{ env.releaseName }}
+  build_mac:
     runs-on: macos-14
     steps:
       - name: checkout cables_dev
@@ -63,7 +181,7 @@ jobs:
           key: nvm
           path: ~/mynvm/versions
       - name: build standalone
-        run: ./hook_standalone.sh
+        run: ./hook_standalone.sh mac
         env:
           SETUP_NODE_NVM_NVM: "/Users/runner/mynvm/nvm.sh"
           CSC_LINK: "${{ secrets.APPLE_CERT }}"
