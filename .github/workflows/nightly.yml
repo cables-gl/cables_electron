@@ -122,8 +122,6 @@ jobs:
           repository: "undev-studio/cables_dev"
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
-      - name: remove global node
-        run: brew uninstall --force node
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
@@ -132,13 +130,11 @@ jobs:
       - name: debug
         run: node --version
       - name: debug2
-        run: echo "$(which node)" "$(which node)js"
-      - name: Symlink node as nodejs
-        run: ln -sf "$(which node)" "$(which node)js"
+        run: echo "$(which node)"
       - name: debug3
-        run: node --version && nodejs --version
+        run: node --version
       - name: debug4
-        run: echo "$(which node)" "$(which nodejs)"
+        run: echo "$(which node)"
       - name: build standalone
         run: ./hook_standalone.sh mac
         env:
