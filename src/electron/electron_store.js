@@ -3,7 +3,7 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import { app } from "electron";
 import helper from "../utils/helper_util.js";
-
+import logger from "../utils/logger.js";
 class ElectronStore
 {
     constructor(storageDir)
@@ -95,7 +95,7 @@ class ElectronStore
         return value;
     }
 
-    setCurrentPatchDir(value)
+    setCurrentProjectDir(value)
     {
         if (value && !value.endsWith("/")) value += "/";
         this.set(this.CURRENTPATCHDIR_FIELD, value);
@@ -104,9 +104,10 @@ class ElectronStore
     getCurrentProject()
     {
         const file = this.getPatchFile();
+        logger.debug("getting current project from", file);
         if (file && fs.existsSync(file))
         {
-            return JSON.parse(fs.readFileSync(this.getPatchFile()));
+            return JSON.parse(fs.readFileSync(file));
         }
         else
         {

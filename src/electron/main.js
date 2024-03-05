@@ -79,6 +79,7 @@ class ElectronApp
                 if (!result.canceled)
                 {
                     const selectedPath = result.filePaths[0];
+                    console.log("SELECTED PATH", selectedPath);
                     const isDir = fs.lstatSync(selectedPath).isDirectory();
                     if (isDir)
                     {
@@ -86,7 +87,7 @@ class ElectronApp
                         const projectFile = dirFiles.find((file) => { return path.basename(file).endsWith(this.cablesFileExtension); });
                         if (projectFile)
                         {
-                            this._switchPatch(projectFile);
+                            this._switchPatch(path.join(selectedPath, projectFile));
                         }
                         else
                         {
@@ -126,6 +127,7 @@ class ElectronApp
                 if (!result.canceled)
                 {
                     const selectedPath = result.filePaths[0];
+                    console.log("SELECTED PATH", selectedPath);
                     const isDir = fs.lstatSync(selectedPath).isDirectory();
                     if (isDir)
                     {
@@ -133,7 +135,7 @@ class ElectronApp
                         const projectFile = dirFiles.find((file) => { return path.basename(file).endsWith(this.cablesFileExtension); });
                         if (projectFile)
                         {
-                            this._switchPatch(projectFile);
+                            this._switchPatch(path.join(selectedPath, projectFile));
                         }
                         else
                         {
@@ -242,6 +244,7 @@ class ElectronApp
 
     _switchPatch(newPatchFileOrDir, createNewProject = false)
     {
+        logger.debug("SWITCH TO", newPatchFileOrDir, createNewProject);
         if (createNewProject)
         {
             this._createNewCurrentProject(newPatchFileOrDir);
@@ -250,7 +253,7 @@ class ElectronApp
         {
             store.setPatchFile(newPatchFileOrDir);
             let newPatchDir = path.dirname(newPatchFileOrDir);
-            store.setCurrentPatchDir(newPatchDir);
+            store.setCurrentProjectDir(newPatchDir);
         }
         doc.rebuildOpCaches(() =>
         {
@@ -259,12 +262,14 @@ class ElectronApp
         }, ["core", "teams", "extensions", "users", "patches"]);
     }
 
-    _createNewCurrentProject(newPatchFileOrDir)
+    _createNewCurrentProject(newDir)
     {
         const newProject = store.getNewProject();
-        store.setCurrentPatchDir(newPatchFileOrDir);
+        logger.debug("setting new project dir to", newDir);
+        store.setCurrentProjectDir(newDir);
         const projectFileName = sanitizeFileName(newProject.name).replace(/ /g, "_") + ".cables.json";
         const newProjectFile = path.join(store.getCurrentProjectDir(), projectFileName);
+        logger.debug("new projectfile", store.getCurrentProjectDir(), projectFileName, newProjectFile);
         store.setPatchFile(newProjectFile);
         jsonfile.writeFileSync(newProjectFile, newProject, { "encoding": "utf-8", "spaces": 4 });
     }
