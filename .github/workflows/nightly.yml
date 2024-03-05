@@ -10,6 +10,7 @@ env:
 
 jobs:
   build_linux:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: checkout cables_dev
@@ -114,6 +115,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_mac:
+    if: false
     runs-on: macos-14
     steps:
       - name: checkout cables_dev
