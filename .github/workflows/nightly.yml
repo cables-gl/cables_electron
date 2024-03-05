@@ -122,22 +122,15 @@ jobs:
           repository: "undev-studio/cables_dev"
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
-      - name: uninstall global node
-        run: |
-          brew uninstall --ignore-dependencies --force node
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
           node-version: "18.14.2"
           check-latest: false
-      - name: debug
-        run: node --version
-      - name: debug2
-        run: echo "$(which node)"
-      - name: debug3
-        run: node --version
-      - name: debug4
-        run: echo "$(which node)"
+      - name: get node path
+        run: echo "NODE_EXE=$(which node)" >> $GITHUB_OUTPUT
+      - name: get npm path
+        run: echo "NPM_EXE=$(which npm)" >> $GITHUB_OUTPUT
       - name: build standalone
         run: ./hook_standalone.sh mac
         env:
