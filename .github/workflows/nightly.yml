@@ -10,7 +10,6 @@ env:
 
 jobs:
   build_linux:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: checkout cables_dev
@@ -63,7 +62,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build_win:
-    if: false
     runs-on: windows-latest
     steps:
       - name: checkout cables_dev
@@ -117,6 +115,31 @@ jobs:
           repository: "undev-studio/cables_dev"
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
+      - name: checkout cables
+        uses: actions/checkout@v4
+        with:
+          repository: "pandrr/cables"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: "cables/"
+      - name: checkout extensions
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_extensionops"
+          ref: "main"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: "cables/src/ops/extensions"
+      - name: checkout cables ui
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_ui"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          path: "cables_ui/"
+      - name: checkout cables standalone
+        uses: actions/checkout@v4
+        with:
+          path: "cables_electron/"
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
