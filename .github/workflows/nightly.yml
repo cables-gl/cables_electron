@@ -122,6 +122,11 @@ jobs:
           repository: "undev-studio/cables_dev"
           ref: "develop"
           token: ${{ SECRETS.STANDALONE_TOKEN }}
+      - name: uninstall global node
+        run: |
+          brew uninstall --force node
+          brew doctor
+          brew cleanup --prune-prefix
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
