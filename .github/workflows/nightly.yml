@@ -43,19 +43,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: "npm"
           check-latest: false
       - name: checkout cables standalone
         uses: actions/checkout@v4
         with:
           path: "cables_electron/"
-      - name: Configure electron cache
-        uses: actions/cache@v4
-        with:
-          key: electron-builder-linux
-          path: |
-            ~/.cache/electron
-            ~/.cache/electron-builder
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh linux
@@ -99,7 +91,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: "npm"
           check-latest: false
       - name: build standalone
         shell: bash
@@ -144,7 +135,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18.14.2"
-          cache: "npm"
           check-latest: false
       - name: get node path
         id: local_node
