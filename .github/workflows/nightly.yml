@@ -138,7 +138,6 @@ jobs:
       - name: debug4
         run: echo "$(which node)" "$(which nodejs)"
       - name: build standalone
-        shell: bash
         run: ./hook_standalone.sh mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
