@@ -155,5 +155,7 @@ jobs:
         run: ./hook_standalone.sh mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: "${{ secrets.APPLE_CERT }}"
+          CSC_KEY_PASSWORD: "${{ secrets.APPLE_CERT_PASS }}"
           NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
           NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
