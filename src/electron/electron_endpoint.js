@@ -6,7 +6,7 @@ import jsonfile from "jsonfile";
 import crypto from "crypto";
 import pako from "pako";
 import mkdirp from "mkdirp";
-import { addDependency, } from "nypm";
+import { addDependency } from "nypm";
 
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
@@ -18,7 +18,13 @@ import store from "./electron_store.js";
 import electronApp from "./main.js";
 import projectsUtil from "../utils/projects_util.js";
 
-protocol.registerSchemesAsPrivileged([{ "scheme": "cables", "privileges": { "bypassCSP": true, "supportFetchAPI": true } }]);
+protocol.registerSchemesAsPrivileged([{
+    "scheme": "cables",
+    "privileges": {
+        "bypassCSP": true,
+        "supportFetchAPI": true
+    }
+}]);
 
 class ElectronEndpoint
 {
@@ -68,7 +74,10 @@ class ElectronEndpoint
             }
             else if (urlPath === "/api/changelog")
             {
-                return new Response(JSON.stringify({ "ts": Date.now(), "items": [] }), {
+                return new Response(JSON.stringify({
+                    "ts": Date.now(),
+                    "items": []
+                }), {
                     "headers": { "content-type": "application/json" }
                 });
             }
@@ -80,21 +89,23 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/ops/code/project"))
             {
-                return this.getProjectOpsCode().then((code) =>
-                {
-                    return new Response(code, {
-                        "headers": { "content-type": "application/json" }
+                return this.getProjectOpsCode()
+                    .then((code) =>
+                    {
+                        return new Response(code, {
+                            "headers": { "content-type": "application/json" }
+                        });
                     });
-                });
             }
             else if (urlPath.startsWith("/api/ops/code"))
             {
-                return this.getCoreOpsCode().then((code) =>
-                {
-                    return new Response(code, {
-                        "headers": { "content-type": "application/javascript" }
+                return this.getCoreOpsCode()
+                    .then((code) =>
+                    {
+                        return new Response(code, {
+                            "headers": { "content-type": "application/javascript" }
+                        });
                     });
-                });
             }
             else if (urlPath.startsWith("/api/op/"))
             {
@@ -187,55 +198,63 @@ class ElectronEndpoint
 
     savePatch(patch)
     {
-        const project = this.getPatch();
-        if (patch.data || patch.dataB64)
-        {
-            try
-            {
-                let buf = patch.data;
-                if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
-
-                const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
-
-                if (qData.ops) project.ops = qData.ops;
-                if (qData.ui) project.ui = qData.ui;
-            }
-            catch (e)
-            {
-                this._log.error("patch save error/invalid data", e);
-                return;
-            }
-        }
-        else
-        {
-            this._log.error("body does not contain patch data");
-        }
-
-        // filter imported ops, so we do not save these to the database
-        project.ops = project.ops.filter((op) =>
-        {
-            return !(op.storage && op.storage.blueprint);
-        });
-
-        project.updated = new Date();
-
-        project.opsHash = crypto
-            .createHash("sha1")
-            .update(JSON.stringify(project.ops))
-            .digest("hex");
-        project.buildInfo = patch.buildInfo;
-
-        const patchPath = this._store.getPatchFile();
-        jsonfile.writeFileSync(patchPath, project);
-
+        const currentProject = this.getCurrentProject();
         const re = {
             "success": true,
             "msg": "PROJECT_SAVED"
         };
-        re.updated = project.updated;
-        re.updatedByUser = project.updatedByUser;
+        if (!currentProject)
+        {
+            electronApp.savePatchDialog();
+            return re;
+        }
+        else
+        {
+            if (patch.data || patch.dataB64)
+            {
+                try
+                {
+                    let buf = patch.data;
+                    if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
 
-        return re;
+                    const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
+
+                    if (qData.ops) currentProject.ops = qData.ops;
+                    if (qData.ui) currentProject.ui = qData.ui;
+                }
+                catch (e)
+                {
+                    this._log.error("patch save error/invalid data", e);
+                    return;
+                }
+            }
+            else
+            {
+                this._log.error("body does not contain patch data");
+            }
+
+            // filter imported ops, so we do not save these to the database
+            currentProject.ops = currentProject.ops.filter((op) =>
+            {
+                return !(op.storage && op.storage.blueprint);
+            });
+
+            currentProject.updated = new Date();
+
+            currentProject.opsHash = crypto
+                .createHash("sha1")
+                .update(JSON.stringify(currentProject.ops))
+                .digest("hex");
+            currentProject.buildInfo = patch.buildInfo;
+
+            const patchPath = this._store.getPatchFile();
+            jsonfile.writeFileSync(patchPath, currentProject);
+
+            re.updated = currentProject.updated;
+            re.updatedByUser = currentProject.updatedByUser;
+
+            return re;
+        }
     }
 
     getPatch(data)
@@ -249,9 +268,13 @@ class ElectronEndpoint
         }
         else
         {
+            const randomId = helper.generateRandomId();
+            const shortId = helper.generateShortId(randomId, Date.now());
             return {
-                "ops": [],
-                "shortId": "invalid"
+                "_id": randomId,
+                "shortId": shortId,
+                "name": "new project",
+                "ops": []
             };
         }
     }
@@ -261,7 +284,7 @@ class ElectronEndpoint
         const currentUser = this.getCurrentUser();
         let name = data.name || "new offline project";
         this._log.info("project", "created", name);
-        const id = this._generateRandomId();
+        const id = helper.generateRandomId();
         const newFile = path.join(this._store.getCurrentProjectDir(), id + ".json");
         const project = {
             "_id": id,
@@ -824,20 +847,34 @@ class ElectronEndpoint
                 if (s.isDirectory() && fs.readdirSync(fullPath).length > 0)
                 {
                     arr.push({
-                        "d": true, "n": files[i], "t": "dir", "l": lvl, "c": this._readAssetDir(lvl + 1, path.join(fullPath, "/"), origPath, urlPrefix), "p": urlPath
+                        "d": true,
+                        "n": files[i],
+                        "t": "dir",
+                        "l": lvl,
+                        "c": this._readAssetDir(lvl + 1, path.join(fullPath, "/"), origPath, urlPrefix),
+                        "p": urlPath
                     });
                 }
-                else if (files[i].toLowerCase().endsWith(".fileinfo.json")) continue;
+                else if (files[i].toLowerCase()
+                    .endsWith(".fileinfo.json")) continue;
                 else
                 {
                     let type = "unknown";
-                    if (files[i].endsWith("jpg") || files[i].endsWith("png") || files[i].endsWith("jpeg"))type = "image";
-                    else if (files[i].endsWith("mp3") || files[i].endsWith("ogg") || files[i].endsWith("wav"))type = "audio";
-                    else if (files[i].endsWith("3d.json"))type = "3d json";
-                    else if (files[i].endsWith("json"))type = "json";
-                    else if (files[i].endsWith("mp4"))type = "video";
+                    if (files[i].endsWith("jpg") || files[i].endsWith("png") || files[i].endsWith("jpeg")) type = "image";
+                    else if (files[i].endsWith("mp3") || files[i].endsWith("ogg") || files[i].endsWith("wav")) type = "audio";
+                    else if (files[i].endsWith("3d.json")) type = "3d json";
+                    else if (files[i].endsWith("json")) type = "json";
+                    else if (files[i].endsWith("mp4")) type = "video";
 
-                    const fileData = { "d": false, "n": files[i], "t": type, "l": lvl, "p": urlPath, "type": type, "updated": "bla" };
+                    const fileData = {
+                        "d": false,
+                        "n": files[i],
+                        "t": type,
+                        "l": lvl,
+                        "p": urlPath,
+                        "type": type,
+                        "updated": "bla"
+                    };
                     fileData.icon = this._getFileIconName(fileData);
                     let stats = fs.statSync(fullPath);
                     if (stats && stats.mtime)
@@ -1090,14 +1127,16 @@ class ElectronEndpoint
             const fileContents = packageFiles[packageFile];
             const fileJson = JSON.parse(fileContents);
             const deps = fileJson.packages[""].dependencies;
-            Object.keys(deps).forEach((lib) =>
-            {
-                const ver = deps[lib];
-                const semVer = lib + "@" + ver;
-                toInstall.push(addDependency(semVer, { "cwd": currentProjectDir }));
-            });
+            Object.keys(deps)
+                .forEach((lib) =>
+                {
+                    const ver = deps[lib];
+                    const semVer = lib + "@" + ver;
+                    toInstall.push(addDependency(semVer, { "cwd": currentProjectDir }));
+                });
         });
         return Promise.all(toInstall);
     }
 }
+
 export default new ElectronEndpoint();

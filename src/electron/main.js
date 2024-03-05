@@ -8,7 +8,7 @@ import logger from "../utils/logger.js";
 import store from "./electron_store.js";
 import doc from "../utils/doc_util.js";
 
-logger.info("STARTING");
+logger.debug("STARTING");
 
 class ElectronApp
 {
@@ -45,116 +45,39 @@ class ElectronApp
                 "v8CacheOptions": "none"
             }
         });
-        if (patchFile)
-        {
-            doc.rebuildOpCaches(() =>
-            {
-                this.editorWindow.loadFile("index.html").then(() =>
-                {
-                    this.editorWindow.setTitle("cables - " + store.getCurrentProject().name);
-                });
-            }, ["core", "teams", "extensions", "users", "patches"]);
-        }
-        else
+        doc.rebuildOpCaches(() =>
         {
             this.editorWindow.loadFile("index.html").then(() =>
             {
-                this.openPatchDialog();
+                let title = "cables";
+                if (patchFile)
+                {
+                    title = "cables - " + store.getCurrentProject().name;
+                }
+                this.editorWindow.setTitle(title);
             });
-        }
+        }, ["core", "teams", "extensions", "users", "patches"]);
     }
 
     openPatchDialog()
     {
-        try
-        {
-            dialog.showOpenDialog(this.editorWindow, {
-                "title": "select patch",
-                "properties": ["openFile", "openDirectory", "createDirectory"],
-                "filters": [
-                    { "name": "Cables Patches", "extensions": [this.cablesFileExtension] },
-                ]
-            }).then((result) =>
-            {
-                if (!result.canceled)
-                {
-                    const selectedPath = result.filePaths[0];
-                    const isDir = fs.lstatSync(selectedPath).isDirectory();
-                    if (isDir)
-                    {
-                        const dirFiles = fs.readdirSync(selectedPath);
-                        const projectFile = dirFiles.find((file) => { return path.basename(file).endsWith(this.cablesFileExtension); });
-                        if (projectFile)
-                        {
-                            this._switchPatch(path.join(selectedPath, projectFile));
-                        }
-                        else
-                        {
-                            this._switchPatch(selectedPath, true);
-                        }
-                    }
-                    else
-                    {
-                        this._switchPatch(selectedPath);
-                    }
-                }
-                else
-                {
-                    app.quit();
-                }
-            });
-        }
-        catch (e)
-        {
-            dialog.showMessageBox(this.editorWindow, {
-                "type": "error",
-                "title": "error",
-                "message": e.messsage
-            });
-        }
+        let title = "select patch";
+        let properties = ["openFile", "openDirectory", "createDirectory"];
+        this._patchDialog(title, properties, this._switchPatch.bind(this));
     }
 
-    openNewPatchDialog()
+    savePatchDialog(cb)
     {
-        try
-        {
-            dialog.showOpenDialog(this.editorWindow, {
-                "title": "select workspace directory",
-                "properties": ["openDirectory", "createDirectory"]
-            }).then((result) =>
-            {
-                if (!result.canceled)
-                {
-                    const selectedPath = result.filePaths[0];
-                    const isDir = fs.lstatSync(selectedPath).isDirectory();
-                    if (isDir)
-                    {
-                        const dirFiles = fs.readdirSync(selectedPath);
-                        const projectFile = dirFiles.find((file) => { return path.basename(file).endsWith(this.cablesFileExtension); });
-                        if (projectFile)
-                        {
-                            this._switchPatch(path.join(selectedPath, projectFile));
-                        }
-                        else
-                        {
-                            this._switchPatch(selectedPath, true);
-                        }
-                    }
-                    else
-                    {
-                        this.openPatchDialog(selectedPath);
-                    }
-                }
-            });
-        }
-        catch (e)
-        {
-            dialog.showMessageBox(this.editorWindow, {
-                "type": "error",
-                "title": "error",
-                "message": e.messsage
-            });
-        }
+        const title = "select workspace directory";
+        const properties = ["openDirectory", "createDirectory"];
+        this._patchDialog(title, properties, this._switchPatch.bind(this));
+    }
+
+    createNewPatchDialog()
+    {
+        const title = "select workspace directory";
+        const properties = ["openDirectory", "createDirectory"];
+        this._patchDialog(title, properties, this._switchPatch.bind(this));
     }
 
     createMenu()
@@ -170,7 +93,7 @@ class ElectronApp
                         "accelerator": "CmdOrCtrl+N",
                         "click": () =>
                         {
-                            this.openNewPatchDialog();
+                            this.createNewPatchDialog();
                         }
                     },
                     {
@@ -240,23 +163,23 @@ class ElectronApp
         Menu.setApplicationMenu(menu);
     }
 
-    _switchPatch(newPatchFileOrDir, createNewProject = false)
+    _switchPatch(patchFile, createNewProject = false)
     {
-        logger.debug("SWITCH TO", newPatchFileOrDir, createNewProject);
+        logger.debug("SWITCH TO", patchFile, createNewProject);
         if (createNewProject)
         {
-            this._createNewCurrentProject(newPatchFileOrDir);
+            this._createNewCurrentProject(patchFile);
         }
         else
         {
-            store.setPatchFile(newPatchFileOrDir);
-            let newPatchDir = path.dirname(newPatchFileOrDir);
+            store.setPatchFile(patchFile);
+            let newPatchDir = path.dirname(patchFile);
             store.setCurrentProjectDir(newPatchDir);
         }
         doc.rebuildOpCaches(() =>
         {
-            this.editorWindow.reload();
-            this.editorWindow.setTitle("cables - " + store.getCurrentProject().name);
+            if (this.editorWindow) this.editorWindow.reload();
+            if (this.editorWindow) this.editorWindow.setTitle("cables - " + store.getCurrentProject().name);
         }, ["core", "teams", "extensions", "users", "patches"]);
     }
 
@@ -270,6 +193,50 @@ class ElectronApp
         logger.debug("new projectfile", store.getCurrentProjectDir(), projectFileName, newProjectFile);
         store.setPatchFile(newProjectFile);
         jsonfile.writeFileSync(newProjectFile, newProject, { "encoding": "utf-8", "spaces": 4 });
+    }
+
+    _patchDialog(title, properties, cb = null)
+    {
+        try
+        {
+            dialog.showOpenDialog(this.editorWindow, {
+                "title": title,
+                "properties": properties
+            }).then((result) =>
+            {
+                if (!result.canceled)
+                {
+                    const selectedPath = result.filePaths[0];
+                    const isDir = fs.lstatSync(selectedPath).isDirectory();
+                    if (isDir)
+                    {
+                        const dirFiles = fs.readdirSync(selectedPath);
+                        const projectFile = dirFiles.find((file) => { return path.basename(file).endsWith(this.cablesFileExtension); });
+                        if (projectFile)
+                        {
+                            if (cb) cb(path.join(selectedPath, projectFile));
+                        }
+                        else
+                        {
+                            if (cb) cb(selectedPath, true);
+                            this._switchPatch(selectedPath, true);
+                        }
+                    }
+                    else
+                    {
+                        if (cb) cb(selectedPath);
+                    }
+                }
+            });
+        }
+        catch (e)
+        {
+            dialog.showMessageBox(this.editorWindow, {
+                "type": "error",
+                "title": "error",
+                "message": e.message
+            });
+        }
     }
 }
 app.whenReady().then(() =>
