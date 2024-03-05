@@ -10,7 +10,6 @@ env:
 
 jobs:
   build_linux:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: checkout cables_dev
@@ -51,7 +50,7 @@ jobs:
         with:
           path: "cables_electron/"
       - name: Configure electron cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: electron-builder-linux
           path: |
@@ -64,7 +63,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_win:
-    if: false
     runs-on: windows-latest
     steps:
       - name: checkout cables_dev
@@ -105,7 +103,7 @@ jobs:
           cache: "npm"
           check-latest: false
       - name: Configure electron cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: electron-builder-windows
           path: ~/AppData/Local/electron/Cache/
@@ -156,7 +154,7 @@ jobs:
           cache: "npm"
           check-latest: false
       - name: Configure electron cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: electron-builder-mac
           path: |
