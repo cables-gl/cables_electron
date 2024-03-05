@@ -103,11 +103,6 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "npm"
           check-latest: false
-      - name: Configure electron cache
-        uses: actions/cache@v4
-        with:
-          key: electron-builder-windows
-          path: ~/AppData/Local/electron/Cache/
       - name: build standalone
         shell: bash
         run: ./hook_standalone.sh win
@@ -126,12 +121,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18.14.2"
+          cache: "npm"
           check-latest: false
       - name: get node path
-        run: echo "NODE_EXE=$(which node)" >> $GITHUB_OUTPUT
-      - name: get npm path
-        run: echo "NPM_EXE=$(which npm)" >> $GITHUB_OUTPUT
+        id: local_node
+        run: |
+          echo "NODE_EXE=$(which node)" >> $GITHUB_OUTPUT
+          echo "NPM_EXE=$(which npm)" >> $GITHUB_OUTPUT
       - name: build standalone
         run: ./hook_standalone.sh mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
+          NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
