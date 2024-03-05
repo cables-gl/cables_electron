@@ -121,7 +121,7 @@ jobs:
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          node-version: "18.14.2"
           check-latest: false
       - name: debug
         run: node --version && nodejs --version
