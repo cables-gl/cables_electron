@@ -124,8 +124,7 @@ jobs:
           token: ${{ SECRETS.STANDALONE_TOKEN }}
       - name: uninstall global node
         run: |
-          brew uninstall --force node
-          brew doctor
+          brew uninstall --ignore-dependencies --force node
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
