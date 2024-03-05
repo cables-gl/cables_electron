@@ -118,57 +118,18 @@ jobs:
   build_mac:
     runs-on: macos-14
     steps:
-      - name: checkout cables_dev
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_dev"
-          ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
-      - name: checkout cables
-        uses: actions/checkout@v4
-        with:
-          repository: "pandrr/cables"
-          ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
-          path: "cables/"
-      - name: checkout extensions
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_extensionops"
-          ref: "main"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
-          path: "cables/src/ops/extensions"
-      - name: checkout cables ui
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_ui"
-          ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
-          path: "cables_ui/"
-      - name: checkout cables standalone
-        uses: actions/checkout@v4
-        with:
-          path: "cables_electron/"
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           check-latest: false
+      - name: debug
+        run: node --version && nodejs --version
+      - name: debug2
+        run: echo "$(which node)" "$(which node)js"
       - name: Symlink node as nodejs
         run: ln -sf "$(which node)" "$(which node)js"
-      - name: Configure electron cache
-        uses: actions/cache@v4
-        with:
-          key: electron-builder-mac
-          path: |
-            ~/Library/Caches/electron
-            ~/Library/Caches/electron-builder
-      - name: build standalone
-        shell: bash
-        run: ./hook_standalone.sh mac
-        env:
-          SETUP_NODE_NVM_NVM: "/Users/runner/mynvm/nvm.sh"
-          CSC_LINK: "${{ secrets.APPLE_CERT }}"
-          CSC_KEY_PASSWORD: "${{ secrets.APPLE_CERT_PASS }}"
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_VERSION: ${{ env.releaseName }}
+      - name: debug3
+        run: node --version && nodejs --version
+      - name: debug4
+        run: echo "$(which node)" "$(which node)js"
