@@ -62,7 +62,6 @@ jobs:
         run: ./hook_standalone.sh linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_win:
     if: false
     runs-on: windows-latest
@@ -114,7 +113,6 @@ jobs:
         run: ./hook_standalone.sh win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_VERSION: ${{ env.releaseName }}
   build_mac:
     runs-on: macos-14
     steps:
@@ -124,7 +122,7 @@ jobs:
           node-version: "18.14.2"
           check-latest: false
       - name: debug
-        run: node --version && nodejs --version
+        run: node --version
       - name: debug2
         run: echo "$(which node)" "$(which node)js"
       - name: Symlink node as nodejs
@@ -132,4 +130,9 @@ jobs:
       - name: debug3
         run: node --version && nodejs --version
       - name: debug4
-        run: echo "$(which node)" "$(which node)js"
+        run: echo "$(which node)" "$(which nodejs)"
+      - name: build standalone
+        shell: bash
+        run: ./hook_standalone.sh mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
