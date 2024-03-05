@@ -116,6 +116,12 @@ jobs:
   build_mac:
     runs-on: macos-14
     steps:
+      - name: checkout cables_dev
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_dev"
+          ref: "develop"
+          token: ${{ SECRETS.STANDALONE_TOKEN }}
       - name: install nodejs
         uses: actions/setup-node@v4
         with:
