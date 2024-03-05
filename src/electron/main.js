@@ -79,7 +79,6 @@ class ElectronApp
                 if (!result.canceled)
                 {
                     const selectedPath = result.filePaths[0];
-                    console.log("SELECTED PATH", selectedPath);
                     const isDir = fs.lstatSync(selectedPath).isDirectory();
                     if (isDir)
                     {
@@ -127,7 +126,6 @@ class ElectronApp
                 if (!result.canceled)
                 {
                     const selectedPath = result.filePaths[0];
-                    console.log("SELECTED PATH", selectedPath);
                     const isDir = fs.lstatSync(selectedPath).isDirectory();
                     if (isDir)
                     {
