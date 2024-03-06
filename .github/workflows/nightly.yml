@@ -52,6 +52,7 @@ jobs:
         shell: bash
         run: ./hook_standalone.sh linux
         env:
+          BUILD_VERSION: ${{ github.run_number }}-dev
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build_win:
     runs-on: windows-latest
@@ -96,6 +97,7 @@ jobs:
         shell: bash
         run: ./hook_standalone.sh win
         env:
+          BUILD_VERSION: ${{ github.run_number }}-dev
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build_mac:
     runs-on: macos-14
@@ -144,6 +146,7 @@ jobs:
       - name: build standalone
         run: ./hook_standalone.sh mac
         env:
+          BUILD_VERSION: ${{ github.run_number }}-dev
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: "${{ secrets.APPLE_CERT }}"
           CSC_KEY_PASSWORD: "${{ secrets.APPLE_CERT_PASS }}"
