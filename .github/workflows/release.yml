@@ -11,6 +11,9 @@ jobs:
   build_linux:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
       - uses: ./.github/actions/standalone
         with:
           os: "linux"
