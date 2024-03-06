@@ -29,27 +29,27 @@ jobs:
         with:
           repository: "undev-studio/cables_dev"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
       - name: checkout cables
         uses: actions/checkout@v4
         with:
           repository: "pandrr/cables"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables/"
       - name: checkout extensions
         uses: actions/checkout@v4
         with:
           repository: "undev-studio/cables_extensionops"
           ref: "main"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables/src/ops/extensions"
       - name: checkout cables ui
         uses: actions/checkout@v4
         with:
           repository: "undev-studio/cables_ui"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables_ui/"
       - name: install nodejs
         uses: actions/setup-node@v4
@@ -75,7 +75,7 @@ jobs:
         with:
           repository: "undev-studio/cables_dev"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
       - name: checkout cables
         uses: actions/checkout@v4
         with:
@@ -88,14 +88,14 @@ jobs:
         with:
           repository: "undev-studio/cables_extensionops"
           ref: "main"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables/src/ops/extensions"
       - name: checkout cables ui
         uses: actions/checkout@v4
         with:
           repository: "undev-studio/cables_ui"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables_ui/"
       - name: checkout cables standalone
         uses: actions/checkout@v4
@@ -121,27 +121,27 @@ jobs:
         with:
           repository: "undev-studio/cables_dev"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
       - name: checkout cables
         uses: actions/checkout@v4
         with:
           repository: "pandrr/cables"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables/"
       - name: checkout extensions
         uses: actions/checkout@v4
         with:
           repository: "undev-studio/cables_extensionops"
           ref: "main"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables/src/ops/extensions"
       - name: checkout cables ui
         uses: actions/checkout@v4
         with:
           repository: "undev-studio/cables_ui"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables_ui/"
       - name: checkout cables standalone
         uses: actions/checkout@v4

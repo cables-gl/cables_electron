@@ -3,10 +3,6 @@ name: release build
 on:
   workflow_dispatch:
 
-env:
-  github_token: ${{ SECRETS.GITHUB_TOKEN }}
-  standalone_token: ${{ SECRETS.STANDALONE_TOKEN }}
-
 jobs:
   build_linux:
     uses: ./.github/workflows/build.yml
@@ -15,24 +11,4 @@ jobs:
       os: linux
       branch: develop
       build_version: ${{ github.run_number }}-dev
-    secrets: inherit
-  build_win:
-    if: false
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: windows-latest
-      os: "win"
-      branch: "develop"
-      build_version: ${{ github.run_number }}-dev
-    secrets: inherit
-  build_mac:
-    if: false
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: macos-14
-      os: "mac"
-      branch: "develop"
-      build_version: ${{ github.run_number }}-dev
-      apple_cert: "${{ secrets.APPLE_CERT }}"
-      apple_pass: "${{ secrets.APPLE_CERT_PASS }}"
     secrets: inherit
