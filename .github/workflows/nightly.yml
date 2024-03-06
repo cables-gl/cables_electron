@@ -16,6 +16,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
+          name: "build: {{ env.releaseName }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v${{ env.releaseName }}
           draft: true
