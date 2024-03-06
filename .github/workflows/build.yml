@@ -1,4 +1,4 @@
-name: standalone build
+name: shared action - build standalone
 
 on:
   workflow_call:
