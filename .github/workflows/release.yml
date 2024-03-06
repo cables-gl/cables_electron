@@ -5,7 +5,6 @@ on:
 
 jobs:
   build_linux:
-    if: false
     uses: ./.github/workflows/build.yml
     with:
       runner: ubuntu-latest
@@ -14,7 +13,6 @@ jobs:
       build_version: ${{ github.run_number }}-dev
     secrets: inherit
   build_win:
-    if: false
     uses: ./.github/workflows/build.yml
     with:
       runner: windows-latest
@@ -23,7 +21,6 @@ jobs:
       build_version: ${{ github.run_number }}-dev
     secrets: inherit
   build_mac:
-    if: false
     uses: ./.github/workflows/build.yml
     with:
       runner: macos-14

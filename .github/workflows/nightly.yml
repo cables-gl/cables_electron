@@ -22,148 +22,26 @@ jobs:
           draft: true
           prerelease: true
   build_linux:
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout cables_dev
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_dev"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-      - name: checkout cables
-        uses: actions/checkout@v4
-        with:
-          repository: "pandrr/cables"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables/"
-      - name: checkout extensions
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_extensionops"
-          ref: "main"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables/src/ops/extensions"
-      - name: checkout cables ui
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_ui"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables_ui/"
-      - name: install nodejs
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
-          check-latest: false
-      - name: checkout cables standalone
-        uses: actions/checkout@v4
-        with:
-          path: "cables_electron/"
-      - name: build standalone
-        shell: bash
-        run: ./hook_standalone.sh linux
-        env:
-          BUILD_VERSION: ${{ env.releaseTag }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: ubuntu-latest
+      target: linux
+      branch: develop
+      build_version: ${{ github.run_number }}-dev
+    secrets: inherit
   build_win:
-    runs-on: windows-latest
-    steps:
-      - name: checkout cables_dev
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_dev"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-      - name: checkout cables
-        uses: actions/checkout@v4
-        with:
-          repository: "pandrr/cables"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables/"
-      - name: checkout extensions
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_extensionops"
-          ref: "main"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables/src/ops/extensions"
-      - name: checkout cables ui
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_ui"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables_ui/"
-      - name: checkout cables standalone
-        uses: actions/checkout@v4
-        with:
-          path: "cables_electron/"
-      - name: install nodejs
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
-          check-latest: false
-      - name: build standalone
-        shell: bash
-        run: ./hook_standalone.sh win
-        env:
-          BUILD_VERSION: ${{ env.releaseTag }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: windows-latest
+      target: win
+      branch: develop
+      build_version: ${{ github.run_number }}-dev
+    secrets: inherit
   build_mac:
-    runs-on: macos-14
-    steps:
-      - name: checkout cables_dev
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_dev"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-      - name: checkout cables
-        uses: actions/checkout@v4
-        with:
-          repository: "pandrr/cables"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables/"
-      - name: checkout extensions
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_extensionops"
-          ref: "main"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables/src/ops/extensions"
-      - name: checkout cables ui
-        uses: actions/checkout@v4
-        with:
-          repository: "undev-studio/cables_ui"
-          ref: "develop"
-          token: ${{ secrets.STANDALONE_TOKEN }}
-          path: "cables_ui/"
-      - name: checkout cables standalone
-        uses: actions/checkout@v4
-        with:
-          path: "cables_electron/"
-      - name: install nodejs
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
-          check-latest: false
-      - name: get node path
-        id: local_node
-        run: |
-          echo "NODE_EXE=$(which node)" >> $GITHUB_OUTPUT
-          echo "NPM_EXE=$(which npm)" >> $GITHUB_OUTPUT
-      - name: build standalone
-        run: ./hook_standalone.sh mac
-        env:
-          BUILD_VERSION:  ${{ env.releaseTag }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: "${{ secrets.APPLE_CERT }}"
-          CSC_KEY_PASSWORD: "${{ secrets.APPLE_CERT_PASS }}"
-          NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
-          NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: mac
+      branch: develop
+      build_version: ${{ github.run_number }}-dev
+    secrets: inherit
