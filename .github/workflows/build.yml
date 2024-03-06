@@ -3,6 +3,10 @@ name: standalone build
 on:
   workflow_call:
     inputs:
+      runner:
+        description: "image to run the build on"
+        required: true
+        type: string
       os:
         description: "mac/win/linux"
         required: true
