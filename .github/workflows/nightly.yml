@@ -115,7 +115,6 @@ jobs:
           BUILD_VERSION: ${{ github.run_number }}-dev
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build_mac:
-    if: false
     runs-on: macos-14
     steps:
       - name: checkout cables_dev
