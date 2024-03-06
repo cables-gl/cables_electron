@@ -8,7 +8,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       runner: ubuntu-latest
-      os: linux
+      target: linux
       branch: develop
       build_version: ${{ github.run_number }}-dev
     secrets: inherit
