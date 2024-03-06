@@ -3,9 +3,6 @@ name: release build
 on:
   workflow_dispatch:
 
-env:
-  releaseTag: ${{ github.run_number }}-dev
-
 jobs:
   build_linux:
     if: false
@@ -14,7 +11,7 @@ jobs:
       runner: ubuntu-latest
       target: linux
       branch: develop
-      build_version: ${{ env.releaseTag }}
+      build_version: ${{ github.run_number }}-dev
     secrets: inherit
   build_win:
     if: false
@@ -23,15 +20,16 @@ jobs:
       runner: windows-latest
       target: win
       branch: develop
-      build_version: ${{ env.releaseTag }}
+      build_version: ${{ github.run_number }}-dev
     secrets: inherit
   build_mac:
+    if: false
     uses: ./.github/workflows/build.yml
     with:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ env.releaseTag }}
+      build_version: ${{ github.run_number }}-dev
       apple_cert: "${{ secrets.APPLE_CERT }}"
       apple_pass: "${{ secrets.APPLE_CERT_PASS }}"
     secrets: inherit
