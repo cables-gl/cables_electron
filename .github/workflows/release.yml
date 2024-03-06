@@ -27,4 +27,5 @@ jobs:
       target: mac
       branch: develop
       build_version: ${{ github.run_number }}-dev
+      sign: true
     secrets: inherit
