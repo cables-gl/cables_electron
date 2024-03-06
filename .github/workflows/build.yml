@@ -19,14 +19,6 @@ on:
         description: "override for package.log version"
         required: false
         type: string
-      apple_cert:
-        description: "apple developer certificate"
-        required: false
-        type: string
-      apple_pass:
-        description: "password for apple developer certificate"
-        required: false
-        type: string
 jobs:
   build:
     runs-on: ${{ inputs.runner }}
@@ -80,7 +72,7 @@ jobs:
       env:
         BUILD_VERSION: ${{ inputs.build_version }}
         GH_TOKEN: ${{ secrets.github_token }}
-        CSC_LINK: "${{ inputs.apple_cert }}"
-        CSC_KEY_PASSWORD: "${{ inputs.apple_pass }}"
+        CSC_LINK: "${{ secrets.apple_cert }}"
+        CSC_KEY_PASSWORD: "${{ secrets.apple_pass }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}

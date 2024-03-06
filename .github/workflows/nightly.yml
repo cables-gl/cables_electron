@@ -81,7 +81,7 @@ jobs:
         with:
           repository: "pandrr/cables"
           ref: "develop"
-          token: ${{ SECRETS.STANDALONE_TOKEN }}
+          token: ${{ secrets.STANDALONE_TOKEN }}
           path: "cables/"
       - name: checkout extensions
         uses: actions/checkout@v4
