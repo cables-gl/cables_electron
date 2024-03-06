@@ -77,8 +77,6 @@ jobs:
       env:
         BUILD_VERSION: ${{ inputs.build_version }}
         GH_TOKEN: ${{ secrets.github_token }}
-        CSC_LINK: "${{ secrets.apple_cert }}"
-        CSC_KEY_PASSWORD: "${{ secrets.apple_pass }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
     - name: build signed standalone
