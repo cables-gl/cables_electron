@@ -10,14 +10,16 @@ env:
 
 jobs:
   draft_release:
-    - name: create release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag_name: v${{ env.releaseName }}
-        draft: true
-        prerelease: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: create release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ env.releaseName }}
+          draft: true
+          prerelease: true
   build_linux:
     if: false
     runs-on: ubuntu-latest
