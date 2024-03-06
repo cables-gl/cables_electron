@@ -4,41 +4,35 @@ on:
   workflow_dispatch:
 
 env:
-  github_token: ${{ secrets.GITHUB_TOKEN }}
+  github_token: ${{ SECRETS.GITHUB_TOKEN }}
   standalone_token: ${{ SECRETS.STANDALONE_TOKEN }}
 
 jobs:
   build_linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: .github
-      - uses: ./.github/actions/standalone
-        with:
-          os: "linux"
-          branch: "develop"
-          build_version: ${{ github.run_number }}-dev
-          env: ${{ env }}
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: ubuntu-latest
+      os: linux
+      branch: develop
+      build_version: ${{ github.run_number }}-dev
+    secrets: inherit
   build_win:
     if: false
-    runs-on: windows-latest
-    steps:
-      - uses: ./.github/actions/standalone
-        with:
-          os: "win"
-          branch: "develop"
-          build_version: ${{ github.run_number }}-dev
-          env: ${{ env }}
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: windows-latest
+      os: "win"
+      branch: "develop"
+      build_version: ${{ github.run_number }}-dev
+      env: ${{ env }}
   build_mac:
     if: false
-    runs-on: macos-14
-    steps:
-      - uses: ./.github/actions/standalone
-        with:
-          os: "mac"
-          branch: "develop"
-          build_version: ${{ github.run_number }}-dev
-          env: ${{ env }}
-          apple_cert: "${{ secrets.APPLE_CERT }}"
-          apple_pass: "${{ secrets.APPLE_CERT_PASS }}"
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      os: "mac"
+      branch: "develop"
+      build_version: ${{ github.run_number }}-dev
+      env: ${{ env }}
+      apple_cert: "${{ secrets.APPLE_CERT }}"
+      apple_pass: "${{ secrets.APPLE_CERT_PASS }}"
