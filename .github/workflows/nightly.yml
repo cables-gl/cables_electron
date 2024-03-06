@@ -6,7 +6,7 @@ on:
     - cron: "0 3 * * *"
 
 env:
-  releaseName: ${{ github.run_number }}-dev
+  releaseTag: ${{ github.run_number }}-dev
 
 jobs:
   draft_release:
@@ -16,9 +16,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          name: "build: {{ env.releaseName }}"
+          name: "build: {{ env.releaseTag }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ env.releaseName }}
+          tag_name: v${{ env.releaseTag }}
           draft: true
           prerelease: true
   build_linux:
