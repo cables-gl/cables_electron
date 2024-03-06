@@ -24,7 +24,7 @@ jobs:
       os: "win"
       branch: "develop"
       build_version: ${{ github.run_number }}-dev
-      env: ${{ env }}
+    secrets: inherit
   build_mac:
     if: false
     uses: ./.github/workflows/build.yml
@@ -33,6 +33,6 @@ jobs:
       os: "mac"
       branch: "develop"
       build_version: ${{ github.run_number }}-dev
-      env: ${{ env }}
       apple_cert: "${{ secrets.APPLE_CERT }}"
       apple_pass: "${{ secrets.APPLE_CERT_PASS }}"
+    secrets: inherit
