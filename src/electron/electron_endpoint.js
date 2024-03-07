@@ -178,22 +178,21 @@ class ElectronEndpoint
     async getProjectOpsCode()
     {
         const project = this.getCurrentProject();
-        const opDocs = doc.getOpDocs(true, true);
+        let opDocs = doc.getOpDocs(true, true);
         let code = "";
+        let missingOps = [];
         if (project && project.ops)
         {
-            let missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
+            missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
+            const opsInProjectDir = this._getOpDocsInProjectDir();
             missingOps = missingOps.concat(ops);
+            missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId === obj.opId; }) === index; });
-            code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, opDocs);
-            return code;
         }
-        else
-        {
-            return code;
-        }
+        code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, true, true, opDocs);
+        return code;
     }
 
     savePatch(patch)
@@ -274,7 +273,8 @@ class ElectronEndpoint
                 "_id": randomId,
                 "shortId": shortId,
                 "name": "new project",
-                "ops": []
+                "ops": [],
+                "settings": {}
             };
         }
     }
@@ -1126,16 +1126,46 @@ class ElectronEndpoint
         {
             const fileContents = packageFiles[packageFile];
             const fileJson = JSON.parse(fileContents);
-            const deps = fileJson.packages[""].dependencies;
-            Object.keys(deps)
-                .forEach((lib) =>
+            const packages = fileJson.packages;
+            if (packages && packages[""])
+            {
+                const deps = packages[""].dependencies || [];
+                Object.keys(deps).forEach((lib) =>
                 {
                     const ver = deps[lib];
                     const semVer = lib + "@" + ver;
                     toInstall.push(addDependency(semVer, { "cwd": currentProjectDir }));
                 });
+            }
         });
         return Promise.all(toInstall);
+    }
+
+    _getOpDocsInProjectDir()
+    {
+        const dir = cables.getProjectOpsPath();
+        const opDocs = [];
+        if (fs.existsSync(dir))
+        {
+            const jsonFiles = helper.getFilesRecursive(dir, ".json");
+            Object.keys(jsonFiles).forEach((jsonFile) =>
+            {
+                const basename = path.basename(jsonFile, ".json");
+                if (opsUtil.isOpNameValid(basename))
+                {
+                    try
+                    {
+                        const opJson = JSON.parse(jsonFiles[jsonFile].toString());
+                        opJson.objName = basename;
+                        opJson.opId = opJson.id;
+                        opJson.name = basename;
+                        opDocs.push(opJson);
+                    }
+                    catch (e) {}
+                }
+            });
+        }
+        return opDocs;
     }
 }
 
