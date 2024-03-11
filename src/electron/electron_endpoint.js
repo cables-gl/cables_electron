@@ -186,8 +186,8 @@ class ElectronEndpoint
             missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             const opsInProjectDir = this._getOpDocsInProjectDir();
-            missingOps = missingOps.concat(ops);
             missingOps = missingOps.concat(opsInProjectDir);
+            missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId === obj.opId; }) === index; });
         }
@@ -418,11 +418,14 @@ class ElectronEndpoint
 
     async getOpDocsAll()
     {
-        const opDocs = doc.getOpDocs(true, true);
+        let opDocs = doc.getOpDocs(true, true);
+        opDocs = opDocs.concat(this._getOpDocsInProjectDir());
+
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
 
         const extensions = doc.getAllExtensionDocs();
+
         const _libs = fs.readdirSync(cables.getLibsPath());
         const libs = [];
         for (let i = 0; i < _libs.length; i++)
