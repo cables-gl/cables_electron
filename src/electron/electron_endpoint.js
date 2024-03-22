@@ -848,7 +848,7 @@ class ElectronEndpoint
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false)
     {
         let opNamespace = opsUtil.getNamespace(newName);
-        let availableNamespaces = ["Ops."];
+        let availableNamespaces = ["Ops.", "Ops.Extension.", "Ops.Team."];
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
 
