@@ -84,6 +84,7 @@
     "marked": "1.2.9",
     "mkdirp": "2.1.3",
     "moment": "2.29.4",
+    "npm": "10.5.0",
     "nypm": "0.3.6",
     "pako": "2.1.0",
     "sanitize-filename": "1.6.3",
