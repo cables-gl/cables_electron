@@ -33,11 +33,11 @@
     const electron = nodeRequire("electron");
     const module = nodeRequire("module");
     window.ipcRenderer = electron.ipcRenderer; // needed to have ipcRenderer ins standalone_editor.js
-    const store = electron.ipcRenderer.sendSync("store");
+    const settings = electron.ipcRenderer.sendSync("settings");
 
     document.addEventListener('DOMContentLoaded', () => {
         const editorIframe = document.getElementById("editorIframe");
-        let src = path.join(store.uiDistPath, "index.html") + window.location.search;
+        let src = path.join(settings.uiDistPath, "index.html") + window.location.search;
         if (window.location.hash) {
             src = src + window.location.hash;
         }
@@ -46,15 +46,15 @@
             const iframeWindow = editorIframe.contentWindow;
             if(iframeWindow && iframeWindow.loadjs)
             {
-                const iframeCables = iframeWindow.CABLES;
                 iframeWindow.loadjs.ready("cables_core", (depsNotFound) => {
+                    const iframeCables = iframeWindow.CABLES;
                     if(!depsNotFound && (iframeCables && iframeCables.Op)) {
                         iframeCables.Op.prototype.require = (moduleName) =>
                         {
                             if(moduleName === "electron") return electron;
                             try
                             {
-                                const modulePath = path.join(store.currentPatchDir, 'node_modules', moduleName);
+                                const modulePath = path.join(settings.currentPatchDir, 'node_modules', moduleName);
                                 console.log("trying to load", modulePath);
                                 return window.nodeRequire(modulePath);
                             } catch (e)
@@ -65,9 +65,14 @@
                         }
                     }
                 });
+
+
                 iframeWindow.loadjs.ready("cablesuinew", (depsNotFound) => {
-                    iframeCables.CMD.STANDALONE = standaloneCommands.functions;
-                    iframeCables.CMD.commands = iframeCables.CMD.commands.concat(standaloneCommands.commands);
+                    const iframeCables = iframeWindow.CABLES;
+                    if(iframeCables) {
+                        iframeCables.CMD.STANDALONE = standaloneCommands.functions;
+                        iframeCables.CMD.commands = iframeCables.CMD.commands.concat(standaloneCommands.commands);
+                    }
                 });
             }
         }
@@ -89,19 +94,20 @@
         new web.StandaloneEditor(
             {
                 config: {
+                    "platformClass": "PlatformStandalone",
                     "urlCables": "cables://",
                     "urlSandbox": "cables://",
-                    "user": store.currentUser,
-                    "usersettings": { "settings": store.userSettings },
+                    "user": settings.currentUser,
+                    "usersettings": { "settings": settings.userSettings },
                     "isDevEnv": true,
                     "env": "dev",
-                    "patchId": "",
+                    "patchId": settings.patchId,
                     "patchVersion": "",
                     "socketcluster": {},
                     "remoteClient": false,
-                    "buildInfo": "{}",
+                    "buildInfo": settings.buildInfo,
                     "patchConfig": {
-                        "prefixAssetPath": store.currentPatchDir
+                        "prefixAssetPath": settings.currentPatchDir
                     }
                 }
             });

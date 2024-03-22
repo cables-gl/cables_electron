@@ -7,13 +7,22 @@ import webpack from "webpack-stream";
 import compiler from "webpack";
 import webpackStandaloneConfig from "./webpack.standalone.config.js";
 
-let configLocation = "./cables.json";
+const defaultConfigLocation = "./cables.json";
+let configLocation = defaultConfigLocation;
 if (process.env.npm_config_apiconfig) configLocation = "./cables_env_" + process.env.npm_config_apiconfig + ".json";
 
 if (!fs.existsSync(configLocation))
 {
-    console.error("config file not found at", configLocation);
-    process.exit(1);
+    if (fs.existsSync(defaultConfigLocation))
+    {
+        console.warn("config file not found at", configLocation, "copying from cables.json");
+        fs.copyFileSync(defaultConfigLocation, configLocation);
+    }
+    else
+    {
+        console.error("config file not found at neither", configLocation, "nor", defaultConfigLocation);
+        process.exit(1);
+    }
 }
 
 const config = JSON.parse(fs.readFileSync(configLocation, "utf-8"));

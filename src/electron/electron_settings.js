@@ -3,7 +3,8 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import { app } from "electron";
 import helper from "../utils/helper_util.js";
-class ElectronStore
+
+class ElectronSettings
 {
     constructor(storageDir)
     {
@@ -12,16 +13,16 @@ class ElectronStore
             mkdirp.sync(storageDir);
         }
         this.MAIN_CONFIG_NAME = "cables-standalone-preferences";
-        this.APIKEY_FIELD = "apiKey";
         this.PATCHFILE_FIELD = "patchFile";
         this.CURRENTPATCHDIR_FIELD = "currentPatchDir";
+        this.PATCHID_FIELD = "patchId";
         this.STORAGEDIR_FIELD = "storageDir";
         this.WINDOW_X_POS_FIELD = "windowX";
         this.WINDOW_Y_POS_FIELD = "windowY";
         this.WINDOW_FULLSCREEN = "windowFullscreen";
         this.WINDOW_HEIGHT = "windowHeight";
         this.WINDOW_WIDTH = "windowWidth";
-
+        this.BUILD_INFO_FIELD = "buildInfo";
         this.USER_SETTINGS = "userSettings";
 
         this.opts = {};
@@ -31,10 +32,11 @@ class ElectronStore
             "introCompleted": true,
             "showTipps": false
         };
-        this.opts.defaults[this.APIKEY_FIELD] = null;
         this.opts.defaults[this.PATCHFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPATCHDIR_FIELD] = null;
+        this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
+        this.opts.defaults[this.BUILD_INFO_FIELD] = this.getBuildInfo();
 
         this.opts.defaults[this.WINDOW_X_POS_FIELD] = null;
         this.opts.defaults[this.WINDOW_Y_POS_FIELD] = null;
@@ -52,7 +54,12 @@ class ElectronStore
         if (this.data && this.data.hasOwnProperty(this.STORAGEDIR_FIELD) && this.data[this.STORAGEDIR_FIELD])
         {
             const userDataPath = path.join(this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
-            this.data = ElectronStore.parseDataFile(userDataPath, this.opts.defaults);
+            const storedData = this._parseDataFile(userDataPath, this.opts.defaults);
+            Object.keys(this.opts.defaults).forEach((key) =>
+            {
+                if (!storedData.hasOwnProperty(key)) storedData[key] = this.opts.defaults[key];
+            });
+            this.data = storedData;
         }
     }
 
@@ -76,17 +83,6 @@ class ElectronStore
         }
     }
 
-    // convenience methods
-    getApiKey()
-    {
-        return this.get(this.APIKEY_FIELD);
-    }
-
-    setApiKey(value)
-    {
-        this.set(this.APIKEY_FIELD, value);
-    }
-
     getCurrentProjectDir()
     {
         let value = this.get(this.CURRENTPATCHDIR_FIELD);
@@ -100,42 +96,26 @@ class ElectronStore
         this.set(this.CURRENTPATCHDIR_FIELD, value);
     }
 
-    getCurrentProject()
+    setCurrentProject(project)
     {
-        const file = this.getPatchFile();
-        if (file && fs.existsSync(file))
-        {
-            return JSON.parse(fs.readFileSync(file));
-        }
-        else
-        {
-            return null;
-        }
+        this._currentProject = project;
+        this.set(this.PATCHID_FIELD, project ? project._id : "");
     }
 
-    getNewProject()
+    getCurrentProject()
     {
-        const now = Date.now();
-        const currentUser = this.getCurrentUser();
-        const projectId = helper.generateRandomId();
-        const shortId = helper.generateShortId(projectId, now);
+        return this._currentProject;
+    }
 
-        return {
-            "_id": projectId,
-            "shortId": shortId,
-            "name": "new project",
-            "description": "",
-            "userId": currentUser._id,
-            "cachedUsername": currentUser.username,
-            "created": now,
-            "updated": now,
-            "visibility": "private",
-            "ops": [],
-            "settings": {
-                "licence": "none"
-            },
-            "log": []
-        };
+    loadProject(projectFile)
+    {
+        if (fs.existsSync(projectFile))
+        {
+            this.setProjectFile(projectFile);
+            let patch = fs.readFileSync(projectFile);
+            patch = JSON.parse(patch.toString("utf-8"));
+            this.setCurrentProject(patch);
+        }
     }
 
     getCurrentUser()
@@ -158,22 +138,12 @@ class ElectronStore
         this.set(this.USER_SETTINGS, value);
     }
 
-    getStorageDir()
-    {
-        return this.get(this.STORAGEDIR_FIELD);
-    }
-
-    setStorageDir(value)
-    {
-        this.set(this.STORAGEDIR_FIELD, value, true);
-    }
-
-    getPatchFile()
+    getProjectFile()
     {
         return this.get(this.PATCHFILE_FIELD);
     }
 
-    setPatchFile(value)
+    setProjectFile(value)
     {
         this.set(this.PATCHFILE_FIELD, value);
     }
@@ -228,8 +198,48 @@ class ElectronStore
         this.set(this.WINDOW_WIDTH, value);
     }
 
+    getBuildInfo()
+    {
+        const core = {
+            "timestamp": 1700734919296,
+            "created": "2023-11-23T10:21:59.296Z",
+            "git": {
+                "branch": "develop",
+                "commit": "04f23fcd2b2830840ed0c62595104fc7c3d96ae3",
+                "date": "2023-11-22T16:18:12.000Z",
+                "message": "viztexture aspect ratio/color picking etc"
+            }
+        };
+        let ui = {
+            "timestamp": 1700746574919,
+            "created": "2023-11-23T13:36:14.919Z",
+            "git": {
+                "branch": "develop",
+                "commit": "7acf5719f001a0ec07034fbe4c0fdfe15946dd7b",
+                "date": null,
+                "message": null
+            }
+        };
+        const api = {
+            "timestamp": 1700748324495,
+            "created": "2023-11-23T14:05:24.495Z",
+            "git": {
+                "branch": "master",
+                "commit": "ac06849ffb3e594b368bd2f5a63bd6eed62ea1a9",
+                "date": "2023-11-23T11:11:29.000Z",
+                "message": "patreon api hotfixes"
+            }
+        };
+        return {
+            "updateWarning": false,
+            "core": core,
+            "ui": ui,
+            "api": api
+        };
+    }
+
     // helper methods
-    static parseDataFile(filePath, defaults)
+    _parseDataFile(filePath, defaults)
     {
         try
         {
@@ -242,5 +252,5 @@ class ElectronStore
         }
     }
 }
-export default new ElectronStore(path.join(app.getPath("userData"), "settings"));
+export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));
 

@@ -6,7 +6,7 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import { fileURLToPath } from "url";
 import logger from "./utils/logger.js";
-import store from "./electron/electron_store.js";
+import settings from "./electron/electron_settings.js";
 
 logger.info("starting up cables");
 
@@ -14,7 +14,7 @@ class CablesStandalone extends Cables
 {
     getAssetPath()
     {
-        const currentProject = store.getCurrentProjectDir();
+        const currentProject = settings.getCurrentProjectDir();
         let assetPath = "";
         if (!currentProject)
         {
@@ -35,7 +35,7 @@ class CablesStandalone extends Cables
 
     getGenPath()
     {
-        const currentProject = store.getCurrentProject();
+        const currentProject = settings.getCurrentProject();
         let genPath = "";
         if (!currentProject)
         {
@@ -58,26 +58,26 @@ class CablesStandalone extends Cables
 
     getUserOpsPath()
     {
-        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/users/");
-        return path.join(store.getCurrentProjectDir(), "/ops/users/");
+        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/users/");
+        return path.join(settings.getCurrentProjectDir(), "/ops/users/");
     }
 
     getTeamOpsPath()
     {
-        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/teams/");
-        return path.join(store.getCurrentProjectDir(), "/ops/teams/");
+        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/teams/");
+        return path.join(settings.getCurrentProjectDir(), "/ops/teams/");
     }
 
     getPatchOpsPath()
     {
-        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/patches/");
-        return path.join(store.getCurrentProjectDir(), "/ops/patches/");
+        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/patches/");
+        return path.join(settings.getCurrentProjectDir(), "/ops/patches/");
     }
 
     getProjectOpsPath()
     {
-        if (!store.getCurrentProjectDir()) return path.join(this.getOpsPath());
-        return path.join(store.getCurrentProjectDir(), "/ops/");
+        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath());
+        return path.join(settings.getCurrentProjectDir(), "/ops/");
     }
 
     _createDirectories()
@@ -91,4 +91,17 @@ class CablesStandalone extends Cables
         if (!fs.existsSync(this.getOpLookupFile())) fs.writeFileSync(this.getOpLookupFile(), JSON.stringify({ "names": {}, "ids": {} }));
     }
 }
-export default new CablesStandalone(utilProvider, fileURLToPath(new URL(".", import.meta.url)), app.getPath("userData"));
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const customConfig = process.env.npm_config_apiconfig;
+let configLocation = null;
+if (customConfig)
+{
+    configLocation = "../cables_env_" + process.env.npm_config_apiconfig + ".json";
+    configLocation = path.join(__dirname, configLocation);
+    if (!fs.existsSync(configLocation))
+    {
+        logger.error("custom config set to ", configLocation, "but file does not exists, do you need to run `npm run build`?");
+        process.exit(1);
+    }
+}
+export default new CablesStandalone(utilProvider, __dirname, app.getPath("userData"), configLocation);

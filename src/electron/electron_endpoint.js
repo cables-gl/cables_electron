@@ -1,4 +1,4 @@
-import { ipcMain, protocol } from "electron";
+import { ipcMain, protocol, shell } from "electron";
 import fs from "fs";
 import path from "path";
 import marked from "marked";
@@ -8,15 +8,17 @@ import pako from "pako";
 import mkdirp from "mkdirp";
 import { addDependency } from "nypm";
 
+import sanitizeFileName from "sanitize-filename";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
 import helper from "../utils/helper_util.js";
 import opsUtil from "../utils/ops_util.js";
 import subPatchOpUtil from "../utils/subpatchop_util.js";
-import store from "./electron_store.js";
-import electronApp from "./main.js";
+import settings from "./electron_settings.js";
 import projectsUtil from "../utils/projects_util.js";
+import electronApp from "./main.js";
+import filesUtil from "../utils/files_util.js";
 
 protocol.registerSchemesAsPrivileged([{
     "scheme": "cables",
@@ -31,21 +33,21 @@ class ElectronEndpoint
     constructor()
     {
         this._log = logger;
-        this._store = store;
-        this._store.set("currentUser", this.getCurrentUser());
-        this._store.set("uiDistPath", cables.getUiDistPath());
+        this._settings = settings;
+        this._settings.set("currentUser", this.getCurrentUser());
+        this._settings.set("uiDistPath", cables.getUiDistPath());
     }
 
     init()
     {
-        ipcMain.handle("talkerMessage", async (event, cmd, data) =>
+        ipcMain.handle("talkerMessage", async (event, cmd, data, topicConfig = {}) =>
         {
-            return this.talkerMessage(cmd, data);
+            return this.talkerMessage(cmd, data, topicConfig);
         });
 
-        ipcMain.on("store", (event, cmd, data) =>
+        ipcMain.on("settings", (event, cmd, data) =>
         {
-            event.returnValue = this._store.data;
+            event.returnValue = this._settings.data;
         });
 
         protocol.handle("cables", (request) =>
@@ -55,7 +57,7 @@ class ElectronEndpoint
             if (urlPath.startsWith("/api/corelib/"))
             {
                 const libName = urlPath.split("/", 4)[3];
-                const libCode = this.getCoreLibCode(libName);
+                const libCode = this.apiGetCoreLibs(libName);
                 return new Response(libCode, {
                     "headers": { "content-type": "application/javascript" }
                 });
@@ -63,7 +65,7 @@ class ElectronEndpoint
             else if (urlPath.startsWith("/api/lib/"))
             {
                 const libName = urlPath.split("/", 4)[3];
-                const libCode = this.getLibCode(libName);
+                const libCode = this.apiGetLibs(libName);
                 return new Response(libCode, {
                     "headers": { "content-type": "application/javascript" }
                 });
@@ -128,13 +130,50 @@ class ElectronEndpoint
         });
     }
 
-    async talkerMessage(cmd, data)
+    async talkerMessage(cmd, data, topicConfig = {})
     {
         let response = null;
         if (!cmd) return null;
         if (typeof this[cmd] === "function")
         {
-            response = this[cmd](data);
+            if (topicConfig && topicConfig.needsProjectDir)
+            {
+                if (topicConfig.needsProjectDir)
+                {
+                    if (!this._settings.getCurrentProjectDir())
+                    {
+                        const projectDir = await electronApp.pickProjectDirDialog();
+                        if (projectDir)
+                        {
+                            logger.debug("setting new project dir to", projectDir);
+                            this._settings.setCurrentProjectDir(projectDir);
+                        }
+                        else
+                        {
+                            logger.error("no project dir chosen");
+                            return null;
+                        }
+                    }
+                }
+                if (topicConfig.needsProjectFile)
+                {
+                    if (!this._settings.getProjectFile())
+                    {
+                        const currentProject = this.getCurrentProject();
+                        this._settings.getCurrentProjectDir();
+                        const projectFileName = sanitizeFileName(currentProject.name).replace(/ /g, "_") + ".cables.json";
+                        const newProjectFile = path.join(this._settings.getCurrentProjectDir(), projectFileName);
+                        logger.debug("new projectfile", this._settings.getCurrentProjectDir(), projectFileName, newProjectFile);
+                        this._settings.setProjectFile(newProjectFile);
+                        jsonfile.writeFileSync(newProjectFile, currentProject, { "encoding": "utf-8", "spaces": 4 });
+                    }
+                }
+                return this[cmd](data);
+            }
+            else
+            {
+                return this[cmd](data);
+            }
         }
         return response;
     }
@@ -195,150 +234,51 @@ class ElectronEndpoint
         return code;
     }
 
-    savePatch(patch)
+    async savePatch(patch)
     {
         const currentProject = this.getCurrentProject();
         const re = {
             "success": true,
             "msg": "PROJECT_SAVED"
         };
-        if (!currentProject)
-        {
-            electronApp.savePatchDialog();
-            return re;
-        }
-        else
-        {
-            if (patch.data || patch.dataB64)
-            {
-                try
-                {
-                    let buf = patch.data;
-                    if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
-
-                    const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
-
-                    if (qData.ops) currentProject.ops = qData.ops;
-                    if (qData.ui) currentProject.ui = qData.ui;
-                }
-                catch (e)
-                {
-                    this._log.error("patch save error/invalid data", e);
-                    return;
-                }
-            }
-            else
-            {
-                this._log.error("body does not contain patch data");
-            }
-
-            // filter imported ops, so we do not save these to the database
-            currentProject.ops = currentProject.ops.filter((op) =>
-            {
-                return !(op.storage && op.storage.blueprint);
-            });
-
-            currentProject.updated = new Date();
-
-            currentProject.opsHash = crypto
-                .createHash("sha1")
-                .update(JSON.stringify(currentProject.ops))
-                .digest("hex");
-            currentProject.buildInfo = patch.buildInfo;
-
-            const patchPath = this._store.getPatchFile();
-            jsonfile.writeFileSync(patchPath, currentProject);
-
-            re.updated = currentProject.updated;
-            re.updatedByUser = currentProject.updatedByUser;
-
-            return re;
-        }
+        this._writeProjectToFile(patch, currentProject);
+        re.updated = currentProject.updated;
+        re.updatedByUser = currentProject.updatedByUser;
+        return re;
     }
 
     getPatch(data)
     {
-        const patchPath = this._store.getPatchFile();
+        const patchPath = this._settings.getProjectFile();
+        const currentUser = this.getCurrentUser();
         if (patchPath && fs.existsSync(patchPath))
         {
             let patch = fs.readFileSync(patchPath);
             patch = JSON.parse(patch.toString("utf-8"));
+            if (!patch.hasOwnProperty("userList")) patch.userList = [currentUser];
+            if (!patch.hasOwnProperty("teams")) patch.teams = [];
             return patch;
         }
         else
         {
-            const randomId = helper.generateRandomId();
-            const shortId = helper.generateShortId(randomId, Date.now());
-            return {
-                "_id": randomId,
-                "shortId": shortId,
-                "name": "new project",
-                "ops": [],
-                "settings": {}
-            };
+            let currentProject = this.getCurrentProject();
+            if (!currentProject)
+            {
+                const newProject = projectsUtil.generateNewProject(this.getCurrentUser());
+                this._settings.setCurrentProject(newProject);
+                currentProject = newProject;
+            }
+            return currentProject;
         }
     }
 
     async newPatch(data)
     {
-        const currentUser = this.getCurrentUser();
-        let name = data.name || "new offline project";
-        this._log.info("project", "created", name);
-        const id = helper.generateRandomId();
-        const newFile = path.join(this._store.getCurrentProjectDir(), id + ".json");
-        const project = {
-            "_id": id,
-            "name": name,
-            "shortId": "sh0r7Id",
-            "userId": currentUser._id,
-            "cachedUsername": currentUser.username,
-            "created": new Date(),
-            "updated": new Date(),
-            "visibility": "public",
-            "settings": {},
-            "ops": []
-        };
+        const project = projectsUtil.generateNewProject(this.getCurrentUser());
+        const newFile = path.join(this._settings.getCurrentProjectDir(), project._id + ".json");
         fs.writeFileSync(newFile, JSON.stringify(project));
-        this._store.setPatchFile(newFile);
+        this._settings.setProjectFile(newFile);
         return project;
-    }
-
-
-    getBuildInfo()
-    {
-        return {
-            "updateWarning": false,
-            "core": {
-                "timestamp": 1700734919296,
-                "created": "2023-11-23T10:21:59.296Z",
-                "git": {
-                    "branch": "develop",
-                    "commit": "04f23fcd2b2830840ed0c62595104fc7c3d96ae3",
-                    "date": "2023-11-22T16:18:12.000Z",
-                    "message": "viztexture aspect ratio/color picking etc"
-                }
-            },
-            "ui": {
-                "timestamp": 1700746574919,
-                "created": "2023-11-23T13:36:14.919Z",
-                "git": {
-                    "branch": "develop",
-                    "commit": "7acf5719f001a0ec07034fbe4c0fdfe15946dd7b",
-                    "date": null,
-                    "message": null
-                }
-            },
-            "api": {
-                "timestamp": 1700748324495,
-                "created": "2023-11-23T14:05:24.495Z",
-                "git": {
-                    "branch": "master",
-                    "commit": "ac06849ffb3e594b368bd2f5a63bd6eed62ea1a9",
-                    "date": "2023-11-23T11:11:29.000Z",
-                    "message": "patreon api hotfixes"
-                }
-            }
-        };
     }
 
     fileUpload(data)
@@ -633,6 +573,11 @@ class ElectronEndpoint
         }
     }
 
+    getBuildInfo()
+    {
+        return this._settings.getBuildInfo();
+    }
+
     getBlueprintOps()
     {
         return { "data": { "ops": [] } };
@@ -678,7 +623,7 @@ class ElectronEndpoint
     {
         if (data && data.settings)
         {
-            this._store.setUserSettings(data.settings);
+            this._settings.setUserSettings(data.settings);
         }
     }
 
@@ -695,7 +640,7 @@ class ElectronEndpoint
         };
     }
 
-    getCoreLibCode(name)
+    apiGetCoreLibs(name)
     {
         const suffix = cables.getConfig().env === "live" ? ".min.js" : ".max.js";
         const fn = path.join(cables.getCoreLibsPath(), name + suffix);
@@ -713,7 +658,7 @@ class ElectronEndpoint
         }
     }
 
-    getLibCode(name)
+    apiGetLibs(name)
     {
         const fn = path.join(cables.getLibsPath(), name);
         if (fs.existsSync(fn))
@@ -771,20 +716,28 @@ class ElectronEndpoint
 
     getFilelist(data)
     {
+        let files;
         switch (data.source)
         {
         case "patch":
-            return this._getPatchFiles();
+            files = this._getPatchFiles();
+            break;
         case "lib":
-            return this._getLibraryFiles();
+            files = this._getLibraryFiles();
+            break;
         default:
-            return [];
+            files = [];
+            break;
         }
+        return files;
     }
 
     getFileDetails(data)
     {
-        return {};
+        let filePath = data.filename.replace("file://", "").replace("file:", "");
+        if (!filePath.startsWith(cables.getAssetPath())) filePath = path.join(cables.getAssetPath(), filePath);
+        const fileDb = filesUtil.getFileDb(filePath, this.getCurrentProject(), this.getCurrentUser());
+        return filesUtil.getFileInfo(fileDb);
     }
 
     checkOpName(data)
@@ -800,24 +753,24 @@ class ElectronEndpoint
 
     getCurrentUser()
     {
-        return store.getCurrentUser();
+        return this._settings.getCurrentUser();
     }
 
     getCurrentProject()
     {
-        return store.getCurrentProject();
+        return this._settings.getCurrentProject();
     }
 
     _getPatchFiles()
     {
         const p = cables.getAssetPath();
-        return this._readAssetDir(0, p, p, "assets/");
+        return this._readAssetDir(0, p, p, "file://" + p);
     }
 
     _getLibraryFiles()
     {
         const p = cables.getAssetLibraryPath();
-        return this._readAssetDir(0, p, p, "public/assets/library/");
+        return this._readAssetDir(0, p, p, "file://" + p);
     }
 
     _getFileIconName(fileDb)
@@ -895,7 +848,7 @@ class ElectronEndpoint
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false)
     {
         let opNamespace = opsUtil.getNamespace(newName);
-        let availableNamespaces = [];
+        let availableNamespaces = ["Ops."];
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
 
@@ -1120,7 +1073,7 @@ class ElectronEndpoint
 
     installProjectDependencies(data)
     {
-        const currentProjectDir = store.getCurrentProjectDir();
+        const currentProjectDir = this._settings.getCurrentProjectDir();
         const opsDir = cables.getProjectOpsPath();
         const packageFiles = helper.getFilesRecursive(opsDir, "package-lock.json");
         const fileNames = Object.keys(packageFiles);
@@ -1142,6 +1095,24 @@ class ElectronEndpoint
             }
         });
         return Promise.all(toInstall);
+    }
+
+    async openProjectDir()
+    {
+        const currentDir = this._settings.getCurrentProjectDir();
+        if (currentDir)
+        {
+            return shell.openPath(currentDir);
+        }
+    }
+
+    async openAssetDir()
+    {
+        const assetPath = cables.getAssetPath();
+        if (assetPath)
+        {
+            return shell.openPath(assetPath);
+        }
     }
 
     _getOpDocsInProjectDir()
@@ -1169,6 +1140,54 @@ class ElectronEndpoint
             });
         }
         return opDocs;
+    }
+
+    _writeProjectToFile(patch, currentProject)
+    {
+        if (patch.data || patch.dataB64)
+        {
+            try
+            {
+                let buf = patch.data;
+                if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
+
+                const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
+
+                if (qData.ops) currentProject.ops = qData.ops;
+                if (qData.ui) currentProject.ui = qData.ui;
+            }
+            catch (e)
+            {
+                this._log.error("patch save error/invalid data", e);
+                return;
+            }
+        }
+        else
+        {
+            this._log.error("body does not contain patch data");
+        }
+
+        // filter imported ops, so we do not save these to the database
+        currentProject.ops = currentProject.ops.filter((op) =>
+        {
+            return !(op.storage && op.storage.blueprint);
+        });
+
+        currentProject.updated = new Date();
+
+        currentProject.opsHash = crypto
+            .createHash("sha1")
+            .update(JSON.stringify(currentProject.ops))
+            .digest("hex");
+        currentProject.buildInfo = patch.buildInfo;
+
+        const patchPath = this._settings.getProjectFile();
+        return jsonfile.writeFileSync(patchPath, currentProject);
+    }
+
+    checkNumAssetPatches()
+    {
+        return { "assets": [], "countPatches": 0, "countOps": 0 };
     }
 }
 

@@ -25,3 +25,5 @@ public/js/
 public/libs/
 public/libs_core/
 ops/
+cables_env_*.json
+
