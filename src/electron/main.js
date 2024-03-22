@@ -1,14 +1,11 @@
 import { app, BrowserWindow, Menu, dialog } from "electron";
 import path from "path";
 import fs from "fs";
-import sanitizeFileName from "sanitize-filename";
-import jsonfile from "jsonfile";
 import mkdirp from "mkdirp";
 import electronEndpoints from "./electron_endpoint.js";
 import logger from "../utils/logger.js";
 import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
-import projectsUtil from "../utils/projects_util.js";
 
 logger.debug("--- starting");
 
