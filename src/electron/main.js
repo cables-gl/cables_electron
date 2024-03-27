@@ -47,11 +47,26 @@ class ElectronApp
                 "v8CacheOptions": "none"
             }
         });
-        // TODO: show proper dialog here...
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
-            event.preventDefault();
+            if (this.editorWindow.isDocumentEdited())
+            {
+                const choice = dialog.showMessageBoxSync(this.editorWindow, {
+                    "type": "question",
+                    "buttons": ["Leave", "Stay"],
+                    "title": "unsaved content!",
+                    "message": "unsaved content!",
+                    "defaultId": 0,
+                    "cancelId": 1
+                });
+                const leave = (choice === 0);
+                if (leave)
+                {
+                    event.preventDefault();
+                }
+            }
         });
+
         this.openPatch(patchFile);
     }
 
