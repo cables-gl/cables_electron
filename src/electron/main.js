@@ -47,6 +47,11 @@ class ElectronApp
                 "v8CacheOptions": "none"
             }
         });
+        // TODO: show proper dialog here...
+        this.editorWindow.webContents.on("will-prevent-unload", (event) =>
+        {
+            event.preventDefault();
+        });
         this.openPatch(patchFile);
     }
 
