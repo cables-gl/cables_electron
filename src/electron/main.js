@@ -70,7 +70,7 @@ class ElectronApp
         this.openPatch(patchFile);
     }
 
-    openPatchDialog()
+    async openPatchDialog()
     {
         let title = "select patch";
         let properties = ["openFile"];
@@ -190,7 +190,7 @@ class ElectronApp
                 {
                     this.settings.setProjectFile(null);
                     this.settings.setCurrentProjectDir(null);
-                    this.settings.setCurrentProject(null);
+                    this.settings.setCurrentProject(null, null);
                 }
                 this.editorWindow.setTitle(title);
             });
@@ -217,7 +217,7 @@ class ElectronApp
 
     _patchDialog(title, properties, cb = null)
     {
-        dialog.showOpenDialog(this.editorWindow, {
+        return dialog.showOpenDialog(this.editorWindow, {
             "title": title,
             "properties": properties,
             "filters": [{
@@ -232,7 +232,7 @@ class ElectronApp
                 this.settings.setCurrentProjectDir(path.dirname(patchFile));
                 this.settings.setProjectFile(patchFile);
                 this.openPatch(patchFile);
-                return result.filePaths[0];
+                return patchFile;
             }
             else
             {

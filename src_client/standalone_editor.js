@@ -44,13 +44,6 @@ export default class ElectronEditor
                 });
             });
 
-        this._talker.addEventListener(
-            "gotoPatch",
-            (options) =>
-            {
-                window.location.reload();
-            });
-
         const talkerTopics = {
             "getOpInfo": { "needsProjectDir": false },
             "getCoreOpsCode": { "needsProjectDir": false },
@@ -84,7 +77,8 @@ export default class ElectronEditor
             "opSaveLayout": { "needsProjectDir": true },
             "opClone": { "needsProjectDir": true },
             "checkNumAssetPatches": { "needsProjectDir": false },
-            "saveProjectAs": { "needsProjectDir": false }
+            "saveProjectAs": { "needsProjectDir": false },
+            "gotoPatch": { "needsProjectDir": false }
         };
 
         Object.keys(talkerTopics).forEach((talkerTopic) =>

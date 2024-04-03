@@ -24,6 +24,7 @@ class ElectronSettings
         this.WINDOW_WIDTH = "windowWidth";
         this.BUILD_INFO_FIELD = "buildInfo";
         this.USER_SETTINGS = "userSettings";
+        this.RECENT_PROJECTS = "recentProjects";
 
         this.opts = {};
         this.opts.defaults = {};
@@ -37,6 +38,7 @@ class ElectronSettings
         this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
         this.opts.defaults[this.BUILD_INFO_FIELD] = this.getBuildInfo();
+        this.opts.defaults[this.RECENT_PROJECTS] = {};
 
         this.opts.defaults[this.WINDOW_X_POS_FIELD] = null;
         this.opts.defaults[this.WINDOW_Y_POS_FIELD] = null;
@@ -96,10 +98,16 @@ class ElectronSettings
         this.set(this.CURRENTPATCHDIR_FIELD, value);
     }
 
-    setCurrentProject(project)
+    setCurrentProject(projectFile, project)
     {
         this._currentProject = project;
         this.set(this.PATCHID_FIELD, project ? project._id : "");
+        const recentProjects = this.getRecentProjects();
+        if (projectFile && project && !recentProjects.hasOwnProperty(projectFile))
+        {
+            recentProjects[projectFile] = project;
+        }
+        /// this.set(this.RECENT_PROJECTS, recentProjects.slice(0, 5));
     }
 
     getCurrentProject()
@@ -114,7 +122,7 @@ class ElectronSettings
             this.setProjectFile(projectFile);
             let patch = fs.readFileSync(projectFile);
             patch = JSON.parse(patch.toString("utf-8"));
-            this.setCurrentProject(patch);
+            this.setCurrentProject(projectFile, patch);
         }
     }
 
@@ -250,6 +258,11 @@ class ElectronSettings
         {
             return defaults;
         }
+    }
+
+    getRecentProjects()
+    {
+        return this.get(this.RECENT_PROJECTS);
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));

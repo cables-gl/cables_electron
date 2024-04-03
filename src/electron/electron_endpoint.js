@@ -266,7 +266,7 @@ class ElectronEndpoint
             if (!currentProject)
             {
                 const newProject = projectsUtil.generateNewProject(this.getCurrentUser());
-                this._settings.setCurrentProject(newProject);
+                this._settings.setCurrentProject(patchPath, newProject);
                 currentProject = newProject;
             }
             return currentProject;
@@ -948,7 +948,8 @@ class ElectronEndpoint
 
     getRecentPatches()
     {
-        return [];
+        const recents = this._settings.getRecentProjects();
+        return Object.values(this._settings.getRecentProjects());
     }
 
     opCreate(data)
@@ -1244,6 +1245,33 @@ class ElectronEndpoint
         };
         project.shortId = helper.generateShortId(project._id, Date.now());
         return project;
+    }
+
+    async gotoPatch(data)
+    {
+        const recent = this._settings.getRecentProjects();
+        let project = null;
+        let projectFile = null;
+        for (const key in recent)
+        {
+            const p = recent[key];
+            if (p && p.shortId === data.id)
+            {
+                project = p;
+                projectFile = key;
+                break;
+            }
+        }
+        if (project && projectFile)
+        {
+            this._settings.setCurrentProject(projectFile, project);
+            electronApp.openPatch(projectFile);
+            return null;
+        }
+        else
+        {
+            return await electronApp.openPatchDialog();
+        }
     }
 }
 
