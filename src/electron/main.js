@@ -104,7 +104,7 @@ class ElectronApp
                         "accelerator": "CmdOrCtrl+N",
                         "click": () =>
                         {
-                            this.createNewPatchDialog();
+                            this.openPatch();
                         }
                     },
                     {
@@ -176,7 +176,6 @@ class ElectronApp
 
     openPatch(patchFile)
     {
-        logger.debug("SWITCH TO", patchFile);
         doc.rebuildOpCaches(() =>
         {
             this.editorWindow.loadFile("index.html").then(() =>
@@ -186,6 +185,12 @@ class ElectronApp
                 {
                     this.settings.loadProject(patchFile);
                     title = "cables - " + this.settings.getCurrentProject().name;
+                }
+                else
+                {
+                    this.settings.setProjectFile(null);
+                    this.settings.setCurrentProjectDir(null);
+                    this.settings.setCurrentProject(null);
                 }
                 this.editorWindow.setTitle(title);
             });
@@ -214,11 +219,19 @@ class ElectronApp
     {
         dialog.showOpenDialog(this.editorWindow, {
             "title": title,
-            "properties": properties
+            "properties": properties,
+            "filters": [{
+                "name": "cables project",
+                "extensions": [this.cablesFileExtension],
+            }]
         }).then((result) =>
         {
             if (!result.canceled)
             {
+                const patchFile = result.filePaths[0];
+                this.settings.setCurrentProjectDir(path.dirname(patchFile));
+                this.settings.setProjectFile(patchFile);
+                this.openPatch(patchFile);
                 return result.filePaths[0];
             }
             else

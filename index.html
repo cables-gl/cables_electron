@@ -59,7 +59,7 @@
                                 return window.nodeRequire(modulePath);
                             } catch (e)
                             {
-                                console.error("failed to load node module \"" + moduleName + "\" do you need to run `npm install`?");
+                                console.error("failed to load node module \"" + moduleName + "\" do you need to run `npm install`?", e);
                                 return "";
                             }
                         }
@@ -74,9 +74,9 @@
                         iframeCables.CMD.commands = iframeCables.CMD.commands.concat(standaloneCommands.commands);
                     }
                 });
+                window.editorIframe = iframeWindow;
             }
         }
-
 
         window.addEventListener("message", (event) => {
             if (event.data && event.data.type === "hashchange") {
