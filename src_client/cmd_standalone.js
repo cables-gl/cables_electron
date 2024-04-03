@@ -3,8 +3,19 @@ const CMD_STANDALONE_COMMANDS = [];
 
 CABLES_CMD_STANDALONE.runNpm = () =>
 {
+    const loadingModal = window.editorIframe.gui.startModalLoading("Installing packages...");
     const options = {};
-    window.ipcRenderer.invoke("talkerMessage", "installProjectDependencies", options).then((r) => {});
+    window.ipcRenderer.invoke("talkerMessage", "installProjectDependencies", options).then((r) =>
+    {
+        if (r.stdout)
+        {
+            loadingModal.setTask(r.stdout);
+        }
+        if (r.stderr)
+        {
+            loadingModal.setTask(r.stderr);
+        }
+    });
 };
 
 CABLES_CMD_STANDALONE.openProjectDir = () =>

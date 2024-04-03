@@ -6,9 +6,10 @@ import jsonfile from "jsonfile";
 import crypto from "crypto";
 import pako from "pako";
 import mkdirp from "mkdirp";
-import { addDependency } from "nypm";
 
 import sanitizeFileName from "sanitize-filename";
+import { fileURLToPath } from "url";
+import { execaSync } from "execa";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
@@ -1073,30 +1074,41 @@ class ElectronEndpoint
         return opsUtil.cloneOp(oldName, newName, currentUser);
     }
 
-    installProjectDependencies(data)
+    async installProjectDependencies(data)
     {
         const currentProjectDir = this._settings.getCurrentProjectDir();
         const opsDir = cables.getProjectOpsPath();
-        const packageFiles = helper.getFilesRecursive(opsDir, "package-lock.json");
-        const fileNames = Object.keys(packageFiles);
-        const toInstall = [];
+        const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
+        const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
+
+        let __dirname = fileURLToPath(new URL(".", import.meta.url));
+        __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
+        const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
+        console.log("NPM", npm);
+
+        let toInstall = [];
         fileNames.forEach((packageFile) =>
         {
             const fileContents = packageFiles[packageFile];
             const fileJson = JSON.parse(fileContents);
-            const packages = fileJson.packages;
-            if (packages && packages[""])
+            let deps = fileJson.dependencies || {};
+            let devDeps = fileJson.devDependencies || {};
+            const allDeps = { ...devDeps, ...deps };
+            Object.keys(allDeps).forEach((lib) =>
             {
-                const deps = packages[""].dependencies || [];
-                Object.keys(deps).forEach((lib) =>
+                if (lib)
                 {
-                    const ver = deps[lib];
-                    const semVer = lib + "@" + ver;
-                    toInstall.push(addDependency(semVer, { "cwd": currentProjectDir }));
-                });
-            }
+                    const ver = allDeps[lib];
+                    if (ver)
+                    {
+                        const semVer = lib + "@" + ver;
+                        toInstall.push(semVer);
+                    }
+                }
+            });
         });
-        return Promise.all(toInstall);
+        toInstall = helper.uniqueArray(toInstall);
+        return execaSync(npm, ["install", toInstall], { "cwd": currentProjectDir });
     }
 
     async openProjectDir()
@@ -1190,6 +1202,48 @@ class ElectronEndpoint
     checkNumAssetPatches()
     {
         return { "assets": [], "countPatches": 0, "countOps": 0 };
+    }
+
+    async saveProjectAs(data)
+    {
+        const newProjectName = data.name || "new project";
+
+        const projectDir = await electronApp.pickProjectDirDialog();
+        if (projectDir)
+        {
+            logger.debug("setting new project dir to", projectDir);
+            this._settings.setCurrentProjectDir(projectDir);
+            const projectFile = path.join(projectDir, filesUtil.realSanitizeFilename(newProjectName + ".cables.json"));
+            this._settings.setProjectFile(projectFile);
+        }
+        else
+        {
+            logger.error("no project dir chosen");
+            return null;
+        }
+
+
+        let collaborators = [];
+        let usersReadOnly = [];
+
+        const origProject = this.getCurrentProject();
+        const currentUser = this.getCurrentUser();
+        const project = {
+            "_id": helper.generateRandomId(),
+            "name": newProjectName,
+            "description": origProject.description,
+            "tags": origProject.tags,
+            "userId": currentUser._id,
+            "cachedUsername": currentUser.username,
+            "created": new Date(),
+            "cloneOf": origProject._id,
+            "updated": new Date(),
+            "users": collaborators,
+            "usersReadOnly": usersReadOnly,
+            "visibility": "private"
+        };
+        project.shortId = helper.generateShortId(project._id, Date.now());
+        return project;
     }
 }
 
