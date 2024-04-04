@@ -5,10 +5,7 @@ import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
 import { fileURLToPath } from "url";
-import logger from "./utils/logger.js";
 import settings from "./electron/electron_settings.js";
-
-logger.info("starting up cables");
 
 class CablesStandalone extends Cables
 {
@@ -100,7 +97,7 @@ if (customConfig)
     configLocation = path.join(__dirname, configLocation);
     if (!fs.existsSync(configLocation))
     {
-        logger.error("custom config set to ", configLocation, "but file does not exists, do you need to run `npm run build`?");
+        console.error("custom config set to ", configLocation, "but file does not exists, do you need to run `npm run build`?");
         process.exit(1);
     }
 }

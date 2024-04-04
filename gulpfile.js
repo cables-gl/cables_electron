@@ -6,6 +6,7 @@ import getRepoInfo from "git-repo-info";
 import webpack from "webpack-stream";
 import compiler from "webpack";
 import webpackStandaloneConfig from "./webpack.standalone.config.js";
+import cables from "./src/cables.js";
 
 const defaultConfigLocation = "./cables.json";
 let configLocation = defaultConfigLocation;

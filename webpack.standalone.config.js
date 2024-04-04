@@ -5,7 +5,7 @@ export default (isLiveBuild, buildInfo) =>
 {
     return {
         "mode": isLiveBuild ? "production" : "development",
-        "devtool": isLiveBuild ? "source-map" : "eval-cheap-module-source-map",
+        "devtool": "source-map",
         "entry": {
             "scripts.standalone.js": [path.resolve("./src_client", "index_standalone.js")]
         },
@@ -13,15 +13,17 @@ export default (isLiveBuild, buildInfo) =>
             "path": path.resolve("./public", "js"),
             "filename": "[name]",
         },
-        "stats": isLiveBuild,
-        "optimization": { "minimize": isLiveBuild },
+        "optimization": { "minimize": true },
         "externals": ["CABLES"],
         "resolve": {
             "extensions": [".js"],
         },
         "plugins": [
-            new webpack.DefinePlugin({
-                "window.BUILD_INFO": JSON.stringify(buildInfo)
+            new webpack.BannerPlugin({
+                "entryOnly": true,
+                "footer": true,
+                "raw": true,
+                "banner": "var CABLES = CABLES || { \"STANDALONE\": {}}; CABLES.STANDALONE = CABLES.STANDALONE || {}; CABLES.STANDALONE.build = " + JSON.stringify(buildInfo) + ";"
             })
         ]
     };
