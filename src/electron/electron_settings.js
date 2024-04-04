@@ -4,6 +4,7 @@ import mkdirp from "mkdirp";
 import { app } from "electron";
 import helper from "../utils/helper_util.js";
 
+
 class ElectronSettings
 {
     constructor(storageDir)
@@ -23,13 +24,14 @@ class ElectronSettings
         this.WINDOW_HEIGHT = "windowHeight";
         this.WINDOW_WIDTH = "windowWidth";
         this.BUILD_INFO_FIELD = "buildInfo";
-        this.USER_SETTINGS = "userSettings";
-        this.RECENT_PROJECTS = "recentProjects";
+        this.USER_SETTINGS_FIELD = "userSettings";
+        this.RECENT_PROJECTS_FIELD = "recentProjects";
+        this.OPEN_DEV_TOOLS_FIELD = "openDevTools";
 
         this.opts = {};
         this.opts.defaults = {};
         this.opts.configName = this.MAIN_CONFIG_NAME;
-        this.opts.defaults[this.USER_SETTINGS] = {
+        this.opts.defaults[this.USER_SETTINGS_FIELD] = {
             "introCompleted": true,
             "showTipps": false
         };
@@ -38,7 +40,8 @@ class ElectronSettings
         this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
         this.opts.defaults[this.BUILD_INFO_FIELD] = this.getBuildInfo();
-        this.opts.defaults[this.RECENT_PROJECTS] = {};
+        this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
+        this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
 
         this.opts.defaults[this.WINDOW_X_POS_FIELD] = null;
         this.opts.defaults[this.WINDOW_Y_POS_FIELD] = null;
@@ -143,7 +146,7 @@ class ElectronSettings
 
     setUserSettings(value)
     {
-        this.set(this.USER_SETTINGS, value);
+        this.set(this.USER_SETTINGS_FIELD, value);
     }
 
     getProjectFile()
@@ -262,7 +265,7 @@ class ElectronSettings
 
     getRecentProjects()
     {
-        return this.get(this.RECENT_PROJECTS);
+        return this.get(this.RECENT_PROJECTS_FIELD);
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));

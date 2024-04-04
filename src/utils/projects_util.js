@@ -1,17 +1,19 @@
 import { utilProvider, SharedProjectsUtil } from "cables-shared-api";
+import path from "path";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
+import cables from "../cables.js";
 
 class ProjectsUtil extends SharedProjectsUtil
 {
     getAssetPath(projectId)
     {
-        return settings.getCurrentProjectDir();
+        return cables.getAssetPath();
     }
 
     getScreenShotPath(pId)
     {
-        return this.getAssetPath(pId) + "/_screenshots/";
+        return path.join(settings.getCurrentProjectDir(), "/_screenshots/");
     }
 
     generateNewProject(owner)

@@ -44,6 +44,17 @@ export default class ElectronEditor
                 });
             });
 
+        this._talker.addEventListener(
+            "updateFile",
+            (options, next) =>
+            {
+                window.ipcRenderer.invoke("talkerMessage", "updateFile", options, { "needsProjectDir": true }).then((r) =>
+                {
+                    next(null, r);
+                    this._talker.send("fileUpdated", { "filename": options.fileName });
+                });
+            });
+
         const talkerTopics = {
             "getOpInfo": { "needsProjectDir": false },
             "getCoreOpsCode": { "needsProjectDir": false },

@@ -122,6 +122,19 @@ class ElectronEndpoint
                     "headers": { "content-type": "application/javascript" }
                 });
             }
+            else if (urlPath.startsWith("/assets/"))
+            {
+                const parts = urlPath.split("/");
+                const assetName = parts[parts.length - 1];
+                const assetDb = { "fileName": assetName };
+                const assetPath = filesUtil.getFileAssetLocation(assetDb);
+                let content = "";
+                if (fs.existsSync(assetPath))
+                {
+                    content = fs.readFileSync(assetPath);
+                }
+                return new Response(content);
+            }
             else
             {
                 return new Response("", {
@@ -1272,6 +1285,37 @@ class ElectronEndpoint
         {
             return await electronApp.openPatchDialog();
         }
+    }
+
+    updateFile(data)
+    {
+        this._log.info("file edit...");
+        if (!data || !data.fileName)
+        {
+            return;
+        }
+
+
+        const project = this.getCurrentProject();
+        const newPath = path.join(projectsUtil.getAssetPath(project._id), "/");
+        if (!fs.existsSync(newPath)) mkdirp.sync(newPath);
+
+        const sanitizedFileName = filesUtil.realSanitizeFilename(data.fileName);
+
+        try
+        {
+            if (fs.existsSync(newPath + sanitizedFileName))
+            {
+                this._log.info("delete old file ", sanitizedFileName);
+                fs.unlinkSync(newPath + sanitizedFileName);
+            }
+        }
+        catch (e) {}
+
+        this._log.info("edit file", newPath + sanitizedFileName);
+
+        fs.writeFileSync(newPath + sanitizedFileName, data.content);
+        return { "success": true, "filename": sanitizedFileName };
     }
 }
 
