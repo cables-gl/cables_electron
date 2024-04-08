@@ -2,8 +2,8 @@ name: nightly dev build
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 3 * * *"
+ # schedule:
+ #   - cron: "0 3 * * *"
 
 env:
   releaseTag: ${{ github.run_number }}-dev
