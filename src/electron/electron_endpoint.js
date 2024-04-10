@@ -1122,7 +1122,14 @@ class ElectronEndpoint
             });
         });
         toInstall = helper.uniqueArray(toInstall);
-        return execaSync(npm, ["install", toInstall], { "cwd": currentProjectDir });
+        if (toInstall.length > 0)
+        {
+            return execaSync(npm, ["install", toInstall], { "cwd": currentProjectDir });
+        }
+        else
+        {
+            return { "stdout": "noting to install" };
+        }
     }
 
     async openProjectDir()
