@@ -199,7 +199,7 @@ class ElectronApp
                 }
                 this.editorWindow.setTitle(title);
             });
-        }, ["core", "teams", "extensions", "users", "patches"]);
+        }, ["core", "teams", "extensions", "users", "patches"], true);
     }
 
     _dirDialog(title, properties)
