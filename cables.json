@@ -1,10 +1,17 @@
 {
   "env": "electron",
+  "sourcePath": {
+    "libs": "../../shared/libs/",
+    "corelibs": "../../cables/build/libs/",
+    "ops": "../../cables/src/ops/",
+    "uiDist": "../../cables_ui/dist/"
+  },
   "path": {
-    "uiDist": "../ui/",
-    "ops": "../ops/",
+    "uiDist": "../dist/ui/",
+    "ops": "../dist/ops/",
     "assets": "../public/assets/",
-    "libs": "../public/libs/",
-    "corelibs": "../public/libs_core/"
+    "libs": "../dist/public/libs/",
+    "corelibs": "../dist/public/libs_core/",
+    "js": "../dist/public/js/"
   }
 }

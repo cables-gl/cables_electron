@@ -37,7 +37,8 @@
     "files": [
       "**/*",
       "!gulpfile.js",
-      "!webpack.*.config.js"
+      "!webpack.*.config.js",
+      "!cables_env_*.json"
     ],
     "directories": {
       "buildResources": "resources"

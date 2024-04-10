@@ -1,5 +1,6 @@
 import gulp from "gulp";
 import fs from "fs";
+import path from "path";
 import mkdirp from "mkdirp";
 import getRepoInfo from "git-repo-info";
 
@@ -20,12 +21,17 @@ if (!fs.existsSync(configLocation))
     }
     else
     {
-        console.error("config file not found at neither", configLocation, "nor", defaultConfigLocation);
+        console.error("no config file found at neither", configLocation, "nor", defaultConfigLocation);
         process.exit(1);
     }
 }
 
-const config = JSON.parse(fs.readFileSync(configLocation, "utf-8"));
+let config = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
+if (configLocation !== defaultConfigLocation)
+{
+    const localConfig = JSON.parse(fs.readFileSync(configLocation, "utf-8"));
+    config = { ...config, localConfig };
+}
 const isLiveBuild = config.env === "electron";
 
 let buildInfo = getBuildInfo();
@@ -48,47 +54,59 @@ function getBuildInfo()
 
 function _create_ops_dirs(done)
 {
+    const opsPath = path.join("./src", config.path.ops);
     fs.rmSync("ops", { "recursive": true, "force": true });
-    mkdirp.sync("ops/base/");
-    mkdirp.sync("ops/extensions/");
-    mkdirp.sync("ops/patches/");
-    mkdirp.sync("ops/teams/");
-    mkdirp.sync("ops/users/");
+    mkdirp.sync(path.join(opsPath, "/base/"));
+    mkdirp.sync(path.join(opsPath, "/extensions/"));
+    mkdirp.sync(path.join(opsPath, "/patches/"));
+    mkdirp.sync(path.join(opsPath, "/teams/"));
+    mkdirp.sync(path.join(opsPath, "/users/"));
     done();
 }
 
 function _libs_copy()
 {
-    mkdirp.sync("public/libs");
-    return gulp.src("../shared/libs/**").pipe(gulp.dest("public/libs/"));
+    const target = path.join("./src", config.path.libs);
+    const source = path.join("./src", config.sourcePath.libs);
+    mkdirp.sync(target);
+    return gulp.src(source + "**").pipe(gulp.dest(target));
 }
 
 function _corelibs_copy()
 {
-    mkdirp.sync("public/libs_core");
-    return gulp.src("../cables/build/libs/**").pipe(gulp.dest("public/libs_core/"));
+    const target = path.join("./src", config.path.corelibs);
+    const source = path.join("./src", config.sourcePath.corelibs);
+    mkdirp.sync(target);
+    return gulp.src(source + "**").pipe(gulp.dest(target));
 }
 
 function _core_ops_copy()
 {
-    mkdirp.sync("ops/base/");
-    return gulp.src("../cables/src/ops/base/**").pipe(gulp.dest("ops/base/"));
+    const target = path.join("./src", config.path.ops, "/base/");
+    const source = path.join("./src", config.sourcePath.ops, "/base/");
+    mkdirp.sync(target);
+    return gulp.src(source + "**").pipe(gulp.dest(target));
 }
 
 function _extension_ops_copy()
 {
-    mkdirp.sync("ops/extensions/");
-    return gulp.src("../cables/src/ops/extensions/**").pipe(gulp.dest("ops/extensions/"));
+    const target = path.join("./src", config.path.ops, "/extensions/");
+    const source = path.join("./src", config.sourcePath.ops, "/extensions/");
+    mkdirp.sync(target);
+    return gulp.src(source + "**").pipe(gulp.dest(target));
 }
 
 function _ui_copy()
 {
-    mkdirp.sync("ui");
-    return gulp.src("../cables_ui/dist/**").pipe(gulp.dest("ui/"));
+    const target = path.join("./src", config.path.uiDist);
+    const source = path.join("./src", config.sourcePath.uiDist);
+    mkdirp.sync(target);
+    return gulp.src(source + "**").pipe(gulp.dest(target));
 }
 
 function _editor_scripts_webpack(done)
 {
+    const target = path.join("./src", config.path.js);
     return gulp.src(["src_client/index_standalone.js"])
         .pipe(
             webpack(
@@ -110,7 +128,7 @@ function _editor_scripts_webpack(done)
                 }
             )
         )
-        .pipe(gulp.dest("public/js"))
+        .pipe(gulp.dest(target))
         .on("error", (err) =>
         {
             console.error("WEBPACK ERROR NEU!!!!!!!", err);
