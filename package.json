@@ -35,13 +35,21 @@
       "node_modules"
     ],
     "files": [
-      "**/*",
-      "!gulpfile.js",
-      "!webpack.*.config.js",
-      "!cables_env_*.json"
+      "cables.json",
+      "src/**/*",
+      "src_client/**/*",
+      "index.html",
+      "dist/ui/**/*",
+      "dist/ops/**/*",
+      "dist/public/**/*",
+      {
+        "from": "resources/assets/",
+        "to": "public/assets/",
+        "filter": ["**/*"]
+      }
     ],
     "directories": {
-      "buildResources": "resources"
+      "buildResources": "resources/build"
     },
     "mac": {
       "category": "public.app-category.developer-tools",
@@ -81,8 +89,8 @@
     "cables-shared-api": "file:../shared/api",
     "cables-shared-client": "file:../shared/client",
     "eslint": "7.32.0",
-    "eslint-config-airbnb-base": "14.2.1",
-    "eslint-plugin-import": "2.27.5",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-plugin-import": "2.29.1",
     "execa": "^8.0.1",
     "fs-extra": "11.1.0",
     "image-size": "1.0.2",
