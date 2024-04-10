@@ -1098,7 +1098,7 @@ class ElectronEndpoint
         let __dirname = fileURLToPath(new URL(".", import.meta.url));
         __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
         const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
-        console.log("NPM", npm);
+        this._log.debug("NPM", npm);
 
         let toInstall = [];
         fileNames.forEach((packageFile) =>
