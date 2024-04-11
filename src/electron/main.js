@@ -47,7 +47,6 @@ class ElectronApp
                 "v8CacheOptions": "none"
             }
         });
-        console.log("SSSS", this.settings.get(this.settings.OPEN_DEV_TOOLS_FIELD));
         if (this.settings.get(this.settings.OPEN_DEV_TOOLS_FIELD)) this.editorWindow.openDevTools();
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {

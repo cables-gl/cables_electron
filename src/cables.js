@@ -27,7 +27,8 @@ class CablesStandalone extends Cables
 
     getAssetLibraryPath()
     {
-        return path.join(this.getPublicPath(), "assets/library");
+        if (!this._config.path.assets) path.join(this.getPublicPath(), "assets/library/");
+        return this._config.path.assets.startsWith("/") ? this._config.path.assets : path.join(this._dirname, this._config.path.assets, "library/");
     }
 
     getGenPath()
