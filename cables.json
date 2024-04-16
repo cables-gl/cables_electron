@@ -1,5 +1,6 @@
 {
   "env": "electron",
+  "minifyJs": true,
   "sourcePath": {
     "libs": "../../shared/libs/",
     "corelibs": "../../cables/build/libs/",

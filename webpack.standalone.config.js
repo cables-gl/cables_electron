@@ -1,11 +1,12 @@
 import path from "path";
 import webpack from "webpack";
+import TerserPlugin from "terser-webpack-plugin";
 
-export default (isLiveBuild, buildInfo) =>
+export default (isLiveBuild, buildInfo, minify = false) =>
 {
     return {
         "mode": isLiveBuild ? "production" : "development",
-        "devtool": "source-map",
+        "devtool": minify ? "source-map" : "eval-cheap-module-source-map",
         "entry": {
             "scripts.standalone.js": [path.resolve("./src_client", "index_standalone.js")]
         },
@@ -13,7 +14,10 @@ export default (isLiveBuild, buildInfo) =>
             "path": path.resolve("./public", "js"),
             "filename": "[name]",
         },
-        "optimization": { "minimize": true },
+        "optimization": {
+            "minimizer": [new TerserPlugin({ "extractComments": false })],
+            "minimize": minify
+        },
         "externals": ["CABLES"],
         "resolve": {
             "extensions": [".js"],

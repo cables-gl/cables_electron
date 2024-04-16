@@ -145,7 +145,6 @@ class ElectronApp
                         {
                             const stateBefore = this.editorWindow.webContents.isDevToolsOpened();
                             this.editorWindow.webContents.toggleDevTools();
-                            console.log("SDSD", this.settings.get(this.settings.OPEN_DEV_TOOLS_FIELD), !stateBefore);
                             this.settings.set(this.settings.OPEN_DEV_TOOLS_FIELD, !stateBefore);
                         }
                     },

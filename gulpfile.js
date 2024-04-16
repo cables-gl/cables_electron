@@ -6,6 +6,7 @@ import getRepoInfo from "git-repo-info";
 
 import webpack from "webpack-stream";
 import compiler from "webpack";
+import jsonfile from "jsonfile";
 import webpackStandaloneConfig from "./webpack.standalone.config.js";
 
 const defaultConfigLocation = "./cables.json";
@@ -17,7 +18,9 @@ if (!fs.existsSync(configLocation))
     if (fs.existsSync(defaultConfigLocation))
     {
         console.warn("config file not found at", configLocation, "copying from cables.json");
-        fs.copyFileSync(defaultConfigLocation, configLocation);
+        let defaultConfig = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
+        defaultConfig.path.assets = "../resources/assets/";
+        jsonfile.writeFileSync(configLocation, defaultConfig, { "encoding": "utf-8", "spaces": 4 });
     }
     else
     {
@@ -32,7 +35,8 @@ if (configLocation !== defaultConfigLocation)
     const localConfig = JSON.parse(fs.readFileSync(configLocation, "utf-8"));
     config = { ...config, localConfig };
 }
-const isLiveBuild = config.env === "electron";
+const isLiveBuild = config.env === "standalone";
+const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 
 let buildInfo = getBuildInfo();
 
@@ -111,7 +115,7 @@ function _editor_scripts_webpack(done)
         .pipe(
             webpack(
                 {
-                    "config": webpackStandaloneConfig(isLiveBuild, buildInfo),
+                    "config": webpackStandaloneConfig(isLiveBuild, buildInfo, minify),
                 },
                 compiler,
                 (err, stats) =>

@@ -109,6 +109,7 @@
     "git-repo-info": "2.1.1",
     "gulp": "4.0.2",
     "webpack": "5.75.0",
-    "webpack-stream": "7.0.0"
+    "webpack-stream": "7.0.0",
+    "terser-webpack-plugin": "5.3.10"
   }
 }

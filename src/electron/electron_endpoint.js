@@ -413,7 +413,7 @@ class ElectronEndpoint
         for (let i = 0; i < _coreLibs.length; i++)
         {
             const coreFilename = _coreLibs[i];
-            if (coreFilename.endsWith(".max.js"))
+            if (coreFilename.endsWith(".js"))
             {
                 coreLibs.push(coreFilename.split(".")[0]);
             }
@@ -656,8 +656,7 @@ class ElectronEndpoint
 
     apiGetCoreLibs(name)
     {
-        const suffix = cables.getConfig().env === "live" ? ".min.js" : ".max.js";
-        const fn = path.join(cables.getCoreLibsPath(), name + suffix);
+        const fn = path.join(cables.getCoreLibsPath(), name + ".js");
 
         if (fs.existsSync(fn))
         {
