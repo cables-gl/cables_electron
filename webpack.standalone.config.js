@@ -6,7 +6,7 @@ export default (isLiveBuild, buildInfo, minify = false) =>
 {
     return {
         "mode": isLiveBuild ? "production" : "development",
-        "devtool": minify ? "source-map" : "eval-cheap-module-source-map",
+        "devtool": minify ? "source-map" : false,
         "entry": {
             "scripts.standalone.js": [path.resolve("./src_client", "index_standalone.js")]
         },
@@ -15,7 +15,7 @@ export default (isLiveBuild, buildInfo, minify = false) =>
             "filename": "[name]",
         },
         "optimization": {
-            "minimizer": [new TerserPlugin({ "extractComments": false })],
+            "minimizer": [new TerserPlugin({ "extractComments": false, "terserOptions": { "output": { "comments": false } } })],
             "minimize": minify
         },
         "externals": ["CABLES"],
