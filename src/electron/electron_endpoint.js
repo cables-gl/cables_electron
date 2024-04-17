@@ -92,7 +92,7 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/ops/code/project"))
             {
-                return this.getProjectOpsCode()
+                return this.apiGetProjectOpsCode()
                     .then((code) =>
                     {
                         return new Response(code, {
@@ -102,7 +102,7 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/ops/code"))
             {
-                return this.getCoreOpsCode()
+                return this.apiGetCoreOpsCode()
                     .then((code) =>
                     {
                         return new Response(code, {
@@ -222,13 +222,13 @@ class ElectronEndpoint
         }
     }
 
-    async getCoreOpsCode(data)
+    async apiGetCoreOpsCode(data)
     {
         const opDocs = doc.getOpDocs(true, true);
         return opsUtil.buildCode(cables.getCoreOpsPath(), null, opDocs, true, true);
     }
 
-    async getProjectOpsCode()
+    async apiGetProjectOpsCode()
     {
         const project = this.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
