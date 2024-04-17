@@ -57,8 +57,6 @@ export default class ElectronEditor
 
         const talkerTopics = {
             "getOpInfo": { "needsProjectDir": false },
-            "getCoreOpsCode": { "needsProjectDir": false },
-            "getProjectOpsCode": { "needsProjectDir": false },
             "savePatch": { "needsProjectDir": true, "needsProjectFile": true },
             "getPatch": { "needsProjectDir": false },
             "newPatch": { "needsProjectDir": true },
