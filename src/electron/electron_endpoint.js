@@ -336,16 +336,16 @@ class ElectronEndpoint
         const patchOps = opsUtil.getPatchOpsNamespaceForProject(project);
         if (patchOps) projectNamespaces.push(patchOps);
 
-        // now we should have all the ops that are used in the project, walk blueprints
+        // now we should have all the ops that are used in the project, walk subPatchOps
         // recursively to get their opdocs
-        const bpOps = subPatchOpUtil.getOpsUsedInSubPatches(project);
-        bpOps.forEach((bpOp) =>
+        const subPatchOps = subPatchOpUtil.getOpsUsedInSubPatches(project);
+        subPatchOps.forEach((bpOp) =>
         {
-            const opName = opsUtil.getOpNameById(bpOp.opId);
+            const opName = opsUtil.getOpNameById(subPatchOps.opId);
             const nsName = opsUtil.getCollectionNamespace(opName);
             projectOps.push(opName);
             if (opsUtil.isCollection(nsName)) projectNamespaces.push(nsName);
-            usedOpIds.push(bpOp.opId);
+            usedOpIds.push(subPatchOps.opId);
         });
 
         projectOps = helper.uniqueArray(projectOps);
@@ -590,11 +590,6 @@ class ElectronEndpoint
     getBuildInfo()
     {
         return this._settings.getBuildInfo();
-    }
-
-    getBlueprintOps()
-    {
-        return { "data": { "ops": [] } };
     }
 
     formatOpCode(data)

@@ -66,7 +66,6 @@ export default class ElectronEditor
             "getOpDocs": { "needsProjectDir": false },
             "saveOpCode": { "needsProjectDir": true },
             "getOpCode": { "needsProjectDir": false },
-            "getBlueprintOps": { "needsProjectDir": false },
             "formatOpCode": { "needsProjectDir": false },
             "saveUserSettings": { "needsProjectDir": false },
             "checkProjectUpdated": { "needsProjectDir": false },
