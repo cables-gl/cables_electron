@@ -19,9 +19,9 @@ CABLES_CMD_STANDALONE.runNpm = () =>
 };
 
 
-CABLES_CMD_STANDALONE.openOpDir = (options) =>
+CABLES_CMD_STANDALONE.openOpDir = (opId, opName) =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "openOpDir", options).then((r) => {});
+    window.ipcRenderer.invoke("talkerMessage", "openOpDir", { "opId": opId, "opName": opName }).then((r) => {});
 };
 
 CABLES_CMD_STANDALONE.openProjectDir = (options) =>
@@ -51,12 +51,6 @@ CMD_STANDALONE_COMMANDS.push(
         "cmd": "open project working directory",
         "category": "patch",
         "func": CABLES_CMD_STANDALONE.openProjectDir,
-        "icon": "file"
-    },
-    {
-        "cmd": "open project asset path",
-        "category": "patch",
-        "func": CABLES_CMD_STANDALONE.openAssetDir,
         "icon": "file"
     }
 );

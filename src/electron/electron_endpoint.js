@@ -1127,6 +1127,7 @@ class ElectronEndpoint
     async openOpDir(options)
     {
         const currentDir = this._settings.getCurrentProjectDir();
+        const currentProject = this._settings.getCurrentProject();
         if (currentDir)
         {
             return shell.openPath(currentDir);
@@ -1142,9 +1143,21 @@ class ElectronEndpoint
         }
     }
 
-    async openAssetDir(options)
+    async openAssetDir(assetUrl)
     {
-        const assetPath = cables.getAssetPath();
+        let assetPath = cables.getAssetPath();
+        if (assetUrl)
+        {
+            try
+            {
+                const url = new URL(assetUrl);
+                assetPath = path.dirname(url.pathname);
+            }
+            catch (e)
+            {
+                assetPath = path.parse(assetUrl);
+            }
+        }
         if (assetPath)
         {
             return shell.openPath(assetPath);
