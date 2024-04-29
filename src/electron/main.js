@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, dialog } from "electron";
+import { app, BrowserWindow, Menu, dialog, shell } from "electron";
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
@@ -67,6 +67,14 @@ class ElectronApp
                 }
             }
         });
+
+
+        this.editorWindow.webContents.setWindowOpenHandler(({ url }) =>
+        {
+            shell.openExternal(url);
+            return { "action": "deny" };
+        });
+
 
         this.openPatch(patchFile);
     }

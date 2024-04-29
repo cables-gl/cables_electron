@@ -18,6 +18,12 @@ CABLES_CMD_STANDALONE.runNpm = () =>
     });
 };
 
+
+CABLES_CMD_STANDALONE.openOpDir = () =>
+{
+    console.log("todo: implement openOpDir");
+};
+
 CABLES_CMD_STANDALONE.openProjectDir = () =>
 {
     const options = {};
