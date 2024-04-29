@@ -19,20 +19,18 @@ CABLES_CMD_STANDALONE.runNpm = () =>
 };
 
 
-CABLES_CMD_STANDALONE.openOpDir = () =>
+CABLES_CMD_STANDALONE.openOpDir = (options) =>
 {
-    console.log("todo: implement openOpDir");
+    window.ipcRenderer.invoke("talkerMessage", "openOpDir", options).then((r) => {});
 };
 
-CABLES_CMD_STANDALONE.openProjectDir = () =>
+CABLES_CMD_STANDALONE.openProjectDir = (options) =>
 {
-    const options = {};
     window.ipcRenderer.invoke("talkerMessage", "openProjectDir", options).then((r) => {});
 };
 
-CABLES_CMD_STANDALONE.openAssetDir = () =>
+CABLES_CMD_STANDALONE.openAssetDir = (options) =>
 {
-    const options = {};
     window.ipcRenderer.invoke("talkerMessage", "openAssetDir", options).then((r) => {});
 };
 
@@ -41,6 +39,12 @@ CMD_STANDALONE_COMMANDS.push(
         "cmd": "install project npm packages",
         "category": "patch",
         "func": CABLES_CMD_STANDALONE.runNpm,
+        "icon": "file"
+    },
+    {
+        "cmd": "open project working directory",
+        "category": "patch",
+        "func": CABLES_CMD_STANDALONE.openOpDir,
         "icon": "file"
     },
     {
