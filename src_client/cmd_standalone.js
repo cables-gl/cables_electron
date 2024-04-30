@@ -18,7 +18,6 @@ CABLES_CMD_STANDALONE.runNpm = () =>
     });
 };
 
-
 CABLES_CMD_STANDALONE.openOpDir = () =>
 {
     console.log("todo: implement openOpDir");
@@ -39,19 +38,19 @@ CABLES_CMD_STANDALONE.openAssetDir = () =>
 CMD_STANDALONE_COMMANDS.push(
     {
         "cmd": "install project npm packages",
-        "category": "patch",
+        "category": "standalone",
         "func": CABLES_CMD_STANDALONE.runNpm,
-        "icon": "file"
+        "icon": "electron"
     },
     {
         "cmd": "open project working directory",
-        "category": "patch",
+        "category": "standalone",
         "func": CABLES_CMD_STANDALONE.openProjectDir,
         "icon": "file"
     },
     {
         "cmd": "open project asset path",
-        "category": "patch",
+        "category": "standalone",
         "func": CABLES_CMD_STANDALONE.openAssetDir,
         "icon": "file"
     }
