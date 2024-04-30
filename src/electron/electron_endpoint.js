@@ -253,7 +253,7 @@ class ElectronEndpoint
             "success": true,
             "msg": "PROJECT_SAVED"
         };
-        this._writeProjectToFile(patch, currentProject);
+        this._writeProjectToFile(currentProject, patch);
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
         return re;
@@ -1062,7 +1062,7 @@ class ElectronEndpoint
     {
         const opName = data.opname;
         const currentUser = this.getCurrentUser();
-        return { "data": opsUtil.updateOp(currentUser, opName, data.updates, { "formatCode": data.formatCode }) };
+        return { "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) };
     }
 
     opSaveLayout(data)
@@ -1191,9 +1191,9 @@ class ElectronEndpoint
         return opDocs;
     }
 
-    _writeProjectToFile(patch, currentProject)
+    _writeProjectToFile(currentProject, patch = null)
     {
-        if (patch.data || patch.dataB64)
+        if (patch && (patch.data || patch.dataB64))
         {
             try
             {
@@ -1211,10 +1211,6 @@ class ElectronEndpoint
                 return;
             }
         }
-        else
-        {
-            this._log.error("body does not contain patch data");
-        }
 
         // filter imported ops, so we do not save these to the database
         currentProject.ops = currentProject.ops.filter((op) =>
@@ -1228,7 +1224,7 @@ class ElectronEndpoint
             .createHash("sha1")
             .update(JSON.stringify(currentProject.ops))
             .digest("hex");
-        currentProject.buildInfo = patch.buildInfo;
+        currentProject.buildInfo = this.getBuildInfo();
 
         const patchPath = this._settings.getProjectFile();
         return jsonfile.writeFileSync(patchPath, currentProject);
@@ -1337,6 +1333,17 @@ class ElectronEndpoint
 
         fs.writeFileSync(newPath + sanitizedFileName, data.content);
         return { "success": true, "filename": sanitizedFileName };
+    }
+
+    async setProjectUpdated(data)
+    {
+        const now = Date.now();
+        const project = this.getCurrentProject();
+        project.updated = now;
+        console.log("HE");
+
+        this._writeProjectToFile(project);
+        return { "data": project };
     }
 }
 

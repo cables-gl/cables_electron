@@ -86,7 +86,8 @@ export default class ElectronEditor
             "opClone": { "needsProjectDir": true },
             "checkNumAssetPatches": { "needsProjectDir": false },
             "saveProjectAs": { "needsProjectDir": false },
-            "gotoPatch": { "needsProjectDir": false }
+            "gotoPatch": { "needsProjectDir": false },
+            "setProjectUpdated": { "needsProjectDir": false }
         };
 
         Object.keys(talkerTopics).forEach((talkerTopic) =>
