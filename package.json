@@ -100,7 +100,7 @@
     "electron": "30.0.1",
     "electron-builder": "24.13.3",
     "git-repo-info": "2.1.1",
-    "gulp": "5.0.0",
+    "gulp": "4.0.2",
     "webpack": "5.76.0",
     "webpack-stream": "7.0.0",
     "terser-webpack-plugin": "5.3.10"
