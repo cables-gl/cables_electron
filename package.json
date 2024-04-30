@@ -21,10 +21,10 @@
     "pack:mac": "electron-builder -m --dir -c.mac.identity=null",
     "pack:win": "electron-builder -w --dir",
     "pack:linux": "electron-builder -l --dir",
-    "dist": "electron-builder -mwl",
-    "dist:mac": "electron-builder -m",
-    "dist:win": "electron-builder -w",
-    "dist:linux": "electron-builder -l"
+    "dist": "electron-builder -mwl --publish=never",
+    "dist:mac": "electron-builder -m --publish=never",
+    "dist:win": "electron-builder -w --publish=never",
+    "dist:linux": "electron-builder -l --publish=never"
   },
   "build": {
     "productName": "cables",
@@ -80,17 +80,14 @@
       ],
       "verifyUpdateCodeSignature": false,
       "signAndEditExecutable": false
-    },
-    "publish": [
-      "github"
-    ]
+    }
   },
   "dependencies": {
     "cables-shared-api": "file:../shared/api",
     "cables-shared-client": "file:../shared/client",
     "eslint": "7.32.0",
     "eslint-config-airbnb-base": "14.2.1",
-    "execa": "^8.0.1",
+    "execa": "8.0.1",
     "fs-extra": "11.1.0",
     "image-size": "1.0.2",
     "jsonfile": "6.1.0",
@@ -103,10 +100,10 @@
     "uuid-v4": "0.1.0"
   },
   "devDependencies": {
-    "electron": "29.1.0",
-    "electron-builder": "24.13.2",
+    "electron": "30.0.1",
+    "electron-builder": "24.13.3",
     "git-repo-info": "2.1.1",
-    "gulp": "4.0.2",
+    "gulp": "5.0.0",
     "webpack": "5.76.0",
     "webpack-stream": "7.0.0",
     "terser-webpack-plugin": "5.3.10"

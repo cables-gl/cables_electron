@@ -14,29 +14,29 @@ jobs:
     steps:
       - name: create release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: "build: ${{ env.releaseTag }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v${{ env.releaseTag }}
           draft: true
           prerelease: true
-  build_linux:
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: ubuntu-latest
-      target: linux
-      branch: develop
-      build_version: ${{ github.run_number }}-dev
-    secrets: inherit
-  build_win:
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: windows-latest
-      target: win
-      branch: develop
-      build_version: ${{ github.run_number }}-dev
-    secrets: inherit
+  # build_linux:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     runner: ubuntu-latest
+  #     target: linux
+  #     branch: develop
+  #     build_version: ${{ github.run_number }}-dev
+  #   secrets: inherit
+  # build_win:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     runner: windows-latest
+  #     target: win
+  #     branch: develop
+  #     build_version: ${{ github.run_number }}-dev
+  #   secrets: inherit
   build_mac:
     uses: ./.github/workflows/build.yml
     with:
