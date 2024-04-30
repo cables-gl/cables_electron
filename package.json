@@ -21,10 +21,10 @@
     "pack:mac": "electron-builder -m --dir -c.mac.identity=null",
     "pack:win": "electron-builder -w --dir",
     "pack:linux": "electron-builder -l --dir",
-    "dist": "electron-builder -mwl --publish=never",
-    "dist:mac": "electron-builder -m --publish=never",
-    "dist:win": "electron-builder -w --publish=never",
-    "dist:linux": "electron-builder -l --publish=never"
+    "dist": "electron-builder -mwl",
+    "dist:mac": "electron-builder -m",
+    "dist:win": "electron-builder -w",
+    "dist:linux": "electron-builder -l"
   },
   "build": {
     "productName": "cables",
