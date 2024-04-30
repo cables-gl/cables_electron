@@ -18,20 +18,19 @@ CABLES_CMD_STANDALONE.runNpm = () =>
     });
 };
 
-CABLES_CMD_STANDALONE.openOpDir = () =>
+
+CABLES_CMD_STANDALONE.openOpDir = (opId, opName) =>
 {
-    console.log("todo: implement openOpDir");
+    window.ipcRenderer.invoke("talkerMessage", "openOpDir", { "opId": opId, "opName": opName }).then((r) => {});
 };
 
-CABLES_CMD_STANDALONE.openProjectDir = () =>
+CABLES_CMD_STANDALONE.openProjectDir = (options) =>
 {
-    const options = {};
     window.ipcRenderer.invoke("talkerMessage", "openProjectDir", options).then((r) => {});
 };
 
-CABLES_CMD_STANDALONE.openAssetDir = () =>
+CABLES_CMD_STANDALONE.openAssetDir = (options) =>
 {
-    const options = {};
     window.ipcRenderer.invoke("talkerMessage", "openAssetDir", options).then((r) => {});
 };
 

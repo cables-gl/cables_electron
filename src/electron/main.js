@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, dialog, shell } from "electron";
+import { app, BrowserWindow, Menu, dialog, shell, screen } from "electron";
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
@@ -103,7 +103,10 @@ class ElectronApp
     createMenu()
     {
         let devToolsAcc = "CmdOrCtrl+Shift+I";
+        let inspectElementAcc = "CmdOrCtrl+Shift+C";
+
         if (process.platform === "darwin") devToolsAcc = "CmdOrCtrl+Option+I";
+
         let menu = Menu.buildFromTemplate([
             {
                 "label": "Menu",
@@ -154,6 +157,14 @@ class ElectronApp
                             const stateBefore = this.editorWindow.webContents.isDevToolsOpened();
                             this.editorWindow.webContents.toggleDevTools();
                             this.settings.set(this.settings.OPEN_DEV_TOOLS_FIELD, !stateBefore);
+                        }
+                    },
+                    {
+                        "label": "Inspect Element",
+                        "accelerator": inspectElementAcc,
+                        "click": () =>
+                        {
+                            this.editorWindow.inspectElement();
                         }
                     },
                     {

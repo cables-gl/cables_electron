@@ -92,23 +92,21 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/ops/code/project"))
             {
-                return this.apiGetProjectOpsCode()
-                    .then((code) =>
-                    {
-                        return new Response(code, {
-                            "headers": { "content-type": "application/json" }
-                        });
+                return this.apiGetProjectOpsCode().then((code) =>
+                {
+                    return new Response(code, {
+                        "headers": { "content-type": "application/json" }
                     });
+                });
             }
             else if (urlPath.startsWith("/api/ops/code"))
             {
-                return this.apiGetCoreOpsCode()
-                    .then((code) =>
-                    {
-                        return new Response(code, {
-                            "headers": { "content-type": "application/javascript" }
-                        });
+                return this.apiGetCoreOpsCode().then((code) =>
+                {
+                    return new Response(code, {
+                        "headers": { "content-type": "application/javascript" }
                     });
+                });
             }
             else if (urlPath.startsWith("/api/op/"))
             {
@@ -224,8 +222,8 @@ class ElectronEndpoint
 
     async apiGetCoreOpsCode(data)
     {
-        const opDocs = doc.getOpDocs(true, true);
-        return opsUtil.buildCode(cables.getCoreOpsPath(), null, opDocs, true, true);
+        const opDocs = doc.getOpDocs();
+        return opsUtil.buildCode(cables.getCoreOpsPath(), null, true, true, opDocs);
     }
 
     async apiGetProjectOpsCode()
@@ -1126,7 +1124,17 @@ class ElectronEndpoint
         }
     }
 
-    async openProjectDir()
+    async openOpDir(options)
+    {
+        const currentDir = this._settings.getCurrentProjectDir();
+        const currentProject = this._settings.getCurrentProject();
+        if (currentDir)
+        {
+            return shell.openPath(currentDir);
+        }
+    }
+
+    async openProjectDir(options)
     {
         const currentDir = this._settings.getCurrentProjectDir();
         if (currentDir)
@@ -1135,9 +1143,21 @@ class ElectronEndpoint
         }
     }
 
-    async openAssetDir()
+    async openAssetDir(assetUrl)
     {
-        const assetPath = cables.getAssetPath();
+        let assetPath = cables.getAssetPath();
+        if (assetUrl)
+        {
+            try
+            {
+                const url = new URL(assetUrl);
+                assetPath = path.dirname(url.pathname);
+            }
+            catch (e)
+            {
+                assetPath = path.parse(assetUrl);
+            }
+        }
         if (assetPath)
         {
             return shell.openPath(assetPath);
