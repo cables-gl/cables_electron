@@ -31,9 +31,6 @@
     "appId": "gl.cables.standalone",
     "nodeVersion": "18.14.2",
     "asar": true,
-    "asarUnpack": [
-      "node_modules"
-    ],
     "files": [
       "cables.json",
       "src/**/*",
