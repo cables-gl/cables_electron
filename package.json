@@ -1,5 +1,5 @@
 {
-  "name": "cables_standalone",
+  "name": "cables_electron",
   "version": "0.0.3",
   "author": "undefined development",
   "description": "current templates for the different exe-exports in cables.gl",
@@ -42,12 +42,26 @@
       {
         "from": "resources/assets/",
         "to": "public/assets/",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "directories": {
       "buildResources": "resources/build"
     },
+    "fileAssociations": [
+      {
+        "ext": [
+          "cables",
+          "cables.json"
+        ],
+        "name": "cables patch",
+        "description": "cables patch",
+        "role": "Editor",
+        "rank": "Owner"
+      }
+    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [

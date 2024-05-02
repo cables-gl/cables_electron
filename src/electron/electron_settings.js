@@ -13,7 +13,7 @@ class ElectronSettings
         {
             mkdirp.sync(storageDir);
         }
-        this.MAIN_CONFIG_NAME = "cables-standalone-preferences";
+        this.MAIN_CONFIG_NAME = "cables-electron-preferences";
         this.PATCHFILE_FIELD = "patchFile";
         this.CURRENTPATCHDIR_FIELD = "currentPatchDir";
         this.PATCHID_FIELD = "patchId";
@@ -131,7 +131,7 @@ class ElectronSettings
 
     getCurrentUser()
     {
-        const username = "standalone";
+        const username = "electron";
         return {
             "username": username,
             "_id": helper.generateRandomId(),

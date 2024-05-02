@@ -23,7 +23,6 @@ class ElectronEndpoint
     constructor()
     {
         this._log = logger;
-        this._settings = settings;
     }
 
     init()
@@ -128,7 +127,7 @@ class ElectronEndpoint
 
     async apiGetProjectOpsCode()
     {
-        const project = this._settings.getCurrentProject();
+        const project = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
         let code = "";
         let missingOps = [];
@@ -150,7 +149,7 @@ class ElectronEndpoint
     {
         const opName = params.opName;
         let code = "";
-        const currentProject = this._settings.getCurrentProject();
+        const currentProject = settings.getCurrentProject();
         try
         {
             const attachmentOps = opsUtil.getSubPatchOpAttachment(opName);

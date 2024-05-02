@@ -27,7 +27,7 @@ jobs:
       runner: ubuntu-latest
       target: linux
       branch: develop
-      build_version: ${{ github.run_number }}-dev
+      build_version: ${{ github.run_number }}-dev-linux
     secrets: inherit
   build_win:
     uses: ./.github/workflows/build.yml
@@ -35,7 +35,7 @@ jobs:
       runner: windows-latest
       target: win
       branch: develop
-      build_version: ${{ github.run_number }}-dev
+      build_version: ${{ github.run_number }}-dev-win
     secrets: inherit
   build_mac:
     uses: ./.github/workflows/build.yml
@@ -43,6 +43,6 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ github.run_number }}-dev
+      build_version: ${{ github.run_number }}-dev-mac
       sign: true
     secrets: inherit

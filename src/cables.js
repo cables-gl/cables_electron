@@ -7,7 +7,7 @@ import mkdirp from "mkdirp";
 import { fileURLToPath } from "url";
 import settings from "./electron/electron_settings.js";
 
-class CablesStandalone extends Cables
+class CablesElectron extends Cables
 {
     getAssetPath()
     {
@@ -102,4 +102,4 @@ if (customConfig)
         process.exit(1);
     }
 }
-export default new CablesStandalone(utilProvider, __dirname, app.getPath("userData"), configLocation);
+export default new CablesElectron(utilProvider, __dirname, app.getPath("userData"), configLocation);

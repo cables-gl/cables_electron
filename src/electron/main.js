@@ -15,11 +15,10 @@ class ElectronApp
 {
     constructor()
     {
-        this.cablesFileExtension = ".cables.json";
+        this.cablesFileExtensions = [".cables", ".cables.json"];
         this.editorWindow = null;
-        this.settings = settings;
-        this.settings.set("currentUser", this.settings.getCurrentUser());
-        this.settings.set("uiDistPath", cables.getUiDistPath());
+        settings.set("currentUser", settings.getCurrentUser());
+        settings.set("uiDistPath", cables.getUiDistPath());
         this.documentsPath = path.join(app.getPath("documents"), "cables");
         if (!fs.existsSync(this.documentsPath)) mkdirp.sync(this.documentsPath);
     }
@@ -27,11 +26,11 @@ class ElectronApp
     createWindow()
     {
         let patchFile = null;
-        if (this.settings.getProjectFile())
+        if (settings.getProjectFile())
         {
-            if (fs.existsSync(this.settings.getProjectFile()))
+            if (fs.existsSync(settings.getProjectFile()))
             {
-                patchFile = this.settings.getProjectFile();
+                patchFile = settings.getProjectFile();
             }
         }
 
@@ -51,7 +50,7 @@ class ElectronApp
                 "v8CacheOptions": "none"
             }
         });
-        if (this.settings.get(this.settings.OPEN_DEV_TOOLS_FIELD)) this.editorWindow.openDevTools();
+        if (settings.get(settings.OPEN_DEV_TOOLS_FIELD)) this.editorWindow.openDevTools();
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
             if (this.editorWindow.isDocumentEdited())
@@ -160,7 +159,7 @@ class ElectronApp
                         {
                             const stateBefore = this.editorWindow.webContents.isDevToolsOpened();
                             this.editorWindow.webContents.toggleDevTools();
-                            this.settings.set(this.settings.OPEN_DEV_TOOLS_FIELD, !stateBefore);
+                            settings.set(settings.OPEN_DEV_TOOLS_FIELD, !stateBefore);
                         }
                     },
                     {
@@ -209,14 +208,14 @@ class ElectronApp
                 let title = "cables";
                 if (patchFile)
                 {
-                    this.settings.loadProject(patchFile);
-                    title = "cables - " + this.settings.getCurrentProject().name;
+                    settings.loadProject(patchFile);
+                    title = "cables - " + settings.getCurrentProject().name;
                 }
                 else
                 {
-                    this.settings.setProjectFile(null);
-                    this.settings.setCurrentProjectDir(null);
-                    this.settings.setCurrentProject(null, null);
+                    settings.setProjectFile(null);
+                    settings.setCurrentProjectDir(null);
+                    settings.setCurrentProject(null, null);
                 }
                 this.editorWindow.setTitle(title);
             });
@@ -248,15 +247,15 @@ class ElectronApp
             "properties": properties,
             "filters": [{
                 "name": "cables project",
-                "extensions": [this.cablesFileExtension],
+                "extensions": this.cablesFileExtensions,
             }]
         }).then((result) =>
         {
             if (!result.canceled)
             {
                 const patchFile = result.filePaths[0];
-                this.settings.setCurrentProjectDir(path.dirname(patchFile));
-                this.settings.setProjectFile(patchFile);
+                settings.setCurrentProjectDir(path.dirname(patchFile));
+                settings.setProjectFile(patchFile);
                 this.openPatch(patchFile);
                 return patchFile;
             }

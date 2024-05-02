@@ -7,7 +7,7 @@ import getRepoInfo from "git-repo-info";
 import webpack from "webpack-stream";
 import compiler from "webpack";
 import jsonfile from "jsonfile";
-import webpackStandaloneConfig from "./webpack.standalone.config.js";
+import webpackElectronConfig from "./webpack.electron.config.js";
 
 const defaultConfigLocation = "./cables.json";
 let configLocation = defaultConfigLocation;
@@ -35,7 +35,7 @@ if (configLocation !== defaultConfigLocation)
     const localConfig = JSON.parse(fs.readFileSync(configLocation, "utf-8"));
     config = { ...config, localConfig };
 }
-const isLiveBuild = config.env === "standalone";
+const isLiveBuild = config.env === "electron";
 const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 
 let buildInfo = getBuildInfo();
@@ -111,11 +111,11 @@ function _ui_copy()
 function _editor_scripts_webpack(done)
 {
     const target = path.join("./src", config.path.js);
-    return gulp.src(["src_client/index_standalone.js"])
+    return gulp.src(["src_client/index_electron.js"])
         .pipe(
             webpack(
                 {
-                    "config": webpackStandaloneConfig(isLiveBuild, buildInfo, minify),
+                    "config": webpackElectronConfig(isLiveBuild, buildInfo, minify),
                 },
                 compiler,
                 (err, stats) =>

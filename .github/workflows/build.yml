@@ -1,4 +1,4 @@
-name: shared action - build standalone
+name: shared action - build electron
 
 on:
   workflow_call:
@@ -54,7 +54,7 @@ jobs:
         ref: ${{ inputs.branch }}
         token: ${{ secrets.standalone_token }}
         path: "cables_ui/"
-    - name: checkout cables standalone
+    - name: checkout cables electron
       uses: actions/checkout@v4
       with:
         path: "cables_electron/"
@@ -69,7 +69,7 @@ jobs:
       run: |
         echo "NODE_EXE=$(which node)" >> $GITHUB_OUTPUT
         echo "NPM_EXE=$(which npm)" >> $GITHUB_OUTPUT
-    - name: build standalone
+    - name: build electron
       if: ${{ ! inputs.sign }}
       shell: bash
       run: ./hook_standalone.sh ${{ inputs.target }}
@@ -78,7 +78,7 @@ jobs:
         GH_TOKEN: ${{ secrets.github_token }}
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
-    - name: build signed standalone
+    - name: build signed electron
       if: ${{ inputs.sign }}
       shell: bash
       run: ./hook_standalone.sh ${{ inputs.target }}

@@ -10,7 +10,7 @@
         delete window.module;
     </script>
     <script src="js/talkerapi.js"></script>
-    <script src="../public/js/scripts.standalone.js"></script>
+    <script src="../public/js/scripts.electron.js"></script>
     <style>
         body {
             background-color: #222;
@@ -33,7 +33,7 @@
     const path = nodeRequire("path");
     const electron = nodeRequire("electron");
     const module = nodeRequire("module");
-    window.ipcRenderer = electron.ipcRenderer; // needed to have ipcRenderer ins standalone_editor.js
+    window.ipcRenderer = electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
     const settings = electron.ipcRenderer.sendSync("settings");
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -71,8 +71,8 @@
                 iframeWindow.loadjs.ready("cablesuinew", (depsNotFound) => {
                     const iframeCables = iframeWindow.CABLES;
                     if(iframeCables) {
-                        iframeCables.CMD.STANDALONE = standaloneCommands.functions;
-                        iframeCables.CMD.commands = iframeCables.CMD.commands.concat(standaloneCommands.commands);
+                        iframeCables.CMD.ELECTRON = electronCommands.functions;
+                        iframeCables.CMD.commands = iframeCables.CMD.commands.concat(electronCommands.commands);
                     }
                 });
                 window.editorIframe = iframeWindow;
@@ -92,7 +92,7 @@
             }
         }, false);
 
-        new web.StandaloneEditor(
+        new web.ElectronEditor(
             {
                 config: {
                     "platformClass": "PlatformStandalone",

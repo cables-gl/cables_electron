@@ -8,7 +8,7 @@ export default (isLiveBuild, buildInfo, minify = false) =>
         "mode": isLiveBuild ? "production" : "development",
         "devtool": minify ? "source-map" : false,
         "entry": {
-            "scripts.standalone.js": [path.resolve("./src_client", "index_standalone.js")]
+            "scripts.electron.js": [path.resolve("./src_client", "index_electron.js")]
         },
         "output": {
             "path": path.resolve("./public", "js"),
@@ -27,7 +27,7 @@ export default (isLiveBuild, buildInfo, minify = false) =>
                 "entryOnly": true,
                 "footer": true,
                 "raw": true,
-                "banner": "var CABLES = CABLES || { \"STANDALONE\": {}}; CABLES.STANDALONE = CABLES.STANDALONE || {}; CABLES.STANDALONE.build = " + JSON.stringify(buildInfo) + ";"
+                "banner": "var CABLES = CABLES || { \"ELECTRON\": {}}; CABLES.ELECTRON = CABLES.ELECTRON || {}; CABLES.ELECTRON.build = " + JSON.stringify(buildInfo) + ";"
             })
         ]
     };
