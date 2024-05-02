@@ -56,26 +56,31 @@ class CablesElectron extends Cables
 
     getUserOpsPath()
     {
-        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/users/");
-        return path.join(settings.getCurrentProjectDir(), "/ops/users/");
+        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/", this.USER_OPS_SUBDIR);
+        return path.join(settings.getCurrentProjectDir(), "/ops/", this.USER_OPS_SUBDIR);
     }
 
     getTeamOpsPath()
     {
-        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/teams/");
-        return path.join(settings.getCurrentProjectDir(), "/ops/teams/");
+        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/", this.TEAM_OPS_SUBDIR);
+        return path.join(settings.getCurrentProjectDir(), "/ops/", this.TEAM_OPS_SUBDIR);
     }
 
     getPatchOpsPath()
     {
-        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/patches/");
-        return path.join(settings.getCurrentProjectDir(), "/ops/patches/");
+        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath(), "/", this.PATCH_OPS_SUBDIR);
+        return path.join(settings.getCurrentProjectDir(), "/ops/", this.PATCH_OPS_SUBDIR);
     }
 
     getProjectOpsPath()
     {
         if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath());
         return path.join(settings.getCurrentProjectDir(), "/ops/");
+    }
+
+    getOsOpsDir()
+    {
+        return path.join(app.getPath("userData"), "ops/");
     }
 
     _createDirectories()

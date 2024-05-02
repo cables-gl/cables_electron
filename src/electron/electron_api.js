@@ -542,7 +542,7 @@ class ElectronApi
         const newName = data.namespace + data.v;
         const sourceName = data.sourceName || null;
         const currentUser = settings.getCurrentUser();
-        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, false);
+        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, false, data.opTargetDir);
         result.checkedName = newName;
         return result;
     }
@@ -631,7 +631,7 @@ class ElectronApi
         return arr;
     }
 
-    _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false)
+    _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false, targetDir = false)
     {
         let opNamespace = opsUtil.getNamespace(newName);
         let availableNamespaces = ["Ops.", "Ops.Extension.", "Ops.Team."];
@@ -652,9 +652,9 @@ class ElectronApi
             return result;
         }
 
-        const problems = opsUtil.getOpRenameProblems(newName, oldName, currentUser);
+        const problems = opsUtil.getOpRenameProblems(newName, oldName, currentUser, [], null, null, [], true, targetDir);
         const hints = {};
-        const consequences = opsUtil.getOpRenameConsequences(newName, oldName);
+        const consequences = opsUtil.getOpRenameConsequences(newName, oldName, targetDir);
 
         const newNamespace = opsUtil.getNamespace(newName);
         const existingNamespace = opsUtil.namespaceExists(newNamespace, opDocs);
@@ -739,101 +739,7 @@ class ElectronApi
     {
         let opName = data.opname;
         const currentUser = settings.getCurrentUser();
-        let parts = opName.split(".");
-        if (parts[0] === "Ops" && parts[1] === "User")
-        {
-            parts[2] = currentUser.usernameLowercase;
-        }
-
-        opName = parts.join(".");
-
-        const result = {};
-        const fn = opsUtil.getOpAbsoluteFileName(opName);
-        const basePath = opsUtil.getOpAbsolutePath(opName);
-
-        mkdirp.sync(basePath);
-
-        const newJson = opsUtil.getOpDefaults(opName, currentUser);
-        const changelogMessages = [];
-        changelogMessages.push("created op");
-
-        const opId = newJson.id;
-        const code = data.code || "// your new op\n// have a look at the documentation at: \n// https://cables.gl/docs/5_writing_ops/coding_ops";
-        fs.writeFileSync(fn, code);
-
-        if (data.layout)
-        {
-            const obj = newJson;
-            obj.layout = data.layout;
-            if (obj.layout && obj.layout.name) delete obj.layout.name;
-            result.layout = obj.layout;
-        }
-
-        if (data.libs)
-        {
-            const newLibNames = data.libs;
-            newJson.libs = newLibNames;
-            result.libs = newLibNames;
-            changelogMessages.push(" updated libs: " + newLibNames.join(","));
-        }
-
-        if (data.coreLibs)
-        {
-            result.coreLibs = [];
-            const newCoreLibNames = data.coreLibs;
-            newJson.coreLibs = newCoreLibNames;
-            result.coreLibs = newCoreLibNames;
-            changelogMessages.push(" updated core libs: " + newCoreLibNames.join(","));
-        }
-
-        jsonfile.writeFileSync(opsUtil.getOpJsonPath(opName), newJson, {
-            "encoding": "utf-8",
-            "spaces": 4
-        });
-
-        let attProblems = null;
-        if (data.attachments)
-        {
-            result.attachments = {};
-            attProblems = opsUtil.updateAttachments(opName, data.attachments);
-            result.attachments = opsUtil.getAttachments(opName);
-        }
-
-        if (changelogMessages.length > 0)
-        {
-            opsUtil.addOpChangeLogMessages(currentUser, opName, changelogMessages, "");
-        }
-
-        doc.updateOpDocs(opName);
-        doc.addOpToLookup(opId, opName);
-
-        if (!attProblems)
-        {
-            const response = {
-                "name": opName,
-                "id": opId,
-                "code": code,
-                "opDoc": newJson
-            };
-            if (result.attachments)
-            {
-                const attachmentFiles = opsUtil.getAttachmentFiles(opName);
-                const attachments = {};
-                for (let i = 0; i < attachmentFiles.length; i++)
-                {
-                    const attachmentFile = attachmentFiles[i];
-                    attachments[attachmentFile] = opsUtil.getAttachment(opName, attachmentFile);
-                }
-                response.attachments = attachments;
-            }
-            if (result.coreLibs) response.coreLibs = result.coreLibs;
-            if (result.libs) response.libs = result.libs;
-            return response;
-        }
-        else
-        {
-            return attProblems;
-        }
+        return opsUtil.createOp(opName, currentUser, data.code, data.layout, data.libs, data.coreLibs, data.attachments, data.opTargetDir);
     }
 
     opUpdate(data)
@@ -845,8 +751,8 @@ class ElectronApi
 
     opSaveLayout(data)
     {
-        const opName = data.opname;
         const layout = data.layout;
+        const opName = opsUtil.getOpNameById(data.opname) || layout.name;
         return opsUtil.saveLayout(opName, layout);
     }
 
@@ -899,6 +805,14 @@ class ElectronApi
         else
         {
             return { "stdout": "noting to install" };
+        }
+    }
+
+    async openDir(options)
+    {
+        if (options && options.dir)
+        {
+            return shell.openPath(options.dir);
         }
     }
 
@@ -1096,6 +1010,12 @@ class ElectronApi
         project.updated = now;
         this._writeProjectToFile(project);
         return { "data": project };
+    }
+
+    getOpTargetDirs()
+    {
+        const project = settings.getCurrentProject();
+        return opsUtil.getOpTargetDirs(project);
     }
 }
 

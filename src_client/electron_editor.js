@@ -36,70 +36,79 @@ export default class ElectronEditor
             "fileUploadStr",
             (options, next) =>
             {
-                window.ipcRenderer.invoke("talkerMessage", "fileUpload", options, { "needsProjectDir": true }).then((r) =>
-                {
-                    this._talker.send("refreshFileManager");
-                    this._talker.send("fileUpdated", { "filename": options.filename });
-                    next(null, r);
-                });
+                window.ipcRenderer.invoke("talkerMessage", "fileUpload", options, { "needsProjectDir": true })
+                    .then((r) =>
+                    {
+                        this._talker.send("refreshFileManager");
+                        this._talker.send("fileUpdated", { "filename": options.filename });
+                        next(null, r);
+                    });
             });
 
         this._talker.addEventListener(
             "updateFile",
             (options, next) =>
             {
-                window.ipcRenderer.invoke("talkerMessage", "updateFile", options, { "needsProjectDir": true }).then((r) =>
-                {
-                    next(null, r);
-                    this._talker.send("fileUpdated", { "filename": options.fileName });
-                });
+                window.ipcRenderer.invoke("talkerMessage", "updateFile", options, { "needsProjectDir": true })
+                    .then((r) =>
+                    {
+                        next(null, r);
+                        this._talker.send("fileUpdated", { "filename": options.fileName });
+                    });
             });
 
         const talkerTopics = {
-            "getOpInfo": { "needsProjectDir": false },
-            "savePatch": { "needsProjectDir": true, "needsProjectFile": true },
-            "getPatch": { "needsProjectDir": false },
+            "getOpInfo": {},
+            "savePatch": {
+                "needsProjectDir": true,
+                "needsProjectFile": true
+            },
+            "getPatch": {},
             "newPatch": { "needsProjectDir": true },
-            "getBuildInfo": { "needsProjectDir": false },
-            "getAllProjectOps": { "needsProjectDir": false },
-            "getOpDocsAll": { "needsProjectDir": false },
-            "getOpDocs": { "needsProjectDir": false },
+            "getBuildInfo": {},
+            "getAllProjectOps": {},
+            "getOpDocsAll": {},
+            "getOpDocs": {},
             "saveOpCode": { "needsProjectDir": true },
-            "getOpCode": { "needsProjectDir": false },
-            "formatOpCode": { "needsProjectDir": false },
-            "saveUserSettings": { "needsProjectDir": false },
-            "checkProjectUpdated": { "needsProjectDir": false },
-            "getCoreLibCode": { "needsProjectDir": false },
-            "getLibCode": { "needsProjectDir": false },
-            "getChangelog": { "needsProjectDir": false },
+            "getOpCode": {},
+            "formatOpCode": {},
+            "saveUserSettings": {},
+            "checkProjectUpdated": {},
+            "getCoreLibCode": {},
+            "getLibCode": {},
+            "getChangelog": {},
             "opAttachmentSave": { "needsProjectDir": true },
-            "setIconSaved": { "needsProjectDir": false },
-            "setIconUnsaved": { "needsProjectDir": false },
+            "setIconSaved": {},
+            "setIconUnsaved": {},
             "saveScreenshot": { "needsProjectDir": true },
-            "getFilelist": { "needsProjectDir": false },
-            "getFileDetails": { "needsProjectDir": false },
+            "getFilelist": {},
+            "getFileDetails": {},
             "checkOpName": { "needsProjectDir": true },
-            "getRecentPatches": { "needsProjectDir": false },
-            "opCreate": { "needsProjectDir": true },
+            "getRecentPatches": {},
+            "opCreate": { },
             "opUpdate": { "needsProjectDir": true },
             "opSaveLayout": { "needsProjectDir": true },
             "opClone": { "needsProjectDir": true },
-            "checkNumAssetPatches": { "needsProjectDir": false },
-            "saveProjectAs": { "needsProjectDir": false },
-            "gotoPatch": { "needsProjectDir": false },
-            "setProjectUpdated": { "needsProjectDir": false }
+            "checkNumAssetPatches": {},
+            "saveProjectAs": {},
+            "gotoPatch": {},
+            "setProjectUpdated": {},
+            "getOpTargetDirs": {},
+            "openDir": {}
         };
 
-        Object.keys(talkerTopics).forEach((talkerTopic) =>
-        {
-            this._talker.addEventListener(talkerTopic, (data, next) =>
+        Object.keys(talkerTopics)
+            .forEach((talkerTopic) =>
             {
-                const topicConfig = talkerTopics[talkerTopic];
-                window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig).then((r) =>
+                this._talker.addEventListener(talkerTopic, (data, next) =>
                 {
-                    next(null, r);
+                    const topicConfig = talkerTopics[talkerTopic];
+                    window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig)
+                        .then((r) =>
+                        {
+                            next(null, r);
+                        });
                 });
             });
-        });
     }
 }
