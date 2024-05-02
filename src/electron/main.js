@@ -2,10 +2,12 @@ import { app, BrowserWindow, Menu, dialog, shell, screen } from "electron";
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
-import electronEndpoints from "./electron_endpoint.js";
+import electronEndpoint from "./electron_endpoint.js";
+import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
 import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
+import cables from "../cables.js";
 
 logger.debug("--- starting");
 
@@ -16,6 +18,8 @@ class ElectronApp
         this.cablesFileExtension = ".cables.json";
         this.editorWindow = null;
         this.settings = settings;
+        this.settings.set("currentUser", this.settings.getCurrentUser());
+        this.settings.set("uiDistPath", cables.getUiDistPath());
         this.documentsPath = path.join(app.getPath("documents"), "cables");
         if (!fs.existsSync(this.documentsPath)) mkdirp.sync(this.documentsPath);
     }
@@ -265,7 +269,8 @@ class ElectronApp
 }
 app.whenReady().then(() =>
 {
-    electronEndpoints.init();
+    electronApi.init();
+    electronEndpoint.init();
     electronApp.createWindow();
     electronApp.createMenu();
     app.on("activate", () =>
