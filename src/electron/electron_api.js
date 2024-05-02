@@ -732,11 +732,7 @@ class ElectronApi
     getRecentPatches()
     {
         const recents = settings.getRecentProjects();
-        for (let location in recents)
-        {
-            console.log("location", location);
-        }
-        return Object.values(settings.getRecentProjects());
+        return Object.values(recents);
     }
 
     opCreate(data)
