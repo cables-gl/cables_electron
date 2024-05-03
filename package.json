@@ -97,7 +97,7 @@
       "signAndEditExecutable": false
     },
     "publish": [
-      "github"
+      "always"
     ]
   },
   "dependencies": {
