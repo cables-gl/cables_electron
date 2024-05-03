@@ -72,11 +72,12 @@ class ElectronApi
                     {
                         const currentProject = settings.getCurrentProject();
                         settings.getCurrentProjectDir();
-                        const projectFileName = sanitizeFileName(currentProject.name).replace(/ /g, "_") + ".cables.json";
+                        const projectFileName = sanitizeFileName(currentProject.name).replace(/ /g, "_") + ".cables";
                         const newProjectFile = path.join(settings.getCurrentProjectDir(), projectFileName);
                         logger.debug("new projectfile", settings.getCurrentProjectDir(), projectFileName, newProjectFile);
                         settings.setProjectFile(newProjectFile);
                         jsonfile.writeFileSync(newProjectFile, currentProject, { "encoding": "utf-8", "spaces": 4 });
+                        settings.loadProject(newProjectFile);
                     }
                 }
                 return this[cmd](data);
@@ -162,7 +163,7 @@ class ElectronApi
         const project = projectsUtil.generateNewProject(settings.getCurrentUser());
         const newFile = path.join(settings.getCurrentProjectDir(), project._id + ".json");
         fs.writeFileSync(newFile, JSON.stringify(project));
-        settings.setProjectFile(newFile);
+        settings.loadProject(newFile);
         return project;
     }
 
@@ -200,6 +201,10 @@ class ElectronApi
             usedOpIds.push(projectOp.opId);
         });
 
+        // add all ops in any of the project op directory
+        const otherDirsOps = opsUtil.getOpNamesInProjectDirs(project);
+        projectOps = projectOps.concat(otherDirsOps);
+
         // add all userops of the current user
         projectNamespaces.push(opsUtil.getUserNamespace(currentUser.username));
 
@@ -225,7 +230,8 @@ class ElectronApi
 
         projectOps.forEach((opName) =>
         {
-            const opDoc = doc.getDocForOp(opName);
+            let opDoc = doc.getDocForOp(opName);
+            if (!opDoc) opDoc = doc.buildOpDocs(opName);
             if (opDoc) opDocs.push(opDoc);
         });
 
@@ -759,9 +765,9 @@ class ElectronApi
     opClone(data)
     {
         const newName = data.name;
-        const oldName = data.opname;
+        const oldName = opsUtil.getOpNameById(data.opname) || data.opname;
         const currentUser = settings.getCurrentUser();
-        return opsUtil.cloneOp(oldName, newName, currentUser);
+        return opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir);
     }
 
     async installProjectDependencies(data)
@@ -818,15 +824,16 @@ class ElectronApi
 
     async openOpDir(options)
     {
-        const currentDir = settings.getCurrentProjectDir();
-        const currentProject = settings.getCurrentProject();
-        if (currentDir)
+        const opName = opsUtil.getOpNameById(options.opId) || options.opName;
+        if (!opName) return;
+        const opDir = opsUtil.getOpSourceDir(opName);
+        if (opDir)
         {
-            return shell.openPath(currentDir);
+            return shell.openPath(opDir);
         }
     }
 
-    async openProjectDir(options)
+    async openProjectDir()
     {
         const currentDir = settings.getCurrentProjectDir();
         if (currentDir)
@@ -892,7 +899,9 @@ class ElectronApi
         currentProject.buildInfo = this.getBuildInfo();
 
         const patchPath = settings.getProjectFile();
-        return jsonfile.writeFileSync(patchPath, currentProject);
+        const written = jsonfile.writeFileSync(patchPath, currentProject);
+        settings.loadProject(patchPath);
+        return written;
     }
 
     checkNumAssetPatches()
@@ -902,14 +911,20 @@ class ElectronApi
 
     async saveProjectAs(data)
     {
-        const newProjectName = data.name || "new project";
+        let randomize = settings.getUserSetting("randomizePatchName", true);
+        let newProjectName = data.name;
+        if (!newProjectName)
+        {
+            newProjectName = projectsUtil.getNewProjectName(randomize);
+        }
 
         const projectDir = await electronApp.pickProjectDirDialog();
         if (projectDir)
         {
             logger.debug("setting new project dir to", projectDir);
-            settings.setCurrentProjectDir(projectDir);
-            const projectFile = path.join(projectDir, filesUtil.realSanitizeFilename(newProjectName + ".cables.json"));
+            const projectFile = path.join(projectDir, filesUtil.realSanitizeFilename(newProjectName + ".cables"));
+            const project = settings.getCurrentProject();
+            project.name = newProjectName;
             settings.setProjectFile(projectFile);
         }
         else
@@ -918,28 +933,24 @@ class ElectronApi
             return null;
         }
 
-
         let collaborators = [];
         let usersReadOnly = [];
 
-        const origProject = settings.getCurrentProject();
         const currentUser = settings.getCurrentUser();
-        const project = {
-            "_id": helper.generateRandomId(),
-            "name": newProjectName,
-            "description": origProject.description,
-            "tags": origProject.tags,
-            "userId": currentUser._id,
-            "cachedUsername": currentUser.username,
-            "created": new Date(),
-            "cloneOf": origProject._id,
-            "updated": new Date(),
-            "users": collaborators,
-            "usersReadOnly": usersReadOnly,
-            "visibility": "private"
-        };
-        project.shortId = helper.generateShortId(project._id, Date.now());
-        return project;
+        const origProject = settings.getCurrentProject();
+        origProject._id = helper.generateRandomId();
+        origProject.name = newProjectName;
+        origProject.userId = currentUser._id;
+        origProject.cachedUsername = currentUser.username;
+        origProject.created = new Date();
+        origProject.cloneOf = origProject._id;
+        origProject.updated = new Date();
+        origProject.users = collaborators;
+        origProject.usersReadOnly = usersReadOnly;
+        origProject.visibility = "private";
+        origProject.shortId = helper.generateShortId(origProject._id, Date.now());
+        this._writeProjectToFile(origProject);
+        return origProject;
     }
 
     async gotoPatch(data)
@@ -962,7 +973,7 @@ class ElectronApi
         }
         if (project && projectFile)
         {
-            settings.setCurrentProject(projectFile, project);
+            settings.loadProject(projectFile);
             electronApp.openPatch(projectFile);
             return null;
         }
@@ -1016,6 +1027,26 @@ class ElectronApi
     {
         const project = settings.getCurrentProject();
         return opsUtil.getOpTargetDirs(project);
+    }
+
+    async addProjectOpDir()
+    {
+        const project = settings.getCurrentProject();
+        if (!project) return;
+        const opDir = await electronApp.pickOpDirDialog();
+        if (opDir)
+        {
+            if (!project.dirs) project.dirs = {};
+            if (!project.dirs.ops) project.dirs.ops = [];
+            project.dirs.ops.unshift(opDir);
+            this._writeProjectToFile(project);
+            return projectsUtil.getProjectOpDirs(project, false);
+        }
+        else
+        {
+            logger.error("no project dir chosen");
+            return [];
+        }
     }
 }
 

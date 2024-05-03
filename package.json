@@ -107,6 +107,7 @@
     "moment": "2.29.4",
     "npm": "9.5.0",
     "pako": "2.1.0",
+    "project-name-generator": "2.1.9",
     "sanitize-filename": "1.6.3",
     "uuid-v4": "0.1.0"
   },

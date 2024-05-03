@@ -1,16 +1,17 @@
 import { utilProvider, SharedOpsUtil } from "cables-shared-api";
-import { app } from "electron";
 import path from "path";
 import fs from "fs";
+import helper from "./helper_util.js";
 import settings from "../electron/electron_settings.js";
 import cables from "../cables.js";
+import projectsUtil from "./projects_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
     addPermissionsToOps(ops, user, teams = [], project = null)
     {
         if (!ops) return ops;
-        ops.forEach((op) => { op.allowEdit = true; });
+        ops.forEach((op) => { if (op && !(this.isCoreOp(op.name) || this.isExtension(op.name))) op.allowEdit = true; });
         return ops;
     }
 
@@ -21,49 +22,32 @@ class OpsUtil extends SharedOpsUtil
 
     getOpAbsolutePath(opName)
     {
-        const projectDir = settings.getCurrentProjectDir();
-        let projectOpDir = null;
-        if (projectDir) projectOpDir = cables.getProjectOpsPath();
-        const osOpsDir = cables.getOsOpsDir();
-        const relativePath = super.getOpSourceDir(opName, true);
-        let dirToCheck = null;
-        if (relativePath)
-        {
-            if (projectDir)
-            {
-                dirToCheck = path.join(projectOpDir, relativePath);
-                if (fs.existsSync(dirToCheck)) return dirToCheck;
-                const project = settings.getCurrentProject();
-                let additionalOpDirs = [];
-                if (project && project.dirs && project.dirs.ops) additionalOpDirs = project.dirs.ops;
-                if (additionalOpDirs.length > 0)
-                {
-                    for (let additionalOpDir of additionalOpDirs)
-                    {
-                        if (!path.isAbsolute(additionalOpDir)) additionalOpDir = path.join(projectDir, additionalOpDir);
-                        dirToCheck = path.join(additionalOpDir, relativePath);
-                        if (fs.existsSync(dirToCheck)) return dirToCheck;
-                    }
-                }
-                dirToCheck = path.join(osOpsDir, relativePath);
-                if (fs.existsSync(dirToCheck)) return dirToCheck;
-            }
-        }
-        return super.getOpAbsolutePath(opName);
+        return this._getAbsoluteOpDirFromHierarchy(opName, super.getOpAbsolutePath(opName));
     }
 
-    getOpRenameConsequences(newName, oldName, targetDir = false)
+    getOpSourceDir(opName, relative = false)
+    {
+        if (relative) return super.getOpSourceDir(opName, relative);
+        return this._getAbsoluteOpDirFromHierarchy(opName, super.getOpSourceDir(opName));
+    }
+
+    getOpRenameConsequences(newName, oldName, targetDir = null)
     {
         const consequences = super.getOpRenameConsequences(newName, oldName);
-        if (this.opExists(newName))
+        if (this.opExists(newName) && targetDir)
         {
-            const existingOpDir = this.getOpSourceDir(newName);
             const newOpDir = path.join(targetDir, this.getOpTargetDir(newName, true));
             const newOpFile = path.join(newOpDir, this.getOpFileName(newName));
             if (!fs.existsSync(newOpFile))
             {
+                const existingOpDir = this.getOpSourceDir(newName);
                 const opTargetDirs = this.getOpTargetDirs(settings.getCurrentProject());
-                consequences.shadows_other_op = "The new Op will 'shadow' the op at <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + newOpDir + "'});\">" + newOpDir + "</a>";
+                const newIndex = opTargetDirs.findIndex((dir) => { return newOpDir.startsWith(dir); });
+                const oldIndex = opTargetDirs.findIndex((dir) => { return existingOpDir.startsWith(dir); });
+                if (newIndex < oldIndex)
+                {
+                    consequences.overrules_other_op = "The new Op will 'overrule' the op at:<br/> <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + newOpDir + "'});\">" + newOpDir + "</a>";
+                }
             }
         }
 
@@ -80,6 +64,15 @@ class OpsUtil extends SharedOpsUtil
             {
                 delete problems.target_exists;
                 delete problems.name_taken;
+
+                const existingOpDir = this.getOpSourceDir(newName);
+                const opTargetDirs = this.getOpTargetDirs(settings.getCurrentProject());
+                const newIndex = opTargetDirs.findIndex((dir) => { return newOpDir.startsWith(dir); });
+                const oldIndex = opTargetDirs.findIndex((dir) => { return existingOpDir.startsWith(dir); });
+                if (newIndex > oldIndex)
+                {
+                    problems.overruled_by_other_op = "The new Op would be 'overruled' by the op at:<br/> <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + existingOpDir + "'});\">" + existingOpDir + "</a>";
+                }
             }
         }
         return problems;
@@ -87,16 +80,52 @@ class OpsUtil extends SharedOpsUtil
 
     getOpTargetDirs(project)
     {
-        const projectDir = settings.getCurrentProjectDir();
-        let dirs = [];
-        dirs.push(cables.getOsOpsDir());
-        if (project && project.dirs && project.dirs.ops)
+        return projectsUtil.getProjectOpDirs(settings.getCurrentProject());
+    }
+
+    getOpNamesInProjectDirs(project)
+    {
+        const opNames = [];
+        if (!project) return opNames;
+
+        const opDirs = projectsUtil.getProjectOpDirs(project);
+        opDirs.forEach((opDir) =>
         {
-            const additionalOpDirs = project.dirs.ops.reverse();
-            dirs = dirs.concat(additionalOpDirs);
+            if (fs.existsSync(opDir))
+            {
+                const opJsons = helper.getFilesRecursive(opDir, ".json");
+                for (let jsonPath in opJsons)
+                {
+                    const parts = jsonPath.split("/");
+                    const opName = parts[parts.length - 2];
+                    if (this.isOpNameValid(opName) && !opNames.includes(opName))
+                    {
+                        opNames.push(opName);
+                    }
+                }
+            }
+        });
+        return helper.uniqueArray(opNames);
+    }
+
+    _getAbsoluteOpDirFromHierarchy(opName, defaultDir)
+    {
+        const projectDir = settings.getCurrentProjectDir();
+        let projectOpDir = null;
+        if (projectDir) projectOpDir = cables.getProjectOpsPath();
+        const osOpsDir = cables.getOsOpsDir();
+        const relativePath = super.getOpSourceDir(opName, true);
+        if (relativePath)
+        {
+            const dirs = projectsUtil.getProjectOpDirs(settings.getCurrentProject());
+            for (let i = 0; i < dirs.length; i++)
+            {
+                const dir = dirs[i];
+                const opPath = path.join(dir, relativePath);
+                if (fs.existsSync(opPath)) return opPath;
+            }
         }
-        if (projectDir) dirs.push(cables.getProjectOpsPath());
-        return dirs.reverse();
+        return defaultDir;
     }
 }
 export default new OpsUtil(utilProvider);

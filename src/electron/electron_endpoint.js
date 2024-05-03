@@ -141,6 +141,16 @@ class ElectronEndpoint
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId === obj.opId; }) === index; });
         }
+        const otherDirsOps = opsUtil.getOpNamesInProjectDirs(project);
+        otherDirsOps.forEach((opName) =>
+        {
+            if (!missingOps.some((op) => { return op.objName === opName; }))
+            {
+                missingOps.push({
+                    "objName": opName
+                });
+            }
+        });
         code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, true, true, opDocs);
         return code;
     }

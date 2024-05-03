@@ -120,12 +120,22 @@ class ElectronSettings
 
     loadProject(projectFile)
     {
-        if (fs.existsSync(projectFile))
+        if (projectFile)
         {
-            this.setProjectFile(projectFile);
-            let patch = fs.readFileSync(projectFile);
-            patch = JSON.parse(patch.toString("utf-8"));
-            this.setCurrentProject(projectFile, patch);
+            if (fs.existsSync(projectFile))
+            {
+                this.setProjectFile(projectFile);
+                this.setCurrentProjectDir(path.dirname(projectFile));
+                let patch = fs.readFileSync(projectFile);
+                patch = JSON.parse(patch.toString("utf-8"));
+                this.setCurrentProject(projectFile, patch);
+            }
+        }
+        else
+        {
+            this.setProjectFile(null);
+            this.setCurrentProjectDir(null);
+            this.setCurrentProject(null, null);
         }
     }
 
@@ -147,6 +157,14 @@ class ElectronSettings
     setUserSettings(value)
     {
         this.set(this.USER_SETTINGS_FIELD, value);
+    }
+
+    getUserSetting(key, defaultValue = null)
+    {
+        const userSettings = this.get(this.USER_SETTINGS_FIELD);
+        if (!userSettings) return defaultValue;
+        if (!userSettings.hasOwnProperty(key)) return defaultValue;
+        return userSettings[key];
     }
 
     getProjectFile()

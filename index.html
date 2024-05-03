@@ -71,7 +71,7 @@
                 iframeWindow.loadjs.ready("cablesuinew", (depsNotFound) => {
                     const iframeCables = iframeWindow.CABLES;
                     if(iframeCables) {
-                        iframeCables.CMD.ELECTRON = electronCommands.functions;
+                        iframeCables.CMD.STANDALONE = electronCommands.functions;
                         iframeCables.CMD.commands = iframeCables.CMD.commands.concat(electronCommands.commands);
                     }
                 });

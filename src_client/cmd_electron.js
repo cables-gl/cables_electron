@@ -45,6 +45,11 @@ CABLES_CMD_ELECTRON.openAssetDir = (options) =>
     window.ipcRenderer.invoke("talkerMessage", "openAssetDir", options).then((r) => {});
 };
 
+CABLES_CMD_ELECTRON.addProjectOpDir = (options) =>
+{
+    window.ipcRenderer.invoke("talkerMessage", "addProjectOpDir", options).then((r) => {});
+};
+
 CMD_ELECTRON_COMMANDS.push(
     {
         "cmd": "new patch",

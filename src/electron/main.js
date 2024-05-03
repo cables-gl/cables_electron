@@ -96,6 +96,13 @@ class ElectronApp
         return this._dirDialog(title, properties);
     }
 
+    async pickOpDirDialog()
+    {
+        const title = "select op directory";
+        const properties = ["openDirectory", "createDirectory"];
+        return this._dirDialog(title, properties);
+    }
+
     async createNewPatchDialog()
     {
         const title = "select workspace directory";
@@ -128,6 +135,20 @@ class ElectronApp
                         "click": () =>
                         {
                             this.openPatchDialog();
+                        }
+                    },
+                    {
+                        "label": "Open working directory",
+                        "click": () =>
+                        {
+                            electronApi.openProjectDir();
+                        }
+                    },
+                    {
+                        "label": "Add Op directory",
+                        "click": () =>
+                        {
+                            electronApi.addProjectOpDir();
                         }
                     },
                     {
@@ -213,9 +234,7 @@ class ElectronApp
                 }
                 else
                 {
-                    settings.setProjectFile(null);
-                    settings.setCurrentProjectDir(null);
-                    settings.setCurrentProject(null, null);
+                    settings.loadProject(null);
                 }
                 this.editorWindow.setTitle(title);
             });
@@ -254,8 +273,7 @@ class ElectronApp
             if (!result.canceled)
             {
                 const patchFile = result.filePaths[0];
-                settings.setCurrentProjectDir(path.dirname(patchFile));
-                settings.setProjectFile(patchFile);
+                settings.loadProject(patchFile);
                 this.openPatch(patchFile);
                 return patchFile;
             }
