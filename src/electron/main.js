@@ -226,19 +226,27 @@ class ElectronApp
         {
             this.editorWindow.loadFile("index.html").then(() =>
             {
-                let title = "cables";
                 if (patchFile)
                 {
                     settings.loadProject(patchFile);
-                    title = "cables - " + settings.getCurrentProject().name;
                 }
                 else
                 {
                     settings.loadProject(null);
                 }
-                this.editorWindow.setTitle(title);
+                this.updateTitle(settings.getCurrentProject());
             });
         }, ["core", "teams", "extensions", "users", "patches"], true);
+    }
+
+    updateTitle(project)
+    {
+        let title = "cables";
+        if (project)
+        {
+            title = "cables - " + settings.getCurrentProject().name;
+        }
+        this.editorWindow.setTitle(title);
     }
 
     _dirDialog(title, properties)

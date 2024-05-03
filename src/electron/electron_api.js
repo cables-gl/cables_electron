@@ -7,7 +7,6 @@ import crypto from "crypto";
 import pako from "pako";
 import mkdirp from "mkdirp";
 
-import sanitizeFileName from "sanitize-filename";
 import { fileURLToPath } from "url";
 import { execaSync } from "execa";
 import cables from "../cables.js";
@@ -71,8 +70,7 @@ class ElectronApi
                     if (!settings.getProjectFile())
                     {
                         const currentProject = settings.getCurrentProject();
-                        settings.getCurrentProjectDir();
-                        const projectFileName = sanitizeFileName(currentProject.name).replace(/ /g, "_") + ".cables";
+                        const projectFileName = projectsUtil.getProjectFileName(currentProject);
                         const newProjectFile = path.join(settings.getCurrentProjectDir(), projectFileName);
                         logger.debug("new projectfile", settings.getCurrentProjectDir(), projectFileName, newProjectFile);
                         settings.setProjectFile(newProjectFile);
@@ -127,35 +125,36 @@ class ElectronApi
             "success": true,
             "msg": "PROJECT_SAVED"
         };
-        this._writeProjectToFile(currentProject, patch);
+        this._writeProjectToFile(settings.getProjectFile(), currentProject, patch);
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
         return re;
     }
 
-    getPatch(data)
+    getPatch()
     {
         const patchPath = settings.getProjectFile();
         const currentUser = settings.getCurrentUser();
+        let currentProject = settings.getCurrentProject();
         if (patchPath && fs.existsSync(patchPath))
         {
-            let patch = fs.readFileSync(patchPath);
-            patch = JSON.parse(patch.toString("utf-8"));
-            if (!patch.hasOwnProperty("userList")) patch.userList = [currentUser];
-            if (!patch.hasOwnProperty("teams")) patch.teams = [];
-            return patch;
+            currentProject = fs.readFileSync(patchPath);
+            currentProject = JSON.parse(currentProject.toString("utf-8"));
+            if (!currentProject.hasOwnProperty("userList")) currentProject.userList = [currentUser];
+            if (!currentProject.hasOwnProperty("teams")) currentProject.teams = [];
         }
         else
         {
-            let currentProject = settings.getCurrentProject();
             if (!currentProject)
             {
                 const newProject = projectsUtil.generateNewProject(settings.getCurrentUser());
                 settings.setCurrentProject(patchPath, newProject);
                 currentProject = newProject;
             }
-            return currentProject;
         }
+        currentProject.summary = currentProject.summary || {};
+        currentProject.summary.allowEdit = true;
+        return currentProject;
     }
 
     async newPatch()
@@ -738,7 +737,17 @@ class ElectronApi
     getRecentPatches()
     {
         const recents = settings.getRecentProjects();
-        return Object.values(recents);
+        Object.keys(recents).forEach((projectFile) =>
+        {
+            if (fs.existsSync(projectFile))
+            {
+                const recent = recents[projectFile];
+                let screenShotFilename = projectsUtil.getScreenShotFileName(recent, "png");
+                if (!fs.existsSync(screenShotFilename)) screenShotFilename = path.join(cables.getUiDistPath(), "/img/placeholder_dark.png");
+                recent.thumbnail = screenShotFilename;
+            }
+        });
+        return Object.values(recents).slice(0, 10);
     }
 
     opCreate(data)
@@ -863,7 +872,7 @@ class ElectronApi
         }
     }
 
-    _writeProjectToFile(currentProject, patch = null)
+    _writeProjectToFile(projectFile, project, patch = null)
     {
         if (patch && (patch.data || patch.dataB64))
         {
@@ -874,8 +883,8 @@ class ElectronApi
 
                 const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
 
-                if (qData.ops) currentProject.ops = qData.ops;
-                if (qData.ui) currentProject.ui = qData.ui;
+                if (qData.ops) project.ops = qData.ops;
+                if (qData.ui) project.ui = qData.ui;
             }
             catch (e)
             {
@@ -885,22 +894,21 @@ class ElectronApi
         }
 
         // filter imported ops, so we do not save these to the database
-        currentProject.ops = currentProject.ops.filter((op) =>
+        project.ops = project.ops.filter((op) =>
         {
             return !(op.storage && op.storage.blueprint);
         });
 
-        currentProject.updated = new Date();
+        project.updated = new Date();
 
-        currentProject.opsHash = crypto
+        project.opsHash = crypto
             .createHash("sha1")
-            .update(JSON.stringify(currentProject.ops))
+            .update(JSON.stringify(project.ops))
             .digest("hex");
-        currentProject.buildInfo = this.getBuildInfo();
+        project.buildInfo = this.getBuildInfo();
 
-        const patchPath = settings.getProjectFile();
-        const written = jsonfile.writeFileSync(patchPath, currentProject);
-        settings.loadProject(patchPath);
+        const written = jsonfile.writeFileSync(projectFile, project);
+        settings.loadProject(projectFile);
         return written;
     }
 
@@ -922,9 +930,9 @@ class ElectronApi
         if (projectDir)
         {
             logger.debug("setting new project dir to", projectDir);
-            const projectFile = path.join(projectDir, filesUtil.realSanitizeFilename(newProjectName + ".cables"));
             const project = settings.getCurrentProject();
             project.name = newProjectName;
+            const projectFile = path.join(projectDir, projectsUtil.getProjectFileName(project));
             settings.setProjectFile(projectFile);
         }
         else
@@ -949,7 +957,7 @@ class ElectronApi
         origProject.usersReadOnly = usersReadOnly;
         origProject.visibility = "private";
         origProject.shortId = helper.generateShortId(origProject._id, Date.now());
-        this._writeProjectToFile(origProject);
+        this._writeProjectToFile(settings.getProjectFile(), origProject);
         return origProject;
     }
 
@@ -1019,7 +1027,7 @@ class ElectronApi
         const now = Date.now();
         const project = settings.getCurrentProject();
         project.updated = now;
-        this._writeProjectToFile(project);
+        this._writeProjectToFile(settings.getProjectFile(), project);
         return { "data": project };
     }
 
@@ -1039,7 +1047,7 @@ class ElectronApi
             if (!project.dirs) project.dirs = {};
             if (!project.dirs.ops) project.dirs.ops = [];
             project.dirs.ops.unshift(opDir);
-            this._writeProjectToFile(project);
+            this._writeProjectToFile(settings.getProjectFile(), project);
             return projectsUtil.getProjectOpDirs(project, false);
         }
         else
@@ -1047,6 +1055,20 @@ class ElectronApi
             logger.error("no project dir chosen");
             return [];
         }
+    }
+
+    setProjectName(options)
+    {
+        const oldFile = settings.getProjectFile();
+        let project = settings.getCurrentProject();
+        project.name = options.name;
+        const newFile = path.join(settings.getCurrentProjectDir(), projectsUtil.getProjectFileName(project));
+        fs.renameSync(oldFile, newFile);
+        settings.replaceInRecentPatches(oldFile, newFile);
+        this._writeProjectToFile(newFile, project);
+        settings.loadProject(newFile);
+        electronApp.updateTitle(settings.getCurrentProject());
+        return { "data": { "name": project.name } };
     }
 }
 

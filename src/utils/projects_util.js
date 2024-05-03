@@ -1,8 +1,10 @@
 import { utilProvider, SharedProjectsUtil } from "cables-shared-api";
 import path from "path";
+import sanitizeFileName from "sanitize-filename";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
+import filesUtil from "./files_util.js";
 
 class ProjectsUtil extends SharedProjectsUtil
 {
@@ -13,7 +15,13 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getScreenShotPath(pId)
     {
-        return path.join(settings.getCurrentProjectDir(), "/_screenshots/");
+        return settings.getCurrentProjectDir();
+    }
+
+    getScreenShotFileName(proj, ext)
+    {
+        const screenShotPath = this.getScreenShotPath(proj.id);
+        return path.join(screenShotPath, "/", filesUtil.realSanitizeFilename(proj.name) + "." + ext);
     }
 
     generateNewProject(owner)
@@ -65,6 +73,11 @@ class ProjectsUtil extends SharedProjectsUtil
         }
         if (reverse) return opsDirs.reverse();
         return opsDirs;
+    }
+
+    getProjectFileName(project)
+    {
+        return sanitizeFileName(project.name).replace(/ /g, "_") + ".cables";
     }
 }
 export default new ProjectsUtil(utilProvider);

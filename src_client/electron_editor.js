@@ -18,6 +18,11 @@ export default class ElectronEditor
             if (next) next();
         });
 
+        this._talker.addEventListener("updatePatchName", (opts, next) =>
+        {
+            if (next) next(null, opts);
+        });
+
         this._talker.addEventListener(
             "reload",
             (options) =>
@@ -91,7 +96,8 @@ export default class ElectronEditor
             "gotoPatch": {},
             "setProjectUpdated": {},
             "getOpTargetDirs": {},
-            "openDir": {}
+            "openDir": {},
+            "setProjectName": { "needsProjectFile": true }
         };
 
         Object.keys(talkerTopics)

@@ -283,7 +283,15 @@ class ElectronSettings
 
     getRecentProjects()
     {
-        return this.get(this.RECENT_PROJECTS_FIELD);
+        return this.get(this.RECENT_PROJECTS_FIELD) || {};
+    }
+
+    replaceInRecentPatches(oldFile, newFile, newProject)
+    {
+        const recents = this.getRecentProjects();
+        recents[newFile] = newProject;
+        delete recents[oldFile];
+        return recents;
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));
