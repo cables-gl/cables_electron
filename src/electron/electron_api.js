@@ -582,6 +582,11 @@ class ElectronApi
     _readAssetDir(lvl, filePath, origPath, urlPrefix = "")
     {
         const arr = [];
+        if (!fs.existsSync(filePath))
+        {
+            this._log.error("could not find library assets at", filePath, "check your cables_env_local.json");
+            return arr;
+        }
         const files = fs.readdirSync(filePath);
         for (const i in files)
         {
