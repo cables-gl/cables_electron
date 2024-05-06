@@ -60,8 +60,7 @@ class ElectronApi
                         }
                         else
                         {
-                            logger.error("no project dir chosen");
-                            return null;
+                            return { "error": true, "msg": "no project dir chosen" };
                         }
                     }
                 }
