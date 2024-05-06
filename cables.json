@@ -10,7 +10,7 @@
   "path": {
     "uiDist": "../dist/ui/",
     "ops": "../dist/ops/",
-    "assets": "../public/assets/",
+    "assets": "../resources/assets/",
     "libs": "../dist/public/libs/",
     "corelibs": "../dist/public/libs_core/",
     "js": "../dist/public/js/"
