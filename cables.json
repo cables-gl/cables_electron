@@ -8,6 +8,7 @@
     "uiDist": "../../cables_ui/dist/"
   },
   "path": {
+    "standaloneDist": "../dist/",
     "uiDist": "../dist/ui/",
     "ops": "../dist/ops/",
     "assets": "../resources/assets/",

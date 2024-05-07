@@ -9,6 +9,15 @@ import settings from "./electron/electron_settings.js";
 
 class CablesElectron extends Cables
 {
+    getStandaloneDistPath()
+    {
+        if (this._config.path.standaloneDist)
+        {
+            return path.join(this._dirname, this._config.path.standaloneDist);
+        }
+        return path.join(this.getApiPath(), "dist");
+    }
+
     getAssetPath()
     {
         const currentProject = settings.getCurrentProjectDir();

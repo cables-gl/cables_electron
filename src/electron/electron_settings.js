@@ -6,6 +6,7 @@ import jsonfile from "jsonfile";
 import helper from "../utils/helper_util.js";
 import logger from "../utils/logger.js";
 import projectsUtil from "../utils/projects_util.js";
+import cables from "../cables.js";
 
 
 class ElectronSettings
@@ -22,7 +23,6 @@ class ElectronSettings
         this.PATCHFILE_FIELD = "patchFile";
         this.CURRENTPATCHDIR_FIELD = "currentPatchDir";
         this.STORAGEDIR_FIELD = "storageDir";
-        this.BUILD_INFO_FIELD = "buildInfo";
         this.USER_SETTINGS_FIELD = "userSettings";
         this.RECENT_PROJECTS_FIELD = "recentProjects";
         this.OPEN_DEV_TOOLS_FIELD = "openDevTools";
@@ -37,7 +37,6 @@ class ElectronSettings
         this.opts.defaults[this.PATCHFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPATCHDIR_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
-        this.opts.defaults[this.BUILD_INFO_FIELD] = this.getBuildInfo();
         this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
         this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
 
@@ -196,36 +195,56 @@ class ElectronSettings
 
     getBuildInfo()
     {
-        const core = {
-            "timestamp": 1700734919296,
-            "created": "2023-11-23T10:21:59.296Z",
-            "git": {
-                "branch": "develop",
-                "commit": "04f23fcd2b2830840ed0c62595104fc7c3d96ae3",
-                "date": "2023-11-22T16:18:12.000Z",
-                "message": "viztexture aspect ratio/color picking etc"
+        const coreFile = path.join(cables.getUiDistPath(), "js", "buildinfo.json");
+        const uiFile = path.join(cables.getUiDistPath(), "buildinfo.json");
+        const standaloneFile = path.join(cables.getStandaloneDistPath(), "public", "buildinfo.json");
+
+        let core = {};
+        if (fs.existsSync(coreFile))
+        {
+            try
+            {
+                core = jsonfile.readFileSync(coreFile);
             }
-        };
-        let ui = {
-            "timestamp": 1700746574919,
-            "created": "2023-11-23T13:36:14.919Z",
-            "git": {
-                "branch": "develop",
-                "commit": "7acf5719f001a0ec07034fbe4c0fdfe15946dd7b",
-                "date": null,
-                "message": null
+            catch (e)
+            {
+                this._log.info("failed to parse buildinfo from", coreFile);
             }
-        };
-        const api = {
-            "timestamp": 1700748324495,
-            "created": "2023-11-23T14:05:24.495Z",
-            "git": {
-                "branch": "master",
-                "commit": "ac06849ffb3e594b368bd2f5a63bd6eed62ea1a9",
-                "date": "2023-11-23T11:11:29.000Z",
-                "message": "patreon api hotfixes"
+        }
+
+        let ui = {};
+        if (fs.existsSync(uiFile))
+        {
+            try
+            {
+                ui = jsonfile.readFileSync(uiFile);
             }
-        };
+            catch (e)
+            {
+                this._log.info("failed to parse buildinfo from", uiFile);
+            }
+        }
+
+        let api = {};
+        if (fs.existsSync(standaloneFile))
+        {
+            try
+            {
+                api = jsonfile.readFileSync(standaloneFile);
+            }
+            catch (e)
+            {
+                this._log.info("failed to parse buildinfo from", standaloneFile);
+            }
+        }
+
+        this.set("buildInfo", {
+            "updateWarning": false,
+            "core": core,
+            "ui": ui,
+            "api": api
+        });
+
         return {
             "updateWarning": false,
             "core": core,

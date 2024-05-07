@@ -1,14 +1,35 @@
 import path from "path";
 import webpack from "webpack";
 import TerserPlugin from "terser-webpack-plugin";
+import CopyPlugin from "copy-webpack-plugin";
+import getRepoInfo from "git-repo-info";
 
-export default (isLiveBuild, buildInfo, minify = false) =>
+export default (isLiveBuild, minify = false) =>
 {
+    const getBuildInfo = () =>
+    {
+        const git = getRepoInfo();
+        const date = new Date();
+        return JSON.stringify({
+            "timestamp": date.getTime(),
+            "created": date.toISOString(),
+            "git": {
+                "branch": git.branch,
+                "commit": git.sha,
+                "date": git.committerDate,
+                "message": git.commitMessage,
+                "tag": git.tag
+            }
+        });
+    };
+
+    let buildInfo = getBuildInfo();
+
     return {
         "mode": isLiveBuild ? "production" : "development",
         "devtool": minify ? "source-map" : false,
         "entry": {
-            "scripts.electron.js": [path.resolve("./src_client", "index_electron.js")]
+            "scripts.electron.js": [path.resolve("./src_client", "index_electron.js")],
         },
         "output": {
             "path": path.resolve("./public", "js"),
@@ -28,6 +49,18 @@ export default (isLiveBuild, buildInfo, minify = false) =>
                 "footer": true,
                 "raw": true,
                 "banner": "var CABLES = CABLES || { \"ELECTRON\": {}}; CABLES.ELECTRON = CABLES.ELECTRON || {}; CABLES.ELECTRON.build = " + JSON.stringify(buildInfo) + ";"
+            }),
+            new CopyPlugin({
+                "patterns": [
+                    {
+                        "from": path.resolve("./src_client", "index_electron.js"),
+                        "to": path.resolve("./public", "js", "buildinfo.json"),
+                        "transform": () =>
+                        {
+                            return buildInfo;
+                        }
+                    },
+                ],
             })
         ]
     };

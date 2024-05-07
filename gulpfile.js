@@ -2,7 +2,6 @@ import gulp from "gulp";
 import fs from "fs";
 import path from "path";
 import mkdirp from "mkdirp";
-import getRepoInfo from "git-repo-info";
 
 import webpack from "webpack-stream";
 import compiler from "webpack";
@@ -37,24 +36,6 @@ if (configLocation !== defaultConfigLocation)
 }
 const isLiveBuild = config.env === "electron";
 const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
-
-let buildInfo = getBuildInfo();
-
-function getBuildInfo()
-{
-    const git = getRepoInfo();
-    const date = new Date();
-    return JSON.stringify({
-        "timestamp": date.getTime(),
-        "created": date.toISOString(),
-        "git": {
-            "branch": git.branch,
-            "commit": git.sha,
-            "date": git.committerDate,
-            "message": git.commitMessage
-        }
-    });
-}
 
 function _create_ops_dirs(done)
 {
@@ -115,7 +96,7 @@ function _editor_scripts_webpack(done)
         .pipe(
             webpack(
                 {
-                    "config": webpackElectronConfig(isLiveBuild, buildInfo, minify),
+                    "config": webpackElectronConfig(isLiveBuild, minify),
                 },
                 compiler,
                 (err, stats) =>

@@ -3,8 +3,6 @@ import fs from "fs";
 import path from "path";
 import marked from "marked";
 import jsonfile from "jsonfile";
-import crypto from "crypto";
-import pako from "pako";
 import mkdirp from "mkdirp";
 
 import { fileURLToPath } from "url";
