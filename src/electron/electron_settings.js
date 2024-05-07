@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
 import { app } from "electron";
+import jsonfile from "jsonfile";
 import helper from "../utils/helper_util.js";
 
 
@@ -16,13 +17,7 @@ class ElectronSettings
         this.MAIN_CONFIG_NAME = "cables-electron-preferences";
         this.PATCHFILE_FIELD = "patchFile";
         this.CURRENTPATCHDIR_FIELD = "currentPatchDir";
-        this.PATCHID_FIELD = "patchId";
         this.STORAGEDIR_FIELD = "storageDir";
-        this.WINDOW_X_POS_FIELD = "windowX";
-        this.WINDOW_Y_POS_FIELD = "windowY";
-        this.WINDOW_FULLSCREEN = "windowFullscreen";
-        this.WINDOW_HEIGHT = "windowHeight";
-        this.WINDOW_WIDTH = "windowWidth";
         this.BUILD_INFO_FIELD = "buildInfo";
         this.USER_SETTINGS_FIELD = "userSettings";
         this.RECENT_PROJECTS_FIELD = "recentProjects";
@@ -37,17 +32,10 @@ class ElectronSettings
         };
         this.opts.defaults[this.PATCHFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPATCHDIR_FIELD] = null;
-        this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
         this.opts.defaults[this.BUILD_INFO_FIELD] = this.getBuildInfo();
         this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
         this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
-
-        this.opts.defaults[this.WINDOW_X_POS_FIELD] = null;
-        this.opts.defaults[this.WINDOW_Y_POS_FIELD] = null;
-        this.opts.defaults[this.WINDOW_FULLSCREEN] = false;
-        this.opts.defaults[this.WINDOW_HEIGHT] = 768;
-        this.opts.defaults[this.WINDOW_WIDTH] = 1366;
 
         this.data = this.opts.defaults;
         mkdirp(this.data[this.STORAGEDIR_FIELD]);
@@ -104,13 +92,13 @@ class ElectronSettings
     setCurrentProject(projectFile, project)
     {
         this._currentProject = project;
-        this.set(this.PATCHID_FIELD, project ? project._id : "");
         const recentProjects = this.getRecentProjects();
         if (projectFile && project && !recentProjects.hasOwnProperty(projectFile))
         {
             recentProjects[projectFile] = project;
         }
-        /// this.set(this.RECENT_PROJECTS, recentProjects.slice(0, 5));
+        this.setRecentProjects(recentProjects);
+        this._updateRecentProjects();
     }
 
     getCurrentProject()
@@ -124,19 +112,20 @@ class ElectronSettings
         {
             if (fs.existsSync(projectFile))
             {
-                this.setProjectFile(projectFile);
+                this.setCurrentProjectFile(projectFile);
                 this.setCurrentProjectDir(path.dirname(projectFile));
-                let patch = fs.readFileSync(projectFile);
-                patch = JSON.parse(patch.toString("utf-8"));
-                this.setCurrentProject(projectFile, patch);
+                let project = fs.readFileSync(projectFile);
+                project = JSON.parse(project.toString("utf-8"));
+                this.setCurrentProject(projectFile, project);
             }
         }
         else
         {
-            this.setProjectFile(null);
+            this.setCurrentProjectFile(null);
             this.setCurrentProjectDir(null);
             this.setCurrentProject(null, null);
         }
+        this._updateRecentProjects();
     }
 
     getCurrentUser()
@@ -167,64 +156,14 @@ class ElectronSettings
         return userSettings[key];
     }
 
-    getProjectFile()
+    getCurrentProjectFile()
     {
         return this.get(this.PATCHFILE_FIELD);
     }
 
-    setProjectFile(value)
+    setCurrentProjectFile(value)
     {
         this.set(this.PATCHFILE_FIELD, value);
-    }
-
-    getWindowXPos()
-    {
-        return this.get(this.WINDOW_X_POS_FIELD);
-    }
-
-    setWindowXPos(value)
-    {
-        this.set(this.WINDOW_X_POS_FIELD, value);
-    }
-
-    getWindowYPos()
-    {
-        return this.get(this.WINDOW_Y_POS_FIELD);
-    }
-
-    setWindowYPos(value)
-    {
-        this.set(this.WINDOW_Y_POS_FIELD, value);
-    }
-
-    getFullscreen()
-    {
-        return this.get(this.WINDOW_FULLSCREEN);
-    }
-
-    setFullscreen(value)
-    {
-        this.set(this.WINDOW_FULLSCREEN, value);
-    }
-
-    getWindowHeight()
-    {
-        return this.get(this.WINDOW_HEIGHT);
-    }
-
-    setWindowHeight(value)
-    {
-        this.set(this.WINDOW_HEIGHT, value);
-    }
-
-    getWindowWidth()
-    {
-        return this.get(this.WINDOW_WIDTH);
-    }
-
-    setWindowWidth(value)
-    {
-        this.set(this.WINDOW_WIDTH, value);
     }
 
     getBuildInfo()
@@ -286,12 +225,43 @@ class ElectronSettings
         return this.get(this.RECENT_PROJECTS_FIELD) || {};
     }
 
+    setRecentProjects(recents)
+    {
+        if (!recents) recents = {};
+        return this.set(this.RECENT_PROJECTS_FIELD, recents);
+    }
+
     replaceInRecentPatches(oldFile, newFile, newProject)
     {
         const recents = this.getRecentProjects();
         recents[newFile] = newProject;
         delete recents[oldFile];
-        return recents;
+        this._updateRecentProjects();
+        return this.getRecentProjects();
+    }
+
+    _updateRecentProjects()
+    {
+        const recents = this.getRecentProjects();
+        let files = Object.keys(recents);
+        files = files.filter((f) => { return fs.existsSync(f); });
+        files = files.sort((f1, f2) =>
+        {
+            const p1 = recents[f1];
+            const p2 = recents[f2];
+            if (!p1.updated) return 1;
+            if (!p2.updated) return -1;
+            return p2.updated - p1.updated;
+        });
+        files = helper.uniqueArray(files);
+        const newRecents = {};
+        for (let i = 0; i < 10; i++)
+        {
+            if (i > files.length) break;
+            const key = files[i];
+            if (recents.hasOwnProperty(key)) newRecents[key] = jsonfile.readFileSync(key);
+        }
+        this.set(this.RECENT_PROJECTS_FIELD, newRecents);
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));

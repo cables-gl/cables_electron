@@ -1,6 +1,7 @@
 import { utilProvider, SharedProjectsUtil } from "cables-shared-api";
 import path from "path";
 import sanitizeFileName from "sanitize-filename";
+import { app } from "electron";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
@@ -15,7 +16,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getScreenShotPath(pId)
     {
-        return settings.getCurrentProjectDir();
+        return path.join(app.getPath("userData"), "screenshots/");
     }
 
     getScreenShotFileName(proj, ext)
@@ -29,7 +30,7 @@ class ProjectsUtil extends SharedProjectsUtil
         const now = Date.now();
         const projectId = helper.generateRandomId();
         const shortId = helper.generateShortId(projectId, now);
-        const randomize = settings.getUserSetting("randomizePatchName", true);
+        const randomize = settings.getUserSetting("randomizePatchName", false);
         const newProjectName = this.getNewProjectName(randomize);
 
         return {

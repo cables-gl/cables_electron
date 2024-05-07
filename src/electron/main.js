@@ -26,11 +26,11 @@ class ElectronApp
     createWindow()
     {
         let patchFile = null;
-        if (settings.getProjectFile())
+        if (settings.getCurrentProjectFile())
         {
-            if (fs.existsSync(settings.getProjectFile()))
+            if (fs.existsSync(settings.getCurrentProjectFile()))
             {
-                patchFile = settings.getProjectFile();
+                patchFile = settings.getCurrentProjectFile();
             }
         }
 
@@ -82,30 +82,48 @@ class ElectronApp
         this.openPatch(patchFile);
     }
 
-    async openPatchDialog()
+    async pickProjectFileDialog()
     {
         let title = "select patch";
         let properties = ["openFile"];
-        return this._patchDialog(title, properties);
+        return this._projectFileDialog(title, properties);
     }
 
-    async pickProjectDirDialog()
+    async saveProjectFileDialog()
     {
-        const title = "select workspace directory";
-        const properties = ["openDirectory", "createDirectory"];
-        return this._dirDialog(title, properties);
+        let title = "select patch";
+        let properties = ["createDirectory"];
+        return dialog.showSaveDialog(this.editorWindow, {
+            "title": title,
+            "properties": properties,
+            "filters": [{
+                "name": "cables project",
+                "extensions": this.cablesFileExtensions,
+            }]
+        }).then((result) =>
+        {
+            if (!result.canceled)
+            {
+                const patchFile = result.filePath;
+                const currentProject = settings.getCurrentProject();
+                if (currentProject)
+                {
+                    currentProject.name = path.basename(patchFile);
+                    electronApi._writeProjectToFile(patchFile, currentProject);
+                }
+                settings.loadProject(patchFile);
+                return patchFile;
+            }
+            else
+            {
+                return null;
+            }
+        });
     }
 
     async pickOpDirDialog()
     {
         const title = "select op directory";
-        const properties = ["openDirectory", "createDirectory"];
-        return this._dirDialog(title, properties);
-    }
-
-    async createNewPatchDialog()
-    {
-        const title = "select workspace directory";
         const properties = ["openDirectory", "createDirectory"];
         return this._dirDialog(title, properties);
     }
@@ -134,7 +152,7 @@ class ElectronApp
                         "accelerator": "CmdOrCtrl+O",
                         "click": () =>
                         {
-                            this.openPatchDialog();
+                            this.pickProjectFileDialog();
                         }
                     },
                     {
@@ -156,7 +174,7 @@ class ElectronApp
                         "accelerator": "CmdOrCtrl+R",
                         "click": () =>
                         {
-                            this.editorWindow.reload();
+                            this.reload();
                         }
                     },
                     {
@@ -234,17 +252,18 @@ class ElectronApp
                 {
                     settings.loadProject(null);
                 }
-                this.updateTitle(settings.getCurrentProject());
+                this.updateTitle();
             });
         }, ["core", "teams", "extensions", "users", "patches"], true);
     }
 
-    updateTitle(project)
+    updateTitle()
     {
         let title = "cables";
-        if (project)
+        const projectFile = settings.getCurrentProjectFile();
+        if (projectFile)
         {
-            title = "cables - " + settings.getCurrentProject().name;
+            title = "cables - " + projectFile;
         }
         this.editorWindow.setTitle(title);
     }
@@ -267,7 +286,7 @@ class ElectronApp
         });
     }
 
-    _patchDialog(title, properties, cb = null)
+    _projectFileDialog(title, properties, cb = null)
     {
         return dialog.showOpenDialog(this.editorWindow, {
             "title": title,
@@ -290,6 +309,12 @@ class ElectronApp
                 return null;
             }
         });
+    }
+
+    reload()
+    {
+        this.updateTitle();
+        this.editorWindow.reload();
     }
 }
 app.whenReady().then(() =>

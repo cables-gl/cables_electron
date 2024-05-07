@@ -33,16 +33,7 @@ class CablesElectron extends Cables
 
     getGenPath()
     {
-        const currentProject = settings.getCurrentProject();
-        let genPath = "";
-        if (!currentProject)
-        {
-            genPath = path.join(this._writeableDirName, "caches/");
-        }
-        else
-        {
-            genPath = path.join(this._writeableDirName, "/gen/", currentProject.shortId, "/");
-        }
+        const genPath = path.join(this._writeableDirName, "gen/");
         if (!fs.existsSync(genPath)) mkdirp.sync(genPath);
         return genPath;
     }
@@ -74,7 +65,7 @@ class CablesElectron extends Cables
 
     getProjectOpsPath()
     {
-        if (!settings.getCurrentProjectDir()) return path.join(this.getOpsPath());
+        if (!settings.getCurrentProjectDir()) return null;
         return path.join(settings.getCurrentProjectDir(), "/ops/");
     }
 

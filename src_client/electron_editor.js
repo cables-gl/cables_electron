@@ -41,7 +41,7 @@ export default class ElectronEditor
             "fileUploadStr",
             (options, next) =>
             {
-                window.ipcRenderer.invoke("talkerMessage", "fileUpload", options, { "needsProjectDir": true })
+                window.ipcRenderer.invoke("talkerMessage", "fileUpload", options, {})
                     .then((r) =>
                     {
                         this._talker.send("refreshFileManager");
@@ -54,7 +54,7 @@ export default class ElectronEditor
             "updateFile",
             (options, next) =>
             {
-                window.ipcRenderer.invoke("talkerMessage", "updateFile", options, { "needsProjectDir": true })
+                window.ipcRenderer.invoke("talkerMessage", "updateFile", options, {})
                     .then((r) =>
                     {
                         next(null, r);
@@ -64,9 +64,9 @@ export default class ElectronEditor
 
         const talkerTopics = {
             "getOpInfo": {},
-            "savePatch": { "needsProjectDir": true, "needsProjectFile": true },
+            "savePatch": { "needsProjectFile": true },
             "getPatch": {},
-            "newPatch": { "needsProjectFile": true },
+            "newPatch": { },
             "getBuildInfo": {},
             "getAllProjectOps": {},
             "getOpDocsAll": {},
@@ -82,7 +82,7 @@ export default class ElectronEditor
             "opAttachmentSave": {},
             "setIconSaved": {},
             "setIconUnsaved": {},
-            "saveScreenshot": { "needsProjectDir": true },
+            "saveScreenshot": { },
             "getFilelist": {},
             "getFileDetails": {},
             "checkOpName": {},
@@ -91,7 +91,7 @@ export default class ElectronEditor
             "opUpdate": {},
             "opSaveLayout": { },
             "opClone": { },
-            "checkNumAssetPatches": {},
+            "checkNumAssetPatches": { "needsProjectFile": true },
             "saveProjectAs": {},
             "gotoPatch": {},
             "setProjectUpdated": {},

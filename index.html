@@ -73,6 +73,7 @@
                     if(iframeCables) {
                         iframeCables.CMD.STANDALONE = electronCommands.functions;
                         iframeCables.CMD.commands = iframeCables.CMD.commands.concat(electronCommands.commands);
+                        Object.assign(iframeCables.CMD.PATCH, electronCommands.functionOverrides.PATCH);
                     }
                 });
                 window.editorIframe = iframeWindow;

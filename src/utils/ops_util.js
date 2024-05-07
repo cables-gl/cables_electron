@@ -11,7 +11,7 @@ class OpsUtil extends SharedOpsUtil
     addPermissionsToOps(ops, user, teams = [], project = null)
     {
         if (!ops) return ops;
-        ops.forEach((op) => { if (op && !(this.isCoreOp(op.name) || this.isExtension(op.name))) op.allowEdit = true; });
+        ops.forEach((op) => { op.allowEdit = true; });
         return ops;
     }
 
@@ -33,25 +33,7 @@ class OpsUtil extends SharedOpsUtil
 
     getOpRenameConsequences(newName, oldName, targetDir = null)
     {
-        const consequences = super.getOpRenameConsequences(newName, oldName);
-        if (this.opExists(newName) && targetDir)
-        {
-            const newOpDir = path.join(targetDir, this.getOpTargetDir(newName, true));
-            const newOpFile = path.join(newOpDir, this.getOpFileName(newName));
-            if (!fs.existsSync(newOpFile))
-            {
-                const existingOpDir = this.getOpSourceDir(newName);
-                const opTargetDirs = this.getOpTargetDirs(settings.getCurrentProject());
-                const newIndex = opTargetDirs.findIndex((dir) => { return newOpDir.startsWith(dir); });
-                const oldIndex = opTargetDirs.findIndex((dir) => { return existingOpDir.startsWith(dir); });
-                if (newIndex < oldIndex)
-                {
-                    consequences.overrules_other_op = "The new Op will 'overrule' the op at:<br/> <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + newOpDir + "'});\">" + newOpDir + "</a>";
-                }
-            }
-        }
-
-        return consequences;
+        return [];
     }
 
     getOpRenameProblems(newName, oldName, userObj, teams = [], newOpProject = null, oldOpProject = null, opUsages = [], checkUsages = true, targetDir = null)
@@ -63,24 +45,16 @@ class OpsUtil extends SharedOpsUtil
             if (!fs.existsSync(newOpDir))
             {
                 delete problems.target_exists;
-                delete problems.name_taken;
-
                 const existingOpDir = this.getOpSourceDir(newName);
-                const opTargetDirs = this.getOpTargetDirs(settings.getCurrentProject());
-                const newIndex = opTargetDirs.findIndex((dir) => { return newOpDir.startsWith(dir); });
-                const oldIndex = opTargetDirs.findIndex((dir) => { return existingOpDir.startsWith(dir); });
-                if (newIndex > oldIndex)
-                {
-                    problems.overruled_by_other_op = "The new Op would be 'overruled' by the op at:<br/> <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + existingOpDir + "'});\">" + existingOpDir + "</a>";
-                }
+                problems.overruled_by_other_op = "The new Op would conflict with the Op at:<br/> <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + existingOpDir + "'});\">" + existingOpDir + "</a>";
             }
         }
         return problems;
     }
 
-    getOpTargetDirs(project)
+    getOpTargetDirs(project, reverse = false)
     {
-        return projectsUtil.getProjectOpDirs(settings.getCurrentProject());
+        return projectsUtil.getProjectOpDirs(project, true, reverse);
     }
 
     getOpNamesInProjectDirs(project)
@@ -113,7 +87,6 @@ class OpsUtil extends SharedOpsUtil
         const projectDir = settings.getCurrentProjectDir();
         let projectOpDir = null;
         if (projectDir) projectOpDir = cables.getProjectOpsPath();
-        const osOpsDir = cables.getOsOpsDir();
         const relativePath = super.getOpSourceDir(opName, true);
         if (relativePath)
         {

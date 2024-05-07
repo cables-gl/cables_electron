@@ -1,5 +1,7 @@
 const CABLES_CMD_ELECTRON = {};
+const CABLES_CMD_ELECTRON_OVERRIDES = {};
 const CMD_ELECTRON_COMMANDS = [];
+
 
 CABLES_CMD_ELECTRON.newPatch = () =>
 {
@@ -50,6 +52,12 @@ CABLES_CMD_ELECTRON.addProjectOpDir = (options) =>
     window.ipcRenderer.invoke("talkerMessage", "addProjectOpDir", options).then((r) => {});
 };
 
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH = {};
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH.saveAs = () =>
+{
+    window.ipcRenderer.invoke("talkerMessage", "saveProjectAs", { }).then((r) => {});
+};
+
 CMD_ELECTRON_COMMANDS.push(
     {
         "cmd": "new patch",
@@ -83,4 +91,4 @@ CMD_ELECTRON_COMMANDS.push(
     }
 );
 
-export { CABLES_CMD_ELECTRON, CMD_ELECTRON_COMMANDS };
+export { CABLES_CMD_ELECTRON, CMD_ELECTRON_COMMANDS, CABLES_CMD_ELECTRON_OVERRIDES };

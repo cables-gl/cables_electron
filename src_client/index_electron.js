@@ -1,10 +1,11 @@
 import ElectronEditor from "./electron_editor.js";
-import { CABLES_CMD_ELECTRON, CMD_ELECTRON_COMMANDS } from "./cmd_electron.js";
+import { CABLES_CMD_ELECTRON, CMD_ELECTRON_COMMANDS, CABLES_CMD_ELECTRON_OVERRIDES } from "./cmd_electron.js";
 
 
 window.web = { "ElectronEditor": ElectronEditor };
 window.electronCommands = {
     "commands": CMD_ELECTRON_COMMANDS,
-    "functions": CABLES_CMD_ELECTRON
+    "functions": CABLES_CMD_ELECTRON,
+    "functionOverrides": CABLES_CMD_ELECTRON_OVERRIDES
 };
 

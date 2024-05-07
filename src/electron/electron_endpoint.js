@@ -215,8 +215,7 @@ class ElectronEndpoint
         if (fs.existsSync(fn))
         {
             let info = fs.readFileSync(fn);
-
-            info = info + "\n\nCABLES.loadedCoreLib(\"" + name + "\")";
+            info += "\n\nCABLES.loadedCoreLib(\"" + name + "\")";
             return info;
         }
         else
