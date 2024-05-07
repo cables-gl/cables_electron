@@ -15,7 +15,7 @@ jobs:
         with:
           name: "${{ github.run_number }}-dev"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ github.run_number }}-dev
+          tag_name: dev-${{ github.run_number }}
           draft: true
           prerelease: true
   #linux:
@@ -24,9 +24,9 @@ jobs:
   #    runner: ubuntu-latest
   #    target: linux
   #    branch: develop
-  #    build_version: ${{ github.run_number }}-dev
-  #    exe_name: cables-${{ github.run_number }}-dev-linux
-  #    tag_name: ${{ github.run_number }}-dev
+  #    build_version: dev-${{ github.run_number }}
+  #    exe_name: cables-dev-${{ github.run_number }}-linux
+  #    tag_name: dev-${{ github.run_number }}
   #  secrets: inherit
   #win:
   #  uses: ./.github/workflows/build.yml
@@ -34,9 +34,9 @@ jobs:
   #    runner: windows-latest
   #    target: win
   #    branch: develop
-  #    build_version: ${{ github.run_number }}-dev
-  #    exe_name: cables-${{ github.run_number }}-dev-win
-  #    tag_name: ${{ github.run_number }}-dev
+  #    build_version: dev-${{ github.run_number }}
+  #    exe_name: dev-cables-${{ github.run_number }}-win
+  #    tag_name: dev-${{ github.run_number }}
   #  secrets: inherit
   mac:
     uses: ./.github/workflows/build.yml
@@ -44,9 +44,9 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev-mac
-      tag_name: ${{ github.run_number }}-dev
+      build_version: dev-${{ github.run_number }}
+      exe_name: cables-dev-${{ github.run_number }}-mac
+      tag_name: dev-${{ github.run_number }}
       sign: true
       notarize: true
     secrets: inherit
