@@ -15,6 +15,10 @@ on:
         description: "branch to check out all repos at"
         required: true
         type: string
+      exe_name:
+        description: "basename of the final executable"
+        required: true
+        type: string
       build_version:
         description: "override for package.log version"
         required: false
