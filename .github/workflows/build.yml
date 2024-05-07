@@ -103,7 +103,7 @@ jobs:
         CSC_LINK: "${{ secrets.APPLE_CERT }}"
         CSC_KEY_PASSWORD: "${{ secrets.APPLE_CERT_PASS }}"
         APPLE_ID: "${{ secrets.APPLE_ID }}"
-        APPLE_APP_SPECIFIC_PASS: "${{ secrets.APPLE_APP_SPECIFIC_PASS }}"
+        APPLE_APP_SPECIFIC_PASSWORD: "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}"
         APPLE_TEAM_ID: "${{ secrets.APPLE_TEAM_ID }}"
         NOTARIZE: "${{ inputs.notarize }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
