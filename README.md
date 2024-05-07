@@ -1,6 +1,6 @@
 # Cables Standalone Version
 
-[![nightly dev build](https://github.com/cables-gl/cables_electron/actions/workflows/nightly.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/nightly.yml)
+[![dev build](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml)
 
 This is an early-access version of [cables.gl](https://cables.gl) core and editor part, packaged into an electron
 executable for mac/windows/linux.
