@@ -13,7 +13,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "build: ${{ github.run_number }}-dev"
+          name: "${{ github.run_number }}-dev"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.run_number }}-dev
           draft: true

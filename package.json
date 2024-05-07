@@ -96,9 +96,10 @@
       "verifyUpdateCodeSignature": false,
       "signAndEditExecutable": false
     },
-    "publish": [
-      "always"
-    ]
+    "publish": {
+        "provider": "github",
+        "vPrefixedTagName": false
+    }
   },
   "dependencies": {
     "cables-shared-api": "file:../shared/api",
