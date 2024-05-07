@@ -15,6 +15,31 @@ to date with the features in the browser version. As your browser is "sandboxed"
 this is no longer the case in the standalone version. This is intentional and gives great power, but also some responsibility
 is now shifted to the user-site. Read about some of the implication on the [Electron site](https://www.electronjs.org/docs/latest/tutorial/security).
 
+### IMPORTANT:
+
+The current electron settings, as of now, are almost exactly the opposite that electron suggests. This might change for later versions,
+or be configurable. But a lot of these suggestions only make sense for "static" apps that do not run or execute external code, this - on
+the other hand - is THE main reason we do this. For now: KNOW THE PEOPLE YOU GET YOUR OPS OR PATCHES FROM!
+
+```javascript
+this.editorWindow = new BrowserWindow({
+    "width": 1920,
+    "height": 1080,
+    "webPreferences": {
+        "nodeIntegration": true,
+        "nodeIntegrationInWorker": true,
+        "nodeIntegrationInSubFrames": true,
+        "contextIsolation": false,
+        "sandbox": false,
+        "webSecurity": false,
+        "allowRunningInsecureContent": true,
+        "plugins": true,
+        "experimentalFeatures": true,
+        "v8CacheOptions": "none"
+    }
+});
+```
+
 ## Issue Workflow
 
 - create an issue, pick "Bug report" or "Feature Request" from the templates
