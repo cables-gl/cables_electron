@@ -103,11 +103,9 @@
         }
       ]
     },
-    "publish": {
-      "provider": "github",
-      "vPrefixedTagName": false,
-      "publishAutoUpdate": false
-    }
+    "publish": [
+      "github"
+    ]
   },
   "dependencies": {
     "cables-shared-api": "file:../shared/api",

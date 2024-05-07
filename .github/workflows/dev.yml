@@ -13,40 +13,40 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ github.run_number }}-dev"
+          name: "dev-${{ github.run_number }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: dev-${{ github.run_number }}
+          tag_name: v${{ github.run_number }}-dev
           draft: true
           prerelease: true
-  #linux:
-  #  uses: ./.github/workflows/build.yml
-  #  with:
-  #    runner: ubuntu-latest
-  #    target: linux
-  #    branch: develop
-  #    build_version: dev-${{ github.run_number }}
-  #    exe_name: cables-dev-${{ github.run_number }}-linux
-  #    tag_name: dev-${{ github.run_number }}
-  #  secrets: inherit
-  #win:
-  #  uses: ./.github/workflows/build.yml
-  #  with:
-  #    runner: windows-latest
-  #    target: win
-  #    branch: develop
-  #    build_version: dev-${{ github.run_number }}
-  #    exe_name: dev-cables-${{ github.run_number }}-win
-  #    tag_name: dev-${{ github.run_number }}
-  #  secrets: inherit
+  linux:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: ubuntu-latest
+      target: linux
+      branch: develop
+      build_version: ${{ github.run_number }}-dev
+      exe_name: cables-dev-${{ github.run_number }}-linux
+      tag_name: ${{ github.run_number }}-dev
+    secrets: inherit
+  win:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: windows-latest
+      target: win
+      branch: develop
+      build_version: ${{ github.run_number }}-dev
+      exe_name: cables-${{ github.run_number }}-dev-win
+      tag_name: ${{ github.run_number }}-dev
+    secrets: inherit
   mac:
     uses: ./.github/workflows/build.yml
     with:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: dev-${{ github.run_number }}
-      exe_name: cables-dev-${{ github.run_number }}-mac
-      tag_name: dev-${{ github.run_number }}
+      build_version: ${{ github.run_number }}-dev
+      exe_name: cables-${{ github.run_number }}-dev-mac
+      tag_name: ${{ github.run_number }}-dev
       sign: true
       notarize: true
     secrets: inherit
