@@ -22,7 +22,7 @@
     "pack:win": "electron-builder -w --dir",
     "pack:linux": "electron-builder -l --dir",
     "dist": "electron-builder -mwl",
-    "dist:mac": "NOTARIZE=true electron-builder -m",
+    "dist:mac": "electron-builder -m",
     "dist:win": "electron-builder -w",
     "dist:linux": "electron-builder -l"
   },
@@ -31,7 +31,6 @@
     "appId": "gl.cables.standalone",
     "nodeVersion": "18.14.2",
     "asar": true,
-    "afterSign": "resources/build/notarize.js",
     "files": [
       "cables.json",
       "src/**/*",
@@ -68,7 +67,9 @@
       }
     ],
     "mac": {
-      "notarize": false,
+      "notarize": {
+        "teamId": "3HHYN68G6F"
+      },
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "resources/build/entitlements.mac.plist",
