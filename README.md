@@ -8,6 +8,13 @@ executable for mac/windows/linux.
 ***This is under heavy development, things may (and will break), use it at your own peril. Please provide feedback in
 the issue tracker attached to this repository.***
 
+## About
+
+Cables Standalone uses Electron to bring the cables editor and ops to your desktop. For this it uses [Electron](https://www.electronjs.org/) to keep up
+to date with the features in the browser version. As your browser is "sandboxed" different security measures apply,
+this is no longer the case in the standalone version. This is intentional and gives great power, but also some responsibility
+is now shifted to the user-site. Read about some of the implication on the [Electron site](https://www.electronjs.org/docs/latest/tutorial/security).
+
 ## Issue Workflow
 
 - create an issue, pick "Bug report" or "Feature Request" from the templates

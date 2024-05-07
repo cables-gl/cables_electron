@@ -5,9 +5,6 @@ on:
  # schedule:
  #   - cron: "0 3 * * *"
 
-env:
-  releaseTag: ${{ github.run_number }}-dev
-
 jobs:
   draft_release:
     runs-on: ubuntu-latest
@@ -16,9 +13,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "build: ${{ env.releaseTag }}"
+          name: "build: ${{ github.run_number }}-dev"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ env.releaseTag }}
+          tag_name: ${{ github.run_number }}-dev
           draft: true
           prerelease: true
   linux:
@@ -27,9 +24,9 @@ jobs:
       runner: ubuntu-latest
       target: linux
       branch: develop
-      build_version: ${{ env.releaseTag }}
-      exe_name: cables-${{ env.releaseTag }}-linux
-      tag_name: ${{ env.releaseTag }}
+      build_version: ${{ github.run_number }}-dev
+      exe_name: cables-${{ github.run_number }}-dev-linux
+      tag_name: ${{ github.run_number }}-dev
     secrets: inherit
   win:
     uses: ./.github/workflows/build.yml
@@ -37,9 +34,9 @@ jobs:
       runner: windows-latest
       target: win
       branch: develop
-      build_version: ${{ env.releaseTag }}
-      exe_name: cables-${{ env.releaseTag }}-win
-      tag_name: ${{ env.releaseTag }}
+      build_version: ${{ github.run_number }}-dev
+      exe_name: cables-${{ github.run_number }}-dev-win
+      tag_name: ${{ github.run_number }}-dev
     secrets: inherit
   mac:
     uses: ./.github/workflows/build.yml
@@ -47,8 +44,8 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ env.releaseTag }}
-      exe_name: cables-${{ env.releaseTag }}-mac
-      tag_name: ${{ env.releaseTag }}
+      build_version: ${{ github.run_number }}-dev
+      exe_name: cables-${{ github.run_number }}-dev-mac
+      tag_name: ${{ github.run_number }}-dev
       sign: true
     secrets: inherit
