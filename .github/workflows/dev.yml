@@ -24,7 +24,7 @@ jobs:
       runner: ubuntu-latest
       target: linux
       branch: develop
-      build_version: ${{ github.run_number }}-dev-linux
+      build_version: ${{ github.run_number }}-dev
       exe_name: cables-${{ github.run_number }}-dev-linux
       tag_name: ${{ github.run_number }}-dev
     secrets: inherit
@@ -34,7 +34,7 @@ jobs:
       runner: windows-latest
       target: win
       branch: develop
-      build_version: ${{ github.run_number }}-dev-win
+      build_version: ${{ github.run_number }}-dev
       exe_name: cables-${{ github.run_number }}-dev-win
       tag_name: ${{ github.run_number }}-dev
     secrets: inherit
@@ -44,8 +44,9 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ github.run_number }}-dev-mac
+      build_version: ${{ github.run_number }}-dev
       exe_name: cables-${{ github.run_number }}-dev-mac
       tag_name: ${{ github.run_number }}-dev
       sign: true
+      notarize: true
     secrets: inherit

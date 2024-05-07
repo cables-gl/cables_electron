@@ -31,6 +31,11 @@ on:
         description: "sign executable"
         required: false
         type: boolean
+      notarize:
+        description: "notarize osx executable"
+        required: false
+        type: boolean
+        default: "false"
 jobs:
   build:
     runs-on: ${{ inputs.runner }}
@@ -95,7 +100,11 @@ jobs:
         EXE_NAME: ${{ inputs.exe_name }}
         BUILD_VERSION: ${{ inputs.build_version }}
         GH_TOKEN: ${{ secrets.github_token }}
-        CSC_LINK: "${{ secrets.apple_cert }}"
-        CSC_KEY_PASSWORD: "${{ secrets.apple_cert_pass }}"
+        CSC_LINK: "${{ secrets.APPLE_CERT }}"
+        CSC_KEY_PASSWORD: "${{ secrets.APPLE_CERT_PASS }}"
+        APPLE_ID: "${{ secrets.APPLE_ID }}"
+        APPLE_APP_SPECIFIC_PASS: "${{ secrets.APPLE_APP_SPECIFIC_PASS }}"
+        APPLE_TEAM_ID: "${{ secrets.APPLE_TEAM_ID }}"
+        NOTARIZE: "${{ inputs.notarize }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}

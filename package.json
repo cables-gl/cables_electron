@@ -31,6 +31,7 @@
     "appId": "gl.cables.standalone",
     "nodeVersion": "18.14.2",
     "asar": true,
+    "afterSign": "resources/build/notarize.js",
     "files": [
       "cables.json",
       "src/**/*",
@@ -67,6 +68,10 @@
       }
     ],
     "mac": {
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "resources/build/entitlements.mac.plist",
+      "entitlementsInherit": "resources/build/entitlements.mac.plist",
       "category": "public.app-category.developer-tools",
       "target": [
         {
@@ -79,6 +84,8 @@
       ]
     },
     "win": {
+      "verifyUpdateCodeSignature": false,
+      "signAndEditExecutable": false,
       "target": [
         {
           "target": "zip",
@@ -92,9 +99,7 @@
             "x64"
           ]
         }
-      ],
-      "verifyUpdateCodeSignature": false,
-      "signAndEditExecutable": false
+      ]
     },
     "publish": {
       "provider": "github",
@@ -123,6 +128,7 @@
   "devDependencies": {
     "electron": "30.0.1",
     "electron-builder": "24.13.3",
+    "electron-notarize": "1.2.2",
     "git-repo-info": "2.1.1",
     "gulp": "4.0.2",
     "webpack": "5.76.0",
