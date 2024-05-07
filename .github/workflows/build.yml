@@ -74,6 +74,7 @@ jobs:
       shell: bash
       run: ./hook_standalone.sh ${{ inputs.target }}
       env:
+        EXE_NAME: ${{ inputs.exe_name }}
         BUILD_VERSION: ${{ inputs.build_version }}
         GH_TOKEN: ${{ secrets.github_token }}
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
@@ -83,6 +84,7 @@ jobs:
       shell: bash
       run: ./hook_standalone.sh ${{ inputs.target }}
       env:
+        EXE_NAME: ${{ inputs.exe_name }}
         BUILD_VERSION: ${{ inputs.build_version }}
         GH_TOKEN: ${{ secrets.github_token }}
         CSC_LINK: "${{ secrets.apple_cert }}"

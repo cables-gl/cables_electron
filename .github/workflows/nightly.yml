@@ -28,6 +28,7 @@ jobs:
       target: linux
       branch: develop
       build_version: ${{ github.run_number }}-dev
+      exe_name: cables-dev-${{ github.run_number }}-linux
     secrets: inherit
   build_win:
     uses: ./.github/workflows/build.yml
@@ -36,6 +37,7 @@ jobs:
       target: win
       branch: develop
       build_version: ${{ github.run_number }}-dev
+      exe_name: cables-dev-${{ github.run_number }}-win
     secrets: inherit
   build_mac:
     uses: ./.github/workflows/build.yml
@@ -44,5 +46,6 @@ jobs:
       target: mac
       branch: develop
       build_version: ${{ github.run_number }}-dev
+      exe_name: cables-dev-${{ github.run_number }}-mac
       sign: true
     secrets: inherit
