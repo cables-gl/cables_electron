@@ -223,7 +223,15 @@ class ElectronApp
                         "accelerator": inspectElementAcc,
                         "click": () =>
                         {
-                            this.editorWindow.inspectElement();
+                            let mousePos = screen.getCursorScreenPoint();
+                            if (mousePos)
+                            {
+                                this.editorWindow.inspectElement(mousePos.x, mousePos.y);
+                            }
+                            else
+                            {
+                                this.editorWindow.inspectElement(0, 0);
+                            }
                         }
                     },
                     {
