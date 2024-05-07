@@ -46,13 +46,3 @@ jobs:
       build_version: ${{ github.run_number }}-dev
       sign: true
     secrets: inherit
-  cleanup:
-    steps:
-      - name: delete electron-updater files
-        uses: mknejp/delete-release-assets@v1
-        with:
-          token: ${{ github.token }}
-          tag: ${{ github.run_number }}-dev
-          assets: |
-            *.yml
-            *.blockmap
