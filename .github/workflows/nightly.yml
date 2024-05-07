@@ -18,7 +18,7 @@ jobs:
         with:
           name: "build: ${{ env.releaseTag }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ env.releaseTag }}
+          tag_name: ${{ github.run_number }}-dev
           draft: true
           prerelease: true
   build_linux:
