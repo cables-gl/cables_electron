@@ -35,7 +35,7 @@ on:
         description: "notarize osx executable"
         required: false
         type: boolean
-        default: "false"
+        default: false
 jobs:
   build:
     runs-on: ${{ inputs.runner }}
