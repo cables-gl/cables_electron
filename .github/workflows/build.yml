@@ -99,14 +99,3 @@ jobs:
         CSC_KEY_PASSWORD: "${{ secrets.apple_cert_pass }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
-    - name: delete update files
-      uses: mknejp/delete-release-assets@v1
-      continue-on-error: true
-      with:
-        token: ${{ github.token }}
-        tag: ${{ inputs.tag_name }}
-        fail-if-no-assets: false
-        fail-if-no-release: false
-        assets: |
-          *.yml
-          *.blockmap

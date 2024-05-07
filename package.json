@@ -97,8 +97,9 @@
       "signAndEditExecutable": false
     },
     "publish": {
-        "provider": "github",
-        "vPrefixedTagName": false
+      "provider": "github",
+      "vPrefixedTagName": false,
+      "publishAutoUpdate": false
     }
   },
   "dependencies": {
