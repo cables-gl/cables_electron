@@ -5,7 +5,14 @@ import path from "path";
 export default async function notarizing(context)
 {
     const { electronPlatformName, appOutDir } = context;
+
+    console.log("NOTARIZE", electronPlatformName, process.env.NOTARIZE);
     if (electronPlatformName !== "darwin")
+    {
+        return;
+    }
+
+    if (!process.env.NOTARIZE || process.env.NOTARIZE === "false")
     {
         return;
     }
