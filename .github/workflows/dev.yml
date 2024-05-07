@@ -21,7 +21,7 @@ jobs:
           tag_name: ${{ github.run_number }}-dev
           draft: true
           prerelease: true
-  build_linux:
+  linux:
     uses: ./.github/workflows/build.yml
     with:
       runner: ubuntu-latest
@@ -30,7 +30,7 @@ jobs:
       build_version: ${{ github.run_number }}-dev
       exe_name: cables-dev-${{ github.run_number }}-linux
     secrets: inherit
-  build_win:
+  win:
     uses: ./.github/workflows/build.yml
     with:
       runner: windows-latest
@@ -39,7 +39,7 @@ jobs:
       build_version: ${{ github.run_number }}-dev
       exe_name: cables-dev-${{ github.run_number }}-win
     secrets: inherit
-  build_mac:
+  mac:
     uses: ./.github/workflows/build.yml
     with:
       runner: macos-14
