@@ -39,6 +39,7 @@
       "dist/ui/**/*",
       "dist/ops/**/*",
       "dist/public/**/*",
+      "LICENCE",
       {
         "from": "resources/assets/",
         "to": "public/assets/",
