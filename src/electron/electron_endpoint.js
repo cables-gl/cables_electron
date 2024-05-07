@@ -35,17 +35,35 @@ class ElectronEndpoint
             {
                 const libName = urlPath.split("/", 4)[3];
                 const libCode = this.apiGetCoreLibs(libName);
-                return new Response(libCode, {
-                    "headers": { "content-type": "application/javascript" }
-                });
+                if (libCode)
+                {
+                    return new Response(libCode, {
+                        "headers": { "content-type": "application/javascript" }
+                    });
+                }
+                else
+                {
+                    return new Response(libCode, {
+                        "headers": { "content-type": "application/javascript", "status": 500 }
+                    });
+                }
             }
             else if (urlPath.startsWith("/api/lib/"))
             {
                 const libName = urlPath.split("/", 4)[3];
                 const libCode = this.apiGetLibs(libName);
-                return new Response(libCode, {
-                    "headers": { "content-type": "application/javascript" }
-                });
+                if (libCode)
+                {
+                    return new Response(libCode, {
+                        "headers": { "content-type": "application/javascript" }
+                    });
+                }
+                else
+                {
+                    return new Response(libCode, {
+                        "headers": { "content-type": "application/javascript", "status": 500 }
+                    });
+                }
             }
             else if (urlPath === "/api/errorReport")
             {
@@ -53,10 +71,7 @@ class ElectronEndpoint
             }
             else if (urlPath === "/api/changelog")
             {
-                return new Response(JSON.stringify({
-                    "ts": Date.now(),
-                    "items": []
-                }), {
+                return new Response(JSON.stringify(this.apiGetChangelog()), {
                     "headers": { "content-type": "application/json" }
                 });
             }
@@ -68,21 +83,26 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/ops/code/project"))
             {
-                return this.apiGetProjectOpsCode().then((code) =>
-                {
-                    return new Response(code, {
-                        "headers": { "content-type": "application/json" }
-                    });
+                const code = this.apiGetProjectOpsCode();
+                return new Response(code, {
+                    "headers": { "content-type": "application/json" }
                 });
             }
             else if (urlPath.startsWith("/api/ops/code"))
             {
-                return this.apiGetCoreOpsCode().then((code) =>
+                const code = this.apiGetCoreOpsCode();
+                if (code)
                 {
                     return new Response(code, {
                         "headers": { "content-type": "application/javascript" }
                     });
-                });
+                }
+                else
+                {
+                    return new Response(code, {
+                        "headers": { "content-type": "application/javascript", "status": 500 }
+                    });
+                }
             }
             else if (urlPath.startsWith("/api/op/"))
             {
@@ -92,9 +112,18 @@ class ElectronEndpoint
                     opName = opsUtil.getOpNameById(opName);
                 }
                 const opCode = this.apiGetOpCode({ "opName": opName });
-                return new Response(opCode, {
-                    "headers": { "content-type": "application/javascript" }
-                });
+                if (opCode)
+                {
+                    return new Response(opCode, {
+                        "headers": { "content-type": "application/javascript" }
+                    });
+                }
+                else
+                {
+                    return new Response(opCode, {
+                        "headers": { "content-type": "application/javascript", "status": 500 }
+                    });
+                }
             }
             else if (urlPath.startsWith("/assets/"))
             {
@@ -106,26 +135,33 @@ class ElectronEndpoint
                 if (fs.existsSync(assetPath))
                 {
                     content = fs.readFileSync(assetPath);
+                    return new Response(content);
                 }
-                return new Response(content);
+                else
+                {
+                    this._log.warn("asset not found", urlPath);
+                    return new Response(content, { "status": 404 });
+                }
             }
             else
             {
                 return new Response("", {
-                    "headers": { "content-type": "application/javascript" }
+                    "headers": { "content-type": "application/javascript", "status": 404 }
                 });
             }
         });
     }
 
 
-    async apiGetCoreOpsCode(data)
+    apiGetCoreOpsCode()
     {
         const opDocs = doc.getOpDocs();
-        return opsUtil.buildCode(cables.getCoreOpsPath(), null, true, true, opDocs);
+        const code = opsUtil.buildCode(cables.getCoreOpsPath(), null, true, true, opDocs);
+        if (!code) this._log.warn("FAILED TO GET CODE FOR COREOPS FROM", cables.getCoreOpsPath());
+        return code;
     }
 
-    async apiGetProjectOpsCode()
+    apiGetProjectOpsCode()
     {
         const project = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
@@ -204,6 +240,7 @@ class ElectronEndpoint
         }
         catch (e)
         {
+            this._log.error("FAILED TO BUILD OPCODE FOR", opName, e);
             return code;
         }
     }
@@ -220,6 +257,7 @@ class ElectronEndpoint
         }
         else
         {
+            this._log.error("COULD NOT FIND CORELIB FILE AT", fn);
             return "";
         }
     }
@@ -235,8 +273,17 @@ class ElectronEndpoint
         }
         else
         {
+            this._log.error("COULD NOT FIND LIB FILE AT", fn);
             return "";
         }
+    }
+
+    apiGetChangelog()
+    {
+        return {
+            "ts": Date.now(),
+            "items": []
+        };
     }
 }
 
