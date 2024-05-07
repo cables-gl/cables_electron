@@ -19,6 +19,10 @@ on:
         description: "basename of the final executable"
         required: true
         type: string
+      tag_name:
+        description: "the tag of the current release"
+        required: true
+        type: string
       build_version:
         description: "override for package.log version"
         required: false
@@ -99,7 +103,9 @@ jobs:
       uses: mknejp/delete-release-assets@v1
       with:
         token: ${{ github.token }}
-        tag: ${{ github.run_number }}-dev
+        tag: ${{ inputs.tag_name }}
+        fail-if-no-assets: false
+        fail-if-no-release: false
         assets: |
           *.yml
           *.blockmap

@@ -18,7 +18,7 @@ jobs:
         with:
           name: "build: ${{ env.releaseTag }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ github.run_number }}-dev
+          tag_name: ${{ env.releaseTag }}
           draft: true
           prerelease: true
   linux:
@@ -27,8 +27,9 @@ jobs:
       runner: ubuntu-latest
       target: linux
       branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-dev-${{ github.run_number }}-linux
+      build_version: ${{ env.releaseTag }}
+      exe_name: cables-${{ env.releaseTag }}-linux
+      tag_name: ${{ env.releaseTag }}
     secrets: inherit
   win:
     uses: ./.github/workflows/build.yml
@@ -36,8 +37,9 @@ jobs:
       runner: windows-latest
       target: win
       branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-dev-${{ github.run_number }}-win
+      build_version: ${{ env.releaseTag }}
+      exe_name: cables-${{ env.releaseTag }}-win
+      tag_name: ${{ env.releaseTag }}
     secrets: inherit
   mac:
     uses: ./.github/workflows/build.yml
@@ -45,7 +47,8 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-dev-${{ github.run_number }}-mac
+      build_version: ${{ env.releaseTag }}
+      exe_name: cables-${{ env.releaseTag }}-mac
+      tag_name: ${{ env.releaseTag }}
       sign: true
     secrets: inherit
