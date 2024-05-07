@@ -1,7 +1,10 @@
-import { utilProvider, SharedProjectsUtil } from "cables-shared-api";
+import { SharedProjectsUtil, utilProvider } from "cables-shared-api";
 import path from "path";
 import sanitizeFileName from "sanitize-filename";
 import { app } from "electron";
+import pako from "pako";
+import crypto from "crypto";
+import jsonfile from "jsonfile";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
@@ -79,6 +82,45 @@ class ProjectsUtil extends SharedProjectsUtil
     getProjectFileName(project)
     {
         return sanitizeFileName(project.name).replace(/ /g, "_") + ".cables";
+    }
+
+    writeProjectToFile(projectFile, project, patch = null)
+    {
+        if (!project.ops) project.ops = [];
+        if (patch && (patch.data || patch.dataB64))
+        {
+            try
+            {
+                let buf = patch.data;
+                if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
+
+                const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
+
+                if (qData.ops) project.ops = qData.ops;
+                if (qData.ui) project.ui = qData.ui;
+            }
+            catch (e)
+            {
+                this._log.error("patch save error/invalid data", e);
+                return;
+            }
+        }
+
+        // filter imported ops, so we do not save these to the database
+        project.ops = project.ops.filter((op) =>
+        {
+            return !(op.storage && op.storage.blueprint);
+        });
+
+        project.updated = Date.now();
+        project.name = path.basename(projectFile, ".cables");
+
+        project.opsHash = crypto
+            .createHash("sha1")
+            .update(JSON.stringify(project.ops))
+            .digest("hex");
+        project.buildInfo = settings.getBuildInfo();
+        return jsonfile.writeFileSync(projectFile, project);
     }
 }
 export default new ProjectsUtil(utilProvider);

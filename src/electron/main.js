@@ -1,13 +1,13 @@
 import { app, BrowserWindow, Menu, dialog, shell, screen } from "electron";
 import path from "path";
 import fs from "fs";
-import mkdirp from "mkdirp";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
 import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
 import cables from "../cables.js";
+import projectsUtil from "../utils/projects_util.js";
 
 logger.debug("--- starting");
 
@@ -15,25 +15,16 @@ class ElectronApp
 {
     constructor()
     {
+        this._log = logger;
         this.cablesFileExtensions = [".cables", ".cables.json"];
         this.editorWindow = null;
         settings.set("currentUser", settings.getCurrentUser());
         settings.set("uiDistPath", cables.getUiDistPath());
-        this.documentsPath = path.join(app.getPath("documents"), "cables");
-        if (!fs.existsSync(this.documentsPath)) mkdirp.sync(this.documentsPath);
     }
 
     createWindow()
     {
         let patchFile = null;
-        if (settings.getCurrentProjectFile())
-        {
-            if (fs.existsSync(settings.getCurrentProjectFile()))
-            {
-                patchFile = settings.getCurrentProjectFile();
-            }
-        }
-
         this.editorWindow = new BrowserWindow({
             "width": 1920,
             "height": 1080,
@@ -50,6 +41,32 @@ class ElectronApp
                 "v8CacheOptions": "none"
             }
         });
+
+        if (settings.getCurrentProjectFile())
+        {
+            if (fs.existsSync(settings.getCurrentProjectFile()))
+            {
+                patchFile = settings.getCurrentProjectFile();
+            }
+            else
+            {
+                dialog.showMessageBox(this.editorWindow, {
+                    "type": "warning",
+                    "title": "missing project",
+                    "message": "failed to open:\n" + settings.getCurrentProjectFile(),
+                    "buttons": ["create new", "open patch"],
+                    "defaultId": 0,
+                    "cancelId": 1
+                }).then((button) =>
+                {
+                    if (button && button.response === 1)
+                    {
+                        this.pickProjectFileDialog();
+                    }
+                });
+            }
+        }
+
         if (settings.get(settings.OPEN_DEV_TOOLS_FIELD)) this.editorWindow.openDevTools();
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
@@ -109,7 +126,7 @@ class ElectronApp
                 if (currentProject)
                 {
                     currentProject.name = path.basename(patchFile);
-                    electronApi._writeProjectToFile(patchFile, currentProject);
+                    projectsUtil.writeProjectToFile(patchFile, currentProject);
                 }
                 settings.loadProject(patchFile);
                 return patchFile;

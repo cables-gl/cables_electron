@@ -55,7 +55,7 @@ class ElectronApi
                     if (newProjectFile)
                     {
                         const currentProject = settings.getCurrentProject();
-                        this._writeProjectToFile(newProjectFile, currentProject);
+                        projectsUtil.writeProjectToFile(newProjectFile, currentProject);
                         settings.loadProject(newProjectFile);
                     }
                     else
@@ -106,9 +106,10 @@ class ElectronApi
             "success": true,
             "msg": "PROJECT_SAVED"
         };
-        this._writeProjectToFile(settings.getCurrentProjectFile(), currentProject, patch);
+        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject, patch);
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
+        settings.loadProject(currentProject);
         return re;
     }
 
@@ -134,6 +135,7 @@ class ElectronApi
             }
         }
         currentProject.summary = currentProject.summary || {};
+        if (!currentProject.summary.title) currentProject.summary.title = currentProject.name;
         currentProject.summary.allowEdit = true;
         return currentProject;
     }
@@ -855,48 +857,6 @@ class ElectronApi
         }
     }
 
-    _writeProjectToFile(projectFile, project, patch = null)
-    {
-        if (!project.ops) project.ops = [];
-        if (patch && (patch.data || patch.dataB64))
-        {
-            try
-            {
-                let buf = patch.data;
-                if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
-
-                const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
-
-                if (qData.ops) project.ops = qData.ops;
-                if (qData.ui) project.ui = qData.ui;
-            }
-            catch (e)
-            {
-                this._log.error("patch save error/invalid data", e);
-                return;
-            }
-        }
-
-        // filter imported ops, so we do not save these to the database
-        project.ops = project.ops.filter((op) =>
-        {
-            return !(op.storage && op.storage.blueprint);
-        });
-
-        project.updated = Date.now();
-        project.name = path.basename(projectFile, ".cables");
-
-        project.opsHash = crypto
-            .createHash("sha1")
-            .update(JSON.stringify(project.ops))
-            .digest("hex");
-        project.buildInfo = this.getBuildInfo();
-
-        const written = jsonfile.writeFileSync(projectFile, project);
-        settings.loadProject(projectFile);
-        return written;
-    }
-
     checkNumAssetPatches()
     {
         return { "assets": [], "countPatches": 0, "countOps": 0 };
@@ -932,7 +892,8 @@ class ElectronApi
         origProject.usersReadOnly = usersReadOnly;
         origProject.visibility = "private";
         origProject.shortId = helper.generateShortId(origProject._id, Date.now());
-        this._writeProjectToFile(settings.getCurrentProjectFile(), origProject);
+        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), origProject);
+        settings.loadProject(settings.getCurrentProjectFile());
         electronApp.reload();
         return origProject;
     }
@@ -998,12 +959,13 @@ class ElectronApi
         return { "success": true, "filename": sanitizedFileName };
     }
 
-    async setProjectUpdated(data)
+    async setProjectUpdated()
     {
         const now = Date.now();
         const project = settings.getCurrentProject();
         project.updated = now;
-        this._writeProjectToFile(settings.getCurrentProjectFile(), project);
+        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
+        settings.loadProject(settings.getCurrentProjectFile());
         return { "data": project };
     }
 
@@ -1022,7 +984,8 @@ class ElectronApi
             if (!project.dirs) project.dirs = {};
             if (!project.dirs.ops) project.dirs.ops = [];
             project.dirs.ops.unshift(opDir);
-            this._writeProjectToFile(settings.getCurrentProjectFile(), project);
+            projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
+            settings.loadProject(settings.getCurrentProjectFile());
             return projectsUtil.getProjectOpDirs(project, false);
         }
         else
@@ -1041,7 +1004,7 @@ class ElectronApi
         project.name = path.basename(newFile);
         fs.renameSync(oldFile, newFile);
         settings.replaceInRecentPatches(oldFile, newFile);
-        this._writeProjectToFile(newFile, project);
+        projectsUtil.writeProjectToFile(newFile, project);
         settings.loadProject(newFile);
         electronApp.updateTitle();
         return { "data": { "name": project.name } };

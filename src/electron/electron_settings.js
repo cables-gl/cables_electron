@@ -4,12 +4,16 @@ import mkdirp from "mkdirp";
 import { app } from "electron";
 import jsonfile from "jsonfile";
 import helper from "../utils/helper_util.js";
+import logger from "../utils/logger.js";
+import projectsUtil from "../utils/projects_util.js";
 
 
 class ElectronSettings
 {
     constructor(storageDir)
     {
+        this._log = logger;
+
         if (storageDir && !fs.existsSync(storageDir))
         {
             mkdirp.sync(storageDir);
@@ -93,12 +97,36 @@ class ElectronSettings
     {
         this._currentProject = project;
         const recentProjects = this.getRecentProjects();
-        if (projectFile && project && !recentProjects.hasOwnProperty(projectFile))
+        if (projectFile && project)
         {
-            recentProjects[projectFile] = project;
+            const projectName = path.basename(projectFile);
+            if (project.name !== projectName)
+            {
+                project.name = projectName;
+                projectsUtil.writeProjectToFile(projectFile, project);
+            }
+            if (!recentProjects.hasOwnProperty(projectFile))
+            {
+                const recent = this._toRecentProjectInfo(project);
+                if (recent) recentProjects[projectFile] = recent;
+                this.setRecentProjects(recentProjects);
+            }
         }
-        this.setRecentProjects(recentProjects);
+
         this._updateRecentProjects();
+    }
+
+    _toRecentProjectInfo(project)
+    {
+        if (!project) return null;
+        return {
+            "_id": project._id,
+            "shortId": project.shortId,
+            "name": project.name,
+            "thumbnail": project.thumbnail,
+            "created": project.created,
+            "updated": project.updated
+        };
     }
 
     getCurrentProject()
@@ -259,7 +287,18 @@ class ElectronSettings
         {
             if (i > files.length) break;
             const key = files[i];
-            if (recents.hasOwnProperty(key)) newRecents[key] = jsonfile.readFileSync(key);
+            if (recents.hasOwnProperty(key))
+            {
+                try
+                {
+                    const project = jsonfile.readFileSync(key);
+                    newRecents[key] = this._toRecentProjectInfo(project);
+                }
+                catch (e)
+                {
+                    this._log.info("failed to parse project file for recent projects, ignoring", key);
+                }
+            }
         }
         this.set(this.RECENT_PROJECTS_FIELD, newRecents);
     }
