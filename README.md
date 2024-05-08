@@ -2,6 +2,7 @@
 
 ## Downloads
 dev version: [![dev build](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml)
+
 release version: [![release build](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml)
 
 This is an early-access version of [cables.gl](https://cables.gl) core and editor part, packaged into an electron
