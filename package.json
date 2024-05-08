@@ -28,6 +28,7 @@
   },
   "build": {
     "productName": "cables",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "appId": "gl.cables.standalone",
     "nodeVersion": "18.14.2",
     "asar": true,

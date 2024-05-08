@@ -13,7 +13,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "dev-${{ github.run_number }}"
+          name: "${{ github.run_number }}-dev"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v${{ github.run_number }}-dev
           draft: true
@@ -25,7 +25,7 @@ jobs:
       target: linux
       branch: develop
       build_version: ${{ github.run_number }}-dev
-      exe_name: cables-dev-${{ github.run_number }}-linux
+      exe_name: cables-${{ github.run_number }}-dev
       tag_name: ${{ github.run_number }}-dev
     secrets: inherit
   win:
@@ -35,7 +35,7 @@ jobs:
       target: win
       branch: develop
       build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev-win
+      exe_name: cables-${{ github.run_number }}-dev
       tag_name: ${{ github.run_number }}-dev
     secrets: inherit
   mac:
@@ -45,7 +45,7 @@ jobs:
       target: mac
       branch: develop
       build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev-mac
+      exe_name: cables-${{ github.run_number }}-dev
       tag_name: ${{ github.run_number }}-dev
       sign: true
       notarize: true
