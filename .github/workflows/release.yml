@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
   push:
     tags:
-      -v*
-    tags-ignore:
-      - v*-dev
+      - "v*"
+      - "!v*-dev"
 
 jobs:
   draft_release:
