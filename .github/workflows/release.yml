@@ -15,9 +15,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ env.releaseTag }}"
+          name: "${{ github.ref_name }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ env.releaseTag }}
+          tag_name: ${{ github.ref_name }}
           draft: true
           prerelease: true
   linux:
@@ -26,7 +26,7 @@ jobs:
       runner: ubuntu-latest
       target: linux
       branch: develop
-      build_version: ${{ env.releaseTag }}
+      build_version: ${{ github.ref_name }}
     secrets: inherit
   win:
     uses: ./.github/workflows/build.yml
@@ -34,9 +34,9 @@ jobs:
       runner: windows-latest
       target: win
       branch: develop
-      build_version: ${{ env.releaseTag }}
-      exe_name: cables-${{ env.releaseTag }}
-      tag_name: ${{ env.releaseTag }}
+      build_version: ${{ github.ref_name }}
+      exe_name: cables-${{ github.ref_name }}
+      tag_name: ${{ github.ref_name }}
     secrets: inherit
   mac:
     uses: ./.github/workflows/build.yml
@@ -44,9 +44,9 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ env.releaseTag }}
-      exe_name: cables-${{ env.releaseTag }}
-      tag_name: ${{ env.releaseTag }}
+      build_version: ${{ github.ref_name }}
+      exe_name: cables-${{ github.ref_name }}
+      tag_name: ${{ github.ref_name }}
       sign: true
       notarize: true
     secrets: inherit
