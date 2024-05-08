@@ -27,6 +27,8 @@ jobs:
       target: linux
       branch: develop
       build_version: ${{ github.ref_name }}
+      exe_name: cables-${{ github.ref_name }}
+      tag_name: ${{ github.ref_name }}
     secrets: inherit
   win:
     uses: ./.github/workflows/build.yml
