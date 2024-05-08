@@ -28,7 +28,6 @@
   },
   "build": {
     "productName": "cables",
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "appId": "gl.cables.standalone",
     "nodeVersion": "18.14.2",
     "asar": true,
@@ -69,6 +68,7 @@
       }
     ],
     "mac": {
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
       "notarize": {
         "teamId": "3HHYN68G6F"
       },
@@ -88,6 +88,7 @@
       ]
     },
     "win": {
+      "artifactName": "${productName}-${version}-${os}.${ext}",
       "verifyUpdateCodeSignature": false,
       "signAndEditExecutable": false,
       "target": [
@@ -104,6 +105,9 @@
           ]
         }
       ]
+    },
+    "linux": {
+      "artifactName": "${productName}-${version}-${os}.${ext}"
     },
     "publish": [
       "github"
