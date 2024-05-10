@@ -71,6 +71,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         path: "cables_electron/"
+        ref: ${{ inputs.branch }}
     - name: install nodejs
       uses: actions/setup-node@v4
       with:
