@@ -62,7 +62,7 @@ export default (isLiveBuild, minify = false) =>
                         "to": path.resolve("./public", "js", "buildinfo.json"),
                         "transform": () =>
                         {
-                            console.log("P", buildInfo);
+                            console.log("build info:", buildInfo);
                             return buildInfo;
                         }
                     },
