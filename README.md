@@ -1,10 +1,5 @@
 # Cables Standalone Version
 
-## Downloads
-dev version: [![dev build](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml)
-
-release version: [![release build](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml)
-
 ## Early-Access
 
 This is an early-access version of [cables.gl](https://cables.gl) core and editor part, packaged into an electron
@@ -12,6 +7,27 @@ executable for mac/windows/linux.
 
 ***This is under heavy development, things may (and will break), use it at your own peril. Please provide feedback in
 the issue tracker attached to this repository.***
+
+## Downloads
+dev version: [![dev build](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml)
+
+release version: [![release build](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml)
+
+### Mac
+
+[Download](https://github.com/cables-gl/cables_electron/releases) the lastest version for mac (`.mac-arm64.dmg` for `m1/m2` or `.mac-x64.dmg` for `intel macs`).
+Open the `.dmg`, drag the icon to your applications folder or any other place you want and start it. Acknowledge that this software has been
+downloaded form the internet (the executable is signed and notarized, though) and start patching!
+
+### Win
+[Download](https://github.com/cables-gl/cables_electron/releases) the lastest version for windows (`-win.msi ` for and installer or `-win.zip ` for a plain executable).
+Unpack or install the software and run it. You might need to acknowledge that this software is not signed and select "more infor" and/or "run anyhow" on
+the shown dialog. Once that is done, start patching!
+
+### Linux
+[Download](https://github.com/cables-gl/cables_electron/releases) the lastest version for linux (`linux.AppImage`).
+Once you downloaded the package, set it's permissions to executable via your filemanager or using the terminal (`chmod +x ...AppImage`).
+Open the AppImage and start patching!
 
 ## About
 
@@ -45,7 +61,9 @@ this.editorWindow = new BrowserWindow({
 });
 ```
 
-## Issue Workflow
+## Giving Feedback
+
+### Issue Workflow
 
 - create an issue, pick "Bug report" or "Feature Request" from the templates
 - the issue will be assigned a "new" label
@@ -54,8 +72,10 @@ this.editorWindow = new BrowserWindow({
 - stable releases will have a changelog with all the closed issues
 
 <!---
-## Local Build
 
+## Development
+
+### Local Build
 
 - check out this repository
 - run `npm install`
@@ -63,13 +83,13 @@ this.editorWindow = new BrowserWindow({
 - run `npm run build` to build the standalone version
 - run `npm run start` to start the standalone from the checked out sources
 
-## Local Development
+### Local Development
 
 - take the steps that are described in "Local Build" above
 - use `npm run build` and/op `npm run build:sources` to rebuild with your changes
 - restart the standalone
 
-## Building an executable
+### Building an executable
 
 - take the steps that are described in "Local Build" above
 - use `npm run pack` or `npm run dist` (will try to sign the exe)  - add `:mac`, `:win`, `:linux` to only build one architecture
