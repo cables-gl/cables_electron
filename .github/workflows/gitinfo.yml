@@ -7,7 +7,7 @@ on:
 
 jobs:
   repoinfos:
-    runs-on: ${{ inputs.runner }}
+    runs-on: ubuntu-latest
     steps:
       - name: checkout cables_dev
         uses: actions/checkout@v4
