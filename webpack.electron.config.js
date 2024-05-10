@@ -10,7 +10,7 @@ export default (isLiveBuild, minify = false) =>
     {
         const git = getRepoInfo();
         const date = new Date();
-        return JSON.stringify({
+        const info = {
             "timestamp": date.getTime(),
             "created": date.toISOString(),
             "git": {
@@ -20,7 +20,12 @@ export default (isLiveBuild, minify = false) =>
                 "message": git.commitMessage,
                 "tag": git.tag
             }
-        });
+        };
+        if (process.env.BUILD_VERSION)
+        {
+            info.version = process.env.BUILD_VERSION;
+        }
+        return JSON.stringify(info);
     };
 
     let buildInfo = getBuildInfo();
@@ -57,6 +62,7 @@ export default (isLiveBuild, minify = false) =>
                         "to": path.resolve("./public", "js", "buildinfo.json"),
                         "transform": () =>
                         {
+                            console.log("P", buildInfo);
                             return buildInfo;
                         }
                     },

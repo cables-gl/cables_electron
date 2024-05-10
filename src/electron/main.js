@@ -284,11 +284,23 @@ class ElectronApp
 
     updateTitle()
     {
+        const buildInfo = settings.getBuildInfo();
         let title = "cables";
+        if (buildInfo && buildInfo.api)
+        {
+            if (buildInfo.api.version)
+            {
+                title += " - " + buildInfo.api.version;
+            }
+            else if (buildInfo.api.git && buildInfo.api.git.tag)
+            {
+                title += " - " + buildInfo.api.git.tag;
+            }
+        }
         const projectFile = settings.getCurrentProjectFile();
         if (projectFile)
         {
-            title = "cables - " + projectFile;
+            title = title + " - " + projectFile;
         }
         this.editorWindow.setTitle(title);
     }
