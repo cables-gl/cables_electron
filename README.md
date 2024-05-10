@@ -53,7 +53,9 @@ this.editorWindow = new BrowserWindow({
 - once we added the feature or fixed the bug in any release (also dev/nighty) we will close the issue
 - stable releases will have a changelog with all the closed issues
 
+<!---
 ## Local Build
+
 
 - check out this repository
 - run `npm install`
@@ -72,6 +74,8 @@ this.editorWindow = new BrowserWindow({
 - take the steps that are described in "Local Build" above
 - use `npm run pack` or `npm run dist` (will try to sign the exe)  - add `:mac`, `:win`, `:linux` to only build one architecture
 - find the executable in `dist/`
+
+-->
 
 ## Appreciation
 
