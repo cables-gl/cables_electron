@@ -1,0 +1,63 @@
+name: check gitinfo
+
+on:
+  workflow_dispatch:
+ # schedule:
+ #   - cron: "0 3 * * *"
+
+jobs:
+  repoinfos:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: checkout cables_dev
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_dev"
+          ref: "develop"
+          token: ${{ secrets.standalone_token }}
+      - name: info cables_dev
+        shell: bash
+        run: |
+          git --no-pager log --decorate=short --pretty=oneline -n1
+      - name: checkout cables
+        uses: actions/checkout@v4
+        with:
+          repository: "pandrr/cables"
+          ref: "develop"
+          token: ${{ secrets.standalone_token }}
+          path: "cables/"
+      - name: info cables
+        shell: bash
+        run: |
+          git -C cables/ --no-pager log --decorate=short --pretty=oneline -n1
+      - name: checkout extensions
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_extensionops"
+          ref: "main"
+          token: ${{ secrets.standalone_token }}
+          path: "cables/src/ops/extensions"
+      - name: info cables_extensionops
+        shell: bash
+        run: |
+          git -C cables/src/ops/extensions/ --no-pager log --decorate=short --pretty=oneline -n1
+      - name: checkout cables ui
+        uses: actions/checkout@v4
+        with:
+          repository: "undev-studio/cables_ui"
+          ref: "develop"
+          token: ${{ secrets.standalone_token }}
+          path: "cables_ui/"
+      - name: info cables_ui
+        shell: bash
+        run: |
+          git -C cables_ui/ --no-pager log --decorate=short --pretty=oneline -n1
+      - name: checkout cables electron
+        uses: actions/checkout@v4
+        with:
+          path: "cables_electron/"
+          ref: "develop"
+      - name: info cables_electron
+        shell: bash
+        run: |
+          git -C cables_electron/ --no-pager log --decorate=short --pretty=oneline -n1
