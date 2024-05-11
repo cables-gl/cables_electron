@@ -23,6 +23,7 @@ jobs:
             ls -la
             ls -la .git/objects/
             ls -la .git/objects/pack/
-            for i in `ls .git/*.pack`; do mv -f $i .git/objects/pack/*.pack; done
+            for i in `ls .git/objects/pack/*.pack`; do mv -f $i .git/; done
+            ls -la .git/
             for i in `ls .git/*.pack`; do cat $i | git unpack-objects -r; done
-
+            ls -la .git/objects/
