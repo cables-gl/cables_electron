@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
             cd cables/
-            ls
+            ls -la
             for i in `ls .git/*.pack`; do mv -f $i .git/objects/pack/*.pack; done
             for i in `ls .git/*.pack`; do cat $i | git unpack-objects -r; done
 
