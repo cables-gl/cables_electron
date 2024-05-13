@@ -9,9 +9,9 @@ executable for mac/windows/linux.
 the issue tracker attached to this repository.***
 
 ## Downloads
-dev version: [![dev build](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml)
+dev version: [![dev build](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml/badge.svg)](https://github.com/cables-gl/cables_electron/releases)
 
-release version: [![release build](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml/badge.svg)](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml)
+release version: [![release build](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml/badge.svg)](https://github.com/cables-gl/cables_electron/tags)
 
 ### Mac
 
