@@ -24,7 +24,7 @@ jobs:
   linux:
     uses: ./.github/workflows/build.yml
     with:
-      runner: ubuntu-latest
+      runner: macos-14
       target: linux
       branch: develop
       build_version: ${{ inputs.version }}
@@ -34,7 +34,7 @@ jobs:
   win:
     uses: ./.github/workflows/build.yml
     with:
-      runner: windows-latest
+      runner: macos-14
       target: win
       branch: develop
       build_version: ${{ inputs.version }}
