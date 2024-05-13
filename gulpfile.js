@@ -150,7 +150,7 @@ const getBuildInfo = (cb) =>
         {
             info.git.tag = commit.tags[0];
         }
-        cb();
+        cb(info);
     });
 };
 
