@@ -104,7 +104,7 @@
       "artifactName": "${productName}-${version}-${os}.${ext}"
     },
     "publish": [
-      "github"
+      "always"
     ]
   },
   "dependencies": {
