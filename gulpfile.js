@@ -40,6 +40,7 @@ const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 function _create_ops_dirs(done)
 {
     const opsPath = path.join("./src", config.path.ops);
+    console.log("creating opdirs in", opsPath);
     fs.rmSync("ops", { "recursive": true, "force": true });
     mkdirp.sync(path.join(opsPath, "/base/"));
     mkdirp.sync(path.join(opsPath, "/extensions/"));
@@ -53,6 +54,7 @@ function _libs_copy()
 {
     const target = path.join("./src", config.path.libs);
     const source = path.join("./src", config.sourcePath.libs);
+    console.log("copying", source, "to", target);
     mkdirp.sync(target);
     return gulp.src(source + "**").pipe(gulp.dest(target));
 }
@@ -61,6 +63,7 @@ function _corelibs_copy()
 {
     const target = path.join("./src", config.path.corelibs);
     const source = path.join("./src", config.sourcePath.corelibs);
+    console.log("copying", source, "to", target);
     mkdirp.sync(target);
     return gulp.src(source + "**").pipe(gulp.dest(target));
 }
@@ -69,6 +72,7 @@ function _core_ops_copy()
 {
     const target = path.join("./src", config.path.ops, "/base/");
     const source = path.join("./src", config.sourcePath.ops, "/base/");
+    console.log("copying", source, "to", target);
     mkdirp.sync(target);
     return gulp.src(source + "**").pipe(gulp.dest(target));
 }
@@ -77,6 +81,7 @@ function _extension_ops_copy()
 {
     const target = path.join("./src", config.path.ops, "/extensions/");
     const source = path.join("./src", config.sourcePath.ops, "/extensions/");
+    console.log("copying", source, "to", target);
     mkdirp.sync(target);
     return gulp.src(source + "**").pipe(gulp.dest(target));
 }
@@ -85,6 +90,7 @@ function _ui_copy()
 {
     const target = path.join("./src", config.path.uiDist);
     const source = path.join("./src", config.sourcePath.uiDist);
+    console.log("copying", source, "to", target);
     mkdirp.sync(target);
     return gulp.src(source + "**").pipe(gulp.dest(target));
 }
