@@ -20,7 +20,7 @@ Open the `.dmg`, drag the icon to your applications folder or any other place yo
 downloaded form the internet (the executable is signed and notarized, though) and start patching!
 
 ### Win
-[Download](https://github.com/cables-gl/cables_electron/releases) the latest version for windows (`-win.zip ` for a plain executable).
+[Download](https://github.com/cables-gl/cables_electron/releases) the latest version for windows (`-win.zip ` for a portable executable).
 Unpack the software and run it. You might need to acknowledge that this software is not signed and select "more info" and/or "run anyhow" on
 the shown dialog. Once that is done, start patching!
 
