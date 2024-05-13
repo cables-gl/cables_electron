@@ -133,7 +133,7 @@ class ElectronApi
             }
         }
         currentProject.summary = currentProject.summary || {};
-        if (!currentProject.summary.title) currentProject.summary.title = currentProject.name;
+        currentProject.summary.title = currentProject.name;
         currentProject.summary.allowEdit = true;
         return currentProject;
     }
@@ -881,6 +881,8 @@ class ElectronApi
         const origProject = settings.getCurrentProject();
         origProject._id = helper.generateRandomId();
         origProject.name = path.basename(projectFile);
+        origProject.summary = origProject.summary || {};
+        origProject.summary.title = origProject.name;
         origProject.userId = currentUser._id;
         origProject.cachedUsername = currentUser.username;
         origProject.created = Date.now();
@@ -1000,6 +1002,8 @@ class ElectronApi
         project.name = options.name;
         const newFile = path.join(settings.getCurrentProjectDir(), projectsUtil.getProjectFileName(project));
         project.name = path.basename(newFile);
+        project.summary = project.summary || {};
+        project.summary.title = project.name;
         fs.renameSync(oldFile, newFile);
         settings.replaceInRecentPatches(oldFile, newFile);
         projectsUtil.writeProjectToFile(newFile, project);

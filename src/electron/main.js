@@ -126,6 +126,8 @@ class ElectronApp
                 if (currentProject)
                 {
                     currentProject.name = path.basename(patchFile);
+                    currentProject.summary = currentProject.summary || {};
+                    currentProject.summary.title = currentProject.name;
                     projectsUtil.writeProjectToFile(patchFile, currentProject);
                 }
                 settings.loadProject(patchFile);

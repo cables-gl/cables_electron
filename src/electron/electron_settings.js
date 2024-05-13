@@ -102,6 +102,8 @@ class ElectronSettings
             if (project.name !== projectName)
             {
                 project.name = projectName;
+                project.summary = project.summary || {};
+                project.summary.title = project.name;
                 projectsUtil.writeProjectToFile(projectFile, project);
             }
             if (!recentProjects.hasOwnProperty(projectFile))

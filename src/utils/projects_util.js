@@ -114,6 +114,8 @@ class ProjectsUtil extends SharedProjectsUtil
 
         project.updated = Date.now();
         project.name = path.basename(projectFile, ".cables");
+        project.summary = project.summary || {};
+        project.summary.title = project.name;
 
         project.opsHash = crypto
             .createHash("sha1")
