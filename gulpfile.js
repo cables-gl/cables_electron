@@ -136,7 +136,7 @@ const getBuildInfo = (cb) =>
     const date = new Date();
     git.getLastCommit((err, commit) =>
     {
-        cb({
+        const info = {
             "timestamp": date.getTime(),
             "created": date.toISOString(),
             "git": {
@@ -145,7 +145,12 @@ const getBuildInfo = (cb) =>
                 "date": commit.committedOn,
                 "message": commit.subject
             }
-        });
+        };
+        if (commit.tags && commit.tags.length > 0)
+        {
+            info.git.tag = commit.tags[0];
+        }
+        cb();
     });
 };
 

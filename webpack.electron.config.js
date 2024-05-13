@@ -37,6 +37,10 @@ export default (isLiveBuild, buildInfo, minify = false) =>
                         "to": path.resolve("./public", "js", "buildinfo.json"),
                         "transform": () =>
                         {
+                            if (process.env.BUILD_VERSION)
+                            {
+                                buildInfo.version = process.env.BUILD_VERSION;
+                            }
                             return JSON.stringify(buildInfo);
                         }
                     },
