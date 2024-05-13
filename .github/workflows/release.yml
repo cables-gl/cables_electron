@@ -2,10 +2,11 @@ name: release build
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*"
-      - "!v*-dev"
+    inputs:
+      version:
+        description: 'version number'
+        required: true
+        type: string
 
 jobs:
   draft_release:
@@ -15,9 +16,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ github.ref_name }}"
+          name: "${{ inputs.version }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ inputs.version }}
           draft: true
           prerelease: true
   linux:
@@ -26,9 +27,9 @@ jobs:
       runner: ubuntu-latest
       target: linux
       branch: develop
-      build_version: ${{ github.ref_name }}
-      exe_name: cables-${{ github.ref_name }}
-      tag_name: ${{ github.ref_name }}
+      build_version: ${{ inputs.version }}
+      exe_name: cables-${{ inputs.version }}
+      tag_name: v${{ inputs.version }}
     secrets: inherit
   win:
     uses: ./.github/workflows/build.yml
@@ -36,9 +37,9 @@ jobs:
       runner: windows-latest
       target: win
       branch: develop
-      build_version: ${{ github.ref_name }}
-      exe_name: cables-${{ github.ref_name }}
-      tag_name: ${{ github.ref_name }}
+      build_version: ${{ inputs.version }}
+      exe_name: cables-${{ inputs.version }}
+      tag_name: v${{ inputs.version }}
     secrets: inherit
   mac:
     uses: ./.github/workflows/build.yml
@@ -46,9 +47,9 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ github.ref_name }}
-      exe_name: cables-${{ github.ref_name }}
-      tag_name: ${{ github.ref_name }}
+      build_version: ${{ inputs.version }}
+      exe_name: cables-${{ inputs.version }}
+      tag_name: ${{ inputs.version }}
       sign: true
       notarize: true
     secrets: inherit
