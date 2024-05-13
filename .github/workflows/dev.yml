@@ -18,16 +18,16 @@ jobs:
           tag_name: v${{ github.run_number }}-dev
           draft: true
           prerelease: true
-  linux:
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: ubuntu-latest
-      target: linux
-      branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev
-      tag_name: ${{ github.run_number }}-dev
-    secrets: inherit
+  # linux:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     runner: ubuntu-latest
+  #     target: linux
+  #     branch: develop
+  #     build_version: ${{ github.run_number }}-dev
+  #     exe_name: cables-${{ github.run_number }}-dev
+  #     tag_name: ${{ github.run_number }}-dev
+  #   secrets: inherit
   win:
     uses: ./.github/workflows/build.yml
     with:
@@ -38,15 +38,15 @@ jobs:
       exe_name: cables-${{ github.run_number }}-dev
       tag_name: ${{ github.run_number }}-dev
     secrets: inherit
-  mac:
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: macos-14
-      target: mac
-      branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev
-      tag_name: ${{ github.run_number }}-dev
-      sign: true
-      notarize: true
-    secrets: inherit
+  # mac:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     runner: macos-14
+  #     target: mac
+  #     branch: develop
+  #     build_version: ${{ github.run_number }}-dev
+  #     exe_name: cables-${{ github.run_number }}-dev
+  #     tag_name: ${{ github.run_number }}-dev
+  #     sign: true
+  #     notarize: true
+  #   secrets: inherit
