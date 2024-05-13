@@ -15,18 +15,18 @@ release version: [![release build](https://github.com/cables-gl/cables_electron/
 
 ### Mac
 
-[Download](https://github.com/cables-gl/cables_electron/releases) the lastest version for mac (`.mac-arm64.dmg` for `m1/m2` or `.mac-x64.dmg` for `intel macs`).
+[Download](https://github.com/cables-gl/cables_electron/releases) the latest version for mac (`.mac-arm64.dmg` for `m1/m2` or `.mac-x64.dmg` for `intel macs`).
 Open the `.dmg`, drag the icon to your applications folder or any other place you want and start it. Acknowledge that this software has been
 downloaded form the internet (the executable is signed and notarized, though) and start patching!
 
 ### Win
-[Download](https://github.com/cables-gl/cables_electron/releases) the lastest version for windows (`-win.msi ` for and installer or `-win.zip ` for a plain executable).
-Unpack or install the software and run it. You might need to acknowledge that this software is not signed and select "more infor" and/or "run anyhow" on
+[Download](https://github.com/cables-gl/cables_electron/releases) the latest version for windows (`-win.zip ` for a plain executable).
+Unpack the software and run it. You might need to acknowledge that this software is not signed and select "more info" and/or "run anyhow" on
 the shown dialog. Once that is done, start patching!
 
 ### Linux
-[Download](https://github.com/cables-gl/cables_electron/releases) the lastest version for linux (`linux.AppImage`).
-Once you downloaded the package, set it's permissions to executable via your filemanager or using the terminal (`chmod +x ...AppImage`).
+[Download](https://github.com/cables-gl/cables_electron/releases) the latest version for linux (`linux.AppImage`).
+Once you downloaded the package, set its permissions to executable via your file-manager or using the terminal (`chmod +x ...AppImage`).
 Open the AppImage and start patching!
 
 ## About
@@ -67,8 +67,8 @@ this.editorWindow = new BrowserWindow({
 
 - create an issue, pick "Bug report" or "Feature Request" from the templates
 - the issue will be assigned a "new" label
-- we will check on these issues regularily, add them to a milestone and remove the "new" label
-- once we added the feature or fixed the bug in any release (also dev/nighty) we will close the issue
+- we will check on these issues regularly, add them to a milestone and remove the "new" label
+- once we added the feature or fixed the bug in any release (also dev/nightly) we will close the issue
 - stable releases will have a changelog with all the closed issues
 
 <!---
