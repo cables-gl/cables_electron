@@ -129,7 +129,7 @@
     "electron": "30.0.1",
     "electron-builder": "24.13.3",
     "electron-notarize": "1.2.2",
-    "git-repo-info": "2.1.1",
+    "git-last-commit": "1.0.1",
     "gulp": "4.0.2",
     "webpack": "5.76.0",
     "webpack-stream": "7.0.0",

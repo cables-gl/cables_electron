@@ -2,34 +2,9 @@ import path from "path";
 import webpack from "webpack";
 import TerserPlugin from "terser-webpack-plugin";
 import CopyPlugin from "copy-webpack-plugin";
-import getRepoInfo from "git-repo-info";
 
-export default (isLiveBuild, minify = false) =>
+export default (isLiveBuild, buildInfo, minify = false) =>
 {
-    const getBuildInfo = () =>
-    {
-        const git = getRepoInfo();
-        const date = new Date();
-        const info = {
-            "timestamp": date.getTime(),
-            "created": date.toISOString(),
-            "git": {
-                "branch": git.branch,
-                "commit": git.sha,
-                "date": git.committerDate,
-                "message": git.commitMessage,
-                "tag": git.tag
-            }
-        };
-        if (process.env.BUILD_VERSION)
-        {
-            info.version = process.env.BUILD_VERSION;
-        }
-        return JSON.stringify(info);
-    };
-
-    let buildInfo = getBuildInfo();
-
     return {
         "mode": isLiveBuild ? "production" : "development",
         "devtool": minify ? "source-map" : false,
@@ -62,8 +37,7 @@ export default (isLiveBuild, minify = false) =>
                         "to": path.resolve("./public", "js", "buildinfo.json"),
                         "transform": () =>
                         {
-                            console.log("build info:", buildInfo);
-                            return buildInfo;
+                            return JSON.stringify(buildInfo);
                         }
                     },
                 ],

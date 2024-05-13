@@ -6,6 +6,7 @@ import mkdirp from "mkdirp";
 import webpack from "webpack-stream";
 import compiler from "webpack";
 import jsonfile from "jsonfile";
+import git from "git-last-commit";
 import webpackElectronConfig from "./webpack.electron.config.js";
 
 const defaultConfigLocation = "./cables.json";
@@ -97,35 +98,56 @@ function _ui_copy()
 
 function _editor_scripts_webpack(done)
 {
-    const target = path.join("./src", config.path.js);
-    return gulp.src(["src_client/index_electron.js"])
-        .pipe(
-            webpack(
-                {
-                    "config": webpackElectronConfig(isLiveBuild, minify),
-                },
-                compiler,
-                (err, stats) =>
-                {
-                    if (err) done(err);
-                    if (stats.hasErrors())
+    getBuildInfo((buildInfo) =>
+    {
+        const target = path.join("./src", config.path.js);
+        return gulp.src(["src_client/index_electron.js"])
+            .pipe(
+                webpack(
                     {
-                        done(new Error(stats.compilation.errors.join("\n")));
-                    }
-                    else
+                        "config": webpackElectronConfig(isLiveBuild, buildInfo, minify),
+                    },
+                    compiler,
+                    (err, stats) =>
                     {
-                        done();
+                        if (err) done(err);
+                        if (stats.hasErrors())
+                        {
+                            done(new Error(stats.compilation.errors.join("\n")));
+                        }
+                        else
+                        {
+                            done();
+                        }
                     }
-                }
+                )
             )
-        )
-        .pipe(gulp.dest(target))
-        .on("error", (err) =>
-        {
-            console.error("WEBPACK ERROR NEU!!!!!!!", err);
-            done(err);
-        });
+            .pipe(gulp.dest(target))
+            .on("error", (err) =>
+            {
+                console.error("WEBPACK ERROR NEU!!!!!!!", err);
+                done(err);
+            });
+    });
 }
+
+const getBuildInfo = (cb) =>
+{
+    const date = new Date();
+    git.getLastCommit((err, commit) =>
+    {
+        cb({
+            "timestamp": date.getTime(),
+            "created": date.toISOString(),
+            "git": {
+                "branch": commit.branch,
+                "commit": commit.hash,
+                "date": commit.committedOn,
+                "message": commit.subject
+            }
+        });
+    });
+};
 
 /*
  * -------------------------------------------------------------------------------------------
