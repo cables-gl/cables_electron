@@ -802,7 +802,7 @@ class ElectronApi
         }
         else
         {
-            return { "stdout": "noting to install" };
+            return { "stdout": "notihng to install" };
         }
     }
 
