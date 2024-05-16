@@ -12,6 +12,13 @@ import filesUtil from "./files_util.js";
 
 class ProjectsUtil extends SharedProjectsUtil
 {
+    constructor(provider)
+    {
+        super(provider);
+        this.CABLES_PROJECT_FILE_EXTENSION = "cables";
+        this.CABLES_STANDALONE_EXPORT_FILE_EXTENSION = "cables.json";
+    }
+
     getAssetPath(projectId)
     {
         return cables.getAssetPath();
@@ -81,7 +88,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getProjectFileName(project)
     {
-        return sanitizeFileName(project.name).replace(/ /g, "_") + ".cables";
+        return sanitizeFileName(project.name).replace(/ /g, "_") + ".".this._se;
     }
 
     writeProjectToFile(projectFile, project, patch = null)
@@ -113,7 +120,7 @@ class ProjectsUtil extends SharedProjectsUtil
         });
 
         project.updated = Date.now();
-        project.name = path.basename(projectFile, ".cables");
+        project.name = path.basename(projectFile, "." + this.CABLES_PROJECT_FILE_EXTENSION);
         project.summary = project.summary || {};
         project.summary.title = project.name;
 

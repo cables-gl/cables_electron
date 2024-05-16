@@ -16,7 +16,7 @@ class ElectronApp
     constructor()
     {
         this._log = logger;
-        this.cablesFileExtensions = [".cables", ".cables.json"];
+        this.cablesFileExtensions = [projectsUtil.CABLES_PROJECT_FILE_EXTENSION, projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION];
         this.editorWindow = null;
         settings.set("currentUser", settings.getCurrentUser());
         settings.set("uiDistPath", cables.getUiDistPath());
@@ -70,7 +70,7 @@ class ElectronApp
         if (settings.get(settings.OPEN_DEV_TOOLS_FIELD)) this.editorWindow.openDevTools();
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
-            if (this.editorWindow.isDocumentEdited())
+            if (this.isDocumentEdited())
             {
                 const choice = dialog.showMessageBoxSync(this.editorWindow, {
                     "type": "question",
@@ -85,6 +85,10 @@ class ElectronApp
                 {
                     event.preventDefault();
                 }
+            }
+            else
+            {
+                event.preventDefault();
             }
         });
 
@@ -355,6 +359,17 @@ class ElectronApp
         this.updateTitle();
         this.editorWindow.reload();
     }
+
+    setDocumentEdited(edited)
+    {
+        this._contentChanged = edited;
+    }
+
+
+    isDocumentEdited()
+    {
+        return this._contentChanged || this.editorWindow.isDocumentEdited();
+    }
 }
 app.whenReady().then(() =>
 {
@@ -370,7 +385,7 @@ app.whenReady().then(() =>
 
 app.on("window-all-closed", () =>
 {
-    if (process.platform !== "darwin") app.quit();
+    app.quit();
 });
 const electronApp = new ElectronApp();
 export default electronApp;

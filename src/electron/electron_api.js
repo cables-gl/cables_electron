@@ -472,14 +472,14 @@ class ElectronApi
         const pos = title.lastIndexOf(" *");
         let newTitle = title;
         if (pos !== -1) newTitle = title.substring(0, pos);
-        electronApp.editorWindow.setDocumentEdited(false);
+        electronApp.setDocumentEdited(false);
         electronApp.editorWindow.setTitle(newTitle);
     }
 
     setIconUnsaved()
     {
         const title = electronApp.editorWindow.getTitle();
-        electronApp.editorWindow.setDocumentEdited(true);
+        electronApp.setDocumentEdited(true);
         electronApp.editorWindow.setTitle(title + " *");
     }
 
