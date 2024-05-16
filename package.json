@@ -14,9 +14,9 @@
     "node": "18.14.2"
   },
   "scripts": {
-    "start": "npm_config_apiconfig=local electron .",
-    "build": "npm_config_apiconfig=local gulp build",
-    "build:source": "npm_config_apiconfig=local gulp build:source",
+    "start": "cross-env NPM_CONFIG_APICONFIG=local electron .",
+    "build": "cross-env NPM_CONFIG_APICONFIG=local gulp build",
+    "build:source": "cross-env NPM_CONFIG_APICONFIG=local gulp build:source",
     "pack": "electron-builder -mwl --dir",
     "pack:mac": "electron-builder -m --dir -c.mac.identity=null",
     "pack:win": "electron-builder -w --dir",
@@ -126,6 +126,7 @@
     "uuid-v4": "0.1.0"
   },
   "devDependencies": {
+    "cross-env": "5.2.0",
     "electron": "30.0.1",
     "electron-builder": "24.13.3",
     "electron-notarize": "1.2.2",
