@@ -1011,6 +1011,11 @@ class ElectronApi
         electronApp.updateTitle();
         return { "data": { "name": project.name } };
     }
+
+    cycleFullscreen()
+    {
+        electronApp.cycleFullscreen();
+    }
 }
 
 export default new ElectronApi();

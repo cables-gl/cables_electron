@@ -204,14 +204,7 @@ class ElectronApp
                         "label": "Toggle fullscreen",
                         "click": () =>
                         {
-                            if (this.editorWindow.isFullScreen())
-                            {
-                                this.editorWindow.setFullScreen(false);
-                            }
-                            else
-                            {
-                                this.editorWindow.setFullScreen(true);
-                            }
+                            this.cycleFullscreen();
                         }
                     },
                     {
@@ -369,6 +362,20 @@ class ElectronApp
     isDocumentEdited()
     {
         return this._contentChanged || this.editorWindow.isDocumentEdited();
+    }
+
+    cycleFullscreen()
+    {
+        if (this.editorWindow.isFullScreen())
+        {
+            this.editorWindow.setMenuBarVisibility(true);
+            this.editorWindow.setFullScreen(false);
+        }
+        else
+        {
+            this.editorWindow.setMenuBarVisibility(false);
+            this.editorWindow.setFullScreen(true);
+        }
     }
 }
 app.whenReady().then(() =>

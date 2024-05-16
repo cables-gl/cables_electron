@@ -58,6 +58,12 @@ CABLES_CMD_ELECTRON_OVERRIDES.PATCH.saveAs = () =>
     window.ipcRenderer.invoke("talkerMessage", "saveProjectAs", { }).then((r) => {});
 };
 
+CABLES_CMD_ELECTRON_OVERRIDES.RENDERER = {};
+CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
+{
+    window.ipcRenderer.invoke("talkerMessage", "cycleFullscreen", { }).then((r) => {});
+};
+
 CMD_ELECTRON_COMMANDS.push(
     {
         "cmd": "new patch",
