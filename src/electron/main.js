@@ -95,8 +95,12 @@ class ElectronApp
 
         this.editorWindow.webContents.setWindowOpenHandler(({ url }) =>
         {
-            shell.openExternal(url);
-            return { "action": "deny" };
+            if (url && url.startsWith("http"))
+            {
+                shell.openExternal(url);
+                return { "action": "deny" };
+            }
+            return { "action": "allow" };
         });
 
 
