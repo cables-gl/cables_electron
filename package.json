@@ -11,7 +11,7 @@
   "main": "src/electron/main.js",
   "type": "module",
   "engines": {
-    "node": "18.14.2"
+    "node": "20.13.1"
   },
   "scripts": {
     "start": "cross-env NPM_CONFIG_APICONFIG=local electron .",
@@ -29,7 +29,7 @@
   "build": {
     "productName": "cables",
     "appId": "gl.cables.standalone",
-    "nodeVersion": "18.14.2",
+    "nodeVersion": "20.13.1",
     "asar": true,
     "files": [
       "cables.json",
@@ -119,7 +119,7 @@
     "marked": "1.2.9",
     "mkdirp": "2.1.3",
     "moment": "2.29.4",
-    "npm": "9.5.0",
+    "npm": "10.5.2",
     "pako": "2.1.0",
     "project-name-generator": "2.1.9",
     "sanitize-filename": "1.6.3",

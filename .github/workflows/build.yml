@@ -43,7 +43,7 @@ jobs:
     - name: checkout cables_dev
       uses: actions/checkout@v4
       with:
-        repository: "undev-studio/cables_dev"
+        repository: "cables-gl/cables_dev"
         ref: ${{ inputs.branch }}
         token: ${{ secrets.standalone_token }}
     - name: checkout cables
@@ -56,14 +56,14 @@ jobs:
     - name: checkout extensions
       uses: actions/checkout@v4
       with:
-        repository: "undev-studio/cables_extensionops"
+        repository: "cables-gl/cables_extensionops"
         ref: "main"
         token: ${{ secrets.standalone_token }}
         path: "cables/src/ops/extensions"
     - name: checkout cables ui
       uses: actions/checkout@v4
       with:
-        repository: "undev-studio/cables_ui"
+        repository: "cables-gl/cables_ui"
         ref: ${{ inputs.branch }}
         token: ${{ secrets.standalone_token }}
         path: "cables_ui/"
