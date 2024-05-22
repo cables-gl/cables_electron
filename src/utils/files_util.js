@@ -24,14 +24,15 @@ class FilesUtil extends SharedFilesUtil
             "cachebuster": helper.generateRandomId(),
             "isLibraryFile": filePath.includes(cables.getAssetLibraryPath()),
             "__v": 0,
-            "size": stats.size
+            "size": stats.size,
+            "path": filePath
         };
     }
 
     getFileAssetLocation(fileDb)
     {
-        let assetPath = cables.getAssetPath();
-        let fileName = this.getAssetFileName(fileDb);
+        let assetPath = "";
+        let fileName = fileDb.path;
         if (fileDb.isLibraryFile)
         {
             assetPath = cables.getAssetLibraryPath();

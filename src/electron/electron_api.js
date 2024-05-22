@@ -513,8 +513,7 @@ class ElectronApi
 
     getFileDetails(data)
     {
-        let filePath = data.filename.replace("file:", "").replace("file:", "");
-        if (!filePath.startsWith(cables.getAssetPath())) filePath = path.join(cables.getAssetPath(), filePath);
+        let filePath = data.filename.replace("file://", "").replace("file:", "");
         const fileDb = filesUtil.getFileDb(filePath, settings.getCurrentProject(), settings.getCurrentUser());
         return filesUtil.getFileInfo(fileDb);
     }
@@ -568,7 +567,7 @@ class ElectronApi
             }
             if (fs.existsSync(fullPath))
             {
-                const dirName = path.dirname(fullPath);
+                const dirName = path.join(path.dirname(fullPath), "/");
                 if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
                 const fileData = {
                     "d": false,
@@ -597,12 +596,22 @@ class ElectronApi
         for (let dirName of dirNames)
         {
             let displayName = dirName;
-            if (dirName === projectDir) displayName = "Project Directory";
-            if (dirName.startsWith(projectDir)) displayName = dirName.replace(projectDir, "");
+            if (dirName === projectDir)
+            {
+                displayName = "Project Directory";
+            }
+            else if (dirName.startsWith(projectDir))
+            {
+                displayName = path.join(dirName.replace(projectDir, ""), "/");
+            }
+            else
+            {
+                displayName = path.join(dirName, "/");
+            }
 
             arr.push({
                 "d": true,
-                "n": displayName + "/",
+                "n": displayName,
                 "t": "dir",
                 "l": 1,
                 "c": fileHierarchy[dirName],
