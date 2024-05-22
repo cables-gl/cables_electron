@@ -44,7 +44,7 @@ class FilesUtil extends SharedFilesUtil
         if (!fileDb) return "";
         let assetDir = cables.getAssetPath();
         if (fileDb.isLibraryFile) cables.getAssetLibraryPath();
-        return path.join("file://", assetDir, this.getAssetFileName(fileDb));
+        return path.join("file:", assetDir, this.getAssetFileName(fileDb));
     }
 }
 

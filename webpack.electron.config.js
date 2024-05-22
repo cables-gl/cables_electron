@@ -12,7 +12,7 @@ export default (isLiveBuild, buildInfo, minify = false) =>
             "scripts.electron.js": [path.resolve("./src_client", "index_electron.js")],
         },
         "output": {
-            "path": path.resolve("./public", "js"),
+            "path": path.resolve("./dist", "public", "js"),
             "filename": "[name]",
         },
         "optimization": {
@@ -34,7 +34,7 @@ export default (isLiveBuild, buildInfo, minify = false) =>
                 "patterns": [
                     {
                         "from": path.resolve("./src_client", "index_electron.js"),
-                        "to": path.resolve("./public", "js", "buildinfo.json"),
+                        "to": path.resolve("./dist", "public", "js", "buildinfo.json"),
                         "transform": () =>
                         {
                             if (process.env.BUILD_VERSION)

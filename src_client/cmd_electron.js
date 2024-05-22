@@ -57,6 +57,10 @@ CABLES_CMD_ELECTRON_OVERRIDES.PATCH.saveAs = () =>
 {
     window.ipcRenderer.invoke("talkerMessage", "saveProjectAs", { }).then((r) => {});
 };
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH.uploadFileDialog = () =>
+{
+    window.ipcRenderer.invoke("talkerMessage", "openAssetDir").then((r) => {});
+};
 
 CABLES_CMD_ELECTRON_OVERRIDES.RENDERER = {};
 CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>

@@ -513,7 +513,7 @@ class ElectronApi
 
     getFileDetails(data)
     {
-        let filePath = data.filename.replace("file://", "").replace("file:", "");
+        let filePath = data.filename.replace("file:", "").replace("file:", "");
         if (!filePath.startsWith(cables.getAssetPath())) filePath = path.join(cables.getAssetPath(), filePath);
         const fileDb = filesUtil.getFileDb(filePath, settings.getCurrentProject(), settings.getCurrentUser());
         return filesUtil.getFileInfo(fileDb);
@@ -538,6 +538,7 @@ class ElectronApi
         const project = settings.getCurrentProject();
         if (!project) return arr;
 
+        const projectDir = settings.getCurrentProjectDir();
         const assetPorts = projectsUtil.getProjectAssetPorts(project, true);
         let urls = assetPorts.map((assetPort) => { return assetPort.value; });
         urls = helper.uniqueArray(urls);
@@ -549,6 +550,11 @@ class ElectronApi
             else if (url.endsWith("3d.json")) type = "3d json";
             else if (url.endsWith("json")) type = "json";
             else if (url.endsWith("mp4")) type = "video";
+
+            if (url.startsWith("./"))
+            {
+                url = path.join(projectDir, url);
+            }
 
             let fullPath = url;
             try
@@ -590,9 +596,13 @@ class ElectronApi
         const dirNames = Object.keys(fileHierarchy);
         for (let dirName of dirNames)
         {
+            let displayName = dirName;
+            if (dirName === projectDir) displayName = "Project Directory";
+            if (dirName.startsWith(projectDir)) displayName = dirName.replace(projectDir, "");
+
             arr.push({
                 "d": true,
-                "n": dirName,
+                "n": displayName + "/",
                 "t": "dir",
                 "l": 1,
                 "c": fileHierarchy[dirName],
@@ -605,7 +615,7 @@ class ElectronApi
     _getLibraryFiles()
     {
         const p = cables.getAssetLibraryPath();
-        return this._readAssetDir(0, p, p, "file://" + p);
+        return this._readAssetDir(0, p, p, "file:" + p);
     }
 
     _getFileIconName(fileDb)
