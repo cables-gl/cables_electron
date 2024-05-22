@@ -1,7 +1,7 @@
 import { ipcMain, shell } from "electron";
 import fs from "fs";
 import path from "path";
-import marked from "marked";
+import { marked } from "marked";
 import jsonfile from "jsonfile";
 import mkdirp from "mkdirp";
 
