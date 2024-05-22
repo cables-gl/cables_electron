@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, dialog, shell, screen } from "electron";
-import path from "path";
+import path, { dirname } from "path";
 import fs from "fs";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
@@ -10,6 +10,7 @@ import cables from "../cables.js";
 import projectsUtil from "../utils/projects_util.js";
 
 logger.debug("--- starting");
+
 
 class ElectronApp
 {

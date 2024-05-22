@@ -532,8 +532,74 @@ class ElectronApi
 
     _getPatchFiles()
     {
-        const p = cables.getAssetPath();
-        return this._readAssetDir(0, p, p, "file://" + p);
+        const arr = [];
+        const fileHierarchy = {};
+
+        const project = settings.getCurrentProject();
+        if (!project) return arr;
+
+        const assetPorts = projectsUtil.getProjectAssetPorts(project, true);
+        let urls = assetPorts.map((assetPort) => { return assetPort.value; });
+        urls = helper.uniqueArray(urls);
+        urls.forEach((url) =>
+        {
+            let type = "unknown";
+            if (url.endsWith("jpg") || url.endsWith("png") || url.endsWith("jpeg")) type = "image";
+            else if (url.endsWith("mp3") || url.endsWith("ogg") || url.endsWith("wav")) type = "audio";
+            else if (url.endsWith("3d.json")) type = "3d json";
+            else if (url.endsWith("json")) type = "json";
+            else if (url.endsWith("mp4")) type = "video";
+
+            let fullPath = url;
+            try
+            {
+                const parseUrl = new URL(url);
+                fullPath = decodeURI(parseUrl.pathname);
+            }
+            catch (e)
+            {
+                this._log.debug("no url in assetport");
+            }
+            if (fs.existsSync(fullPath))
+            {
+                const dirName = path.dirname(fullPath);
+                if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
+                const fileData = {
+                    "d": false,
+                    "n": path.basename(fullPath),
+                    "t": type,
+                    "l": 0,
+                    "p": url,
+                    "type": type,
+                    "updated": "bla"
+                };
+                fileData.icon = this._getFileIconName(fileData);
+
+                let stats = fs.statSync(fullPath);
+                if (stats && stats.mtime)
+                {
+                    fileData.updated = new Date(stats.mtime).getTime();
+                }
+                fileHierarchy[dirName].push(fileData);
+            }
+            else
+            {
+                this._log.warn("missing file", fullPath);
+            }
+        });
+        const dirNames = Object.keys(fileHierarchy);
+        for (let dirName of dirNames)
+        {
+            arr.push({
+                "d": true,
+                "n": dirName,
+                "t": "dir",
+                "l": 1,
+                "c": fileHierarchy[dirName],
+                "p": dirName
+            });
+        }
+        return arr;
     }
 
     _getLibraryFiles()

@@ -14,9 +14,9 @@
     "node": "20.13.1"
   },
   "scripts": {
-    "start": "cross-env NPM_CONFIG_APICONFIG=local electron .",
-    "build": "cross-env NPM_CONFIG_APICONFIG=local gulp build",
-    "build:source": "cross-env NPM_CONFIG_APICONFIG=local gulp build:source",
+    "start": "cross-env npm_config_apiconfig=local electron .",
+    "build": "cross-env npm_config_apiconfig=local gulp build",
+    "build:source": "cross-env npm_config_apiconfig=local gulp build:source",
     "pack": "electron-builder -mwl --dir",
     "pack:mac": "electron-builder -m --dir -c.mac.identity=null",
     "pack:win": "electron-builder -w --dir",

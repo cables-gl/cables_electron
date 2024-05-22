@@ -82,6 +82,45 @@ class OpsUtil extends SharedOpsUtil
         return helper.uniqueArray(opNames);
     }
 
+    getOpAssetPorts(op, includeLibraryAssets = false)
+    {
+        const assetPorts = [];
+        if (!op) return assetPorts;
+        if (!op.portsIn) return assetPorts;
+
+        for (let i = 0; i < op.portsIn.length; i++)
+        {
+            const port = op.portsIn[i];
+            if (
+                port.value &&
+                typeof port.value == "string" &&
+                port.name &&
+                port.value.length &&
+                (port.display === "file" ||
+                    port.name.toLowerCase().indexOf("file") > -1 ||
+                    port.name.toLowerCase().indexOf("url") > -1 ||
+                    // port names in cubemapfromtextures !
+                    port.name.toLowerCase().indexOf("posx") > -1 ||
+                    port.name.toLowerCase().indexOf("posy") > -1 ||
+                    port.name.toLowerCase().indexOf("posz") > -1 ||
+                    port.name.toLowerCase().indexOf("negx") > -1 ||
+                    port.name.toLowerCase().indexOf("negy") > -1 ||
+                    port.name.toLowerCase().indexOf("negz") > -1)
+            )
+            {
+                if (!port.value.toLowerCase().startsWith("/assets/library"))
+                {
+                    assetPorts.push(port);
+                }
+                else if (includeLibraryAssets)
+                {
+                    assetPorts.push(port);
+                }
+            }
+        }
+        return assetPorts;
+    }
+
     _getAbsoluteOpDirFromHierarchy(opName, defaultDir)
     {
         const projectDir = settings.getCurrentProjectDir();
