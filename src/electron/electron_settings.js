@@ -7,7 +7,8 @@ import helper from "../utils/helper_util.js";
 import logger from "../utils/logger.js";
 import projectsUtil from "../utils/projects_util.js";
 import cables from "../cables.js";
-
+import electronApp from "./main.js";
+import opsUtil from "../utils/ops_util.js";
 
 class ElectronSettings
 {
@@ -105,6 +106,9 @@ class ElectronSettings
                 project.summary = project.summary || {};
                 project.summary.title = project.name;
                 projectsUtil.writeProjectToFile(projectFile, project);
+                electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchName", "data": { "name": project.name } });
+                electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchSummary", "data": project.summary });
+                electronApp.updateTitle();
             }
             if (!recentProjects.hasOwnProperty(projectFile))
             {
@@ -146,6 +150,20 @@ class ElectronSettings
                 let project = fs.readFileSync(projectFile);
                 project = JSON.parse(project.toString("utf-8"));
                 this.setCurrentProject(projectFile, project);
+                projectsUtil.registerAssetChangeListeners(project);
+                if (project.ops)
+                {
+                    const opNames = [];
+                    project.ops.forEach((op) =>
+                    {
+                        const opName = opsUtil.getOpNameById(op.opId);
+                        if (opName)
+                        {
+                            opNames.push(opsUtil.getOpAbsoluteFileName(opName));
+                        }
+                    });
+                    projectsUtil.registerOpChangeListeners(opNames);
+                }
             }
         }
         else

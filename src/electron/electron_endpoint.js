@@ -1,4 +1,4 @@
-import { protocol } from "electron";
+import { protocol, net } from "electron";
 import fs from "fs";
 import path from "path";
 
@@ -9,6 +9,7 @@ import opsUtil from "../utils/ops_util.js";
 import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
 import filesUtil from "../utils/files_util.js";
+import projectsUtil from "../utils/projects_util.js";
 
 protocol.registerSchemesAsPrivileged([{
     "scheme": "cables",
@@ -27,6 +28,37 @@ class ElectronEndpoint
 
     init()
     {
+        protocol.handle("file", (request) =>
+        {
+            let actualFile = request.url.replace("file://", "");
+            try
+            {
+                const url = new URL(request.url);
+                if (url.searchParams.size > 0)
+                {
+                    const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
+                    if (!fs.existsSync(paramsFile))
+                    {
+                        actualFile = url.pathname.replace("//", "/");
+                    }
+                }
+                if (fs.existsSync(actualFile))
+                {
+                    return net.fetch("file://" + actualFile, { "bypassCustomProtocolHandlers": true });
+                }
+                else
+                {
+                    return new Response(null, {
+                        "headers": { "status": 404 }
+                    });
+                }
+            }
+            catch (e)
+            {
+                return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
+            }
+        });
+
         protocol.handle("cables", (request) =>
         {
             const url = new URL(request.url);
@@ -188,6 +220,7 @@ class ElectronEndpoint
             }
         });
         code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, true, true, opDocs);
+        projectsUtil.registerOpChangeListeners(missingOps.map((missingOp) => { return missingOp.objName; }));
         return code;
     }
 

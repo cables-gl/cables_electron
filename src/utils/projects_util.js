@@ -5,10 +5,14 @@ import { app } from "electron";
 import pako from "pako";
 import crypto from "crypto";
 import jsonfile from "jsonfile";
+import chokidar from "chokidar";
+import fs from "fs";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
 import filesUtil from "./files_util.js";
+import electronApp from "../electron/main.js";
+import opsUtil from "./ops_util.js";
 
 class ProjectsUtil extends SharedProjectsUtil
 {
@@ -17,6 +21,44 @@ class ProjectsUtil extends SharedProjectsUtil
         super(provider);
         this.CABLES_PROJECT_FILE_EXTENSION = "cables";
         this.CABLES_STANDALONE_EXPORT_FILE_EXTENSION = "cables.json";
+
+        this._opChangeWatcher = chokidar.watch([], {
+            "ignored": /(^|[\/\\])\../,
+            "ignorePermissionErrors": true
+        });
+
+        this._opChangeWatcher.on("change", (fileName) =>
+        {
+            const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
+            if (opName)
+            {
+                electronApp.sendTalkerMessage("executeOp", { "name": opName });
+            }
+        });
+
+        this._opChangeWatcher.on("unlink", (fileName) =>
+        {
+            const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
+            if (opName)
+            {
+                electronApp.sendTalkerMessage("deleteOp", { "name": opName });
+            }
+        });
+
+        this._assetChangeWatcher = chokidar.watch([], {
+            "ignored": /(^|[\/\\])\../,
+            "ignorePermissionErrors": true
+        });
+
+        this._assetChangeWatcher.on("change", (fileName) =>
+        {
+            electronApp.sendTalkerMessage("fileUpdated", { "filename": fileName });
+        });
+
+        this._assetChangeWatcher.on("unlink", (fileName) =>
+        {
+            electronApp.sendTalkerMessage("fileDeleted", { "fileName": fileName });
+        });
     }
 
     getAssetPath(projectId)
@@ -130,6 +172,61 @@ class ProjectsUtil extends SharedProjectsUtil
             .digest("hex");
         project.buildInfo = settings.getBuildInfo();
         return jsonfile.writeFileSync(projectFile, project);
+    }
+
+    registerAssetChangeListeners(project)
+    {
+        if (!project || !project.ops) return;
+        const fileNames = this.getUsedAssetFilenames(project, true);
+        this._assetChangeWatcher.add(fileNames);
+    }
+
+    registerOpChangeListeners(opNames)
+    {
+        if (!opNames) return;
+        const fileNames = [];
+        opNames.forEach((opName) =>
+        {
+            const opFile = opsUtil.getOpAbsoluteFileName(opName);
+            if (opFile) fileNames.push(opFile);
+        });
+        this._opChangeWatcher.add(fileNames);
+    }
+
+    getUsedAssetFilenames(project, includeLibraryAssets = false)
+    {
+        const fileNames = [];
+        if (!project || !project.ops) return [];
+        const projectDir = settings.getCurrentProjectDir();
+        const assetPorts = this.getProjectAssetPorts(project, includeLibraryAssets);
+        let urls = assetPorts.map((assetPort) => { return assetPort.value; });
+        urls.forEach((url) =>
+        {
+            if (url.startsWith("./"))
+            {
+                url = path.join(projectDir, url);
+            }
+
+            let fullPath = url;
+            try
+            {
+                const parseUrl = new URL(url);
+                fullPath = decodeURI(parseUrl.pathname);
+            }
+            catch (e)
+            {
+                this._log.debug("no url in assetport", fullPath);
+            }
+            if (fs.existsSync(fullPath))
+            {
+                fileNames.push(fullPath);
+            }
+            else
+            {
+                this._log.warn("missing file", fullPath);
+            }
+        });
+        return helper.uniqueArray(fileNames);
     }
 }
 export default new ProjectsUtil(utilProvider);

@@ -110,6 +110,7 @@
   "dependencies": {
     "cables-shared-api": "file:../shared/api",
     "cables-shared-client": "file:../shared/client",
+    "chokidar": "3.6.0",
     "eslint": "7.32.0",
     "eslint-config-airbnb-base": "14.2.1",
     "execa": "8.0.1",

@@ -8,6 +8,11 @@ export default class ElectronEditor
         this._talker = new TalkerAPI(frame.contentWindow);
         this._patchId = params.config.patchId;
 
+        window.ipcRenderer.on("talkerMessage", (_event, data) =>
+        {
+            this._talker.send(data.cmd, data.data);
+        });
+
         this._talker.addEventListener("requestPatchData", (data, next) =>
         {
             if (next) next(params.config);
@@ -91,7 +96,7 @@ export default class ElectronEditor
             "opUpdate": {},
             "opSaveLayout": { },
             "opClone": { },
-            "checkNumAssetPatches": { "needsProjectFile": true },
+            "checkNumAssetPatches": {},
             "saveProjectAs": {},
             "gotoPatch": {},
             "setProjectUpdated": {},

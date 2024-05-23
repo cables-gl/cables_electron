@@ -269,7 +269,7 @@ class ElectronApp
 
     openPatch(patchFile)
     {
-        doc.rebuildOpCaches(() =>
+        doc.rebuildOpCaches((opDocs) =>
         {
             this.editorWindow.loadFile("index.html").then(() =>
             {
@@ -381,6 +381,11 @@ class ElectronApp
             this.editorWindow.setMenuBarVisibility(false);
             this.editorWindow.setFullScreen(true);
         }
+    }
+
+    sendTalkerMessage(cmd, data)
+    {
+        this.editorWindow.webContents.send("talkerMessage", { "cmd": cmd, "data": data });
     }
 }
 app.whenReady().then(() =>

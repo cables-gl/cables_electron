@@ -47,7 +47,7 @@ class ElectronApi
             if (topicConfig.needsProjectFile)
             {
                 const projectFile = settings.getCurrentProjectFile();
-                if (!projectFile)
+                if (!projectFile || !projectFile.endsWith(projectsUtil.CABLES_PROJECT_FILE_EXTENSION))
                 {
                     const newProjectFile = await electronApp.saveProjectFileDialog();
                     if (newProjectFile)
@@ -538,59 +538,35 @@ class ElectronApi
         if (!project) return arr;
 
         const projectDir = settings.getCurrentProjectDir();
-        const assetPorts = projectsUtil.getProjectAssetPorts(project, true);
-        let urls = assetPorts.map((assetPort) => { return assetPort.value; });
-        urls = helper.uniqueArray(urls);
-        urls.forEach((url) =>
+        const fileNames = projectsUtil.getUsedAssetFilenames(project);
+        fileNames.forEach((fileName) =>
         {
             let type = "unknown";
-            if (url.endsWith("jpg") || url.endsWith("png") || url.endsWith("jpeg")) type = "image";
-            else if (url.endsWith("mp3") || url.endsWith("ogg") || url.endsWith("wav")) type = "audio";
-            else if (url.endsWith("3d.json")) type = "3d json";
-            else if (url.endsWith("json")) type = "json";
-            else if (url.endsWith("mp4")) type = "video";
+            if (fileName.endsWith("jpg") || fileName.endsWith("png") || fileName.endsWith("jpeg")) type = "image";
+            else if (fileName.endsWith("mp3") || fileName.endsWith("ogg") || fileName.endsWith("wav")) type = "audio";
+            else if (fileName.endsWith("3d.json")) type = "3d json";
+            else if (fileName.endsWith("json")) type = "json";
+            else if (fileName.endsWith("mp4")) type = "video";
 
-            if (url.startsWith("./"))
-            {
-                url = path.join(projectDir, url);
-            }
+            const dirName = path.join(path.dirname(fileName), "/");
+            if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
+            const fileData = {
+                "d": false,
+                "n": path.basename(fileName),
+                "t": type,
+                "l": 0,
+                "p": fileName,
+                "type": type,
+                "updated": "bla"
+            };
+            fileData.icon = this._getFileIconName(fileData);
 
-            let fullPath = url;
-            try
+            let stats = fs.statSync(fileName);
+            if (stats && stats.mtime)
             {
-                const parseUrl = new URL(url);
-                fullPath = decodeURI(parseUrl.pathname);
+                fileData.updated = new Date(stats.mtime).getTime();
             }
-            catch (e)
-            {
-                this._log.debug("no url in assetport");
-            }
-            if (fs.existsSync(fullPath))
-            {
-                const dirName = path.join(path.dirname(fullPath), "/");
-                if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
-                const fileData = {
-                    "d": false,
-                    "n": path.basename(fullPath),
-                    "t": type,
-                    "l": 0,
-                    "p": url,
-                    "type": type,
-                    "updated": "bla"
-                };
-                fileData.icon = this._getFileIconName(fileData);
-
-                let stats = fs.statSync(fullPath);
-                if (stats && stats.mtime)
-                {
-                    fileData.updated = new Date(stats.mtime).getTime();
-                }
-                fileHierarchy[dirName].push(fileData);
-            }
-            else
-            {
-                this._log.warn("missing file", fullPath);
-            }
+            fileHierarchy[dirName].push(fileData);
         });
         const dirNames = Object.keys(fileHierarchy);
         for (let dirName of dirNames)
@@ -822,7 +798,10 @@ class ElectronApi
     {
         let opName = data.opname;
         const currentUser = settings.getCurrentUser();
-        return opsUtil.createOp(opName, currentUser, data.code, data.layout, data.libs, data.coreLibs, data.attachments, data.opTargetDir);
+        const result = opsUtil.createOp(opName, currentUser, data.code, data.layout, data.libs, data.coreLibs, data.attachments, data.opTargetDir);
+        projectsUtil.registerOpChangeListeners([opName]);
+
+        return result;
     }
 
     opUpdate(data)
@@ -931,7 +910,14 @@ class ElectronApi
             }
             catch (e)
             {
-                assetPath = path.parse(assetUrl);
+                if (assetUrl.startsWith("./"))
+                {
+                    assetPath = path.join(settings.getCurrentProjectDir(), assetUrl);
+                }
+                else
+                {
+                    assetPath = path.parse(assetUrl);
+                }
             }
         }
         if (assetPath)

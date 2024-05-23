@@ -139,5 +139,13 @@ class OpsUtil extends SharedOpsUtil
         }
         return defaultDir;
     }
+
+    getOpNameByAbsoluteFileName(fileName)
+    {
+        if (!fileName) return "";
+        const parts = path.parse(fileName);
+        if (parts && parts.name) return parts.name;
+        return "";
+    }
 }
 export default new OpsUtil(utilProvider);
