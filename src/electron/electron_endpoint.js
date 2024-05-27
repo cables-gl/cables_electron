@@ -1,4 +1,4 @@
-import { protocol, net } from "electron";
+import { protocol, net, session } from "electron";
 import fs from "fs";
 import path from "path";
 
@@ -28,7 +28,10 @@ class ElectronEndpoint
 
     init()
     {
-        protocol.handle("file", (request) =>
+        const partition = settings.SESSION_PARTITION;
+        const ses = session.fromPartition(partition, { "cache": false });
+
+        ses.protocol.handle("file", (request) =>
         {
             let actualFile = request.url.replace("file://", "");
             try
@@ -42,6 +45,7 @@ class ElectronEndpoint
                         actualFile = url.pathname.replace("//", "/");
                     }
                 }
+                actualFile = decodeURI(actualFile);
                 if (fs.existsSync(actualFile))
                 {
                     return net.fetch("file://" + actualFile, { "bypassCustomProtocolHandlers": true });
@@ -59,7 +63,7 @@ class ElectronEndpoint
             }
         });
 
-        protocol.handle("cables", (request) =>
+        ses.protocol.handle("cables", (request) =>
         {
             const url = new URL(request.url);
             const urlPath = url.pathname;

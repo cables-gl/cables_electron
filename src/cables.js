@@ -9,6 +9,12 @@ import settings from "./electron/electron_settings.js";
 
 class CablesElectron extends Cables
 {
+    constructor(provider, dirName, writableDirName, configLocation)
+    {
+        super(provider, dirName, writableDirName, configLocation);
+        settings.set("uiDistPath", this.getUiDistPath());
+    }
+
     getStandaloneDistPath()
     {
         if (this._config.path.standaloneDist)

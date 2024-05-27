@@ -128,7 +128,7 @@ class ElectronApi
             if (!currentProject)
             {
                 const newProject = projectsUtil.generateNewProject(settings.getCurrentUser());
-                settings.setCurrentProject(patchPath, newProject);
+                settings.loadProject(patchPath, newProject);
                 currentProject = newProject;
             }
         }
@@ -209,7 +209,11 @@ class ElectronApi
         {
             let opDoc = doc.getDocForOp(opName);
             if (!opDoc) opDoc = doc.buildOpDocs(opName);
-            if (opDoc) opDocs.push(opDoc);
+            if (opDoc)
+            {
+                if (!opDoc.name) opDoc.name = opName;
+                opDocs.push(opDoc);
+            }
         });
 
         // get opdocs for all the collected ops
@@ -284,7 +288,7 @@ class ElectronApi
 
     getOpDocs(data)
     {
-        const opName = opsUtil.getOpNameById(data.op.opId || data.op.id);
+        const opName = data.op.objName || opsUtil.getOpNameById(data.op.opId || data.op.id);
         if (!opName)
         {
             return {};
@@ -313,8 +317,6 @@ class ElectronApi
             mkdirp.sync(opDir);
         }
         const fn = opsUtil.getOpAbsoluteFileName(opName);
-        this._log.info("save op ", opName, fn);
-
         const code = data.code;
         let returnedCode = code;
 
@@ -353,11 +355,8 @@ class ElectronApi
             "spaces": 4
         });
 
-        setTimeout(() =>
-        {
-            doc.updateOpDocs(opName);
-            opsUtil.setOpDefaults(opName, null);
-        }, 1000);
+        doc.updateOpDocs(opName);
+        opsUtil.setOpDefaults(opName);
 
         return {
             "success": true,
@@ -440,14 +439,26 @@ class ElectronApi
     checkProjectUpdated(data)
     {
         const project = settings.getCurrentProject();
-
-        return {
-            "updated": project.updated,
-            "updatedByUser": project.updatedByUser,
-            "buildInfo": project.buildInfo,
-            "maintenance": false,
-            "disallowSave": false
-        };
+        if (project)
+        {
+            return {
+                "updated": project.updated,
+                "updatedByUser": project.updatedByUser,
+                "buildInfo": project.buildInfo,
+                "maintenance": false,
+                "disallowSave": false
+            };
+        }
+        else
+        {
+            return {
+                "updated": "",
+                "updatedByUser": "",
+                "buildInfo": settings.getBuildInfo(),
+                "maintenance": false,
+                "disallowSave": false
+            };
+        }
     }
 
     getChangelog(data)
@@ -934,12 +945,7 @@ class ElectronApi
     async saveProjectAs()
     {
         const projectFile = await electronApp.saveProjectFileDialog();
-        if (projectFile)
-        {
-            logger.debug("setting new project file to", projectFile);
-            settings.setCurrentProjectFile(projectFile);
-        }
-        else
+        if (!projectFile)
         {
             logger.error("no project dir chosen");
             return null;
@@ -963,7 +969,7 @@ class ElectronApi
         origProject.usersReadOnly = usersReadOnly;
         origProject.visibility = "private";
         origProject.shortId = helper.generateShortId(origProject._id, Date.now());
-        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), origProject);
+        projectsUtil.writeProjectToFile(projectFile, origProject);
         settings.loadProject(settings.getCurrentProjectFile());
         electronApp.reload();
         return origProject;

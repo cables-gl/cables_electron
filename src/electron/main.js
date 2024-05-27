@@ -6,11 +6,10 @@ import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
 import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
-import cables from "../cables.js";
 import projectsUtil from "../utils/projects_util.js";
 
+app.commandLine.appendSwitch("disable-http-cache");
 logger.debug("--- starting");
-
 
 class ElectronApp
 {
@@ -19,8 +18,6 @@ class ElectronApp
         this._log = logger;
         this.cablesFileExtensions = [projectsUtil.CABLES_PROJECT_FILE_EXTENSION, projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION];
         this.editorWindow = null;
-        settings.set("currentUser", settings.getCurrentUser());
-        settings.set("uiDistPath", cables.getUiDistPath());
     }
 
     createWindow()
@@ -30,6 +27,7 @@ class ElectronApp
             "width": 1920,
             "height": 1080,
             "webPreferences": {
+                "partition": settings.SESSION_PARTITION,
                 "nodeIntegration": true,
                 "nodeIntegrationInWorker": true,
                 "nodeIntegrationInSubFrames": true,

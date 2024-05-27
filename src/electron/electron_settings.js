@@ -15,12 +15,14 @@ class ElectronSettings
     constructor(storageDir)
     {
         this._log = logger;
+        this.SESSION_PARTITION = "persist:cables:" + helper.generateUUID();
 
         if (storageDir && !fs.existsSync(storageDir))
         {
             mkdirp.sync(storageDir);
         }
         this.MAIN_CONFIG_NAME = "cables-electron-preferences";
+        this.PATCHID_FIELD = "patchId";
         this.PATCHFILE_FIELD = "patchFile";
         this.CURRENTPATCHDIR_FIELD = "currentPatchDir";
         this.STORAGEDIR_FIELD = "storageDir";
@@ -35,6 +37,7 @@ class ElectronSettings
             "introCompleted": true,
             "showTipps": false
         };
+        this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.PATCHFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPATCHDIR_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
@@ -44,6 +47,7 @@ class ElectronSettings
         this.data = this.opts.defaults;
         mkdirp(this.data[this.STORAGEDIR_FIELD]);
         this.refresh();
+        this.set("currentUser", this.getCurrentUser(), true);
     }
 
     refresh()
@@ -87,69 +91,22 @@ class ElectronSettings
         return value;
     }
 
-    setCurrentProjectDir(value)
-    {
-        if (value && !value.endsWith("/")) value += "/";
-        this.set(this.CURRENTPATCHDIR_FIELD, value);
-    }
-
-    setCurrentProject(projectFile, project)
-    {
-        this._currentProject = project;
-        const recentProjects = this.getRecentProjects();
-        if (projectFile && project)
-        {
-            const projectName = path.basename(projectFile);
-            if (project.name !== projectName)
-            {
-                project.name = projectName;
-                project.summary = project.summary || {};
-                project.summary.title = project.name;
-                projectsUtil.writeProjectToFile(projectFile, project);
-                electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchName", "data": { "name": project.name } });
-                electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchSummary", "data": project.summary });
-                electronApp.updateTitle();
-            }
-            if (!recentProjects.hasOwnProperty(projectFile))
-            {
-                const recent = this._toRecentProjectInfo(project);
-                if (recent) recentProjects[projectFile] = recent;
-                this.setRecentProjects(recentProjects);
-            }
-        }
-
-        this._updateRecentProjects();
-    }
-
-    _toRecentProjectInfo(project)
-    {
-        if (!project) return null;
-        return {
-            "_id": project._id,
-            "shortId": project.shortId,
-            "name": project.name,
-            "thumbnail": project.thumbnail,
-            "created": project.created,
-            "updated": project.updated
-        };
-    }
-
     getCurrentProject()
     {
         return this._currentProject;
     }
 
-    loadProject(projectFile)
+    loadProject(projectFile, newProject = null)
     {
         if (projectFile)
         {
             if (fs.existsSync(projectFile))
             {
-                this.setCurrentProjectFile(projectFile);
-                this.setCurrentProjectDir(path.dirname(projectFile));
+                this._setCurrentProjectFile(projectFile);
+                this._setCurrentProjectDir(path.dirname(projectFile));
                 let project = fs.readFileSync(projectFile);
                 project = JSON.parse(project.toString("utf-8"));
-                this.setCurrentProject(projectFile, project);
+                this._setCurrentProject(projectFile, project);
                 projectsUtil.registerAssetChangeListeners(project);
                 if (project.ops)
                 {
@@ -168,9 +125,9 @@ class ElectronSettings
         }
         else
         {
-            this.setCurrentProjectFile(null);
-            this.setCurrentProjectDir(null);
-            this.setCurrentProject(null, null);
+            this._setCurrentProjectFile(null);
+            this._setCurrentProjectDir(null);
+            this._setCurrentProject(null, newProject);
         }
         this._updateRecentProjects();
     }
@@ -206,11 +163,6 @@ class ElectronSettings
     getCurrentProjectFile()
     {
         return this.get(this.PATCHFILE_FIELD);
-    }
-
-    setCurrentProjectFile(value)
-    {
-        this.set(this.PATCHFILE_FIELD, value);
     }
 
     getBuildInfo()
@@ -339,6 +291,58 @@ class ElectronSettings
             }
         }
         this.set(this.RECENT_PROJECTS_FIELD, newRecents);
+    }
+
+    _setCurrentProjectFile(value)
+    {
+        this.set(this.PATCHFILE_FIELD, value);
+    }
+
+    _toRecentProjectInfo(project)
+    {
+        if (!project) return null;
+        return {
+            "_id": project._id,
+            "shortId": project.shortId,
+            "name": project.name,
+            "thumbnail": project.thumbnail,
+            "created": project.created,
+            "updated": project.updated
+        };
+    }
+
+    _setCurrentProjectDir(value)
+    {
+        if (value && !value.endsWith("/")) value += "/";
+        this.set(this.CURRENTPATCHDIR_FIELD, value);
+    }
+
+    _setCurrentProject(projectFile, project)
+    {
+        this._currentProject = project;
+        if (project) this.set(this.PATCHID_FIELD, project._id);
+        const recentProjects = this.getRecentProjects();
+        if (projectFile && project)
+        {
+            const projectName = path.basename(projectFile);
+            if (project.name !== projectName)
+            {
+                project.name = projectName;
+                project.summary = project.summary || {};
+                project.summary.title = project.name;
+                projectsUtil.writeProjectToFile(projectFile, project);
+            }
+            if (!recentProjects.hasOwnProperty(projectFile))
+            {
+                const recent = this._toRecentProjectInfo(project);
+                if (recent) recentProjects[projectFile] = recent;
+                this.setRecentProjects(recentProjects);
+            }
+        }
+        this._updateRecentProjects();
+        if (project) electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchName", "data": { "name": project.name } });
+        if (project) electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchSummary", "data": project.summary });
+        electronApp.updateTitle();
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));

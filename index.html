@@ -95,26 +95,25 @@
             }
         }, false);
 
-        new web.ElectronEditor(
-            {
-                config: {
-                    "platformClass": "PlatformStandalone",
-                    "urlCables": "cables://",
-                    "urlSandbox": "cables://",
-                    "user": settings.currentUser,
-                    "usersettings": { "settings": settings.userSettings },
-                    "isDevEnv": true,
-                    "env": "dev",
-                    "patchId": settings.patchId,
-                    "patchVersion": "",
-                    "socketcluster": {},
-                    "remoteClient": false,
-                    "buildInfo": settings.buildInfo,
-                    "patchConfig": {
-                        "prefixAssetPath": settings.currentPatchDir
-                    }
+        new web.ElectronEditor({
+            config: {
+                "platformClass": "PlatformStandalone",
+                "urlCables": "cables://",
+                "urlSandbox": "cables://",
+                "user": settings.currentUser,
+                "usersettings": { "settings": settings.userSettings },
+                "isDevEnv": true,
+                "env": "dev",
+                "patchId": settings.patchId,
+                "patchVersion": "",
+                "socketcluster": {},
+                "remoteClient": false,
+                "buildInfo": settings.buildInfo,
+                "patchConfig": {
+                    "prefixAssetPath": settings.currentPatchDir
                 }
-            });
+            }
+        });
     });
 </script>
 </body>
