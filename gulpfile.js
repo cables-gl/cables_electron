@@ -32,7 +32,7 @@ let config = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
 if (configLocation !== defaultConfigLocation)
 {
     const localConfig = JSON.parse(fs.readFileSync(configLocation, "utf-8"));
-    config = { ...config, localConfig };
+    config = { ...config, ...localConfig };
 }
 const isLiveBuild = config.env === "electron";
 const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
