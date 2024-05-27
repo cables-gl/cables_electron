@@ -102,7 +102,7 @@ class ElectronApp
             return { "action": "allow" };
         });
 
-
+        settings.loadProject(patchFile);
         this.openPatch(patchFile);
     }
 
