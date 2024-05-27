@@ -22,11 +22,16 @@ class ProjectsUtil extends SharedProjectsUtil
         this.CABLES_PROJECT_FILE_EXTENSION = "cables";
         this.CABLES_STANDALONE_EXPORT_FILE_EXTENSION = "cables.json";
 
-        this._opChangeWatcher = chokidar.watch([], {
+        const watcherOptions = {
             "ignored": /(^|[\/\\])\../,
-            "ignorePermissionErrors": true
-        });
+            "ignorePermissionErrors": true,
+            "ignoreInitial": true,
+            "persistent": true,
+            "followSymlinks": true,
+            "disableGlobbing": true
+        };
 
+        this._opChangeWatcher = chokidar.watch([], watcherOptions);
         this._opChangeWatcher.on("change", (fileName) =>
         {
             const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
@@ -45,11 +50,7 @@ class ProjectsUtil extends SharedProjectsUtil
             }
         });
 
-        this._assetChangeWatcher = chokidar.watch([], {
-            "ignored": /(^|[\/\\])\../,
-            "ignorePermissionErrors": true
-        });
-
+        this._assetChangeWatcher = chokidar.watch([], watcherOptions);
         this._assetChangeWatcher.on("change", (fileName) =>
         {
             electronApp.sendTalkerMessage("fileUpdated", { "filename": fileName });
@@ -191,6 +192,12 @@ class ProjectsUtil extends SharedProjectsUtil
             if (opFile) fileNames.push(opFile);
         });
         this._opChangeWatcher.add(fileNames);
+    }
+
+    async unregisterChangeListeners()
+    {
+        await this._assetChangeWatcher.close();
+        await this._opChangeWatcher.close();
     }
 
     getUsedAssetFilenames(project, includeLibraryAssets = false)

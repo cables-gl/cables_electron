@@ -320,25 +320,26 @@ class ElectronApi
         const code = data.code;
         let returnedCode = code;
 
-        const format = opsUtil.validateAndFormatOpCode(code);
-        if (format.error)
-        {
-            const {
-                line,
-                message
-            } = format.message;
-            this._log.info({
-                line,
-                message
-            });
-            return {
-                "error": {
-                    line,
-                    message
-                }
-            };
-        }
-        const formatedCode = format.formatedCode;
+        // const format = opsUtil.validateAndFormatOpCode(code);
+        // if (format.error)
+        // {
+        //     const {
+        //         line,
+        //         message
+        //     } = format.message;
+        //     this._log.info({
+        //         line,
+        //         message
+        //     });
+        //     return {
+        //         "error": {
+        //             line,
+        //             message
+        //         }
+        //     };
+        // }
+        // const formatedCode = format.formatedCode;
+        const formatedCode = code;
         if (opsUtil.existingCoreOp(opName) || data.format)
         {
             returnedCode = formatedCode;
@@ -397,27 +398,32 @@ class ElectronApi
         const code = data.code;
         if (code)
         {
-            const format = opsUtil.validateAndFormatOpCode(code);
-            if (format.error)
-            {
-                const {
-                    line,
-                    message
-                } = format.message;
-                return {
-                    "error": {
-                        line,
-                        message
-                    }
-                };
-            }
-            else
-            {
-                return {
-                    "opFullCode": format.formatedCode,
-                    "success": true
-                };
-            }
+            // const format = opsUtil.validateAndFormatOpCode(code);
+            // if (format.error)
+            // {
+            //     const {
+            //         line,
+            //         message
+            //     } = format.message;
+            //     return {
+            //         "error": {
+            //             line,
+            //             message
+            //         }
+            //     };
+            // }
+            // else
+            // {
+            //     return {
+            //         "opFullCode": format.formatedCode,
+            //         "success": true
+            //     };
+            // }
+
+            return {
+                "opFullCode": code,
+                "success": true
+            };
         }
         else
         {

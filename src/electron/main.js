@@ -402,5 +402,17 @@ app.on("window-all-closed", () =>
 {
     app.quit();
 });
+app.on("will-quit", (event) =>
+{
+    event.preventDefault();
+    projectsUtil.unregisterChangeListeners().then(() =>
+    {
+        process.exit(0);
+    }).catch((e) =>
+    {
+        console.error("error during shutdown", e);
+        process.exit(1);
+    });
+});
 const electronApp = new ElectronApp();
 export default electronApp;
