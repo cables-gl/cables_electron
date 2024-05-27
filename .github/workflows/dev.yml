@@ -2,8 +2,11 @@ name: dev build
 
 on:
   workflow_dispatch:
- # schedule:
- #   - cron: "0 3 * * *"
+    inputs:
+      version:
+        description: 'version number'
+        required: true
+        type: string
 
 jobs:
   draft_release:
@@ -13,9 +16,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ github.run_number }}-dev"
+          name: "${{ inputs.version }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ github.run_number }}-dev
+          tag_name: v${{ inputs.version }}
           draft: true
           prerelease: true
   linux:
@@ -24,9 +27,9 @@ jobs:
       runner: macos-14
       target: linux
       branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev
-      tag_name: ${{ github.run_number }}-dev
+      build_version: ${{ inputs.version }}
+      exe_name: cables-${{ inputs.version }}
+      tag_name: v${{ inputs.version }}
     secrets: inherit
   win:
     uses: ./.github/workflows/build.yml
@@ -34,9 +37,9 @@ jobs:
       runner: macos-14
       target: win
       branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev
-      tag_name: ${{ github.run_number }}-dev
+      build_version: ${{ inputs.version }}
+      exe_name: cables-${{ inputs.version }}
+      tag_name: v${{ inputs.version }}
     secrets: inherit
   mac:
     uses: ./.github/workflows/build.yml
@@ -44,9 +47,9 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ github.run_number }}-dev
-      exe_name: cables-${{ github.run_number }}-dev
-      tag_name: ${{ github.run_number }}-dev
+      build_version: ${{ inputs.version }}
+      exe_name: cables-${{ inputs.version }}
+      tag_name: ${{ inputs.version }}
       sign: true
       notarize: true
     secrets: inherit
