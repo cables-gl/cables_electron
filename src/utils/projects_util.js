@@ -7,6 +7,7 @@ import crypto from "crypto";
 import jsonfile from "jsonfile";
 import chokidar from "chokidar";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
@@ -28,7 +29,8 @@ class ProjectsUtil extends SharedProjectsUtil
             "ignoreInitial": true,
             "persistent": true,
             "followSymlinks": true,
-            "disableGlobbing": true
+            "disableGlobbing": true,
+            "awaitWriteFinish": true
         };
 
         this._opChangeWatcher = chokidar.watch([], watcherOptions);
@@ -179,6 +181,7 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         if (!project || !project.ops) return;
         const fileNames = this.getUsedAssetFilenames(project, true);
+        console.log("listener for", fileNames);
         this._assetChangeWatcher.add(fileNames);
     }
 
@@ -212,6 +215,10 @@ class ProjectsUtil extends SharedProjectsUtil
             if (url.startsWith("./"))
             {
                 url = path.join(projectDir, url);
+            }
+            else
+            {
+                url = fileURLToPath(url);
             }
 
             let fullPath = url;
