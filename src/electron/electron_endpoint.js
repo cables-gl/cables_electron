@@ -31,37 +31,37 @@ class ElectronEndpoint
         const partition = settings.SESSION_PARTITION;
         const ses = session.fromPartition(partition, { "cache": false });
 
-        ses.protocol.handle("file", (request) =>
-        {
-            let actualFile = request.url.replace("file://", "");
-            try
-            {
-                const url = new URL(request.url);
-                if (url.searchParams.size > 0)
-                {
-                    const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
-                    if (!fs.existsSync(paramsFile))
-                    {
-                        actualFile = url.pathname.replace("//", "/");
-                    }
-                }
-                actualFile = decodeURI(actualFile);
-                if (fs.existsSync(actualFile))
-                {
-                    return net.fetch("file://" + actualFile, { "bypassCustomProtocolHandlers": true });
-                }
-                else
-                {
-                    return new Response(null, {
-                        "headers": { "status": 404 }
-                    });
-                }
-            }
-            catch (e)
-            {
-                return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
-            }
-        });
+        // ses.protocol.handle("file", (request) =>
+        // {
+        //     let actualFile = request.url.replace("file://", "");
+        //     try
+        //     {
+        //         const url = new URL(request.url);
+        //         if (url.searchParams.size > 0)
+        //         {
+        //             const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
+        //             if (!fs.existsSync(paramsFile))
+        //             {
+        //                 actualFile = url.pathname.replace("//", "/");
+        //             }
+        //         }
+        //         actualFile = decodeURI(actualFile);
+        //         if (fs.existsSync(actualFile))
+        //         {
+        //             return net.fetch("file://" + actualFile, { "bypassCustomProtocolHandlers": true });
+        //         }
+        //         else
+        //         {
+        //             return new Response(null, {
+        //                 "headers": { "status": 404 }
+        //             });
+        //         }
+        //     }
+        //     catch (e)
+        //     {
+        //         return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
+        //     }
+        // });
 
         ses.protocol.handle("cables", (request) =>
         {
