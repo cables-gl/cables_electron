@@ -16,8 +16,13 @@ export default (isLiveBuild, buildInfo, minify = false) =>
             "filename": "[name]",
         },
         "optimization": {
-            "minimizer": [new TerserPlugin({ "extractComments": false, "terserOptions": { "output": { "comments": false } } })],
-            "minimize": minify
+            "concatenateModules": true,
+            "minimizer": [new TerserPlugin({
+                "extractComments": false,
+                "terserOptions": { "output": { "comments": false } }
+            })],
+            "minimize": minify,
+            "usedExports": true
         },
         "externals": ["CABLES"],
         "resolve": {
