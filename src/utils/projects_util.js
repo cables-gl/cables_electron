@@ -181,7 +181,6 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         if (!project || !project.ops) return;
         const fileNames = this.getUsedAssetFilenames(project, true);
-        console.log("listener for", fileNames);
         this._assetChangeWatcher.add(fileNames);
     }
 
@@ -212,6 +211,8 @@ class ProjectsUtil extends SharedProjectsUtil
         let urls = assetPorts.map((assetPort) => { return assetPort.value; });
         urls.forEach((url) =>
         {
+            if (url.startsWith("/assets/")) url = "." + url;
+
             if (url.startsWith("./"))
             {
                 url = path.join(projectDir, url);
