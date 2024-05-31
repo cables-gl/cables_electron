@@ -660,11 +660,11 @@ class ElectronApi
                         "t": "dir",
                         "l": lvl,
                         "c": this._readAssetDir(lvl + 1, path.join(fullPath, "/"), origPath, urlPrefix),
-                        "p": urlPath
+                        "p": urlPath,
+                        "isLibraryFile": true
                     });
                 }
-                else if (files[i].toLowerCase()
-                    .endsWith(".fileinfo.json")) continue;
+                else if (files[i].toLowerCase().endsWith(".fileinfo.json")) continue;
                 else
                 {
                     let type = "unknown";
@@ -681,7 +681,8 @@ class ElectronApi
                         "l": lvl,
                         "p": urlPath,
                         "type": type,
-                        "updated": "bla"
+                        "updated": "bla",
+                        "isLibraryFile": true
                     };
                     fileData.icon = this._getFileIconName(fileData);
                     let stats = fs.statSync(fullPath);
