@@ -42,7 +42,7 @@
       "LICENCE",
       {
         "from": "resources/assets/",
-        "to": "public/assets/",
+        "to": "resources/assets/",
         "filter": [
           "**/*"
         ]
