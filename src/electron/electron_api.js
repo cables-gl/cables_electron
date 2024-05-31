@@ -892,7 +892,7 @@ class ElectronApi
     {
         if (options && options.dir)
         {
-            return shell.showItemInFolder(options.dir);
+            return shell.openPath(options.dir);
         }
     }
 
@@ -903,7 +903,7 @@ class ElectronApi
         const opDir = opsUtil.getOpAbsoluteFileName(opName);
         if (opDir)
         {
-            return shell.showItemInFolder(opDir);
+            return shell.openPath(opDir);
         }
     }
 
@@ -934,13 +934,28 @@ class ElectronApi
                 }
                 else
                 {
-                    assetPath = path.parse(assetUrl);
+                    assetPath = path.resolve(assetUrl);
                 }
             }
         }
         if (assetPath)
         {
-            return shell.showItemInFolder(assetPath);
+            if (fs.existsSync(assetPath))
+            {
+                const stats = fs.statSync(assetPath);
+                if (stats.isDirectory())
+                {
+                    return shell.openPath(assetPath);
+                }
+                else
+                {
+                    shell.showItemInFolder(assetPath);
+                }
+            }
+            else
+            {
+                return shell.openPath(assetPath);
+            }
         }
     }
 
