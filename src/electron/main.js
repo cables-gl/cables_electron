@@ -1,5 +1,5 @@
-import { app, BrowserWindow, Menu, dialog, shell, screen } from "electron";
-import path, { dirname } from "path";
+import { app, BrowserWindow, dialog, Menu, screen, shell } from "electron";
+import path from "path";
 import fs from "fs";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
@@ -102,8 +102,7 @@ class ElectronApp
             return { "action": "allow" };
         });
 
-        settings.loadProject(patchFile);
-        this.openPatch(patchFile);
+        this.openPatch(patchFile, true);
     }
 
     async pickProjectFileDialog()
@@ -111,6 +110,13 @@ class ElectronApp
         let title = "select patch";
         let properties = ["openFile"];
         return this._projectFileDialog(title, properties);
+    }
+
+    async pickFileDialog(filePath, filter = [])
+    {
+        let title = "select file";
+        let properties = ["openFile"];
+        return this._fileDialog(title, filePath, filter, properties);
     }
 
     async saveProjectFileDialog()
@@ -265,7 +271,7 @@ class ElectronApp
         Menu.setApplicationMenu(menu);
     }
 
-    openPatch(patchFile)
+    openPatch(patchFile, onStartup = false)
     {
         doc.rebuildOpCaches((opDocs) =>
         {
@@ -273,11 +279,11 @@ class ElectronApp
             {
                 if (patchFile)
                 {
-                    settings.loadProject(patchFile);
+                    settings.loadProject(patchFile, null, onStartup);
                 }
                 else
                 {
-                    settings.loadProject(null);
+                    settings.loadProject(null, null, onStartup);
                 }
                 this.updateTitle();
             });
@@ -313,6 +319,27 @@ class ElectronApp
             "title": title,
             "properties": properties
         }).then((result) =>
+        {
+            if (!result.canceled)
+            {
+                return result.filePaths[0];
+            }
+            else
+            {
+                return null;
+            }
+        });
+    }
+
+    _fileDialog(title, filePath = null, extensions = ["*"], properties = null)
+    {
+        const options = {
+            "title": title,
+            "properties": properties,
+            "filters": [{ "name": "Assets", "extensions": extensions }]
+        };
+        if (filePath) options.defaultPath = filePath;
+        return dialog.showOpenDialog(this.editorWindow, options).then((result) =>
         {
             if (!result.canceled)
             {

@@ -102,6 +102,7 @@ export default class ElectronEditor
             "setProjectUpdated": {},
             "getOpTargetDirs": {},
             "openDir": {},
+            "selectFile": {},
             "setProjectName": { "needsProjectFile": true }
         };
 

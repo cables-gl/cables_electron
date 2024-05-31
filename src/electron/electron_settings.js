@@ -96,15 +96,16 @@ class ElectronSettings
         return this._currentProject;
     }
 
-    loadProject(projectFile, newProject = null)
+    loadProject(projectFile, newProject = null, onStartup = false)
     {
+        let project = newProject;
         if (projectFile)
         {
             if (fs.existsSync(projectFile))
             {
                 this._setCurrentProjectFile(projectFile);
                 this._setCurrentProjectDir(path.dirname(projectFile));
-                let project = fs.readFileSync(projectFile);
+                project = fs.readFileSync(projectFile);
                 project = JSON.parse(project.toString("utf-8"));
                 this._setCurrentProject(projectFile, project);
                 projectsUtil.registerAssetChangeListeners(project);
@@ -127,9 +128,17 @@ class ElectronSettings
         {
             this._setCurrentProjectFile(null);
             this._setCurrentProjectDir(null);
-            this._setCurrentProject(null, newProject);
+            this._setCurrentProject(null, project);
         }
         this._updateRecentProjects();
+        if (!onStartup)
+        {
+            if (project)
+            {
+                electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchName", "data": { "name": project.name } });
+                electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchSummary", "data": project.summary });
+            }
+        }
     }
 
     getCurrentUser()
@@ -340,8 +349,6 @@ class ElectronSettings
             }
         }
         this._updateRecentProjects();
-        if (project) electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchName", "data": { "name": project.name } });
-        if (project) electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchSummary", "data": project.summary });
         electronApp.updateTitle();
     }
 }

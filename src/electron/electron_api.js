@@ -916,9 +916,15 @@ class ElectronApi
         }
     }
 
-    async openAssetDir(assetUrl)
+    async openAssetDir(data)
     {
         let assetPath = cables.getAssetPath();
+
+        let assetUrl = null;
+        if (data)
+        {
+            assetUrl = data.url && data.url !== "0" ? data.url : null;
+        }
         if (assetUrl)
         {
             try
@@ -958,6 +964,17 @@ class ElectronApi
             }
         }
     }
+
+    async selectFile(data)
+    {
+        let assetUrl = null;
+        if (data)
+        {
+            assetUrl = data.url && data.url !== "0" ? data.url : null;
+        }
+        return electronApp.pickFileDialog(assetUrl, data.filter);
+    }
+
 
     checkNumAssetPatches()
     {
