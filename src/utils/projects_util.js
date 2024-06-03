@@ -222,16 +222,8 @@ class ProjectsUtil extends SharedProjectsUtil
                 url = fileURLToPath(url);
             }
 
+
             let fullPath = url;
-            try
-            {
-                const parseUrl = new URL(url);
-                fullPath = decodeURI(parseUrl.pathname);
-            }
-            catch (e)
-            {
-                this._log.debug("no url in assetport", fullPath);
-            }
             if (fs.existsSync(fullPath))
             {
                 fileNames.push(fullPath);

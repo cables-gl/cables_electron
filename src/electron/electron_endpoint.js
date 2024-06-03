@@ -1,4 +1,4 @@
-import { protocol, net, session } from "electron";
+import { protocol, session } from "electron";
 import fs from "fs";
 import path from "path";
 

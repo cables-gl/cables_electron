@@ -565,7 +565,9 @@ class ElectronApi
             else if (fileName.endsWith("json")) type = "json";
             else if (fileName.endsWith("mp4")) type = "video";
 
-            const dirName = path.join(path.dirname(fileName), "/");
+            let dirName = path.join(path.dirname(fileName), "/");
+            dirName = dirName.replaceAll("\\", "/");
+
             if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
             const fileData = {
                 "d": false,
@@ -929,8 +931,7 @@ class ElectronApi
         {
             try
             {
-                const url = new URL(assetUrl);
-                assetPath = url.pathname;
+                assetPath = fileURLToPath(assetUrl);
             }
             catch (e)
             {
@@ -960,6 +961,7 @@ class ElectronApi
             }
             else
             {
+                assetPath = path.dirname(assetPath);
                 return shell.openPath(assetPath);
             }
         }
@@ -970,7 +972,7 @@ class ElectronApi
         let assetUrl = null;
         if (data)
         {
-            assetUrl = data.url && data.url !== "0" ? data.url : null;
+            assetUrl = data.url && data.url !== "0" ? fileURLToPath(data.url) : null;
         }
         return electronApp.pickFileDialog(assetUrl, data.filter);
     }

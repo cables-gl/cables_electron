@@ -333,6 +333,13 @@ class ElectronApp
 
     _fileDialog(title, filePath = null, extensions = ["*"], properties = null)
     {
+        if (extensions)
+        {
+            extensions.forEach((ext, i) =>
+            {
+                if (ext.startsWith(".")) extensions[i] = ext.replace(".", "");
+            });
+        }
         const options = {
             "title": title,
             "properties": properties,

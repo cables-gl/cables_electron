@@ -1,6 +1,6 @@
 import gulp from "gulp";
 import fs from "fs";
-import path from "path";
+import path from "path/posix";
 import mkdirp from "mkdirp";
 
 import webpack from "webpack";
@@ -39,21 +39,21 @@ const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 
 function _create_ops_dirs(done)
 {
-    const opsPath = path.posix.join("./src", config.path.ops);
+    const opsPath = path.join("./src", config.path.ops);
     fs.rmSync("ops", { "recursive": true, "force": true });
     console.info("creating opdirs in", opsPath);
-    mkdirp.sync(path.posix.join(opsPath, "/base/"));
-    mkdirp.sync(path.posix.join(opsPath, "/extensions/"));
-    mkdirp.sync(path.posix.join(opsPath, "/patches/"));
-    mkdirp.sync(path.posix.join(opsPath, "/teams/"));
-    mkdirp.sync(path.posix.join(opsPath, "/users/"));
+    mkdirp.sync(path.join(opsPath, "/base/"));
+    mkdirp.sync(path.join(opsPath, "/extensions/"));
+    mkdirp.sync(path.join(opsPath, "/patches/"));
+    mkdirp.sync(path.join(opsPath, "/teams/"));
+    mkdirp.sync(path.join(opsPath, "/users/"));
     done();
 }
 
 function _libs_copy()
 {
-    const source = path.posix.join("./src", config.sourcePath.libs);
-    const target = path.posix.join("./src", config.path.libs);
+    const source = path.join("./src", config.sourcePath.libs);
+    const target = path.join("./src", config.path.libs);
     mkdirp.sync(target);
     console.info("copying libs from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -61,8 +61,8 @@ function _libs_copy()
 
 function _corelibs_copy()
 {
-    const source = path.posix.join("./src", config.sourcePath.corelibs);
-    const target = path.posix.join("./src", config.path.corelibs);
+    const source = path.join("./src", config.sourcePath.corelibs);
+    const target = path.join("./src", config.path.corelibs);
     mkdirp.sync(target);
     console.info("copying corelibs from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -70,8 +70,8 @@ function _corelibs_copy()
 
 function _core_ops_copy()
 {
-    const source = path.posix.join("./src", config.sourcePath.ops, "/base/");
-    const target = path.posix.join("./src", config.path.ops, "/base/");
+    const source = path.join("./src", config.sourcePath.ops, "/base/");
+    const target = path.join("./src", config.path.ops, "/base/");
     mkdirp.sync(target);
     console.info("copying ops from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -79,8 +79,8 @@ function _core_ops_copy()
 
 function _extension_ops_copy()
 {
-    const source = path.posix.join("./src", config.sourcePath.ops, "/extensions/");
-    const target = path.posix.join("./src", config.path.ops, "/extensions/");
+    const source = path.join("./src", config.sourcePath.ops, "/extensions/");
+    const target = path.join("./src", config.path.ops, "/extensions/");
     mkdirp.sync(target);
     console.info("copying extensions from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -88,8 +88,8 @@ function _extension_ops_copy()
 
 function _ui_copy()
 {
-    const source = path.posix.join("./src", config.sourcePath.uiDist);
-    const target = path.posix.join("./src", config.path.uiDist);
+    const source = path.join("./src", config.sourcePath.uiDist);
+    const target = path.join("./src", config.path.uiDist);
     mkdirp.sync(target);
     console.info("copying ui from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
