@@ -209,21 +209,20 @@ class ProjectsUtil extends SharedProjectsUtil
         const projectDir = settings.getCurrentProjectDir();
         const assetPorts = this.getProjectAssetPorts(project, includeLibraryAssets);
         let urls = assetPorts.map((assetPort) => { return assetPort.value; });
-        urls.forEach((url) =>
+        urls.forEach((fullPath) =>
         {
-            if (url.startsWith("/assets/")) url = "." + url;
+            if (fullPath.startsWith("/assets/")) fullPath = "." + fullPath;
 
-            if (url.startsWith("./"))
+            if (fullPath.startsWith("./"))
             {
-                url = path.join(projectDir, url);
+                fullPath = path.join(projectDir, fullPath);
             }
-            else
+            else if (fullPath.startsWith("file:"))
             {
-                url = fileURLToPath(url);
+                fullPath = decodeURI(fullPath);
+                fullPath = fileURLToPath(fullPath);
             }
 
-
-            let fullPath = url;
             if (fs.existsSync(fullPath))
             {
                 fileNames.push(fullPath);
