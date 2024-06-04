@@ -5,7 +5,7 @@
 This is an early-access version of [cables.gl](https://cables.gl) core and editor part, packaged into an electron
 executable for mac/windows/linux.
 
-***This is under heavy development, things may (and will break), use it at your own peril. Please provide feedback in
+***This is under heavy development, things may (and will) break, use it at your own peril. Please provide feedback in
 the issue tracker attached to this repository.***
 
 ## Downloads
