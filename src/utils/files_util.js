@@ -17,7 +17,7 @@ class FilesUtil extends SharedFilesUtil
             "name": fileName,
             "type": this.getFileType(fileName),
             "suffix": suffix,
-            "fileName": filePath,
+            "fileName": fileName,
             "projectId": project._id,
             "userId": user._id,
             "updated": stats.mtime,
@@ -32,13 +32,7 @@ class FilesUtil extends SharedFilesUtil
 
     getFileAssetLocation(fileDb)
     {
-        let assetPath = "";
-        let fileName = fileDb.path;
-        if (fileDb.isLibraryFile)
-        {
-            assetPath = cables.getAssetLibraryPath();
-        }
-        return path.join(assetPath, fileName);
+        return fileDb.path;
     }
 
     getFileAssetUrlPath(fileDb)

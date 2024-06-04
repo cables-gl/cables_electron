@@ -90,6 +90,7 @@ export default class ElectronEditor
             "saveScreenshot": { },
             "getFilelist": {},
             "getFileDetails": {},
+            "getLibraryFileInfo": {},
             "checkOpName": {},
             "getRecentPatches": {},
             "opCreate": { },

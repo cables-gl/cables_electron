@@ -78,7 +78,7 @@ this.editorWindow = new BrowserWindow({
 ### Local Build
 
 - check out this repository
-- run `npm install`
+- run `npm install --no-save`
 - run `npm run deps` to fetch cables dependencies (shared code, cables ops, ui)
 - run `npm run build` to build the standalone version
 - run `npm run start` to start the standalone from the checked out sources

@@ -535,6 +535,38 @@ class ElectronApi
         return filesUtil.getFileInfo(fileDb);
     }
 
+    getLibraryFileInfo(data)
+    {
+        const fileName = filesUtil.realSanitizeFilename(data.filename);
+        const fileCategory = filesUtil.realSanitizeFilename(data.fileCategory);
+
+        const filePath = path.join(fileCategory, fileName);
+        const libraryPath = cables.getAssetLibraryPath();
+        const finalPath = path.join(libraryPath, filePath);
+
+        if (!fs.existsSync(finalPath))
+        {
+            return {};
+        }
+        else
+        {
+            const infoFileName = finalPath + ".fileinfo.json";
+            let filename = "";
+
+            if (fs.existsSync(infoFileName))filename = infoFileName;
+
+            if (filename === "")
+            {
+                return {};
+            }
+            else
+            {
+                const fileInfo = JSON.parse(fs.readFileSync(filename));
+                return fileInfo;
+            }
+        }
+    }
+
     checkOpName(data)
     {
         const opDocs = doc.getOpDocs(false, false);
