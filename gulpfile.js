@@ -28,7 +28,8 @@ if (!fs.existsSync(configLocation))
     }
 }
 
-let config = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
+let defaultConfig = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
+let config = defaultConfig;
 if (configLocation !== defaultConfigLocation)
 {
     const localConfig = JSON.parse(fs.readFileSync(configLocation, "utf-8"));
@@ -39,7 +40,7 @@ const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 
 function _create_ops_dirs(done)
 {
-    const opsPath = path.join("./src", config.path.ops);
+    const opsPath = path.join("./src", defaultConfig.path.ops);
     fs.rmSync("ops", { "recursive": true, "force": true });
     console.info("creating opdirs in", opsPath);
     mkdirp.sync(path.join(opsPath, "/base/"));
@@ -53,7 +54,7 @@ function _create_ops_dirs(done)
 function _libs_copy()
 {
     const source = path.join("./src", config.sourcePath.libs);
-    const target = path.join("./src", config.path.libs);
+    const target = path.join("./src", defaultConfig.path.libs);
     mkdirp.sync(target);
     console.info("copying libs from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -62,7 +63,7 @@ function _libs_copy()
 function _corelibs_copy()
 {
     const source = path.join("./src", config.sourcePath.corelibs);
-    const target = path.join("./src", config.path.corelibs);
+    const target = path.join("./src", defaultConfig.path.corelibs);
     mkdirp.sync(target);
     console.info("copying corelibs from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -71,7 +72,7 @@ function _corelibs_copy()
 function _core_ops_copy()
 {
     const source = path.join("./src", config.sourcePath.ops, "/base/");
-    const target = path.join("./src", config.path.ops, "/base/");
+    const target = path.join("./src", defaultConfig.path.ops, "/base/");
     mkdirp.sync(target);
     console.info("copying ops from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -80,7 +81,7 @@ function _core_ops_copy()
 function _extension_ops_copy()
 {
     const source = path.join("./src", config.sourcePath.ops, "/extensions/");
-    const target = path.join("./src", config.path.ops, "/extensions/");
+    const target = path.join("./src", defaultConfig.path.ops, "/extensions/");
     mkdirp.sync(target);
     console.info("copying extensions from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
@@ -89,7 +90,7 @@ function _extension_ops_copy()
 function _ui_copy()
 {
     const source = path.join("./src", config.sourcePath.uiDist);
-    const target = path.join("./src", config.path.uiDist);
+    const target = path.join("./src", defaultConfig.path.uiDist);
     mkdirp.sync(target);
     console.info("copying ui from", source, "to", target);
     return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));

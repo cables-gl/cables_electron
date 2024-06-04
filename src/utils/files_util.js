@@ -1,6 +1,7 @@
 import { utilProvider, SharedFilesUtil } from "cables-shared-api";
 import fs from "fs";
 import path from "path";
+import { pathToFileURL } from "url";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
 
@@ -16,12 +17,12 @@ class FilesUtil extends SharedFilesUtil
             "name": fileName,
             "type": this.getFileType(fileName),
             "suffix": suffix,
-            "fileName": fileName,
+            "fileName": filePath,
             "projectId": project._id,
             "userId": user._id,
             "updated": stats.mtime,
             "created": stats.ctime,
-            "cachebuster": helper.generateRandomId(),
+            "cachebuster": "",
             "isLibraryFile": filePath.includes(cables.getAssetLibraryPath()),
             "__v": 0,
             "size": stats.size,
@@ -43,9 +44,11 @@ class FilesUtil extends SharedFilesUtil
     getFileAssetUrlPath(fileDb)
     {
         if (!fileDb) return "";
-        let assetDir = cables.getAssetPath();
-        if (fileDb.isLibraryFile) cables.getAssetLibraryPath();
-        return path.join("file:", assetDir, this.getAssetFileName(fileDb));
+        let assetDir = "";
+        if (fileDb.isLibraryFile) assetDir = cables.getAssetLibraryPath();
+        const assetFilePath = path.join(assetDir, this.getAssetFileName(fileDb));
+        const assetUrl = pathToFileURL(assetFilePath);
+        return assetUrl.href;
     }
 }
 

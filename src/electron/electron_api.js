@@ -5,7 +5,7 @@ import { marked } from "marked";
 import jsonfile from "jsonfile";
 import mkdirp from "mkdirp";
 
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { execaSync } from "execa";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
@@ -530,7 +530,7 @@ class ElectronApi
 
     getFileDetails(data)
     {
-        let filePath = data.filename.replace("file://", "").replace("file:", "");
+        let filePath = fileURLToPath(data.filename);
         const fileDb = filesUtil.getFileDb(filePath, settings.getCurrentProject(), settings.getCurrentUser());
         return filesUtil.getFileInfo(fileDb);
     }
@@ -569,12 +569,14 @@ class ElectronApi
             dirName = dirName.replaceAll("\\", "/");
 
             if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
+            const fileUrl = pathToFileURL(fileName);
+
             const fileData = {
                 "d": false,
-                "n": path.basename(fileName),
+                "n": path.basename(fileUrl.pathname),
                 "t": type,
                 "l": 0,
-                "p": fileName,
+                "p": fileUrl.href,
                 "type": type,
                 "updated": "bla"
             };
@@ -619,7 +621,7 @@ class ElectronApi
     _getLibraryFiles()
     {
         const p = cables.getAssetLibraryPath();
-        return this._readAssetDir(0, p, p, "file:" + p);
+        return this._readAssetDir(0, p, p);
     }
 
     _getFileIconName(fileDb)
@@ -649,7 +651,7 @@ class ElectronApi
         for (const i in files)
         {
             const fullPath = path.join(filePath, "/", files[i]);
-            const urlPath = path.join(urlPrefix, fullPath.substr(origPath.length, fullPath.length - origPath.length));
+            const urlPath = pathToFileURL(fullPath).href;
 
             if (files[i] && !files[i].startsWith("."))
             {
