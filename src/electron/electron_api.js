@@ -905,7 +905,7 @@ class ElectronApi
         const opDir = opsUtil.getOpAbsoluteFileName(opName);
         if (opDir)
         {
-            return shell.openPath(opDir);
+            return shell.showItemInFolder(opDir);
         }
     }
 

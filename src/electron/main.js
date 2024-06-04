@@ -91,7 +91,6 @@ class ElectronApp
             }
         });
 
-
         this.editorWindow.webContents.setWindowOpenHandler(({ url }) =>
         {
             if (url && url.startsWith("http"))
