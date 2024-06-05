@@ -20,8 +20,6 @@
     <true/>
     <key>com.apple.security.personal-information.location</key>
     <true/>
-    <key>com.apple.security.app-sandbox</key>
-    <true/>
     <key>com.apple.security.inherit</key>
     <true/>
     <key>com.apple.security.files.user-selected.read-write</key>
