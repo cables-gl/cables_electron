@@ -351,6 +351,7 @@ class ElectronApp
     reload()
     {
         this.updateTitle();
+        settings.reloadProject();
         this.editorWindow.reload();
     }
 

@@ -351,6 +351,11 @@ class ElectronSettings
         this._updateRecentProjects();
         electronApp.updateTitle();
     }
+
+    reloadProject()
+    {
+        this.loadProject(this.getCurrentProjectFile());
+    }
 }
 export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));
 

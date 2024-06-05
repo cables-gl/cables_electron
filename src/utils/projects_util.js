@@ -7,7 +7,7 @@ import crypto from "crypto";
 import jsonfile from "jsonfile";
 import chokidar from "chokidar";
 import fs from "fs";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
@@ -55,12 +55,12 @@ class ProjectsUtil extends SharedProjectsUtil
         this._assetChangeWatcher = chokidar.watch([], watcherOptions);
         this._assetChangeWatcher.on("change", (fileName) =>
         {
-            electronApp.sendTalkerMessage("fileUpdated", { "filename": fileName });
+            electronApp.sendTalkerMessage("fileUpdated", { "filename": pathToFileURL(fileName).href });
         });
 
         this._assetChangeWatcher.on("unlink", (fileName) =>
         {
-            electronApp.sendTalkerMessage("fileDeleted", { "fileName": fileName });
+            electronApp.sendTalkerMessage("fileDeleted", { "fileName": pathToFileURL(fileName).href });
         });
     }
 
