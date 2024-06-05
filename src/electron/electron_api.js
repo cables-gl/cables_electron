@@ -1008,7 +1008,7 @@ class ElectronApi
         {
             assetUrl = data.url && data.url !== "0" ? fileURLToPath(data.url) : null;
         }
-        return electronApp.pickFileDialog(assetUrl, data.filter);
+        return electronApp.pickFileDialog(assetUrl, true, data.filter);
     }
 
 

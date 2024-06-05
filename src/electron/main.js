@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, Menu, screen, shell } from "electron";
 import path, { dirname } from "path";
 import fs from "fs";
+import { pathToFileURL } from "url";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
@@ -113,11 +114,11 @@ class ElectronApp
         return this._projectFileDialog(title, properties);
     }
 
-    async pickFileDialog(filePath, filter = [])
+    async pickFileDialog(filePath, asUrl = false, filter = [])
     {
         let title = "select file";
         let properties = ["openFile"];
-        return this._fileDialog(title, filePath, filter, properties);
+        return this._fileDialog(title, filePath, asUrl, filter, properties);
     }
 
     async saveProjectFileDialog()
@@ -293,7 +294,7 @@ class ElectronApp
         });
     }
 
-    _fileDialog(title, filePath = null, extensions = ["*"], properties = null)
+    _fileDialog(title, filePath = null, asUrl = false, extensions = ["*"], properties = null)
     {
         if (extensions)
         {
@@ -312,7 +313,8 @@ class ElectronApp
         {
             if (!result.canceled)
             {
-                return result.filePaths[0];
+                if (!asUrl) return result.filePaths[0];
+                return pathToFileURL(result.filePaths[0]).href;
             }
             else
             {
