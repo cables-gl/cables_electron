@@ -30,7 +30,7 @@ class ProjectsUtil extends SharedProjectsUtil
             "persistent": true,
             "followSymlinks": true,
             "disableGlobbing": true,
-            "awaitWriteFinish": true
+            "awaitWriteFinish": false
         };
 
         this._opChangeWatcher = chokidar.watch([], watcherOptions);
