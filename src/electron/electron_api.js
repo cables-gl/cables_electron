@@ -1117,7 +1117,6 @@ class ElectronApi
         const project = settings.getCurrentProject();
         project.updated = now;
         projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
-        settings.loadProject(settings.getCurrentProjectFile());
         return { "data": project };
     }
 
