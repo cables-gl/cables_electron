@@ -4,9 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'version number'
-        required: true
         type: string
+        description: "version number"
+        required: true
+      mac:
+        type: boolean
+        description: "mac"
+        default: 'true'
+        required: false
+      win:
+        type: boolean
+        description: "win"
+        default: 'true'
+        required: false
+      linux:
+        type: boolean
+        description: "linux"
+        default: 'true'
+        required: false
 
 jobs:
   draft_release:
@@ -22,6 +37,7 @@ jobs:
           draft: true
           prerelease: true
   linux:
+    if: ${{ inputs.linux == true || inputs.linux == 'true' }}
     uses: ./.github/workflows/build.yml
     with:
       runner: macos-14
@@ -32,6 +48,7 @@ jobs:
       tag_name: v${{ inputs.version }}
     secrets: inherit
   win:
+    if: ${{ inputs.win == true || inputs.win == 'true' }}
     uses: ./.github/workflows/build.yml
     with:
       runner: macos-14
@@ -42,6 +59,7 @@ jobs:
       tag_name: v${{ inputs.version }}
     secrets: inherit
   mac:
+    if: ${{ inputs.mac == true || inputs.mac == 'true' }}
     uses: ./.github/workflows/build.yml
     with:
       runner: macos-14
