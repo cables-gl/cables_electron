@@ -173,6 +173,15 @@ class ElectronApp
                 "label": "Menu",
                 "submenu": [
                     {
+                        "label": "Open patch",
+                        "visible": false,
+                        "accelerator": "CmdOrCtrl+O",
+                        "click": () =>
+                        {
+                            this.pickProjectFileDialog();
+                        }
+                    },
+                    {
                         "label": "Reload patch",
                         "visible": false,
                         "accelerator": "CmdOrCtrl+R",
