@@ -27,6 +27,7 @@ class ElectronApp
         this.editorWindow = new BrowserWindow({
             "width": 1920,
             "height": 1080,
+            "autoHideMenuBar": true,
             "webPreferences": {
                 "partition": settings.SESSION_PARTITION,
                 "nodeIntegration": true,
