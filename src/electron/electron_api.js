@@ -1055,7 +1055,7 @@ class ElectronApi
         const recent = settings.getRecentProjects();
         let project = null;
         let projectFile = null;
-        if (data)
+        if (data && data.id)
         {
             for (const key in recent)
             {
