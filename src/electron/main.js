@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, Menu, screen, shell } from "electron";
-import path from "path";
+import path, { dirname } from "path";
 import fs from "fs";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
@@ -7,6 +7,7 @@ import logger from "../utils/logger.js";
 import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
 import projectsUtil from "../utils/projects_util.js";
+
 
 app.commandLine.appendSwitch("disable-http-cache");
 logger.debug("--- starting");
@@ -171,37 +172,8 @@ class ElectronApp
                 "label": "Menu",
                 "submenu": [
                     {
-                        "label": "New patch",
-                        "accelerator": "CmdOrCtrl+N",
-                        "click": () =>
-                        {
-                            this.openPatch();
-                        }
-                    },
-                    {
-                        "label": "Open patch",
-                        "accelerator": "CmdOrCtrl+O",
-                        "click": () =>
-                        {
-                            this.pickProjectFileDialog();
-                        }
-                    },
-                    {
-                        "label": "Open working directory",
-                        "click": () =>
-                        {
-                            electronApi.openProjectDir();
-                        }
-                    },
-                    {
-                        "label": "Add Op directory",
-                        "click": () =>
-                        {
-                            electronApi.addProjectOpDir();
-                        }
-                    },
-                    {
                         "label": "Reload patch",
+                        "visible": false,
                         "accelerator": "CmdOrCtrl+R",
                         "click": () =>
                         {
@@ -209,14 +181,8 @@ class ElectronApp
                         }
                     },
                     {
-                        "label": "Toggle fullscreen",
-                        "click": () =>
-                        {
-                            this.cycleFullscreen();
-                        }
-                    },
-                    {
                         "label": "Open Dev-Tools",
+                        "visible": false,
                         "accelerator": devToolsAcc,
                         "click": () =>
                         {
@@ -227,6 +193,7 @@ class ElectronApp
                     },
                     {
                         "label": "Inspect Element",
+                        "visible": false,
                         "accelerator": inspectElementAcc,
                         "click": () =>
                         {
@@ -250,20 +217,6 @@ class ElectronApp
                         }
                     }
                 ]
-            },
-            {
-                "label": "Edit",
-                "submenu": [
-                    { "role": "undo" },
-                    { "role": "redo" },
-                    { "type": "separator" },
-                    { "role": "cut" },
-                    { "role": "copy" },
-                    { "role": "paste" },
-                    { "role": "pasteandmatchstyle" },
-                    { "role": "delete" },
-                    { "role": "selectall" }
-                ]
             }
         ]);
 
@@ -286,7 +239,7 @@ class ElectronApp
                 }
                 this.updateTitle();
             });
-        }, ["core", "teams", "extensions", "users", "patches"], true);
+        }, ["core", "teams", "extensions"], true);
     }
 
     updateTitle()
