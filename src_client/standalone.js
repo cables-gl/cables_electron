@@ -55,7 +55,7 @@ class CablesElectron
             }
         }, false);
 
-        window.electronEditor = new ElectronEditor({
+        this.editor = new ElectronEditor({
             "config": {
                 "isTrustedPatch": true,
                 "platformClass": "PlatformStandalone",

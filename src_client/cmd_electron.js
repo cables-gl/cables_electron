@@ -7,19 +7,19 @@ const CMD_ELECTRON_COMMANDS = [];
 
 CABLES_CMD_ELECTRON.newPatch = () =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "newPatch", { }).then((r) => {});
+    standalone.editor.invoke("newPatch", { }, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON.gotoPatch = () =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "gotoPatch", { }).then((r) => {});
+    standalone.editor.invoke("gotoPatch", { }, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON.runNpm = () =>
 {
     const loadingModal = standalone.gui.startModalLoading("Installing packages...");
     const options = {};
-    window.ipcRenderer.invoke("talkerMessage", "installProjectDependencies", options).then((r) =>
+    standalone.editor.invoke("installProjectDependencies", options, (_err, r) =>
     {
         if (r.stdout)
         {
@@ -35,38 +35,38 @@ CABLES_CMD_ELECTRON.runNpm = () =>
 
 CABLES_CMD_ELECTRON.openOpDir = (opId, opName) =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "openOpDir", { "opId": opId, "opName": opName }).then((r) => {});
+    standalone.editor.invoke("talkerMessage", "openOpDir", { "opId": opId, "opName": opName }, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON.openProjectDir = (options) =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "openProjectDir", options).then((r) => {});
+    standalone.editor.invoke("talkerMessage", "openProjectDir", options, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON.openAssetDir = (options) =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "openAssetDir", options).then((r) => {});
+    standalone.editor.invoke("talkerMessage", "openAssetDir", options, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON.addProjectOpDir = (options) =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "addProjectOpDir", options).then((r) => {});
+    standalone.editor.invoke("talkerMessage", "addProjectOpDir", options, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON_OVERRIDES.PATCH = {};
 CABLES_CMD_ELECTRON_OVERRIDES.PATCH.saveAs = () =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "saveProjectAs", { }).then((r) => {});
+    standalone.editor.invoke("talkerMessage", "saveProjectAs", { }, (_err, r) => {});
 };
 CABLES_CMD_ELECTRON_OVERRIDES.PATCH.uploadFileDialog = () =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "openAssetDir").then((r) => {});
+    standalone.editor.invoke("talkerMessage", "openAssetDir", (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON_OVERRIDES.RENDERER = {};
 CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
 {
-    window.ipcRenderer.invoke("talkerMessage", "cycleFullscreen", { }).then((r) => {});
+    standalone.editor.invoke("talkerMessage", "cycleFullscreen", { }, (_err, r) => {});
 };
 
 CMD_ELECTRON_COMMANDS.push(

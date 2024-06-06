@@ -67,7 +67,7 @@ export default class ElectronEditor
                     });
             });
 
-        const talkerTopics = {
+        this._talkerTopics = {
             "getOpInfo": {},
             "savePatch": { "needsProjectFile": true },
             "getPatch": {},
@@ -107,12 +107,12 @@ export default class ElectronEditor
             "setProjectName": { "needsProjectFile": true }
         };
 
-        Object.keys(talkerTopics)
+        Object.keys(this._talkerTopics)
             .forEach((talkerTopic) =>
             {
                 this._talker.addEventListener(talkerTopic, (data, next) =>
                 {
-                    const topicConfig = talkerTopics[talkerTopic];
+                    const topicConfig = this._talkerTopics[talkerTopic];
                     window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig)
                         .then((r) =>
                         {
@@ -120,5 +120,14 @@ export default class ElectronEditor
                         });
                 });
             });
+    }
+
+    invoke(cmd, data, next)
+    {
+        const topicConfig = this._talkerTopics[cmd];
+        window.ipcRenderer.invoke("talkerMessage", cmd, data, topicConfig).then((r) =>
+        {
+            next(null, r);
+        });
     }
 }
