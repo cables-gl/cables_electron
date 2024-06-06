@@ -80,7 +80,8 @@ class ElectronEndpoint
                 else
                 {
                     return new Response(libCode, {
-                        "headers": { "content-type": "application/javascript", "status": 500 }
+                        "headers": { "content-type": "application/javascript" },
+                        "status": 500
                     });
                 }
             }
@@ -97,7 +98,8 @@ class ElectronEndpoint
                 else
                 {
                     return new Response(libCode, {
-                        "headers": { "content-type": "application/javascript", "status": 500 }
+                        "headers": { "content-type": "application/javascript" },
+                        "status": 500
                     });
                 }
             }
@@ -136,7 +138,8 @@ class ElectronEndpoint
                 else
                 {
                     return new Response(code, {
-                        "headers": { "content-type": "application/javascript", "status": 500 }
+                        "headers": { "content-type": "application/javascript" },
+                        "status": 500
                     });
                 }
             }
@@ -157,7 +160,8 @@ class ElectronEndpoint
                 else
                 {
                     return new Response(opCode, {
-                        "headers": { "content-type": "application/javascript", "status": 500 }
+                        "headers": { "content-type": "application/javascript" },
+                        "status": 500
                     });
                 }
             }
@@ -182,7 +186,8 @@ class ElectronEndpoint
             else
             {
                 return new Response("", {
-                    "headers": { "content-type": "application/javascript", "status": 404 }
+                    "headers": { "content-type": "application/javascript" },
+                    "status": 404
                 });
             }
         });

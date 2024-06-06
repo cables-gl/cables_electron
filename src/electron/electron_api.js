@@ -880,7 +880,7 @@ class ElectronApi
         return opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir);
     }
 
-    async installProjectDependencies(data)
+    async installProjectDependencies()
     {
         const currentProjectDir = settings.getCurrentProjectDir();
         const opsDir = cables.getProjectOpsPath();
@@ -916,9 +916,17 @@ class ElectronApi
                 });
             });
             toInstall = helper.uniqueArray(toInstall);
+
             if (toInstall.length > 0)
             {
-                return execaSync(npm, ["install", toInstall], { "cwd": currentProjectDir });
+                try
+                {
+                    return execaSync(npm, ["install", toInstall, "--legacy-peer-deps"], { "cwd": currentProjectDir });
+                }
+                catch (e)
+                {
+                    return { "stderr": e };
+                }
             }
         }
         return { "stdout": "nothing to install" };
@@ -1135,8 +1143,6 @@ class ElectronApi
             if (!project.dirs) project.dirs = {};
             if (!project.dirs.ops) project.dirs.ops = [];
             project.dirs.ops.unshift(opDir);
-            projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
-            settings.loadProject(settings.getCurrentProjectFile());
             return projectsUtil.getProjectOpDirs(project, false);
         }
         else
