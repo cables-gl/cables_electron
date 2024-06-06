@@ -220,6 +220,13 @@ class ElectronApp
                         }
                     },
                     {
+                        "label": "New patch",
+                        "click": () =>
+                        {
+                            this.openPatch(null, true);
+                        }
+                    },
+                    {
                         "label": "Exit",
                         "accelerator": "CmdOrCtrl+Q",
                         "click": () =>

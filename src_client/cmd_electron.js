@@ -1,3 +1,5 @@
+import standalone from "./index_electron.js";
+
 const CABLES_CMD_ELECTRON = {};
 const CABLES_CMD_ELECTRON_OVERRIDES = {};
 const CMD_ELECTRON_COMMANDS = [];
@@ -13,10 +15,9 @@ CABLES_CMD_ELECTRON.gotoPatch = () =>
     window.ipcRenderer.invoke("talkerMessage", "gotoPatch", { }).then((r) => {});
 };
 
-
 CABLES_CMD_ELECTRON.runNpm = () =>
 {
-    const loadingModal = window.editorIframe.gui.startModalLoading("Installing packages...");
+    const loadingModal = standalone.editorIframe.gui.startModalLoading("Installing packages...");
     const options = {};
     window.ipcRenderer.invoke("talkerMessage", "installProjectDependencies", options).then((r) =>
     {
@@ -101,4 +102,8 @@ CMD_ELECTRON_COMMANDS.push(
     }
 );
 
-export { CABLES_CMD_ELECTRON, CMD_ELECTRON_COMMANDS, CABLES_CMD_ELECTRON_OVERRIDES };
+export default {
+    "commands": CMD_ELECTRON_COMMANDS,
+    "functions": CABLES_CMD_ELECTRON,
+    "functionOverrides": CABLES_CMD_ELECTRON_OVERRIDES
+};

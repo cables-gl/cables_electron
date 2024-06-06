@@ -1,11 +1,12 @@
-import ElectronEditor from "./electron_editor.js";
-import { CABLES_CMD_ELECTRON, CMD_ELECTRON_COMMANDS, CABLES_CMD_ELECTRON_OVERRIDES } from "./cmd_electron.js";
+import { ele } from "cables-shared-client";
+import standalone from "./standalone.js";
 
-
-window.web = { "ElectronEditor": ElectronEditor };
-window.electronCommands = {
-    "commands": CMD_ELECTRON_COMMANDS,
-    "functions": CABLES_CMD_ELECTRON,
-    "functionOverrides": CABLES_CMD_ELECTRON_OVERRIDES
-};
+window.ele = ele;
+document.addEventListener("DOMContentLoaded", () =>
+{
+    standalone.init();
+    window.standalone = standalone;
+    document.dispatchEvent(new Event("cablesStandaloneReady"));
+});
+export default standalone;
 
