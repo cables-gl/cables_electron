@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, Menu, screen, shell } from "electron";
-import path, { dirname } from "path";
+import path from "path";
 import fs from "fs";
 import { pathToFileURL } from "url";
 import electronEndpoint from "./electron_endpoint.js";
