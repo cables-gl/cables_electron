@@ -17,7 +17,7 @@ CABLES_CMD_ELECTRON.gotoPatch = () =>
 
 CABLES_CMD_ELECTRON.runNpm = () =>
 {
-    const loadingModal = standalone.editorIframe.gui.startModalLoading("Installing packages...");
+    const loadingModal = standalone.gui.startModalLoading("Installing packages...");
     const options = {};
     window.ipcRenderer.invoke("talkerMessage", "installProjectDependencies", options).then((r) =>
     {

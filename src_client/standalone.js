@@ -14,6 +14,11 @@ class CablesElectron
         this.editorIframe = null;
     }
 
+    get gui()
+    {
+        return this.editorIframe.contentWindow.gui;
+    }
+
     init()
     {
         this.editorIframe = document.getElementById("editorIframe");
@@ -23,11 +28,9 @@ class CablesElectron
             src += window.location.hash;
         }
         this.editorIframe.src = src;
-        console.log("HERE", src);
         this.editorIframe.onload = () =>
         {
             const iframeWindow = this.editorIframe.contentWindow;
-            console.log("onload", iframeWindow);
             if (iframeWindow && iframeWindow.loadjs)
             {
                 iframeWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
