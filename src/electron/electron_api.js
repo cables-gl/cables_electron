@@ -884,44 +884,44 @@ class ElectronApi
     {
         const currentProjectDir = settings.getCurrentProjectDir();
         const opsDir = cables.getProjectOpsPath();
-        const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
-        const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
-
-        let __dirname = fileURLToPath(new URL(".", import.meta.url));
-        __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
-        const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
-        this._log.debug("NPM", npm);
-
-        let toInstall = [];
-        fileNames.forEach((packageFile) =>
+        if (opsDir)
         {
-            const fileContents = packageFiles[packageFile];
-            const fileJson = JSON.parse(fileContents);
-            let deps = fileJson.dependencies || {};
-            let devDeps = fileJson.devDependencies || {};
-            const allDeps = { ...devDeps, ...deps };
-            Object.keys(allDeps).forEach((lib) =>
+            const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
+            const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
+
+            let __dirname = fileURLToPath(new URL(".", import.meta.url));
+            __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
+            const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
+            this._log.debug("NPM", npm);
+
+            let toInstall = [];
+            fileNames.forEach((packageFile) =>
             {
-                if (lib)
+                const fileContents = packageFiles[packageFile];
+                const fileJson = JSON.parse(fileContents);
+                let deps = fileJson.dependencies || {};
+                let devDeps = fileJson.devDependencies || {};
+                const allDeps = { ...devDeps, ...deps };
+                Object.keys(allDeps).forEach((lib) =>
                 {
-                    const ver = allDeps[lib];
-                    if (ver)
+                    if (lib)
                     {
-                        const semVer = lib + "@" + ver;
-                        toInstall.push(semVer);
+                        const ver = allDeps[lib];
+                        if (ver)
+                        {
+                            const semVer = lib + "@" + ver;
+                            toInstall.push(semVer);
+                        }
                     }
-                }
+                });
             });
-        });
-        toInstall = helper.uniqueArray(toInstall);
-        if (toInstall.length > 0)
-        {
-            return execaSync(npm, ["install", toInstall], { "cwd": currentProjectDir });
+            toInstall = helper.uniqueArray(toInstall);
+            if (toInstall.length > 0)
+            {
+                return execaSync(npm, ["install", toInstall], { "cwd": currentProjectDir });
+            }
         }
-        else
-        {
-            return { "stdout": "notihng to install" };
-        }
+        return { "stdout": "nothing to install" };
     }
 
     async openDir(options)
