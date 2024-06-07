@@ -36,6 +36,11 @@ class ElectronApi
         {
             event.returnValue = settings.data;
         });
+
+        ipcMain.on("config", (event, cmd, data) =>
+        {
+            event.returnValue = cables.getConfig();
+        });
     }
 
     async talkerMessage(cmd, data, topicConfig = {})

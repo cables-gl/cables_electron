@@ -12,7 +12,7 @@ class CablesElectron extends Cables
     constructor(provider, dirName, writableDirName, configLocation)
     {
         super(provider, dirName, writableDirName, configLocation);
-        settings.set("uiDistPath", this.getUiDistPath());
+        this._config.isPackaged = app.isPackaged;
     }
 
     getStandaloneDistPath()

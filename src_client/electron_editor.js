@@ -4,9 +4,10 @@ export default class ElectronEditor
 {
     constructor(params)
     {
+        this._config = params.config;
         const frame = document.getElementById("editorIframe");
         this._talker = new TalkerAPI(frame.contentWindow);
-        this._patchId = params.config.patchId;
+        this._patchId = this._config.patchId;
 
         window.ipcRenderer.on("talkerMessage", (_event, data) =>
         {
@@ -15,7 +16,7 @@ export default class ElectronEditor
 
         this._talker.addEventListener("requestPatchData", (data, next) =>
         {
-            if (next) next(params.config);
+            if (next) next(this._config);
         });
 
         this._talker.addEventListener("sendBrowserInfo", (data, next) =>

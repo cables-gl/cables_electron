@@ -2,7 +2,7 @@ import { Logger } from "cables-shared-client";
 import ElectronEditor from "./electron_editor.js";
 import electronCommands from "./cmd_electron.js";
 
-class CablesElectron
+class CablesStandalone
 {
     constructor()
     {
@@ -11,6 +11,7 @@ class CablesElectron
         this._log = new Logger("standalone");
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
         this._settings = this._electron.ipcRenderer.sendSync("settings");
+        this._config = this._electron.ipcRenderer.sendSync("config");
         this.editorIframe = null;
     }
 
@@ -63,8 +64,8 @@ class CablesElectron
                 "urlSandbox": "cables://",
                 "user": this._settings.currentUser,
                 "usersettings": { "settings": this._settings.userSettings },
-                "isDevEnv": true,
-                "env": "dev",
+                "isDevEnv": !this._config.isPackaged,
+                "env": this._config.env,
                 "patchId": this._settings.patchId,
                 "patchVersion": "",
                 "socketcluster": {},
@@ -142,4 +143,4 @@ class CablesElectron
         }
     }
 }
-export default new CablesElectron();
+export default new CablesStandalone();
