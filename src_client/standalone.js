@@ -9,10 +9,13 @@ class CablesStandalone
         this._path = window.nodeRequire("path");
         this._electron = window.nodeRequire("electron");
         this._log = new Logger("standalone");
+
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
         this._settings = this._electron.ipcRenderer.sendSync("settings");
         this._config = this._electron.ipcRenderer.sendSync("config");
         this.editorIframe = null;
+
+        if (!this._config.isPackaged) window.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
     }
 
     get gui()

@@ -2,10 +2,10 @@ import gulp from "gulp";
 import fs from "fs";
 import path from "path/posix";
 import mkdirp from "mkdirp";
-
 import webpack from "webpack";
 import jsonfile from "jsonfile";
 import git from "git-last-commit";
+import { execa } from "execa";
 import webpackElectronConfig from "./webpack.electron.config.js";
 
 const defaultConfigLocation = "./cables.json";
@@ -37,6 +37,28 @@ if (configLocation !== defaultConfigLocation)
 }
 const isLiveBuild = config.env === "electron";
 const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
+
+const watchers = [];
+function _watch(done)
+{
+    watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/client/*.js", "../shared/client/**/*.js"], { "usePolling": true }, gulp.series(defaultSeries)));
+    done();
+}
+
+function _serve(done)
+{
+    execa(
+        "electron",
+        ["."],
+        { "preferLocal": true, "stdout": "inherit", "stderr": "inherit" }).then((o, te, thr) =>
+    {
+        watchers.forEach((watcher) =>
+        {
+            watcher.close();
+        });
+    });
+    done();
+}
 
 function _create_ops_dirs(done)
 {
@@ -143,10 +165,15 @@ const getBuildInfo = (cb) =>
  * MAIN TASKS
  * -------------------------------------------------------------------------------------------
  */
+
+const defaultSeries = gulp.series(
+    _editor_scripts_webpack,
+);
+
 gulp.task("build", gulp.series(
     _create_ops_dirs,
     gulp.parallel(
-        _editor_scripts_webpack,
+        defaultSeries,
         _corelibs_copy,
         _core_ops_copy,
         _extension_ops_copy,
@@ -155,8 +182,11 @@ gulp.task("build", gulp.series(
     ),
 ));
 
-gulp.task("build:source", gulp.series(
+gulp.task("watch", gulp.series(
+    defaultSeries,
     gulp.parallel(
-        _editor_scripts_webpack
-    ),
+        _serve,
+        _watch
+    )
 ));
+

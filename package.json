@@ -14,9 +14,8 @@
     "node": "20.13.1"
   },
   "scripts": {
-    "start": "cross-env npm_config_apiconfig=local electron .",
+    "start": "cross-env npm_config_apiconfig=local gulp watch",
     "build": "cross-env npm_config_apiconfig=local gulp build",
-    "build:source": "cross-env npm_config_apiconfig=local gulp build:source",
     "pack": "electron-builder -mwl --dir",
     "pack:mac": "electron-builder -m --dir -c.mac.identity=null",
     "pack:win": "electron-builder -w --dir",
@@ -129,14 +128,14 @@
     "uuid-v4": "0.1.0"
   },
   "devDependencies": {
+    "copy-webpack-plugin": "12.0.2",
     "cross-env": "5.2.0",
     "electron": "30.0.6",
     "electron-builder": "24.13.3",
     "electron-notarize": "1.2.2",
     "git-last-commit": "1.0.1",
     "gulp": "5.0.0",
-    "webpack": "5.91.0",
     "terser-webpack-plugin": "5.3.10",
-    "copy-webpack-plugin": "12.0.2"
+    "webpack": "5.91.0"
   }
 }
