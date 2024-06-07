@@ -23,7 +23,7 @@ if (!fs.existsSync(configLocation))
     }
     else
     {
-        console.error("no config file found at neither", configLocation, "nor", defaultConfigLocation);
+        console.error("config file found at neither", configLocation, "nor", defaultConfigLocation);
         process.exit(1);
     }
 }

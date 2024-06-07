@@ -2,13 +2,13 @@ import { app, BrowserWindow, dialog, Menu, screen, shell } from "electron";
 import path from "path";
 import fs from "fs";
 import { pathToFileURL } from "url";
+import localShortcut from "electron-localshortcut";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
 import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
 import projectsUtil from "../utils/projects_util.js";
-
 
 app.commandLine.appendSwitch("disable-http-cache");
 logger.debug("--- starting");
@@ -20,6 +20,14 @@ class ElectronApp
         this._log = logger;
         this.cablesFileExtensions = [projectsUtil.CABLES_PROJECT_FILE_EXTENSION, projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION];
         this.editorWindow = null;
+
+        app.on("browser-window-created", (event, win) =>
+        {
+            if (settings.get(settings.OPEN_DEV_TOOLS_FIELD))
+            {
+                win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
+            }
+        });
     }
 
     createWindow()
@@ -69,41 +77,8 @@ class ElectronApp
             }
         }
 
-        if (settings.get(settings.OPEN_DEV_TOOLS_FIELD)) this.editorWindow.openDevTools();
-        this.editorWindow.webContents.on("will-prevent-unload", (event) =>
-        {
-            if (this.isDocumentEdited())
-            {
-                const choice = dialog.showMessageBoxSync(this.editorWindow, {
-                    "type": "question",
-                    "buttons": ["Leave", "Stay"],
-                    "title": "unsaved content!",
-                    "message": "unsaved content!",
-                    "defaultId": 0,
-                    "cancelId": 1
-                });
-                const leave = (choice === 0);
-                if (leave)
-                {
-                    event.preventDefault();
-                }
-            }
-            else
-            {
-                event.preventDefault();
-            }
-        });
-
-        this.editorWindow.webContents.setWindowOpenHandler(({ url }) =>
-        {
-            if (url && url.startsWith("http"))
-            {
-                shell.openExternal(url);
-                return { "action": "deny" };
-            }
-            return { "action": "allow" };
-        });
-
+        this._registerListeners();
+        this._registerShortcuts();
         this.openPatch(patchFile, true);
     }
 
@@ -164,61 +139,10 @@ class ElectronApp
 
     createMenu()
     {
-        let devToolsAcc = "CmdOrCtrl+Shift+I";
-        let inspectElementAcc = "CmdOrCtrl+Shift+C";
-
-        if (process.platform === "darwin") devToolsAcc = "CmdOrCtrl+Option+I";
-
         let menu = Menu.buildFromTemplate([
             {
                 "label": "Menu",
                 "submenu": [
-                    {
-                        "label": "Open patch",
-                        "visible": false,
-                        "accelerator": "CmdOrCtrl+O",
-                        "click": () =>
-                        {
-                            this.pickProjectFileDialog();
-                        }
-                    },
-                    {
-                        "label": "Reload patch",
-                        "visible": false,
-                        "accelerator": "CmdOrCtrl+R",
-                        "click": () =>
-                        {
-                            this.reload();
-                        }
-                    },
-                    {
-                        "label": "Open Dev-Tools",
-                        "visible": false,
-                        "accelerator": devToolsAcc,
-                        "click": () =>
-                        {
-                            const stateBefore = this.editorWindow.webContents.isDevToolsOpened();
-                            this.editorWindow.webContents.toggleDevTools();
-                            settings.set(settings.OPEN_DEV_TOOLS_FIELD, !stateBefore);
-                        }
-                    },
-                    {
-                        "label": "Inspect Element",
-                        "visible": false,
-                        "accelerator": inspectElementAcc,
-                        "click": () =>
-                        {
-                            let mousePos = screen.getCursorScreenPoint();
-                            if (mousePos)
-                            {
-                                this.editorWindow.inspectElement(mousePos.x, mousePos.y);
-                            }
-                            else
-                            {
-                                this.editorWindow.inspectElement(0, 0);
-                            }
-                        }
-                    },
                     {
                         "label": "New patch",
                         "click": () =>
@@ -398,6 +322,103 @@ class ElectronApp
     sendTalkerMessage(cmd, data)
     {
         this.editorWindow.webContents.send("talkerMessage", { "cmd": cmd, "data": data });
+    }
+
+    _registerShortcuts()
+    {
+        let devToolsAcc = "CmdOrCtrl+Shift+I";
+        let inspectElementAcc = "CmdOrCtrl+Shift+C";
+        if (process.platform === "darwin") devToolsAcc = "CmdOrCtrl+Option+I";
+
+        // https://github.com/sindresorhus/electron-debug/blob/main/index.js
+        localShortcut.register(this.editorWindow, inspectElementAcc, this._inspectElements.bind(this));
+        localShortcut.register(this.editorWindow, devToolsAcc, this._toggleDevTools.bind(this));
+        localShortcut.register(this.editorWindow, "F12", this._toggleDevTools.bind(this));
+        localShortcut.register(this.editorWindow, "CommandOrControl+R", this._reloadWindow.bind(this));
+        localShortcut.register(this.editorWindow, "F5", this._reloadWindow.bind(this));
+        localShortcut.register(this.editorWindow, "CmdOrCtrl+O", this.pickProjectFileDialog.bind(this));
+    }
+
+    _toggleDevTools()
+    {
+        if (this.editorWindow.webContents.isDevToolsOpened())
+        {
+            this.editorWindow.webContents.closeDevTools();
+        }
+        else
+        {
+            this.editorWindow.webContents.openDevTools({ "mode": "previous" });
+        }
+    }
+
+    _inspectElements()
+    {
+        const inspect = () =>
+        {
+            this.editorWindow.devToolsWebContents.executeJavaScript("DevToolsAPI.enterInspectElementMode()");
+        };
+
+        if (this.editorWindow.webContents.isDevToolsOpened())
+        {
+            inspect();
+        }
+        else
+        {
+            this.editorWindow.webContents.once("devtools-opened", inspect);
+            this.editorWindow.openDevTools();
+        }
+    }
+
+    _reloadWindow()
+    {
+        this.editorWindow.webContents.reloadIgnoringCache();
+    }
+
+    _registerListeners()
+    {
+        this.editorWindow.webContents.on("will-prevent-unload", (event) =>
+        {
+            if (this.isDocumentEdited())
+            {
+                const choice = dialog.showMessageBoxSync(this.editorWindow, {
+                    "type": "question",
+                    "buttons": ["Leave", "Stay"],
+                    "title": "unsaved content!",
+                    "message": "unsaved content!",
+                    "defaultId": 0,
+                    "cancelId": 1
+                });
+                const leave = (choice === 0);
+                if (leave)
+                {
+                    event.preventDefault();
+                }
+            }
+            else
+            {
+                event.preventDefault();
+            }
+        });
+
+        this.editorWindow.webContents.setWindowOpenHandler(({ url }) =>
+        {
+            if (url && url.startsWith("http"))
+            {
+                shell.openExternal(url);
+                return { "action": "deny" };
+            }
+            return { "action": "allow" };
+        });
+
+        this.editorWindow.webContents.on("devtools-opened", (event, win) =>
+        {
+            settings.set(settings.OPEN_DEV_TOOLS_FIELD, true);
+        });
+
+        this.editorWindow.webContents.on("devtools-closed", (event, win) =>
+        {
+            settings.set(settings.OPEN_DEV_TOOLS_FIELD, false);
+        });
     }
 }
 app.whenReady().then(() =>
