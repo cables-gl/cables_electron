@@ -9,6 +9,7 @@ import projectsUtil from "../utils/projects_util.js";
 import cables from "../cables.js";
 import electronApp from "./main.js";
 import opsUtil from "../utils/ops_util.js";
+import filesUtil from "../utils/files_util.js";
 
 class ElectronSettings
 {
@@ -108,7 +109,7 @@ class ElectronSettings
                 project = fs.readFileSync(projectFile);
                 project = JSON.parse(project.toString("utf-8"));
                 this._setCurrentProject(projectFile, project);
-                projectsUtil.registerAssetChangeListeners(project);
+                filesUtil.registerAssetChangeListeners(project);
                 if (project.ops)
                 {
                     const opNames = [];
@@ -120,7 +121,7 @@ class ElectronSettings
                             opNames.push(opsUtil.getOpAbsoluteFileName(opName));
                         }
                     });
-                    projectsUtil.registerOpChangeListeners(opNames);
+                    filesUtil.registerOpChangeListeners(opNames);
                 }
             }
         }

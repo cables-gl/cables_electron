@@ -229,7 +229,7 @@ class ElectronEndpoint
             }
         });
         code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, true, true, opDocs);
-        projectsUtil.registerOpChangeListeners(missingOps.map((missingOp) => { return missingOp.objName; }));
+        filesUtil.registerOpChangeListeners(missingOps.map((missingOp) => { return missingOp.objName; }));
         return code;
     }
 

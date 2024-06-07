@@ -351,7 +351,10 @@ class ElectronApi
         }
         returnedCode = helper.removeTrailingSpaces(returnedCode);
 
-        fs.writeFileSync(fn, returnedCode);
+        filesUtil.runUnWatched(opName, () =>
+        {
+            fs.writeFileSync(fn, returnedCode);
+        });
         const jsonFile = opsUtil.getOpJsonPath(opName);
         let jsonData = jsonfile.readFileSync(jsonFile);
         if (!jsonData) jsonData = {};
@@ -858,7 +861,7 @@ class ElectronApi
         let opName = data.opname;
         const currentUser = settings.getCurrentUser();
         const result = opsUtil.createOp(opName, currentUser, data.code, data.layout, data.libs, data.coreLibs, data.attachments, data.opTargetDir);
-        projectsUtil.registerOpChangeListeners([opName]);
+        filesUtil.registerOpChangeListeners([opName]);
 
         return result;
     }

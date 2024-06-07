@@ -5,15 +5,12 @@ import { app } from "electron";
 import pako from "pako";
 import crypto from "crypto";
 import jsonfile from "jsonfile";
-import chokidar from "chokidar";
 import fs from "fs";
 import { fileURLToPath, pathToFileURL } from "url";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
 import filesUtil from "./files_util.js";
-import electronApp from "../electron/main.js";
-import opsUtil from "./ops_util.js";
 
 class ProjectsUtil extends SharedProjectsUtil
 {
@@ -22,46 +19,6 @@ class ProjectsUtil extends SharedProjectsUtil
         super(provider);
         this.CABLES_PROJECT_FILE_EXTENSION = "cables";
         this.CABLES_STANDALONE_EXPORT_FILE_EXTENSION = "cables.json";
-
-        const watcherOptions = {
-            "ignored": /(^|[\/\\])\../,
-            "ignorePermissionErrors": true,
-            "ignoreInitial": true,
-            "persistent": true,
-            "followSymlinks": true,
-            "disableGlobbing": true,
-            "awaitWriteFinish": false
-        };
-
-        this._opChangeWatcher = chokidar.watch([], watcherOptions);
-        this._opChangeWatcher.on("change", (fileName) =>
-        {
-            const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
-            if (opName)
-            {
-                electronApp.sendTalkerMessage("executeOp", { "name": opName });
-            }
-        });
-
-        this._opChangeWatcher.on("unlink", (fileName) =>
-        {
-            const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
-            if (opName)
-            {
-                electronApp.sendTalkerMessage("deleteOp", { "name": opName });
-            }
-        });
-
-        this._assetChangeWatcher = chokidar.watch([], watcherOptions);
-        this._assetChangeWatcher.on("change", (fileName) =>
-        {
-            electronApp.sendTalkerMessage("fileUpdated", { "filename": pathToFileURL(fileName).href });
-        });
-
-        this._assetChangeWatcher.on("unlink", (fileName) =>
-        {
-            electronApp.sendTalkerMessage("fileDeleted", { "fileName": pathToFileURL(fileName).href });
-        });
     }
 
     getAssetPath(projectId)
@@ -175,31 +132,6 @@ class ProjectsUtil extends SharedProjectsUtil
             .digest("hex");
         project.buildInfo = settings.getBuildInfo();
         return jsonfile.writeFileSync(projectFile, project);
-    }
-
-    registerAssetChangeListeners(project)
-    {
-        if (!project || !project.ops) return;
-        const fileNames = this.getUsedAssetFilenames(project, true);
-        this._assetChangeWatcher.add(fileNames);
-    }
-
-    registerOpChangeListeners(opNames)
-    {
-        if (!opNames) return;
-        const fileNames = [];
-        opNames.forEach((opName) =>
-        {
-            const opFile = opsUtil.getOpAbsoluteFileName(opName);
-            if (opFile) fileNames.push(opFile);
-        });
-        this._opChangeWatcher.add(fileNames);
-    }
-
-    async unregisterChangeListeners()
-    {
-        await this._assetChangeWatcher.close();
-        await this._opChangeWatcher.close();
     }
 
     getUsedAssetFilenames(project, includeLibraryAssets = false)

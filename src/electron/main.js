@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, Menu, screen, shell } from "electron";
+import { app, BrowserWindow, dialog, Menu, shell } from "electron";
 import path from "path";
 import fs from "fs";
 import { pathToFileURL } from "url";
@@ -9,6 +9,7 @@ import logger from "../utils/logger.js";
 import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
 import projectsUtil from "../utils/projects_util.js";
+import filesUtil from "../utils/files_util.js";
 
 app.commandLine.appendSwitch("disable-http-cache");
 logger.debug("--- starting");
@@ -440,7 +441,7 @@ app.on("window-all-closed", () =>
 app.on("will-quit", (event) =>
 {
     event.preventDefault();
-    projectsUtil.unregisterChangeListeners().then(() =>
+    filesUtil.unregisterChangeListeners().then(() =>
     {
         process.exit(0);
     }).catch((e) =>

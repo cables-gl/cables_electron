@@ -80,8 +80,6 @@ class CablesStandalone
 
     _coreReady(depsNotFound)
     {
-        console.log("_coreReady", depsNotFound);
-
         const iframeWindow = this.editorIframe.contentWindow;
         const iframeCables = iframeWindow.CABLES;
         if (!depsNotFound && (iframeCables && iframeCables.Op))
@@ -114,8 +112,6 @@ class CablesStandalone
 
     _uiReady(depsNotFound)
     {
-        console.log("_uiReady", depsNotFound);
-
         const iframeWindow = this.editorIframe.contentWindow;
         const iframeCables = iframeWindow.CABLES;
         if (iframeCables)
