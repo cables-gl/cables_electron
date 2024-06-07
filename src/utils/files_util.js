@@ -60,18 +60,20 @@ class FilesUtil extends SharedFilesUtil
     {
         const opFile = opsUtil.getOpAbsoluteFileName(opName);
         this._opChangeWatcher.unwatch(opFile);
+        let returnValue;
         try
         {
-            command();
+            returnValue = command();
         }
         catch (e)
         {
-            this._log.error("failed to run unwatched command for", opName, command);
+            this._log.error("failed to run unwatched command for", opName, command, e);
         }
         finally
         {
             this._opChangeWatcher.add(opFile);
         }
+        return returnValue;
     }
 
     registerAssetChangeListeners(project)

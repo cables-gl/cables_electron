@@ -5,6 +5,7 @@ import helper from "./helper_util.js";
 import settings from "../electron/electron_settings.js";
 import cables from "../cables.js";
 import projectsUtil from "./projects_util.js";
+import filesUtil from "./files_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
@@ -146,6 +147,14 @@ class OpsUtil extends SharedOpsUtil
         const parts = path.parse(fileName);
         if (parts && parts.name) return parts.name;
         return "";
+    }
+
+    updateOpCode(opName, author, code)
+    {
+        return filesUtil.runUnWatched(opName, () =>
+        {
+            return super.updateOpCode(opName, author, code);
+        });
     }
 }
 export default new OpsUtil(utilProvider);

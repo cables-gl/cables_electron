@@ -223,7 +223,10 @@ class ElectronApi
 
         // get opdocs for all the collected ops
         opDocs = opsUtil.addOpDocsForCollections(projectNamespaces, opDocs);
-        opDocs.forEach((opDoc) => { opDoc.usedInProject = true; });
+        opDocs.forEach((opDoc) =>
+        {
+            if (usedOpIds.includes(opDoc.id)) opDoc.usedInProject = true;
+        });
 
         opsUtil.addPermissionsToOps(opDocs, currentUser, [], project);
         opsUtil.addVersionInfoToOps(opDocs);
@@ -316,12 +319,6 @@ class ElectronApi
     saveOpCode(data)
     {
         const opName = opsUtil.getOpNameById(data.opname);
-        const opDir = opsUtil.getOpSourceDir(opName);
-        if (!fs.existsSync(opDir))
-        {
-            mkdirp.sync(opDir);
-        }
-        const fn = opsUtil.getOpAbsoluteFileName(opName);
         const code = data.code;
         let returnedCode = code;
 
@@ -349,23 +346,8 @@ class ElectronApi
         {
             returnedCode = formatedCode;
         }
-        returnedCode = helper.removeTrailingSpaces(returnedCode);
-
-        filesUtil.runUnWatched(opName, () =>
-        {
-            fs.writeFileSync(fn, returnedCode);
-        });
-        const jsonFile = opsUtil.getOpJsonPath(opName);
-        let jsonData = jsonfile.readFileSync(jsonFile);
-        if (!jsonData) jsonData = {};
-        if (jsonData.updated) delete jsonData.updated;
-        jsonfile.writeFileSync(jsonFile, jsonData, {
-            "encoding": "utf-8",
-            "spaces": 4
-        });
-
+        returnedCode = opsUtil.updateOpCode(opName, settings.getCurrentUser(), returnedCode);
         doc.updateOpDocs(opName);
-        opsUtil.setOpDefaults(opName);
 
         return {
             "success": true,

@@ -6,7 +6,7 @@ import pako from "pako";
 import crypto from "crypto";
 import jsonfile from "jsonfile";
 import fs from "fs";
-import { fileURLToPath, pathToFileURL } from "url";
+import { fileURLToPath } from "url";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
