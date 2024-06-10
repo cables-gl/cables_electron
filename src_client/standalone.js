@@ -26,7 +26,7 @@ class CablesStandalone
     init()
     {
         this.editorIframe = document.getElementById("editorIframe");
-        let src = this._settings.uiDistPath + "/index.html" + window.location.search;
+        let src = this._path.join(this._settings.uiDistPath, "index.html") + window.location.search;
         if (window.location.hash)
         {
             src += window.location.hash;
