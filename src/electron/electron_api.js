@@ -874,7 +874,7 @@ class ElectronApi
     {
         const currentProjectDir = settings.getCurrentProjectDir();
         const opsDir = cables.getProjectOpsPath();
-        if (opsDir)
+        if (opsDir && fs.existsSync(opsDir))
         {
             const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
             const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
