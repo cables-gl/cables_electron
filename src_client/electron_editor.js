@@ -29,44 +29,39 @@ export default class ElectronEditor
             if (next) next(null, opts);
         });
 
-        this._talker.addEventListener(
-            "reload",
-            (options) =>
+        this._talker.addEventListener("reload", (options) =>
+        {
+            if (options && options.patchId)
             {
-                if (options && options.patchId)
-                {
-                    document.location.href = "/edit/" + options.patchId;
-                }
-                else
-                {
-                    document.location.reload();
-                }
-            });
+                document.location.href = "/edit/" + options.patchId;
+            }
+            else
+            {
+                document.location.reload();
+            }
+        });
 
-        this._talker.addEventListener(
-            "fileUploadStr",
-            (options, next) =>
-            {
-                window.ipcRenderer.invoke("talkerMessage", "fileUpload", options, {})
-                    .then((r) =>
-                    {
-                        this._talker.send("refreshFileManager");
-                        this._talker.send("fileUpdated", { "filename": options.filename });
-                        next(null, r);
-                    });
-            });
+        this._talker.addEventListener("fileUploadStr", (options, next) =>
+        {
+            window.ipcRenderer.invoke("talkerMessage", "fileUpload", options, {})
+                .then((r) =>
+                {
+                    const error = r && r.hasOwnProperty("error") ? r.error : null;
+                    this._talker.send("refreshFileManager");
+                    this._talker.send("fileUpdated", { "filename": options.filename });
+                    next(error, r);
+                });
+        });
 
-        this._talker.addEventListener(
-            "updateFile",
-            (options, next) =>
+        this._talker.addEventListener("updateFile", (options, next) =>
+        {
+            window.ipcRenderer.invoke("talkerMessage", "updateFile", options, {}).then((r) =>
             {
-                window.ipcRenderer.invoke("talkerMessage", "updateFile", options, {})
-                    .then((r) =>
-                    {
-                        next(null, r);
-                        this._talker.send("fileUpdated", { "filename": options.fileName });
-                    });
+                const error = r && r.hasOwnProperty("error") ? r.error : null;
+                next(error, r);
+                this._talker.send("fileUpdated", { "filename": options.fileName });
             });
+        });
 
         this._talkerTopics = {
             "getOpInfo": {},
@@ -105,30 +100,32 @@ export default class ElectronEditor
             "getOpTargetDirs": {},
             "openDir": {},
             "selectFile": {},
-            "setProjectName": { "needsProjectFile": true }
+            "setProjectName": { "needsProjectFile": true },
+            "collectAssets": { "needsProjectFile": true },
+            "collectOps": { "needsProjectFile": true }
         };
 
-        Object.keys(this._talkerTopics)
-            .forEach((talkerTopic) =>
+        Object.keys(this._talkerTopics).forEach((talkerTopic) =>
+        {
+            this._talker.addEventListener(talkerTopic, (data, next) =>
             {
-                this._talker.addEventListener(talkerTopic, (data, next) =>
+                const topicConfig = this._talkerTopics[talkerTopic];
+                window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig).then((r) =>
                 {
-                    const topicConfig = this._talkerTopics[talkerTopic];
-                    window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig)
-                        .then((r) =>
-                        {
-                            next(null, r);
-                        });
+                    const error = r && r.hasOwnProperty("error") ? r.error : null;
+                    next(error, r);
                 });
             });
+        });
     }
 
-    invoke(cmd, data, next)
+    api(cmd, data, next)
     {
         const topicConfig = this._talkerTopics[cmd];
         window.ipcRenderer.invoke("talkerMessage", cmd, data, topicConfig).then((r) =>
         {
-            next(null, r);
+            const error = r && r.hasOwnProperty("error") ? r.error : null;
+            next(error, r);
         });
     }
 }

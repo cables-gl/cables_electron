@@ -1,4 +1,4 @@
-import { protocol, session } from "electron";
+import { protocol, session, net } from "electron";
 import fs from "fs";
 import path from "path";
 
@@ -9,7 +9,7 @@ import opsUtil from "../utils/ops_util.js";
 import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
 import filesUtil from "../utils/files_util.js";
-import projectsUtil from "../utils/projects_util.js";
+import helper from "../utils/helper_util.js";
 
 protocol.registerSchemesAsPrivileged([{
     "scheme": "cables",
@@ -31,37 +31,45 @@ class ElectronEndpoint
         const partition = settings.SESSION_PARTITION;
         const ses = session.fromPartition(partition, { "cache": false });
 
-        // ses.protocol.handle("file", (request) =>
-        // {
-        //     let actualFile = request.url.replace("file://", "");
-        //     try
-        //     {
-        //         const url = new URL(request.url);
-        //         if (url.searchParams.size > 0)
-        //         {
-        //             const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
-        //             if (!fs.existsSync(paramsFile))
-        //             {
-        //                 actualFile = url.pathname.replace("//", "/");
-        //             }
-        //         }
-        //         actualFile = decodeURI(actualFile);
-        //         if (fs.existsSync(actualFile))
-        //         {
-        //             return net.fetch("file://" + actualFile, { "bypassCustomProtocolHandlers": true });
-        //         }
-        //         else
-        //         {
-        //             return new Response(null, {
-        //                 "headers": { "status": 404 }
-        //             });
-        //         }
-        //     }
-        //     catch (e)
-        //     {
-        //         return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
-        //     }
-        // });
+        ses.protocol.handle("file", (request) =>
+        {
+            let urlFile = request.url;
+            let actualFile = helper.fileURLToPath(urlFile, true);
+            if (fs.existsSync(actualFile))
+            {
+                return net.fetch(helper.pathToFileURL(actualFile).href, { "bypassCustomProtocolHandlers": true });
+            }
+            else
+            {
+                try
+                {
+                    const url = new URL(request.url);
+                    if (url.searchParams.size > 0)
+                    {
+                        const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
+                        if (!fs.existsSync(paramsFile))
+                        {
+                            actualFile = url.pathname.replace("//", "/");
+                        }
+                    }
+                    actualFile = decodeURI(actualFile);
+                    if (fs.existsSync(actualFile))
+                    {
+                        return net.fetch(helper.pathToFileURL(actualFile));
+                    }
+                    else
+                    {
+                        return new Response(null, {
+                            "headers": { "status": 404 }
+                        });
+                    }
+                }
+                catch (e)
+                {
+                    return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
+                }
+            }
+        });
 
         ses.protocol.handle("cables", (request) =>
         {

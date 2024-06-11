@@ -1,46 +1,56 @@
 import { utilProvider, SharedLogger } from "cables-shared-api";
+import log from "electron-log/main.js";
 
 class Logger extends SharedLogger
 {
+    constructor(provider)
+    {
+        super(provider);
+        const logFormat = "[electron-{processType}] {d}:{m}:{y} {h}:{i}:{s} {text}";
+        log.initialize();
+        log.transports.console.format = logFormat;
+        log.transports.file.format = logFormat;
+        log.transports.ipc.level = "debug";
+    }
+
     debug(...args)
     {
-        this._logConsole("electron - " + this._initiator, "debug", this._getContext(), args);
+        log.debug("[" + this._initiator + "]", "DEBUG", args.join(" "));
     }
 
     endTime(...args)
     {
-        this._logConsole("electron - " + this._initiator, "endTime", this._getContext(), args);
+        super.endTime("[" + this._initiator + "]", args.join(" "));
     }
 
     error(...args)
     {
-        this._logConsole("electron - " + this._initiator, "error", this._getContext(), args);
+        log.error("[" + this._initiator + "]", "ERROR", args.join(" "), this._getContext());
     }
 
     info(...args)
     {
-        // eslint-disable-next-line no-caller
-        this._logConsole("electron - " + this._initiator, "info", this._getContext(), args);
+        log.info("[" + this._initiator + "]", args.join(" "));
     }
 
     startTime(...args)
     {
-        this._logConsole("electron - " + this._initiator, "startTime", this._getContext(), args);
+        super.startTime("[" + this._initiator + "]", "startTime", args.join(" "));
     }
 
     uncaught(...args)
     {
-        this._logConsole("electron - " + this._initiator, "uncaught", this._getContext(), args);
+        log.error("[" + this._initiator + "]", "UNCAUGHT", args.join(" "), this._getContext());
     }
 
     verbose(...args)
     {
-        this._logConsole("electron - " + this._initiator, "verbose", this._getContext(), args);
+        log.verbose("[" + this._initiator + "]", args.join(" "));
     }
 
     warn(...args)
     {
-        this._logConsole("electron - " + this._initiator, "warn", this._getContext(), args);
+        log.warn("[" + this._initiator + "]", "WARN", args.join(" "));
     }
 }
 

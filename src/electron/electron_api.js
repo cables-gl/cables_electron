@@ -2,10 +2,8 @@ import { ipcMain, shell } from "electron";
 import fs from "fs";
 import path from "path";
 import { marked } from "marked";
-import jsonfile from "jsonfile";
 import mkdirp from "mkdirp";
 
-import { fileURLToPath, pathToFileURL } from "url";
 import { execaSync } from "execa";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
@@ -29,7 +27,14 @@ class ElectronApi
     {
         ipcMain.handle("talkerMessage", async (event, cmd, data, topicConfig = {}) =>
         {
-            return this.talkerMessage(cmd, data, topicConfig);
+            try
+            {
+                return this.talkerMessage(cmd, data, topicConfig);
+            }
+            catch (e)
+            {
+                return this.error(e.message, e);
+            }
         });
 
         ipcMain.on("settings", (event, cmd, data) =>
@@ -46,7 +51,7 @@ class ElectronApi
     async talkerMessage(cmd, data, topicConfig = {})
     {
         let response = null;
-        if (!cmd) return null;
+        if (!cmd) return this.error("UNKNOWN_COMMAND");
         if (typeof this[cmd] === "function")
         {
             if (topicConfig.needsProjectFile)
@@ -63,11 +68,15 @@ class ElectronApi
                     }
                     else
                     {
-                        return { "error": true, "msg": "no project dir chosen" };
+                        return this.error("no project dir chosen");
                     }
                 }
             }
             return this[cmd](data);
+        }
+        else
+        {
+            this._log.warn("no method for talkerMessage", cmd);
         }
         return response;
     }
@@ -84,13 +93,13 @@ class ElectronApi
             {
                 const result = { "warns": warns };
                 result.attachmentFiles = opsUtil.getAttachmentFiles(name);
-                return result;
+                return this.success(result, true);
             }
             else
             {
                 const result = { "warns": warns };
                 result.attachmentFiles = [];
-                return result;
+                return this.success(result, true);
             }
         }
         catch (e)
@@ -98,7 +107,7 @@ class ElectronApi
             this._log.warn("error when getting opinfo", name, e.message);
             const result = { "warns": warns };
             result.attachmentFiles = [];
-            return result;
+            return this.success(result, true);
         }
     }
 
@@ -113,7 +122,7 @@ class ElectronApi
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
         settings.loadProject(currentProject);
-        return re;
+        return this.success(re, true);
     }
 
     getPatch()
@@ -140,13 +149,13 @@ class ElectronApi
         currentProject.summary = currentProject.summary || {};
         currentProject.summary.title = currentProject.name;
         currentProject.summary.allowEdit = true;
-        return currentProject;
+        return this.success(currentProject, true);
     }
 
     async newPatch()
     {
         electronApp.openPatch();
-        return true;
+        return this.success(true, true);
     }
 
     fileUpload(data)
@@ -158,7 +167,8 @@ class ElectronApi
             return;
         }
         const buffer = Buffer.from(data.fileStr.split(",")[1], "base64");
-        return fs.writeFileSync(path.join(target, data.filename), buffer);
+        fs.writeFileSync(path.join(target, data.filename), buffer);
+        return this.success(true, true);
     }
 
     async getAllProjectOps()
@@ -170,7 +180,7 @@ class ElectronApi
 
         if (!project)
         {
-            return opDocs;
+            return this.success(opDocs, true);
         }
 
         let projectOps = [];
@@ -232,7 +242,7 @@ class ElectronApi
         opsUtil.addVersionInfoToOps(opDocs);
 
         opDocs = doc.makeReadable(opDocs);
-        return opDocs;
+        return this.success(opDocs, true);
     }
 
 
@@ -285,13 +295,13 @@ class ElectronApi
             }
         }
 
-        return {
+        return this.success({
             "opDocs": cleanDocs,
             "extensions": extensions,
             "teamNamespaces": [],
             "libs": libs,
             "coreLibs": coreLibs
-        };
+        }, true);
     }
 
     getOpDocs(data)
@@ -313,7 +323,7 @@ class ElectronApi
         result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
         const c = doc.getOpDocMd(opName);
         if (c) result.content = marked(c || "");
-        return result;
+        return this.success(opDocs, true);
     }
 
     saveOpCode(data)
@@ -349,10 +359,7 @@ class ElectronApi
         returnedCode = opsUtil.updateOpCode(opName, settings.getCurrentUser(), returnedCode);
         doc.updateOpDocs(opName);
 
-        return {
-            "success": true,
-            "opFullCode": returnedCode
-        };
+        return this.success({ "opFullCode": returnedCode }, true);
     }
 
     getOpCode(data)
@@ -361,26 +368,26 @@ class ElectronApi
         if (opsUtil.opExists(opName))
         {
             let code = opsUtil.getOpCode(opName);
-            return {
+            return this.success({
                 "name": opName,
                 "id": data.opId,
                 "code": code
-            };
+            }, true);
         }
         else
         {
             let code = "//empty file...";
-            return {
+            return this.success({
                 "name": opName,
                 "id": null,
                 "code": code
-            };
+            }, true);
         }
     }
 
     getBuildInfo()
     {
-        return settings.getBuildInfo();
+        return this.success(settings.getBuildInfo(), true);
     }
 
     formatOpCode(data)
@@ -410,17 +417,15 @@ class ElectronApi
             //     };
             // }
 
-            return {
-                "opFullCode": code,
-                "success": true
-            };
+            return this.success({
+                "opFullCode": code
+            });
         }
         else
         {
-            return {
-                "opFullCode": "",
-                "success": true
-            };
+            return this.success({
+                "opFullCode": ""
+            });
         }
     }
 
@@ -437,23 +442,23 @@ class ElectronApi
         const project = settings.getCurrentProject();
         if (project)
         {
-            return {
+            return this.success({
                 "updated": project.updated,
                 "updatedByUser": project.updatedByUser,
                 "buildInfo": project.buildInfo,
                 "maintenance": false,
                 "disallowSave": false
-            };
+            }, true);
         }
         else
         {
-            return {
+            return this.success({
                 "updated": "",
                 "updatedByUser": "",
                 "buildInfo": settings.getBuildInfo(),
                 "maintenance": false,
                 "disallowSave": false
-            };
+            }, true);
         }
     }
 
@@ -462,7 +467,7 @@ class ElectronApi
         const obj = {};
         obj.items = [];
         obj.ts = Date.now();
-        return obj;
+        return this.success(obj, true);
     }
 
     opAttachmentSave(data)
@@ -470,7 +475,7 @@ class ElectronApi
         let opName = data.opname;
         if (opsUtil.isOpId(data.opname)) opName = opsUtil.getOpNameById(data.opname);
         const result = opsUtil.updateAttachment(opName, data.name, data.content, false);
-        return true;
+        return this.success(result, true);
     }
 
     setIconSaved()
@@ -495,9 +500,9 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         if (!currentProject || !data || !data.screenshot)
         {
-            return;
+            return this.error("NO_PROJECT");
         }
-        return projectsUtil.saveProjectScreenshot(currentProject, data.screenshot);
+        return this.success(projectsUtil.saveProjectScreenshot(currentProject, data.screenshot), true);
     }
 
     getFilelist(data)
@@ -506,23 +511,23 @@ class ElectronApi
         switch (data.source)
         {
         case "patch":
-            files = this._getPatchFiles();
+            files = filesUtil.getPatchFiles();
             break;
         case "lib":
-            files = this._getLibraryFiles();
+            files = filesUtil.getLibraryFiles();
             break;
         default:
             files = [];
             break;
         }
-        return files;
+        return this.success(files, true);
     }
 
     getFileDetails(data)
     {
-        let filePath = fileURLToPath(data.filename);
+        let filePath = helper.fileURLToPath(data.filename);
         const fileDb = filesUtil.getFileDb(filePath, settings.getCurrentProject(), settings.getCurrentUser());
-        return filesUtil.getFileInfo(fileDb);
+        return this.success(filesUtil.getFileInfo(fileDb), true);
     }
 
     getLibraryFileInfo(data)
@@ -536,7 +541,7 @@ class ElectronApi
 
         if (!fs.existsSync(finalPath))
         {
-            return {};
+            return this.success({}, true);
         }
         else
         {
@@ -547,12 +552,12 @@ class ElectronApi
 
             if (filename === "")
             {
-                return {};
+                return this.success({}, true);
             }
             else
             {
                 const fileInfo = JSON.parse(fs.readFileSync(filename));
-                return fileInfo;
+                return this.success(fileInfo, true);
             }
         }
     }
@@ -565,163 +570,419 @@ class ElectronApi
         const currentUser = settings.getCurrentUser();
         const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, false, data.opTargetDir);
         result.checkedName = newName;
-        return result;
+        return this.success(result, true);
     }
 
-    _getPatchFiles()
+    getRecentPatches()
     {
-        const arr = [];
-        const fileHierarchy = {};
-
-        const project = settings.getCurrentProject();
-        if (!project) return arr;
-
-        const projectDir = settings.getCurrentProjectDir();
-        const fileNames = projectsUtil.getUsedAssetFilenames(project);
-        fileNames.forEach((fileName) =>
+        const recents = settings.getRecentProjects();
+        Object.keys(recents).forEach((projectFile) =>
         {
-            let type = "unknown";
-            if (fileName.endsWith("jpg") || fileName.endsWith("png") || fileName.endsWith("jpeg")) type = "image";
-            else if (fileName.endsWith("mp3") || fileName.endsWith("ogg") || fileName.endsWith("wav")) type = "audio";
-            else if (fileName.endsWith("3d.json")) type = "3d json";
-            else if (fileName.endsWith("json")) type = "json";
-            else if (fileName.endsWith("mp4")) type = "video";
-
-            let dirName = path.join(path.dirname(fileName), "/");
-            dirName = dirName.replaceAll("\\", "/");
-
-            if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
-            const fileUrl = pathToFileURL(fileName);
-
-            const fileData = {
-                "d": false,
-                "n": path.basename(fileUrl.pathname),
-                "t": type,
-                "l": 0,
-                "p": fileUrl.href,
-                "type": type,
-                "updated": "bla"
-            };
-            fileData.icon = this._getFileIconName(fileData);
-
-            let stats = fs.statSync(fileName);
-            if (stats && stats.mtime)
+            if (fs.existsSync(projectFile))
             {
-                fileData.updated = new Date(stats.mtime).getTime();
+                const recent = recents[projectFile];
+                let screenShotFilename = projectsUtil.getScreenShotFileName(recent, "png");
+                if (!fs.existsSync(screenShotFilename)) screenShotFilename = path.join(cables.getUiDistPath(), "/img/placeholder_dark.png");
+                recent.thumbnail = screenShotFilename;
             }
-            fileHierarchy[dirName].push(fileData);
         });
-        const dirNames = Object.keys(fileHierarchy);
-        for (let dirName of dirNames)
+        return this.success(Object.values(recents).slice(0, 10), true);
+    }
+
+    opCreate(data)
+    {
+        let opName = data.opname;
+        const currentUser = settings.getCurrentUser();
+        const result = opsUtil.createOp(opName, currentUser, data.code, data.layout, data.libs, data.coreLibs, data.attachments, data.opTargetDir);
+        filesUtil.registerOpChangeListeners([opName]);
+
+        return this.success(result, true);
+    }
+
+    opUpdate(data)
+    {
+        const opName = data.opname;
+        const currentUser = settings.getCurrentUser();
+        return this.success({ "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) }, true);
+    }
+
+    opSaveLayout(data)
+    {
+        const layout = data.layout;
+        const opName = opsUtil.getOpNameById(data.opname) || layout.name;
+        return this.success(opsUtil.saveLayout(opName, layout), true);
+    }
+
+    opClone(data)
+    {
+        const newName = data.name;
+        const oldName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const currentUser = settings.getCurrentUser();
+        return this.success(opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir), true);
+    }
+
+    async installProjectDependencies()
+    {
+        const currentProjectDir = settings.getCurrentProjectDir();
+        const opsDir = cables.getProjectOpsPath();
+        if (opsDir && fs.existsSync(opsDir))
         {
-            let displayName = dirName;
-            if (dirName === projectDir)
+            const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
+            const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
+
+            let __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
+            __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
+            const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
+            this._log.debug("NPM", npm);
+
+            let toInstall = [];
+            fileNames.forEach((packageFile) =>
             {
-                displayName = "Project Directory";
+                const fileContents = packageFiles[packageFile];
+                const fileJson = JSON.parse(fileContents);
+                let deps = fileJson.dependencies || {};
+                let devDeps = fileJson.devDependencies || {};
+                const allDeps = { ...devDeps, ...deps };
+                Object.keys(allDeps).forEach((lib) =>
+                {
+                    if (lib)
+                    {
+                        const ver = allDeps[lib];
+                        if (ver)
+                        {
+                            const semVer = lib + "@" + ver;
+                            toInstall.push(semVer);
+                        }
+                    }
+                });
+            });
+            toInstall = helper.uniqueArray(toInstall);
+
+            if (toInstall.length > 0)
+            {
+                try
+                {
+                    return execaSync(npm, ["install", toInstall, "--legacy-peer-deps"], { "cwd": currentProjectDir });
+                }
+                catch (e)
+                {
+                    return { "stderr": e };
+                }
             }
-            else if (dirName.startsWith(projectDir))
+        }
+        return this.success({ "stdout": "nothing to install" }, true);
+    }
+
+    async openDir(options)
+    {
+        if (options && options.dir)
+        {
+            return this.success(shell.openPath(options.dir), true);
+        }
+    }
+
+    async openOpDir(options)
+    {
+        const opName = opsUtil.getOpNameById(options.opId) || options.opName;
+        if (!opName) return;
+        const opDir = opsUtil.getOpAbsoluteFileName(opName);
+        if (opDir)
+        {
+            return this.success(shell.showItemInFolder(opDir), true);
+        }
+    }
+
+    async openProjectDir()
+    {
+        const projectFile = settings.getCurrentProjectFile();
+        if (projectFile)
+        {
+            return this.success(shell.showItemInFolder(projectFile), true);
+        }
+    }
+
+    async openAssetDir(data)
+    {
+        let assetPath = cables.getAssetPath();
+
+        let assetUrl = null;
+        if (data)
+        {
+            assetUrl = data.url && data.url !== "0" ? data.url : null;
+        }
+        if (assetUrl)
+        {
+            try
             {
-                displayName = path.join(dirName.replace(projectDir, ""), "/");
+                assetPath = helper.fileURLToPath(assetUrl, true);
+            }
+            catch (e)
+            {
+                if (assetUrl.startsWith("./"))
+                {
+                    assetPath = path.join(settings.getCurrentProjectDir(), assetUrl);
+                }
+                else
+                {
+                    assetPath = path.resolve(assetUrl);
+                }
+            }
+        }
+        if (assetPath)
+        {
+            if (fs.existsSync(assetPath))
+            {
+                const stats = fs.statSync(assetPath);
+                if (stats.isDirectory())
+                {
+                    return this.success(shell.openPath(assetPath), true);
+                }
+                else
+                {
+                    return this.success(shell.showItemInFolder(assetPath), true);
+                }
             }
             else
             {
-                displayName = path.join(dirName, "/");
+                assetPath = path.dirname(assetPath);
+                return this.success(shell.openPath(assetPath), true);
             }
+        }
+    }
 
-            arr.push({
-                "d": true,
-                "n": displayName,
-                "t": "dir",
-                "l": 1,
-                "c": fileHierarchy[dirName],
-                "p": dirName
+    async selectFile(data)
+    {
+        let assetUrl = null;
+        if (data)
+        {
+            assetUrl = data.url && data.url !== "0" ? helper.fileURLToPath(data.url) : null;
+        }
+        return this.success(electronApp.pickFileDialog(assetUrl, true, data.filter), true);
+    }
+
+
+    checkNumAssetPatches()
+    {
+        return this.success({ "assets": [], "countPatches": 0, "countOps": 0 }, true);
+    }
+
+    async saveProjectAs()
+    {
+        const projectFile = await electronApp.saveProjectFileDialog();
+        if (!projectFile)
+        {
+            logger.error("no project dir chosen");
+            return this.error("UNKNOWN_PROJECT");
+        }
+
+        let collaborators = [];
+        let usersReadOnly = [];
+
+        const currentUser = settings.getCurrentUser();
+        const origProject = settings.getCurrentProject();
+        origProject._id = helper.generateRandomId();
+        origProject.name = path.basename(projectFile);
+        origProject.summary = origProject.summary || {};
+        origProject.summary.title = origProject.name;
+        origProject.userId = currentUser._id;
+        origProject.cachedUsername = currentUser.username;
+        origProject.created = Date.now();
+        origProject.cloneOf = origProject._id;
+        origProject.updated = Date.now();
+        origProject.users = collaborators;
+        origProject.usersReadOnly = usersReadOnly;
+        origProject.visibility = "private";
+        origProject.shortId = helper.generateShortId(origProject._id, Date.now());
+        projectsUtil.writeProjectToFile(projectFile, origProject);
+        settings.loadProject(settings.getCurrentProjectFile());
+        electronApp.reload();
+        return this.success(origProject, true);
+    }
+
+    async gotoPatch(data)
+    {
+        const recent = settings.getRecentProjects();
+        let project = null;
+        let projectFile = null;
+        if (data && data.id)
+        {
+            for (const key in recent)
+            {
+                const p = recent[key];
+                if (p && p.shortId === data.id)
+                {
+                    project = p;
+                    projectFile = key;
+                    break;
+                }
+            }
+        }
+        if (project && projectFile)
+        {
+            settings.loadProject(projectFile);
+            electronApp.openPatch(projectFile);
+            return this.success(true, true);
+        }
+        else
+        {
+            return this.success(await electronApp.pickProjectFileDialog(), true);
+        }
+    }
+
+    updateFile(data)
+    {
+        this._log.info("file edit...");
+        if (!data || !data.fileName)
+        {
+            return this.error("UNKNOWN_FILE");
+        }
+
+
+        const project = settings.getCurrentProject();
+        const newPath = path.join(projectsUtil.getAssetPath(project._id), "/");
+        if (!fs.existsSync(newPath)) mkdirp.sync(newPath);
+
+        const sanitizedFileName = filesUtil.realSanitizeFilename(data.fileName);
+
+        try
+        {
+            if (fs.existsSync(newPath + sanitizedFileName))
+            {
+                this._log.info("delete old file ", sanitizedFileName);
+                fs.unlinkSync(newPath + sanitizedFileName);
+            }
+        }
+        catch (e) {}
+
+        this._log.info("edit file", newPath + sanitizedFileName);
+
+        fs.writeFileSync(newPath + sanitizedFileName, data.content);
+        return this.success({ "success": true, "filename": sanitizedFileName }, true);
+    }
+
+    async setProjectUpdated()
+    {
+        const now = Date.now();
+        const project = settings.getCurrentProject();
+        project.updated = now;
+        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
+        return this.success({ "data": project }, true);
+    }
+
+    getOpTargetDirs()
+    {
+        return this.success(opsUtil.getOpTargetDirs(settings.getCurrentProject()), true);
+    }
+
+    async addProjectOpDir()
+    {
+        const project = settings.getCurrentProject();
+        if (!project) return;
+        const opDir = await electronApp.pickOpDirDialog();
+        if (opDir)
+        {
+            if (!project.dirs) project.dirs = {};
+            if (!project.dirs.ops) project.dirs.ops = [];
+            project.dirs.ops.unshift(opDir);
+            return this.success(projectsUtil.getProjectOpDirs(project, false), true);
+        }
+        else
+        {
+            logger.error("no project dir chosen");
+            return this.error("no project dir chosen", []);
+        }
+    }
+
+    setProjectName(options)
+    {
+        const oldFile = settings.getCurrentProjectFile();
+        let project = settings.getCurrentProject();
+        project.name = options.name;
+        const newFile = path.join(settings.getCurrentProjectDir(), projectsUtil.getProjectFileName(project));
+        project.name = path.basename(newFile);
+        project.summary = project.summary || {};
+        project.summary.title = project.name;
+        fs.renameSync(oldFile, newFile);
+        settings.replaceInRecentPatches(oldFile, newFile);
+        projectsUtil.writeProjectToFile(newFile, project);
+        settings.loadProject(newFile);
+        electronApp.updateTitle();
+        return this.success({ "name": project.name });
+    }
+
+    cycleFullscreen()
+    {
+        electronApp.cycleFullscreen();
+    }
+
+    collectAssets()
+    {
+        const currentProject = settings.getCurrentProject();
+        const assetFilenames = projectsUtil.getUsedAssetFilenames(currentProject, true);
+        const oldNew = {};
+        const projectAssetPath = cables.getAssetPath();
+        assetFilenames.forEach((oldFile) =>
+        {
+            const oldUrl = helper.pathToFileURL(oldFile);
+            if (!oldNew.hasOwnProperty(oldUrl) && fs.existsSync(oldFile))
+            {
+                const baseName = path.basename(oldFile);
+                const newName = this._findNewAssetFilename(projectAssetPath, baseName);
+                const newLocation = path.join(projectAssetPath, newName);
+                fs.copyFileSync(oldFile, newLocation);
+                oldNew[oldUrl] = "file://./" + newName;
+            }
+        });
+        this._log.debug("collectAssets", oldNew);
+        return this.success(oldNew);
+    }
+
+    collectOps()
+    {
+        const currentProject = settings.getCurrentProject();
+        const movedOps = {};
+        const allOpNames = [];
+        if (currentProject && currentProject.ops)
+        {
+            currentProject.ops.forEach((op) =>
+            {
+                const opName = opsUtil.getOpNameById(op.opId);
+                allOpNames.push(opName);
+                if (!movedOps.hasOwnProperty(opName))
+                {
+                    const opPath = opsUtil.getOpAbsolutePath(opName);
+                    if (!opPath.startsWith(cables.getOpsPath()))
+                    {
+                        const targetPath = opsUtil.getOpTargetDir(opName, true);
+                        const newOpLocation = path.join(cables.getProjectOpsPath(true), targetPath);
+                        if (opPath !== newOpLocation)
+                        {
+                            fs.cpSync(opPath, newOpLocation, { "recursive": true });
+                            movedOps[opName] = newOpLocation;
+                        }
+                    }
+                }
             });
         }
-        return arr;
+        filesUtil.registerOpChangeListeners(allOpNames, true);
+        return this.success(movedOps);
     }
 
-    _getLibraryFiles()
+    success(data, raw = false)
     {
-        const p = cables.getAssetLibraryPath();
-        return this._readAssetDir(0, p, p);
-    }
-
-    _getFileIconName(fileDb)
-    {
-        let icon = "file";
-
-        if (fileDb.type === "SVG") icon = "pen-tool";
-        else if (fileDb.type === "image") icon = "image";
-        else if (fileDb.type === "gltf" || fileDb.type === "3d json") icon = "cube";
-        else if (fileDb.type === "video") icon = "film";
-        else if (fileDb.type === "font") icon = "type";
-        else if (fileDb.type === "JSON") icon = "code";
-        else if (fileDb.type === "audio") icon = "headphones";
-
-        return icon;
-    }
-
-    _readAssetDir(lvl, filePath, origPath, urlPrefix = "")
-    {
-        const arr = [];
-        if (!fs.existsSync(filePath))
+        if (raw)
         {
-            this._log.error("could not find library assets at", filePath, "check your cables_env_local.json");
-            return arr;
+            return data;
         }
-        const files = fs.readdirSync(filePath);
-        for (const i in files)
+        else
         {
-            const fullPath = path.join(filePath, "/", files[i]);
-            const urlPath = pathToFileURL(fullPath).href;
-
-            if (files[i] && !files[i].startsWith("."))
-            {
-                const s = fs.statSync(fullPath);
-                if (s.isDirectory() && fs.readdirSync(fullPath).length > 0)
-                {
-                    arr.push({
-                        "d": true,
-                        "n": files[i],
-                        "t": "dir",
-                        "l": lvl,
-                        "c": this._readAssetDir(lvl + 1, path.join(fullPath, "/"), origPath, urlPrefix),
-                        "p": urlPath,
-                        "isLibraryFile": true
-                    });
-                }
-                else if (files[i].toLowerCase().endsWith(".fileinfo.json")) continue;
-                else
-                {
-                    let type = "unknown";
-                    if (files[i].endsWith("jpg") || files[i].endsWith("png") || files[i].endsWith("jpeg")) type = "image";
-                    else if (files[i].endsWith("mp3") || files[i].endsWith("ogg") || files[i].endsWith("wav")) type = "audio";
-                    else if (files[i].endsWith("3d.json")) type = "3d json";
-                    else if (files[i].endsWith("json")) type = "json";
-                    else if (files[i].endsWith("mp4")) type = "video";
-
-                    const fileData = {
-                        "d": false,
-                        "n": files[i],
-                        "t": type,
-                        "l": lvl,
-                        "p": urlPath,
-                        "type": type,
-                        "updated": "bla",
-                        "isLibraryFile": true
-                    };
-                    fileData.icon = this._getFileIconName(fileData);
-                    let stats = fs.statSync(fullPath);
-                    if (stats && stats.mtime)
-                    {
-                        fileData.updated = new Date(stats.mtime).getTime();
-                    }
-
-                    arr.push(fileData);
-                }
-            }
+            return { "success": true, "data": data };
         }
-        return arr;
+    }
+
+    error(msg, data)
+    {
+        return { "error": true, "msg": msg, "data": data };
     }
 
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false, targetDir = false)
@@ -822,346 +1083,17 @@ class ElectronApi
         return result;
     }
 
-    getRecentPatches()
+    _findNewAssetFilename(targetDir, fileName)
     {
-        const recents = settings.getRecentProjects();
-        Object.keys(recents).forEach((projectFile) =>
+        let fileInfo = path.parse(fileName);
+        let newName = fileName;
+        let counter = 1;
+        while (fs.existsSync(path.join(targetDir, newName)))
         {
-            if (fs.existsSync(projectFile))
-            {
-                const recent = recents[projectFile];
-                let screenShotFilename = projectsUtil.getScreenShotFileName(recent, "png");
-                if (!fs.existsSync(screenShotFilename)) screenShotFilename = path.join(cables.getUiDistPath(), "/img/placeholder_dark.png");
-                recent.thumbnail = screenShotFilename;
-            }
-        });
-        return Object.values(recents).slice(0, 10);
-    }
-
-    opCreate(data)
-    {
-        let opName = data.opname;
-        const currentUser = settings.getCurrentUser();
-        const result = opsUtil.createOp(opName, currentUser, data.code, data.layout, data.libs, data.coreLibs, data.attachments, data.opTargetDir);
-        filesUtil.registerOpChangeListeners([opName]);
-
-        return result;
-    }
-
-    opUpdate(data)
-    {
-        const opName = data.opname;
-        const currentUser = settings.getCurrentUser();
-        return { "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) };
-    }
-
-    opSaveLayout(data)
-    {
-        const layout = data.layout;
-        const opName = opsUtil.getOpNameById(data.opname) || layout.name;
-        return opsUtil.saveLayout(opName, layout);
-    }
-
-    opClone(data)
-    {
-        const newName = data.name;
-        const oldName = opsUtil.getOpNameById(data.opname) || data.opname;
-        const currentUser = settings.getCurrentUser();
-        return opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir);
-    }
-
-    async installProjectDependencies()
-    {
-        const currentProjectDir = settings.getCurrentProjectDir();
-        const opsDir = cables.getProjectOpsPath();
-        if (opsDir && fs.existsSync(opsDir))
-        {
-            const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
-            const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
-
-            let __dirname = fileURLToPath(new URL(".", import.meta.url));
-            __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
-            const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
-            this._log.debug("NPM", npm);
-
-            let toInstall = [];
-            fileNames.forEach((packageFile) =>
-            {
-                const fileContents = packageFiles[packageFile];
-                const fileJson = JSON.parse(fileContents);
-                let deps = fileJson.dependencies || {};
-                let devDeps = fileJson.devDependencies || {};
-                const allDeps = { ...devDeps, ...deps };
-                Object.keys(allDeps).forEach((lib) =>
-                {
-                    if (lib)
-                    {
-                        const ver = allDeps[lib];
-                        if (ver)
-                        {
-                            const semVer = lib + "@" + ver;
-                            toInstall.push(semVer);
-                        }
-                    }
-                });
-            });
-            toInstall = helper.uniqueArray(toInstall);
-
-            if (toInstall.length > 0)
-            {
-                try
-                {
-                    return execaSync(npm, ["install", toInstall, "--legacy-peer-deps"], { "cwd": currentProjectDir });
-                }
-                catch (e)
-                {
-                    return { "stderr": e };
-                }
-            }
+            newName = path.format({ "name": fileInfo.name + "_" + counter, "ext": fileInfo.ext });
+            counter++;
         }
-        return { "stdout": "nothing to install" };
-    }
-
-    async openDir(options)
-    {
-        if (options && options.dir)
-        {
-            return shell.openPath(options.dir);
-        }
-    }
-
-    async openOpDir(options)
-    {
-        const opName = opsUtil.getOpNameById(options.opId) || options.opName;
-        if (!opName) return;
-        const opDir = opsUtil.getOpAbsoluteFileName(opName);
-        if (opDir)
-        {
-            return shell.showItemInFolder(opDir);
-        }
-    }
-
-    async openProjectDir()
-    {
-        const projectFile = settings.getCurrentProjectFile();
-        if (projectFile)
-        {
-            return shell.showItemInFolder(projectFile);
-        }
-    }
-
-    async openAssetDir(data)
-    {
-        let assetPath = cables.getAssetPath();
-
-        let assetUrl = null;
-        if (data)
-        {
-            assetUrl = data.url && data.url !== "0" ? data.url : null;
-        }
-        if (assetUrl)
-        {
-            try
-            {
-                assetPath = fileURLToPath(assetUrl);
-            }
-            catch (e)
-            {
-                if (assetUrl.startsWith("./"))
-                {
-                    assetPath = path.join(settings.getCurrentProjectDir(), assetUrl);
-                }
-                else
-                {
-                    assetPath = path.resolve(assetUrl);
-                }
-            }
-        }
-        if (assetPath)
-        {
-            if (fs.existsSync(assetPath))
-            {
-                const stats = fs.statSync(assetPath);
-                if (stats.isDirectory())
-                {
-                    return shell.openPath(assetPath);
-                }
-                else
-                {
-                    shell.showItemInFolder(assetPath);
-                }
-            }
-            else
-            {
-                assetPath = path.dirname(assetPath);
-                return shell.openPath(assetPath);
-            }
-        }
-    }
-
-    async selectFile(data)
-    {
-        let assetUrl = null;
-        if (data)
-        {
-            assetUrl = data.url && data.url !== "0" ? fileURLToPath(data.url) : null;
-        }
-        return electronApp.pickFileDialog(assetUrl, true, data.filter);
-    }
-
-
-    checkNumAssetPatches()
-    {
-        return { "assets": [], "countPatches": 0, "countOps": 0 };
-    }
-
-    async saveProjectAs()
-    {
-        const projectFile = await electronApp.saveProjectFileDialog();
-        if (!projectFile)
-        {
-            logger.error("no project dir chosen");
-            return null;
-        }
-
-        let collaborators = [];
-        let usersReadOnly = [];
-
-        const currentUser = settings.getCurrentUser();
-        const origProject = settings.getCurrentProject();
-        origProject._id = helper.generateRandomId();
-        origProject.name = path.basename(projectFile);
-        origProject.summary = origProject.summary || {};
-        origProject.summary.title = origProject.name;
-        origProject.userId = currentUser._id;
-        origProject.cachedUsername = currentUser.username;
-        origProject.created = Date.now();
-        origProject.cloneOf = origProject._id;
-        origProject.updated = Date.now();
-        origProject.users = collaborators;
-        origProject.usersReadOnly = usersReadOnly;
-        origProject.visibility = "private";
-        origProject.shortId = helper.generateShortId(origProject._id, Date.now());
-        projectsUtil.writeProjectToFile(projectFile, origProject);
-        settings.loadProject(settings.getCurrentProjectFile());
-        electronApp.reload();
-        return origProject;
-    }
-
-    async gotoPatch(data)
-    {
-        const recent = settings.getRecentProjects();
-        let project = null;
-        let projectFile = null;
-        if (data && data.id)
-        {
-            for (const key in recent)
-            {
-                const p = recent[key];
-                if (p && p.shortId === data.id)
-                {
-                    project = p;
-                    projectFile = key;
-                    break;
-                }
-            }
-        }
-        if (project && projectFile)
-        {
-            settings.loadProject(projectFile);
-            electronApp.openPatch(projectFile);
-            return null;
-        }
-        else
-        {
-            return await electronApp.pickProjectFileDialog();
-        }
-    }
-
-    updateFile(data)
-    {
-        this._log.info("file edit...");
-        if (!data || !data.fileName)
-        {
-            return;
-        }
-
-
-        const project = settings.getCurrentProject();
-        const newPath = path.join(projectsUtil.getAssetPath(project._id), "/");
-        if (!fs.existsSync(newPath)) mkdirp.sync(newPath);
-
-        const sanitizedFileName = filesUtil.realSanitizeFilename(data.fileName);
-
-        try
-        {
-            if (fs.existsSync(newPath + sanitizedFileName))
-            {
-                this._log.info("delete old file ", sanitizedFileName);
-                fs.unlinkSync(newPath + sanitizedFileName);
-            }
-        }
-        catch (e) {}
-
-        this._log.info("edit file", newPath + sanitizedFileName);
-
-        fs.writeFileSync(newPath + sanitizedFileName, data.content);
-        return { "success": true, "filename": sanitizedFileName };
-    }
-
-    async setProjectUpdated()
-    {
-        const now = Date.now();
-        const project = settings.getCurrentProject();
-        project.updated = now;
-        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
-        return { "data": project };
-    }
-
-    getOpTargetDirs()
-    {
-        return opsUtil.getOpTargetDirs(settings.getCurrentProject());
-    }
-
-    async addProjectOpDir()
-    {
-        const project = settings.getCurrentProject();
-        if (!project) return;
-        const opDir = await electronApp.pickOpDirDialog();
-        if (opDir)
-        {
-            if (!project.dirs) project.dirs = {};
-            if (!project.dirs.ops) project.dirs.ops = [];
-            project.dirs.ops.unshift(opDir);
-            return projectsUtil.getProjectOpDirs(project, false);
-        }
-        else
-        {
-            logger.error("no project dir chosen");
-            return [];
-        }
-    }
-
-    setProjectName(options)
-    {
-        const oldFile = settings.getCurrentProjectFile();
-        let project = settings.getCurrentProject();
-        project.name = options.name;
-        const newFile = path.join(settings.getCurrentProjectDir(), projectsUtil.getProjectFileName(project));
-        project.name = path.basename(newFile);
-        project.summary = project.summary || {};
-        project.summary.title = project.name;
-        fs.renameSync(oldFile, newFile);
-        settings.replaceInRecentPatches(oldFile, newFile);
-        projectsUtil.writeProjectToFile(newFile, project);
-        settings.loadProject(newFile);
-        electronApp.updateTitle();
-        return { "data": { "name": project.name } };
-    }
-
-    cycleFullscreen()
-    {
-        electronApp.cycleFullscreen();
+        return newName;
     }
 }
 

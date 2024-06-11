@@ -12,7 +12,7 @@ import projectsUtil from "../utils/projects_util.js";
 import filesUtil from "../utils/files_util.js";
 
 app.commandLine.appendSwitch("disable-http-cache");
-logger.debug("--- starting");
+logger.info("--- starting");
 
 class ElectronApp
 {

@@ -6,7 +6,6 @@ import pako from "pako";
 import crypto from "crypto";
 import jsonfile from "jsonfile";
 import fs from "fs";
-import { fileURLToPath } from "url";
 import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
@@ -152,7 +151,7 @@ class ProjectsUtil extends SharedProjectsUtil
             else if (fullPath.startsWith("file:"))
             {
                 fullPath = decodeURI(fullPath);
-                fullPath = fileURLToPath(fullPath);
+                fullPath = helper.fileURLToPath(fullPath, true);
             }
 
             if (fs.existsSync(fullPath))

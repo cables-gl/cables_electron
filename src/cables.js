@@ -4,8 +4,8 @@ import { app } from "electron";
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
-import { fileURLToPath } from "url";
 import settings from "./electron/electron_settings.js";
+import helper from "./utils/helper_util.js";
 
 class CablesElectron extends Cables
 {
@@ -79,10 +79,12 @@ class CablesElectron extends Cables
         return path.join(settings.getCurrentProjectDir(), "/ops/", this.PATCH_OPS_SUBDIR);
     }
 
-    getProjectOpsPath()
+    getProjectOpsPath(create = false)
     {
         if (!settings.getCurrentProjectDir()) return null;
-        return path.join(settings.getCurrentProjectDir(), "/ops/");
+        const opsPath = path.join(settings.getCurrentProjectDir(), "/ops/");
+        if (create && !fs.existsSync(opsPath)) mkdirp.sync(opsPath);
+        return opsPath;
     }
 
     getOsOpsDir()
@@ -101,7 +103,7 @@ class CablesElectron extends Cables
         if (!fs.existsSync(this.getOpLookupFile())) fs.writeFileSync(this.getOpLookupFile(), JSON.stringify({ "names": {}, "ids": {} }));
     }
 }
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
 const customConfig = process.env.npm_config_apiconfig;
 let configLocation = null;
 if (customConfig)

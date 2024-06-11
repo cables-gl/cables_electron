@@ -8,6 +8,7 @@ import cables from "../cables.js";
 import opsUtil from "./ops_util.js";
 import electronApp from "../electron/main.js";
 import projectsUtil from "./projects_util.js";
+import settings from "../electron/electron_settings.js";
 
 class FilesUtil extends SharedFilesUtil
 {
@@ -76,16 +77,18 @@ class FilesUtil extends SharedFilesUtil
         return returnValue;
     }
 
-    registerAssetChangeListeners(project)
+    registerAssetChangeListeners(project, removeOthers = false)
     {
         if (!project || !project.ops) return;
+        if (removeOthers) this._assetChangeWatcher.removeAllListeners();
         const fileNames = projectsUtil.getUsedAssetFilenames(project, true);
         this._assetChangeWatcher.add(fileNames);
     }
 
-    registerOpChangeListeners(opNames)
+    registerOpChangeListeners(opNames, removeOthers = true)
     {
         if (!opNames) return;
+        if (removeOthers) this._opChangeWatcher.removeAllListeners();
         const fileNames = [];
         opNames.forEach((opName) =>
         {
@@ -145,6 +148,162 @@ class FilesUtil extends SharedFilesUtil
         }
         const assetUrl = pathToFileURL(assetFilePath);
         return assetUrl.href;
+    }
+
+    getLibraryFiles()
+    {
+        const p = cables.getAssetLibraryPath();
+        return this.readAssetDir(0, p, p);
+    }
+
+    getFileIconName(fileDb)
+    {
+        let icon = "file";
+
+        if (fileDb.type === "SVG") icon = "pen-tool";
+        else if (fileDb.type === "image") icon = "image";
+        else if (fileDb.type === "gltf" || fileDb.type === "3d json") icon = "cube";
+        else if (fileDb.type === "video") icon = "film";
+        else if (fileDb.type === "font") icon = "type";
+        else if (fileDb.type === "JSON") icon = "code";
+        else if (fileDb.type === "audio") icon = "headphones";
+
+        return icon;
+    }
+
+    readAssetDir(lvl, filePath, origPath, urlPrefix = "")
+    {
+        const arr = [];
+        if (!fs.existsSync(filePath))
+        {
+            this._log.error("could not find library assets at", filePath, "check your cables_env_local.json");
+            return arr;
+        }
+        const files = fs.readdirSync(filePath);
+        for (const i in files)
+        {
+            const fullPath = path.join(filePath, "/", files[i]);
+            const urlPath = pathToFileURL(fullPath).href;
+
+            if (files[i] && !files[i].startsWith("."))
+            {
+                const s = fs.statSync(fullPath);
+                if (s.isDirectory() && fs.readdirSync(fullPath).length > 0)
+                {
+                    arr.push({
+                        "d": true,
+                        "n": files[i],
+                        "t": "dir",
+                        "l": lvl,
+                        "c": this.readAssetDir(lvl + 1, path.join(fullPath, "/"), origPath, urlPrefix),
+                        "p": urlPath,
+                        "isLibraryFile": true
+                    });
+                }
+                else if (files[i].toLowerCase().endsWith(".fileinfo.json")) continue;
+                else
+                {
+                    let type = "unknown";
+                    if (files[i].endsWith("jpg") || files[i].endsWith("png") || files[i].endsWith("jpeg")) type = "image";
+                    else if (files[i].endsWith("mp3") || files[i].endsWith("ogg") || files[i].endsWith("wav")) type = "audio";
+                    else if (files[i].endsWith("3d.json")) type = "3d json";
+                    else if (files[i].endsWith("json")) type = "json";
+                    else if (files[i].endsWith("mp4")) type = "video";
+
+                    const fileData = {
+                        "d": false,
+                        "n": files[i],
+                        "t": type,
+                        "l": lvl,
+                        "p": urlPath,
+                        "type": type,
+                        "updated": "bla",
+                        "isLibraryFile": true
+                    };
+                    fileData.icon = this.getFileIconName(fileData);
+                    let stats = fs.statSync(fullPath);
+                    if (stats && stats.mtime)
+                    {
+                        fileData.updated = new Date(stats.mtime).getTime();
+                    }
+
+                    arr.push(fileData);
+                }
+            }
+        }
+        return arr;
+    }
+
+    getPatchFiles()
+    {
+        const arr = [];
+        const fileHierarchy = {};
+
+        const project = settings.getCurrentProject();
+        if (!project) return arr;
+
+        const projectDir = settings.getCurrentProjectDir();
+        const fileNames = projectsUtil.getUsedAssetFilenames(project);
+        fileNames.forEach((fileName) =>
+        {
+            let type = "unknown";
+            if (fileName.endsWith("jpg") || fileName.endsWith("png") || fileName.endsWith("jpeg")) type = "image";
+            else if (fileName.endsWith("mp3") || fileName.endsWith("ogg") || fileName.endsWith("wav")) type = "audio";
+            else if (fileName.endsWith("3d.json")) type = "3d json";
+            else if (fileName.endsWith("json")) type = "json";
+            else if (fileName.endsWith("mp4")) type = "video";
+
+            let dirName = path.join(path.dirname(fileName), "/");
+            dirName = dirName.replaceAll("\\", "/");
+
+            if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
+            const fileUrl = pathToFileURL(fileName);
+
+            const fileData = {
+                "d": false,
+                "n": path.basename(fileUrl.pathname),
+                "t": type,
+                "l": 0,
+                "p": fileUrl.href,
+                "type": type,
+                "updated": "bla"
+            };
+            fileData.icon = this.getFileIconName(fileData);
+
+            let stats = fs.statSync(fileName);
+            if (stats && stats.mtime)
+            {
+                fileData.updated = new Date(stats.mtime).getTime();
+            }
+            fileHierarchy[dirName].push(fileData);
+        });
+        const dirNames = Object.keys(fileHierarchy);
+        for (let dirName of dirNames)
+        {
+            let displayName = dirName;
+            if (dirName === projectDir)
+            {
+                displayName = "Project Directory";
+            }
+            else if (dirName.startsWith(projectDir))
+            {
+                displayName = path.join(dirName.replace(projectDir, ""), "/");
+            }
+            else
+            {
+                displayName = path.join(dirName, "/");
+            }
+
+            arr.push({
+                "d": true,
+                "n": displayName,
+                "t": "dir",
+                "l": 1,
+                "c": fileHierarchy[dirName],
+                "p": dirName
+            });
+        }
+        return arr;
     }
 }
 

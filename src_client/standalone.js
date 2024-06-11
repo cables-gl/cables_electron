@@ -1,4 +1,4 @@
-import { Logger } from "cables-shared-client";
+import log from "electron-log/renderer.js";
 import ElectronEditor from "./electron_editor.js";
 import electronCommands from "./cmd_electron.js";
 
@@ -8,7 +8,13 @@ class CablesStandalone
     {
         this._path = window.nodeRequire("path");
         this._electron = window.nodeRequire("electron");
-        this._log = new Logger("standalone");
+        this._log = log;
+        const logFormat = "{text}";
+        this._log.initialize();
+        this._log.transports.console.format = logFormat;
+        this._log.transports.ipc.level = "debug";
+
+        Object.assign(console, this._log.functions);
 
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
         this._settings = this._electron.ipcRenderer.sendSync("settings");
@@ -37,6 +43,8 @@ class CablesStandalone
             const iframeWindow = this.editorIframe.contentWindow;
             if (iframeWindow && iframeWindow.loadjs)
             {
+                Object.assign(iframeWindow.console, this._log.functions);
+
                 iframeWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
                 iframeWindow.loadjs.ready("cablesuinew", this._uiReady.bind(this));
             }

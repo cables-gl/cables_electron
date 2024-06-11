@@ -109,7 +109,7 @@ class ElectronSettings
                 project = fs.readFileSync(projectFile);
                 project = JSON.parse(project.toString("utf-8"));
                 this._setCurrentProject(projectFile, project);
-                filesUtil.registerAssetChangeListeners(project);
+                filesUtil.registerAssetChangeListeners(project, true);
                 if (project.ops)
                 {
                     const opNames = [];
