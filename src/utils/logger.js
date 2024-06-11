@@ -7,6 +7,7 @@ class Logger extends SharedLogger
     {
         super(provider);
         const logFormat = "[electron-{processType}] {d}:{m}:{y} {h}:{i}:{s} {text}";
+        log.transports.file.maxSize = 20 * 1024 * 1024;
         log.initialize();
         log.transports.console.format = logFormat;
         log.transports.file.format = logFormat;
