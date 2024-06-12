@@ -3,6 +3,7 @@ import path from "path";
 import { pathToFileURL, fileURLToPath } from "url";
 import cables from "../cables.js";
 import settings from "../electron/electron_settings.js";
+import projectsUtil from "./projects_util.js";
 
 class HelperUtil extends SharedHelperUtil
 {
@@ -12,10 +13,12 @@ class HelperUtil extends SharedHelperUtil
         let fileUrl = decodeURI(url);
         if (convertRelativeToProject && this.isLocalAssetUrl(fileUrl))
         {
+            const currentProject = settings.getCurrentProject();
+            const assetPathUrl = projectsUtil.getAssetPathUrl(currentProject);
             let filePath = fileUrl.replace("file://./", "");
+            if (filePath.startsWith("./" + assetPathUrl)) filePath = filePath.replace("./" + assetPathUrl, "");
+            if (filePath.startsWith(assetPathUrl)) filePath = filePath.replace(assetPathUrl, "");
             filePath = filePath.replace("./", "");
-            if (filePath.startsWith("assets/")) filePath = filePath.replace("assets/", "");
-            if (filePath.startsWith("/assets/")) filePath = filePath.replace("/assets/", "");
             filePath = path.join(cables.getAssetPath(), filePath);
             fileUrl = pathToFileURL(filePath).href;
         }

@@ -25,6 +25,11 @@ class ProjectsUtil extends SharedProjectsUtil
         return cables.getAssetPath();
     }
 
+    getAssetPathUrl(projectId)
+    {
+        return "/assets/";
+    }
+
     getScreenShotPath(pId)
     {
         return path.join(app.getPath("userData"), "screenshots/");

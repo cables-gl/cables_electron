@@ -37,14 +37,21 @@ class ElectronApi
             }
         });
 
-        ipcMain.on("settings", (event, cmd, data) =>
+        ipcMain.on("settings", (event, _cmd, _data) =>
         {
             event.returnValue = settings.data;
         });
 
-        ipcMain.on("config", (event, cmd, data) =>
+        ipcMain.on("config", (event, _cmd, _data) =>
         {
             event.returnValue = cables.getConfig();
+        });
+
+        ipcMain.on("getOpDir", (event, data) =>
+        {
+            let opName = data.name;
+            if (!opName) opName = opsUtil.getOpNameById(data.opId);
+            event.returnValue = opsUtil.getOpAbsolutePath(opName);
         });
     }
 
@@ -115,7 +122,6 @@ class ElectronApi
     {
         const currentProject = settings.getCurrentProject();
         const re = {
-            "success": true,
             "msg": "PROJECT_SAVED"
         };
         projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject, patch);
@@ -381,14 +387,12 @@ class ElectronApi
             // }
 
             return this.success({
-                "success": true,
                 "opFullCode": code
             }, true);
         }
         else
         {
             return this.success({
-                "success": true,
                 "opFullCode": ""
             }, true);
         }
@@ -809,7 +813,7 @@ class ElectronApi
         this._log.info("edit file", newPath + sanitizedFileName);
 
         fs.writeFileSync(newPath + sanitizedFileName, data.content);
-        return this.success({ "success": true, "filename": sanitizedFileName }, true);
+        return this.success({ "filename": sanitizedFileName }, true);
     }
 
     async setProjectUpdated()
@@ -818,7 +822,7 @@ class ElectronApi
         const project = settings.getCurrentProject();
         project.updated = now;
         projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
-        return this.success({ "data": project }, true);
+        return this.success(project);
     }
 
     getOpTargetDirs()
@@ -882,7 +886,7 @@ class ElectronApi
                 const newName = this._findNewAssetFilename(projectAssetPath, baseName);
                 const newLocation = path.join(projectAssetPath, newName);
                 fs.copyFileSync(oldFile, newLocation);
-                oldNew[oldUrl] = path.join("/assets", newName);
+                oldNew[oldUrl] = path.join(projectsUtil.getAssetPathUrl(currentProject), newName);
             }
         });
         this._log.debug("collectAssets", oldNew);
@@ -924,6 +928,7 @@ class ElectronApi
     {
         if (raw)
         {
+            if (typeof data === "object") data.success = true;
             return data;
         }
         else

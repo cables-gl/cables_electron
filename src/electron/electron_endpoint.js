@@ -10,6 +10,7 @@ import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
 import filesUtil from "../utils/files_util.js";
 import helper from "../utils/helper_util.js";
+import projectsUtil from "../utils/projects_util.js";
 
 protocol.registerSchemesAsPrivileged([{
     "scheme": "cables",
@@ -173,7 +174,7 @@ class ElectronEndpoint
                     });
                 }
             }
-            else if (urlPath.startsWith("/assets/"))
+            else if (urlPath.startsWith(projectsUtil.getAssetPathUrl(currentProject)))
             {
                 const parts = urlPath.split("/");
                 const assetName = parts[parts.length - 1];

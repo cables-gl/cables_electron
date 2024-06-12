@@ -55,6 +55,8 @@ CABLES_CMD_ELECTRON.addProjectOpDir = (options) =>
 
 CABLES_CMD_ELECTRON.collectAssets = (options) =>
 {
+    const loadingModal = standalone.gui.startModalLoading("Copying assets...");
+    let closeTimeout = 2000;
     standalone.editor.api("collectAssets", options, (_err, r) =>
     {
         if (!_err)
@@ -74,27 +76,77 @@ CABLES_CMD_ELECTRON.collectAssets = (options) =>
                         }
                     }
                 }
-                Object.keys(oldNew).forEach((srch) =>
+                const oldNames = Object.keys(oldNew);
+                if (oldNames.length > 0)
                 {
-                    const rplc = oldNew[srch];
-                    assetPorts.forEach((assetPort) =>
+                    oldNames.forEach((srch) =>
                     {
-                        let v = assetPort.get();
-                        if (v && v.startsWith(srch))
+                        const rplc = oldNew[srch];
+                        loadingModal.setTask("copied " + srch + " to " + rplc);
+                        assetPorts.forEach((assetPort) =>
                         {
-                            v = rplc + v.substring(srch.length);
-                            assetPort.set(v);
-                        }
+                            let v = assetPort.get();
+                            if (v && v.startsWith(srch))
+                            {
+                                v = rplc + v.substring(srch.length);
+                                assetPort.set(v);
+                            }
+                        });
                     });
-                });
+                }
+                else
+                {
+                    loadingModal.setTask("nothing to copy");
+                }
+            }
+            else
+            {
+                loadingModal.setTask("nothing to copy");
             }
         }
+        else
+        {
+            loadingModal.setTask("failed to copy assets");
+            loadingModal.setTask("---");
+            loadingModal.setTask(_err);
+            closeTimeout = 5000;
+        }
+        setTimeout(() => { standalone.gui.endModalLoading(); }, closeTimeout);
     });
 };
 
 CABLES_CMD_ELECTRON.collectOps = (options) =>
 {
-    standalone.editor.api("collectOps", options, (_err, r) => {});
+    const loadingModal = standalone.gui.startModalLoading("Copying ops...");
+    let closeTimeout = 2000;
+    standalone.editor.api("collectOps", options, (_err, r) =>
+    {
+        if (!_err && r && r.data)
+        {
+            const oldNames = Object.keys(r.data);
+            if (r && oldNames.length > 0)
+            {
+                oldNames.forEach((srch) =>
+                {
+                    const rplc = r.data[srch];
+                    loadingModal.setTask("copied " + srch + " to " + rplc);
+                });
+            }
+            else
+            {
+                loadingModal.setTask("nothing to copy");
+            }
+            setTimeout(() => { standalone.gui.endModalLoading(); }, closeTimeout);
+        }
+        else
+        {
+            loadingModal.setTask("failed to copy ops");
+            loadingModal.setTask("---");
+            loadingModal.setTask(_err);
+            closeTimeout = 5000;
+            setTimeout(() => { standalone.gui.endModalLoading(); }, closeTimeout);
+        }
+    });
 };
 
 CABLES_CMD_ELECTRON_OVERRIDES.PATCH = {};

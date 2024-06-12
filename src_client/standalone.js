@@ -26,7 +26,17 @@ class CablesStandalone
 
     get gui()
     {
-        return this.editorIframe.contentWindow.gui;
+        return this.editorWindow ? this.editorWindow.gui : null;
+    }
+
+    get editorWindow()
+    {
+        return this.editorIframe.contentWindow;
+    }
+
+    get CABLES()
+    {
+        return this.editorWindow ? this.editorWindow.CABLES : null;
     }
 
     init()
@@ -40,13 +50,12 @@ class CablesStandalone
         this.editorIframe.src = src;
         this.editorIframe.onload = () =>
         {
-            const iframeWindow = this.editorIframe.contentWindow;
-            if (iframeWindow && iframeWindow.loadjs)
+            if (this.editorWindow && this.editorWindow.loadjs)
             {
-                Object.assign(iframeWindow.console, this._log.functions);
+                Object.assign(this.editorWindow.console, this._log.functions);
 
-                iframeWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
-                iframeWindow.loadjs.ready("cablesuinew", this._uiReady.bind(this));
+                this.editorWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
+                this.editorWindow.loadjs.ready("cablesuinew", this._uiReady.bind(this));
             }
         };
 
@@ -60,10 +69,9 @@ class CablesStandalone
 
         window.addEventListener("hashchange", () =>
         {
-            const patchIframe = document.getElementById("editorIframe");
-            if (patchIframe)
+            if (this.editorWindow)
             {
-                patchIframe.contentWindow.postMessage({ "type": "hashchange", "data": window.location.hash }, "*");
+                this.editorWindow.postMessage({ "type": "hashchange", "data": window.location.hash }, "*");
             }
         }, false);
 
@@ -91,63 +99,77 @@ class CablesStandalone
 
     _coreReady(depsNotFound)
     {
-        const iframeWindow = this.editorIframe.contentWindow;
-        const iframeCables = iframeWindow.CABLES;
-        if (!depsNotFound && (iframeCables && iframeCables.Op))
+        if (!depsNotFound && this.CABLES)
         {
-            iframeCables.Op.prototype.require = (moduleName) =>
+            if (this.CABLES.Op)
             {
-                if (moduleName === "electron") return this._electron;
-                try
+                this.CABLES.Op.prototype.require = this._opRequire.bind(this);
+                Object.defineProperty(this.CABLES.Op.prototype, "__dirname", { "get": function ()
                 {
-                    const modulePath = this._path.join(this._settings.currentPatchDir, "node_modules", moduleName);
-                    console.info("trying to load", modulePath);
-                    return window.nodeRequire(modulePath);
-                }
-                catch (e)
-                {
-                    try
-                    {
-                        console.info("trying to load native module", moduleName);
-                        return window.nodeRequire(moduleName);
-                    }
-                    catch (e2)
-                    {
-                        console.error("failed to load node module \"" + moduleName + "\" do you need to run `npm install`?", e2);
-                        return "";
-                    }
-                }
-            };
+                    return window.ipcRenderer.sendSync("getOpDir", { "name": this.name, "opId": this.opId });
+                } });
+            }
+            if (this.CABLES.Patch)
+            {
+                Object.defineProperty(this.CABLES.Patch.prototype, "__dirname", { "get": this._patchDir.bind(this) });
+            }
         }
     }
 
     _uiReady(depsNotFound)
     {
-        const iframeWindow = this.editorIframe.contentWindow;
-        const iframeCables = iframeWindow.CABLES;
-        if (iframeCables)
+        if (this.CABLES)
         {
-            const getOpsForFilename = iframeCables.UI.getOpsForFilename;
-            iframeCables.UI.getOpsForFilename = function (filename)
+            const getOpsForFilename = this.CABLES.UI.getOpsForFilename;
+            this.CABLES.UI.getOpsForFilename = function (filename)
             {
                 let defaultOps = getOpsForFilename(filename);
                 if (defaultOps.length === 0)
                 {
-                    defaultOps.push(iframeCables.UI.DEFAULTOPNAMES.defaultOpJson);
-                    const addOpCb = iframeWindow.gui.corePatch().on("onOpAdd", (newOp) =>
+                    defaultOps.push(this.CABLES.UI.DEFAULTOPNAMES.defaultOpJson);
+                    const addOpCb = this.gui.corePatch().on("onOpAdd", (newOp) =>
                     {
                         const contentPort = newOp.getPortByName("Content", false);
                         if (contentPort) contentPort.set("String");
-                        iframeWindow.gui.corePatch().off(addOpCb);
+                        this.gui.corePatch().off(addOpCb);
                     });
                 }
                 return defaultOps;
             };
-            iframeCables.CMD.STANDALONE = electronCommands.functions;
-            iframeCables.CMD.commands = iframeCables.CMD.commands.concat(electronCommands.commands);
-            Object.assign(iframeCables.CMD.PATCH, electronCommands.functionOverrides.PATCH);
-            Object.assign(iframeCables.CMD.RENDERER, electronCommands.functionOverrides.RENDERER);
+            this.CABLES.CMD.STANDALONE = electronCommands.functions;
+            this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(electronCommands.commands);
+            Object.assign(this.CABLES.CMD.PATCH, electronCommands.functionOverrides.PATCH);
+            Object.assign(this.CABLES.CMD.RENDERER, electronCommands.functionOverrides.RENDERER);
         }
+    }
+
+    _opRequire(moduleName)
+    {
+        if (moduleName === "electron") return this._electron;
+        try
+        {
+            const modulePath = this._path.join(this._settings.currentPatchDir, "node_modules", moduleName);
+            console.info("trying to load", modulePath);
+            return window.nodeRequire(modulePath);
+        }
+        catch (e)
+        {
+            try
+            {
+                console.info("trying to load native module", moduleName);
+                return window.nodeRequire(moduleName);
+            }
+            catch (e2)
+            {
+                console.error("failed to load node module \"" + moduleName + "\" do you need to run `npm install`?", e2);
+                return "";
+            }
+        }
+    }
+
+    _patchDir(...args)
+    {
+        return this._settings.currentPatchDir;
     }
 }
 export default new CablesStandalone();
