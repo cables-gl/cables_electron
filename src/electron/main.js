@@ -422,6 +422,7 @@ class ElectronApp
         });
     }
 }
+Menu.setApplicationMenu(null);
 app.whenReady().then(() =>
 {
     electronApi.init();

@@ -9,11 +9,28 @@ import filesUtil from "./files_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
-    addPermissionsToOps(ops, user, teams = [], project = null)
+    addPermissionsToOps(opDocs, user, teams = [], project = null)
     {
-        if (!ops) return ops;
-        ops.forEach((op) => { op.allowEdit = true; });
-        return ops;
+        if (!opDocs) return opDocs;
+        opDocs.forEach((opDoc) =>
+        {
+            const file = this.getOpAbsoluteFileName(opDoc.name);
+            opDoc.allowEdit = true;
+            if (file)
+            {
+                try
+                {
+                    fs.accessSync(file, fs.constants.R_OK | fs.constants.W_OK);
+                    opDoc.allowEdit = true;
+                }
+                catch (e)
+                {
+                    // not allowed to read/write
+                    opDoc.allowEdit = false;
+                }
+            }
+        });
+        return opDocs;
     }
 
     userHasWriteRightsOp(user, opName, teams = [], project = null)

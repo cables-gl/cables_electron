@@ -207,19 +207,18 @@ class ElectronApi
         // now we should have all the ops that are used in the project, walk subPatchOps
         // recursively to get their opdocs
         const subPatchOps = subPatchOpUtil.getOpsUsedInSubPatches(project);
-        subPatchOps.forEach((bpOp) =>
+        subPatchOps.forEach((subPatchOp) =>
         {
-            const opName = opsUtil.getOpNameById(subPatchOps.opId);
+            const opName = opsUtil.getOpNameById(subPatchOp.opId);
             const nsName = opsUtil.getCollectionNamespace(opName);
             projectOps.push(opName);
             if (opsUtil.isCollection(nsName)) projectNamespaces.push(nsName);
-            usedOpIds.push(subPatchOps.opId);
+            usedOpIds.push(subPatchOp.opId);
         });
 
         projectOps = helper.uniqueArray(projectOps);
         usedOpIds = helper.uniqueArray(usedOpIds);
         projectNamespaces = helper.uniqueArray(projectNamespaces);
-
         projectOps.forEach((opName) =>
         {
             let opDoc = doc.getDocForOp(opName);
@@ -248,52 +247,16 @@ class ElectronApi
 
     async getOpDocsAll()
     {
+        const currentProject = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
         opDocs = opDocs.concat(doc.getOpDocsInProjectDir());
 
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
 
-        const extensions = doc.getAllExtensionDocs();
-
-        const _libs = fs.readdirSync(cables.getLibsPath());
-        const libs = [];
-        for (let i = 0; i < _libs.length; i++)
-        {
-            let skip = false;
-            if (_libs[i].endsWith(".js"))
-            {
-                const libName = path.parse(_libs[i]);
-                if (libName)
-                {
-                    let jsonName = path.join(cables.getLibsPath(), libName.name);
-                    jsonName += ".json";
-                    if (fs.existsSync(jsonName))
-                    {
-                        const json = JSON.parse(fs.readFileSync(jsonName));
-                        if (json.hidden)
-                        {
-                            skip = true;
-                        }
-                    }
-                }
-                if (!skip)
-                {
-                    libs.push(_libs[i]);
-                }
-            }
-        }
-
-        const _coreLibs = fs.readdirSync(cables.getCoreLibsPath());
-        const coreLibs = [];
-        for (let i = 0; i < _coreLibs.length; i++)
-        {
-            const coreFilename = _coreLibs[i];
-            if (coreFilename.endsWith(".js"))
-            {
-                coreLibs.push(coreFilename.split(".")[0]);
-            }
-        }
+        const extensions = doc.getAllExtensionDocs(true, true);
+        const libs = projectsUtil.getAvailableLibs(currentProject);
+        const coreLibs = projectsUtil.getCoreLibs();
 
         return this.success({
             "opDocs": cleanDocs,
@@ -418,14 +381,16 @@ class ElectronApi
             // }
 
             return this.success({
+                "success": true,
                 "opFullCode": code
-            });
+            }, true);
         }
         else
         {
             return this.success({
+                "success": true,
                 "opFullCode": ""
-            });
+            }, true);
         }
     }
 
