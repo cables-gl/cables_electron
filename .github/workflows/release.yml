@@ -12,6 +12,11 @@ jobs:
   draft_release:
     runs-on: ubuntu-latest
     steps:
+      - name: fetch latest changelog
+        id: fetch_changelog
+        uses: tyrrrz/action-http-request@master
+        with:
+          url: "https://dev.cables.gl/api/changelog?num=1&format=md"
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -21,6 +26,7 @@ jobs:
           tag_name: v${{ inputs.version }}
           draft: true
           prerelease: true
+          body: ${{ steps.fetch_changelog.outputs.body }}
   linux:
     uses: ./.github/workflows/build.yml
     with:
