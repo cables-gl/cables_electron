@@ -32,9 +32,6 @@ jobs:
         uses: tyrrrz/action-http-request@master
         with:
           url: "https://dev.cables.gl/api/changelog?num=1&format=md"
-      - name: Show Response
-        run: |
-          echo ${{ steps.fetch_changelog.outputs.body }}
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v2
