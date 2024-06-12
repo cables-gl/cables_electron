@@ -29,13 +29,12 @@ jobs:
     steps:
       - name: fetch latest changelog
         id: fetch_changelog
-        uses: fjogeleit/http-request-action@v1
+        uses: tyrrrz/action-http-request@master
         with:
           url: "https://dev.cables.gl/api/changelog?num=1&format=md"
-          method: "GET"
       - name: Show Response
         run: |
-          echo ${{ steps.fetch_changelog.outputs.headers }}
+          echo ${{ steps.fetch_changelog.outputs.body }}
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -45,7 +44,7 @@ jobs:
           tag_name: v${{ inputs.version }}
           draft: true
           prerelease: true
-          body: ${{ steps.fetch_changelog.outputs.headers }}
+          body: ${{ steps.fetch_changelog.outputs.body }}
   linux:
     if: ${{ inputs.linux == true || inputs.linux == 'true' }}
     uses: ./.github/workflows/build.yml
