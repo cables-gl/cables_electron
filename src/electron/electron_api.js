@@ -727,7 +727,7 @@ class ElectronApi
         const projectFile = await electronApp.saveProjectFileDialog();
         if (!projectFile)
         {
-            logger.error("no project dir chosen");
+            logger.info("no project dir chosen");
             return this.error("UNKNOWN_PROJECT");
         }
 
@@ -781,7 +781,9 @@ class ElectronApi
         }
         else
         {
-            return this.success(await electronApp.pickProjectFileDialog(), true);
+            let type = data.type || "project";
+            const file = await electronApp.pickProjectFileDialog(type);
+            return this.success({ "projectFile": file });
         }
     }
 
@@ -844,7 +846,7 @@ class ElectronApi
         }
         else
         {
-            logger.error("no project dir chosen");
+            logger.info("no project dir chosen");
             return this.error("no project dir chosen", []);
         }
     }
@@ -928,7 +930,7 @@ class ElectronApi
     {
         if (raw)
         {
-            if (typeof data === "object") data.success = true;
+            if (data && typeof data === "object") data.success = true;
             return data;
         }
         else

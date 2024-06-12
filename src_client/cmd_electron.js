@@ -10,9 +10,9 @@ CABLES_CMD_ELECTRON.newPatch = () =>
     standalone.editor.api("newPatch", { }, (_err, r) => {});
 };
 
-CABLES_CMD_ELECTRON.gotoPatch = () =>
+CABLES_CMD_ELECTRON.gotoPatch = (data) =>
 {
-    standalone.editor.api("gotoPatch", { }, (_err, r) => {});
+    standalone.editor.api("gotoPatch", data, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON.runNpm = () =>
