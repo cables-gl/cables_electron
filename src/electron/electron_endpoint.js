@@ -37,7 +37,7 @@ class ElectronEndpoint
             let actualFile = helper.fileURLToPath(urlFile, true);
             if (fs.existsSync(actualFile))
             {
-                return net.fetch(helper.pathToFileURL(actualFile).href, { "bypassCustomProtocolHandlers": true });
+                return net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
             }
             else
             {

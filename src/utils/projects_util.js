@@ -137,30 +137,18 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         const fileNames = [];
         if (!project || !project.ops) return [];
-        const projectDir = settings.getCurrentProjectDir();
         const assetPorts = this.getProjectAssetPorts(project, includeLibraryAssets);
         let urls = assetPorts.map((assetPort) => { return assetPort.value; });
-        urls.forEach((fullPath) =>
+        urls.forEach((url) =>
         {
-            if (fullPath.startsWith("/assets/")) fullPath = "." + fullPath;
-
-            if (fullPath.startsWith("./"))
-            {
-                fullPath = path.join(projectDir, fullPath);
-            }
-            else if (fullPath.startsWith("file:"))
-            {
-                fullPath = decodeURI(fullPath);
-                fullPath = helper.fileURLToPath(fullPath, true);
-            }
-
+            let fullPath = helper.fileURLToPath(url, true);
             if (fs.existsSync(fullPath))
             {
                 fileNames.push(fullPath);
             }
             else
             {
-                this._log.warn("missing file", fullPath);
+                this._log.warn("missing file", url, fullPath);
             }
         });
         return helper.uniqueArray(fileNames);

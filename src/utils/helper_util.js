@@ -8,15 +8,16 @@ class HelperUtil extends SharedHelperUtil
 {
     fileURLToPath(url, convertRelativeToProject = false)
     {
-        let fileUrl = url;
-        if (convertRelativeToProject)
+        if (!url || url === "0") return "";
+        let fileUrl = decodeURI(url);
+        if (convertRelativeToProject && this.isLocalAssetUrl(fileUrl))
         {
-            if (fileUrl && (fileUrl.startsWith("file://./") || fileUrl.startsWith("./")))
-            {
-                let filePath = fileUrl.substring(fileUrl.indexOf("./") + 1);
-                filePath = path.join(cables.getAssetPath(), filePath);
-                fileUrl = pathToFileURL(filePath);
-            }
+            let filePath = fileUrl.replace("file://./", "");
+            filePath = filePath.replace("./", "");
+            if (filePath.startsWith("assets/")) filePath = filePath.replace("assets/", "");
+            if (filePath.startsWith("/assets/")) filePath = filePath.replace("/assets/", "");
+            filePath = path.join(cables.getAssetPath(), filePath);
+            fileUrl = pathToFileURL(filePath).href;
         }
         return fileURLToPath(fileUrl);
     }
@@ -24,23 +25,26 @@ class HelperUtil extends SharedHelperUtil
     pathToFileURL(thePath, convertProjectToRelative = false)
     {
         let filePath = thePath;
-        if (convertProjectToRelative)
+        if (convertProjectToRelative && this.isLocalAssetPath(filePath))
         {
             const currentProjectDir = settings.getCurrentProjectDir();
-            if (currentProjectDir && thePath.startsWith(currentProjectDir))
-            {
-                filePath = filePath.substring(filePath.indexOf(currentProjectDir) + 1);
-                return "file://./" + filePath;
-            }
-            else
-            {
-                return pathToFileURL(filePath);
-            }
+            return filePath.replace(currentProjectDir, "/");
         }
         else
         {
-            return pathToFileURL(filePath);
+            return pathToFileURL(filePath).href;
         }
+    }
+
+    isLocalAssetUrl(url)
+    {
+        return (url && (url.startsWith("file://./") || url.startsWith("./") || url.startsWith("/")));
+    }
+
+    isLocalAssetPath(thePath)
+    {
+        const currentProjectDir = settings.getCurrentProjectDir();
+        return (currentProjectDir && thePath.startsWith(currentProjectDir));
     }
 }
 export default new HelperUtil(utilProvider);

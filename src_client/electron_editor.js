@@ -31,14 +31,7 @@ export default class ElectronEditor
 
         this._talker.addEventListener("reload", (options) =>
         {
-            if (options && options.patchId)
-            {
-                document.location.href = "/edit/" + options.patchId;
-            }
-            else
-            {
-                document.location.reload();
-            }
+            document.location.reload();
         });
 
         this._talker.addEventListener("fileUploadStr", (options, next) =>

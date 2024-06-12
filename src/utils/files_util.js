@@ -1,7 +1,6 @@
-import { utilProvider, SharedFilesUtil } from "cables-shared-api";
+import { SharedFilesUtil, utilProvider } from "cables-shared-api";
 import fs from "fs";
 import path from "path";
-import { pathToFileURL } from "url";
 import chokidar from "chokidar";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
@@ -48,12 +47,12 @@ class FilesUtil extends SharedFilesUtil
         this._assetChangeWatcher = chokidar.watch([], watcherOptions);
         this._assetChangeWatcher.on("change", (fileName) =>
         {
-            electronApp.sendTalkerMessage("fileUpdated", { "filename": pathToFileURL(fileName).href });
+            electronApp.sendTalkerMessage("fileUpdated", { "filename": helper.pathToFileURL(fileName) });
         });
 
         this._assetChangeWatcher.on("unlink", (fileName) =>
         {
-            electronApp.sendTalkerMessage("fileDeleted", { "fileName": pathToFileURL(fileName).href });
+            electronApp.sendTalkerMessage("fileDeleted", { "fileName": helper.pathToFileURL(fileName) });
         });
     }
 
@@ -146,8 +145,7 @@ class FilesUtil extends SharedFilesUtil
         {
             assetFilePath = path.join(assetDir, this.getAssetFileName(fileDb));
         }
-        const assetUrl = pathToFileURL(assetFilePath);
-        return assetUrl.href;
+        return helper.pathToFileURL(assetFilePath);
     }
 
     getLibraryFiles()
@@ -183,7 +181,7 @@ class FilesUtil extends SharedFilesUtil
         for (const i in files)
         {
             const fullPath = path.join(filePath, "/", files[i]);
-            const urlPath = pathToFileURL(fullPath).href;
+            const urlPath = helper.pathToFileURL(fullPath);
 
             if (files[i] && !files[i].startsWith("."))
             {
@@ -257,14 +255,14 @@ class FilesUtil extends SharedFilesUtil
             dirName = dirName.replaceAll("\\", "/");
 
             if (!fileHierarchy.hasOwnProperty(dirName)) fileHierarchy[dirName] = [];
-            const fileUrl = pathToFileURL(fileName);
+            const fileUrl = helper.pathToFileURL(fileName);
 
             const fileData = {
                 "d": false,
-                "n": path.basename(fileUrl.pathname),
+                "n": path.basename(fileUrl),
                 "t": type,
                 "l": 0,
-                "p": fileUrl.href,
+                "p": fileUrl,
                 "type": type,
                 "updated": "bla"
             };

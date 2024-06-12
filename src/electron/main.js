@@ -1,7 +1,6 @@
 import { app, BrowserWindow, dialog, Menu, shell } from "electron";
 import path from "path";
 import fs from "fs";
-import { pathToFileURL } from "url";
 import localShortcut from "electron-localshortcut";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
@@ -10,6 +9,7 @@ import settings from "./electron_settings.js";
 import doc from "../utils/doc_util.js";
 import projectsUtil from "../utils/projects_util.js";
 import filesUtil from "../utils/files_util.js";
+import helper from "../utils/helper_util.js";
 
 app.commandLine.appendSwitch("disable-http-cache");
 logger.info("--- starting");
@@ -254,7 +254,7 @@ class ElectronApp
             if (!result.canceled)
             {
                 if (!asUrl) return result.filePaths[0];
-                return pathToFileURL(result.filePaths[0]).href;
+                return helper.pathToFileURL(result.filePaths[0], true);
             }
             else
             {

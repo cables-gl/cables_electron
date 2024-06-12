@@ -677,7 +677,8 @@ class ElectronApi
     {
         if (options && options.dir)
         {
-            return this.success(shell.openPath(options.dir), true);
+            shell.openPath(options.dir);
+            return this.success({}, true);
         }
     }
 
@@ -688,7 +689,8 @@ class ElectronApi
         const opDir = opsUtil.getOpAbsoluteFileName(opName);
         if (opDir)
         {
-            return this.success(shell.showItemInFolder(opDir), true);
+            shell.showItemInFolder(opDir);
+            return this.success({}, true);
         }
     }
 
@@ -697,67 +699,52 @@ class ElectronApi
         const projectFile = settings.getCurrentProjectFile();
         if (projectFile)
         {
-            return this.success(shell.showItemInFolder(projectFile), true);
+            shell.showItemInFolder(projectFile);
+            return this.success({});
         }
     }
 
     async openAssetDir(data)
     {
-        let assetPath = cables.getAssetPath();
-
-        let assetUrl = null;
-        if (data)
+        let assetPath = helper.fileURLToPath(data.url, true);
+        if (fs.existsSync(assetPath))
         {
-            assetUrl = data.url && data.url !== "0" ? data.url : null;
-        }
-        if (assetUrl)
-        {
-            try
+            const stats = fs.statSync(assetPath);
+            if (stats.isDirectory())
             {
-                assetPath = helper.fileURLToPath(assetUrl, true);
-            }
-            catch (e)
-            {
-                if (assetUrl.startsWith("./"))
-                {
-                    assetPath = path.join(settings.getCurrentProjectDir(), assetUrl);
-                }
-                else
-                {
-                    assetPath = path.resolve(assetUrl);
-                }
-            }
-        }
-        if (assetPath)
-        {
-            if (fs.existsSync(assetPath))
-            {
-                const stats = fs.statSync(assetPath);
-                if (stats.isDirectory())
-                {
-                    return this.success(shell.openPath(assetPath), true);
-                }
-                else
-                {
-                    return this.success(shell.showItemInFolder(assetPath), true);
-                }
+                shell.openPath(assetPath);
+                return this.success({});
             }
             else
             {
-                assetPath = path.dirname(assetPath);
-                return this.success(shell.openPath(assetPath), true);
+                shell.showItemInFolder(assetPath);
+                return this.success({});
             }
+        }
+        else
+        {
+            shell.openPath(cables.getAssetPath());
+            return this.success({});
         }
     }
 
     async selectFile(data)
     {
-        let assetUrl = null;
-        if (data)
+        if (data && data.url)
         {
-            assetUrl = data.url && data.url !== "0" ? helper.fileURLToPath(data.url) : null;
+            let assetUrl = helper.fileURLToPath(data.url, true);
+            let filter = ["*"];
+            if (data.filter)
+            {
+                filter = filesUtil.FILETYPES[data.filter] || ["*"];
+            }
+            const pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filter);
+            return this.success(pickedFileUrl, true);
         }
-        return this.success(electronApp.pickFileDialog(assetUrl, true, data.filter), true);
+        else
+        {
+            return this.error("NO_FILE_SELECTED");
+        }
     }
 
 
@@ -924,13 +911,13 @@ class ElectronApi
         assetFilenames.forEach((oldFile) =>
         {
             const oldUrl = helper.pathToFileURL(oldFile);
-            if (!oldNew.hasOwnProperty(oldUrl) && fs.existsSync(oldFile))
+            if (!helper.isLocalAssetPath(oldFile) && !oldNew.hasOwnProperty(oldUrl) && fs.existsSync(oldFile))
             {
                 const baseName = path.basename(oldFile);
                 const newName = this._findNewAssetFilename(projectAssetPath, baseName);
                 const newLocation = path.join(projectAssetPath, newName);
                 fs.copyFileSync(oldFile, newLocation);
-                oldNew[oldUrl] = "file://./" + newName;
+                oldNew[oldUrl] = path.join("/assets", newName);
             }
         });
         this._log.debug("collectAssets", oldNew);

@@ -27,6 +27,12 @@ jobs:
   draft_release:
     runs-on: ubuntu-latest
     steps:
+      - name: fetch latest changelog
+        id: fetch_changelog
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://dev.cables.gl/api/changelog?num=1&format=md"
+          method: "GET"
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -36,6 +42,7 @@ jobs:
           tag_name: v${{ inputs.version }}
           draft: true
           prerelease: true
+          body: ${{ steps.myRequest.outputs.response }}
   linux:
     if: ${{ inputs.linux == true || inputs.linux == 'true' }}
     uses: ./.github/workflows/build.yml
