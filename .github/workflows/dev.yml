@@ -33,6 +33,11 @@ jobs:
         with:
           url: "https://dev.cables.gl/api/changelog?num=1&format=md"
           method: "GET"
+      - name: Show Response
+        run: |
+          echo ${{ steps.myRequest.outputs.response }}
+          echo ${{ steps.myRequest.outputs.headers }}
+          echo ${{ steps.myRequest.outputs.status }}
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v2
