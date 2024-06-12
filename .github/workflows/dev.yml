@@ -35,9 +35,7 @@ jobs:
           method: "GET"
       - name: Show Response
         run: |
-          echo ${{ steps.fetch_changelog.outputs.response }}
           echo ${{ steps.fetch_changelog.outputs.headers }}
-          echo ${{ steps.fetch_changelog.outputs.status }}
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -47,7 +45,7 @@ jobs:
           tag_name: v${{ inputs.version }}
           draft: true
           prerelease: true
-          body: ${{ steps.fetch_changelog.outputs.response }}
+          body: ${{ steps.fetch_changelog.outputs.headers }}
   linux:
     if: ${{ inputs.linux == true || inputs.linux == 'true' }}
     uses: ./.github/workflows/build.yml
