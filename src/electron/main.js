@@ -12,6 +12,8 @@ import filesUtil from "../utils/files_util.js";
 import helper from "../utils/helper_util.js";
 
 app.commandLine.appendSwitch("disable-http-cache");
+app.commandLine.appendSwitch("force_high_performance_gpu");
+
 logger.info("--- starting");
 
 class ElectronApp
@@ -64,14 +66,15 @@ class ElectronApp
                     "type": "warning",
                     "title": "missing project",
                     "message": "failed to open:\n" + settings.getCurrentProjectFile(),
-                    "buttons": ["create new", "open patch"],
+                    "buttons": ["create new", "open patch", "open export"],
                     "defaultId": 0,
                     "cancelId": 1
                 }).then((button) =>
                 {
-                    if (button && button.response === 1)
+                    if (button && button.response !== 0)
                     {
-                        this.pickProjectFileDialog();
+                        const type = button.response === 2 ? "export" : "project";
+                        this.pickProjectFileDialog(type);
                     }
                 });
             }

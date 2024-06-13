@@ -255,7 +255,7 @@ class ElectronApi
     {
         const currentProject = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
-        opDocs = opDocs.concat(doc.getOpDocsInProjectDir());
+        opDocs = opDocs.concat(doc.getOpDocsInProjectDirs(currentProject));
 
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);

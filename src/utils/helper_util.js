@@ -18,11 +18,29 @@ class HelperUtil extends SharedHelperUtil
             let filePath = fileUrl.replace("file://./", "");
             if (filePath.startsWith("./" + assetPathUrl)) filePath = filePath.replace("./" + assetPathUrl, "");
             if (filePath.startsWith(assetPathUrl)) filePath = filePath.replace(assetPathUrl, "");
+            if (filePath.startsWith("assets/")) filePath = filePath.replace("assets/", "");
+
             filePath = filePath.replace("./", "");
             filePath = path.join(cables.getAssetPath(), filePath);
-            fileUrl = pathToFileURL(filePath).href;
+            try
+            {
+                fileUrl = pathToFileURL(filePath).href;
+            }
+            catch (e)
+            {
+                this._log.error("failed to convert to project path", url, filePath);
+                return "";
+            }
         }
-        return fileURLToPath(fileUrl);
+        try
+        {
+            return fileURLToPath(fileUrl);
+        }
+        catch (e)
+        {
+            this._log.error("failed to create url from path", url, e);
+            return "";
+        }
     }
 
     pathToFileURL(thePath, convertProjectToRelative = false)
@@ -41,7 +59,7 @@ class HelperUtil extends SharedHelperUtil
 
     isLocalAssetUrl(url)
     {
-        return (url && (url.startsWith("file://./") || url.startsWith("./") || url.startsWith("/")));
+        return (url && (url.startsWith("file://./") || url.startsWith("./") || url.startsWith("/") || url.startsWith("assets/")));
     }
 
     isLocalAssetPath(thePath)

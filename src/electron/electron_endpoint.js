@@ -217,27 +217,17 @@ class ElectronEndpoint
         let opDocs = doc.getOpDocs(true, true);
         let code = "";
         let missingOps = [];
-        if (project && project.ops)
+        if (project)
         {
-            missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
+            if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
-            const opsInProjectDir = doc.getOpDocsInProjectDir();
+            const opsInProjectDir = doc.getOpDocsInProjectDirs(project);
             missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId === obj.opId; }) === index; });
         }
-        const otherDirsOps = opsUtil.getOpNamesInProjectDirs(project);
-        otherDirsOps.forEach((opName) =>
-        {
-            if (!missingOps.some((op) => { return op.objName === opName; }))
-            {
-                missingOps.push({
-                    "objName": opName
-                });
-            }
-        });
-        code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, true, true, opDocs);
+        code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, false, false, opDocs);
         filesUtil.registerOpChangeListeners(missingOps.map((missingOp) => { return missingOp.objName; }));
         return code;
     }

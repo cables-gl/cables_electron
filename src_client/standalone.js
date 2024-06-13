@@ -52,8 +52,6 @@ class CablesStandalone
         {
             if (this.editorWindow && this.editorWindow.loadjs)
             {
-                Object.assign(this.editorWindow.console, this._log.functions);
-
                 this.editorWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
                 this.editorWindow.loadjs.ready("cablesuinew", this._uiReady.bind(this));
             }
