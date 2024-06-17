@@ -354,6 +354,22 @@ class ElectronApi
         }
     }
 
+    async getCollectionOpDocs(data)
+    {
+        let opDocs = [];
+        const collectionName = data.name;
+        const currentUser = settings.getCurrentUser();
+        if (collectionName)
+        {
+            const opNames = opsUtil.getCollectionOpNames(collectionName, true);
+            opDocs = opsUtil.addOpDocsForCollections(opNames, opDocs);
+            opDocs = opsUtil.addVersionInfoToOps(opDocs);
+            opDocs = opsUtil.addPermissionsToOps(opDocs, currentUser);
+        }
+        return this.success({ "opDocs": doc.makeReadable(opDocs) }, true);
+    }
+
+
     getBuildInfo()
     {
         return this.success(settings.getBuildInfo(), true);

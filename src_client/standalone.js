@@ -119,12 +119,12 @@ class CablesStandalone
         if (this.CABLES)
         {
             const getOpsForFilename = this.CABLES.UI.getOpsForFilename;
-            this.CABLES.UI.getOpsForFilename = function (filename)
+            this.CABLES.UI.getOpsForFilename = (filename) =>
             {
                 let defaultOps = getOpsForFilename(filename);
                 if (defaultOps.length === 0)
                 {
-                    defaultOps.push(this.CABLES.UI.DEFAULTOPNAMES.defaultOpJson);
+                    defaultOps.push(this.CABLES.UI.DEFAULTOPNAMES.HttpRequest);
                     const addOpCb = this.gui.corePatch().on("onOpAdd", (newOp) =>
                     {
                         const contentPort = newOp.getPortByName("Content", false);

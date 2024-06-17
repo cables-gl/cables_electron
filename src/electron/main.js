@@ -297,7 +297,7 @@ class ElectronApp
                     {
                         const choice = dialog.showMessageBoxSync(this.editorWindow, {
                             "type": "question",
-                            "buttons": ["Cancel", "Save"],
+                            "buttons": ["Cancel", "OK"],
                             "title": "project file already exists!",
                             "message": "existing project file will be overwritten",
                             "detail": projectFile,

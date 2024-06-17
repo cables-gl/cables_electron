@@ -4,17 +4,6 @@ const CABLES_CMD_ELECTRON = {};
 const CABLES_CMD_ELECTRON_OVERRIDES = {};
 const CMD_ELECTRON_COMMANDS = [];
 
-
-CABLES_CMD_ELECTRON.newPatch = () =>
-{
-    standalone.editor.api("newPatch", { }, (_err, r) => {});
-};
-
-CABLES_CMD_ELECTRON.gotoPatch = (data) =>
-{
-    standalone.editor.api("gotoPatch", data, (_err, r) => {});
-};
-
 CABLES_CMD_ELECTRON.runNpm = () =>
 {
     const loadingModal = standalone.gui.startModalLoading("Installing packages...");
@@ -31,7 +20,6 @@ CABLES_CMD_ELECTRON.runNpm = () =>
         }
     });
 };
-
 
 CABLES_CMD_ELECTRON.openOpDir = (opId, opName) =>
 {
@@ -158,6 +146,10 @@ CABLES_CMD_ELECTRON_OVERRIDES.PATCH.uploadFileDialog = () =>
 {
     standalone.editor.api("openAssetDir", (_err, r) => {});
 };
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH.newPatch = () =>
+{
+    standalone.editor.api("newPatch", { }, (_err, r) => {});
+};
 
 CABLES_CMD_ELECTRON_OVERRIDES.RENDERER = {};
 CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
@@ -167,34 +159,10 @@ CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
 
 CMD_ELECTRON_COMMANDS.push(
     {
-        "cmd": "new patch",
-        "category": "electron",
-        "func": CABLES_CMD_ELECTRON.newPatch,
-        "icon": "electron"
-    },
-    {
-        "cmd": "open patch",
-        "category": "electron",
-        "func": CABLES_CMD_ELECTRON.openPatch,
-        "icon": "electron"
-    },
-    {
         "cmd": "install project npm packages",
         "category": "electron",
         "func": CABLES_CMD_ELECTRON.runNpm,
         "icon": "electron"
-    },
-    {
-        "cmd": "open project working directory",
-        "category": "electron",
-        "func": CABLES_CMD_ELECTRON.openProjectDir,
-        "icon": "file"
-    },
-    {
-        "cmd": "open project asset path",
-        "category": "electron",
-        "func": CABLES_CMD_ELECTRON.openAssetDir,
-        "icon": "file"
     },
     {
         "cmd": "copy assets into project dir",

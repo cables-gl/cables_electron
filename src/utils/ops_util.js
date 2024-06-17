@@ -35,6 +35,21 @@ class OpsUtil extends SharedOpsUtil
 
     userHasWriteRightsOp(user, opName, teams = [], project = null)
     {
+        const file = this.getOpAbsoluteFileName(opName);
+        if (file)
+        {
+            try
+            {
+                fs.accessSync(file, fs.constants.R_OK | fs.constants.W_OK);
+                return true;
+            }
+            catch (e)
+            {
+                // not allowed to read/write
+                return false;
+            }
+        }
+
         return true;
     }
 
