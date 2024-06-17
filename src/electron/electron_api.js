@@ -578,7 +578,12 @@ class ElectronApi
     {
         let opName = data.opname;
         const currentUser = settings.getCurrentUser();
-        const result = opsUtil.createOp(opName, currentUser, data.code, data.layout, data.libs, data.coreLibs, data.attachments, data.opTargetDir);
+        const opDocDefaults = {
+            "layout": data.layout,
+            "libs": data.libs,
+            "coreLibs": data.coreLibs
+        };
+        const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, data.opTargetDir);
         filesUtil.registerOpChangeListeners([opName]);
 
         return this.success(result, true);
