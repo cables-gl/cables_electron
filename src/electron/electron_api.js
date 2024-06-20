@@ -131,6 +131,24 @@ class ElectronApi
         return this.success(re, true);
     }
 
+    async patchCreateBackup()
+    {
+        const re = {
+            "msg": "BACKUP_CREATED"
+        };
+        const currentProject = settings.getCurrentProject();
+        const projectFile = await electronApp.saveProjectFileDialog("export");
+        if (!projectFile)
+        {
+            logger.info("no backup file chosen");
+            return this.error("UNKNOWN_PROJECT");
+        }
+
+        const backupProject = projectsUtil.getBackup(currentProject);
+        fs.writeFileSync(projectFile, JSON.stringify(backupProject));
+        return this.success(re, true);
+    }
+
     getPatch()
     {
         const patchPath = settings.getCurrentProjectFile();

@@ -99,8 +99,12 @@ class ElectronApp
         return this._fileDialog(title, filePath, asUrl, filter, properties);
     }
 
-    async saveProjectFileDialog()
+    async saveProjectFileDialog(type = "project")
     {
+        const extensions = [];
+        if (type === "project") extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
+        if (type === "export") extensions.push(projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION);
+
         let title = "select patch";
         let properties = ["createDirectory"];
         return dialog.showSaveDialog(this.editorWindow, {
@@ -108,22 +112,26 @@ class ElectronApp
             "properties": properties,
             "filters": [{
                 "name": "cables project",
-                "extensions": [projectsUtil.CABLES_PROJECT_FILE_EXTENSION],
+                "extensions": extensions,
             }]
         }).then((result) =>
         {
             if (!result.canceled)
             {
                 const patchFile = result.filePath;
-                const currentProject = settings.getCurrentProject();
-                if (currentProject)
+                if (type === "project")
                 {
-                    currentProject.name = path.basename(patchFile);
-                    currentProject.summary = currentProject.summary || {};
-                    currentProject.summary.title = currentProject.name;
-                    projectsUtil.writeProjectToFile(patchFile, currentProject);
+                    const currentProject = settings.getCurrentProject();
+                    if (currentProject)
+                    {
+                        currentProject.name = path.basename(patchFile);
+                        currentProject.summary = currentProject.summary || {};
+                        currentProject.summary.title = currentProject.name;
+                        projectsUtil.writeProjectToFile(patchFile, currentProject);
+                    }
+                    settings.loadProject(patchFile);
                 }
-                settings.loadProject(patchFile);
+
                 return patchFile;
             }
             else

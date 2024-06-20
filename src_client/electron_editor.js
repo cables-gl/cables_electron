@@ -96,7 +96,8 @@ export default class ElectronEditor
             "setProjectName": { "needsProjectFile": true },
             "collectAssets": { "needsProjectFile": true },
             "collectOps": { "needsProjectFile": true },
-            "getCollectionOpDocs": {}
+            "getCollectionOpDocs": {},
+            "patchCreateBackup": { "needsProjectFile": true }
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
