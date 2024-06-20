@@ -132,11 +132,6 @@ class ElectronSettings
             this._setCurrentProject(null, project);
         }
         this._updateRecentProjects();
-        if (project)
-        {
-            electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchName", "data": { "name": project.name } });
-            electronApp.editorWindow.webContents.send("talkerMessage", { "cmd": "updatePatchSummary", "data": project.summary });
-        }
     }
 
     getCurrentUser()
