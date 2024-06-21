@@ -152,6 +152,28 @@ class ElectronEndpoint
                     });
                 }
             }
+            else if (urlPath.startsWith("/api/op/layout/"))
+            {
+                let opName = urlPath.split("/", 5)[4];
+                if (opsUtil.isOpId(opName))
+                {
+                    opName = opsUtil.getOpNameById(opName);
+                }
+                const layoutSvg = this.apiOpLayout(opName);
+                if (layoutSvg)
+                {
+                    return new Response(layoutSvg, {
+                        "headers": { "content-type": "image/svg+xml" }
+                    });
+                }
+                else
+                {
+                    return new Response("", {
+                        "headers": { "content-type": "image/svg+xml" },
+                        "status": 500
+                    });
+                }
+            }
             else if (urlPath.startsWith("/api/op/"))
             {
                 let opName = urlPath.split("/", 4)[3];
@@ -172,24 +194,6 @@ class ElectronEndpoint
                         "headers": { "content-type": "application/javascript" },
                         "status": 500
                     });
-                }
-            }
-            else if (urlPath.startsWith(projectsUtil.getAssetPathUrl(currentProject)))
-            {
-                const parts = urlPath.split("/");
-                const assetName = parts[parts.length - 1];
-                const assetDb = { "fileName": assetName };
-                const assetPath = filesUtil.getFileAssetLocation(assetDb);
-                let content = "";
-                if (fs.existsSync(assetPath))
-                {
-                    content = fs.readFileSync(assetPath);
-                    return new Response(content);
-                }
-                else
-                {
-                    this._log.warn("asset not found", urlPath);
-                    return new Response(content, { "status": 404 });
                 }
             }
             else
@@ -325,6 +329,11 @@ class ElectronEndpoint
             "ts": Date.now(),
             "items": []
         };
+    }
+
+    apiOpLayout(opName)
+    {
+        return opsUtil.getOpSVG(opName);
     }
 }
 
