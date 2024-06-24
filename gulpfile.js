@@ -8,6 +8,7 @@ import git from "git-last-commit";
 import { execa } from "execa";
 import webpackElectronConfig from "./webpack.electron.config.js";
 
+let analyze = false;
 const defaultConfigLocation = "./cables.json";
 let configLocation = defaultConfigLocation;
 if (process.env.npm_config_apiconfig) configLocation = "./cables_env_" + process.env.npm_config_apiconfig + ".json";
@@ -42,6 +43,12 @@ const watchers = [];
 function _watch(done)
 {
     watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/client/*.js", "../shared/client/**/*.js"], { "usePolling": true }, gulp.series(defaultSeries)));
+    done();
+}
+
+function _analyze(done)
+{
+    analyze = true;
     done();
 }
 
@@ -122,7 +129,7 @@ function _editor_scripts_webpack(done)
 {
     getBuildInfo((buildInfo) =>
     {
-        webpack(webpackElectronConfig(isLiveBuild, buildInfo, minify), (err, stats) =>
+        webpack(webpackElectronConfig(isLiveBuild, buildInfo, minify, analyze), (err, stats) =>
         {
             if (err) done(err);
             if (stats.hasErrors())
@@ -181,6 +188,8 @@ gulp.task("build", gulp.series(
         _ui_copy
     ),
 ));
+
+gulp.task("analyze", gulp.series(_analyze, defaultSeries));
 
 gulp.task("watch", gulp.series(
     defaultSeries,

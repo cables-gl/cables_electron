@@ -16,6 +16,7 @@
   "scripts": {
     "start": "cross-env npm_config_apiconfig=local gulp watch",
     "build": "cross-env npm_config_apiconfig=local gulp build",
+    "analyze": "cross-env npm_config_apiconfig=local gulp analyze",
     "pack": "electron-builder -mwl --dir",
     "pack:mac": "electron-builder -m --dir -c.mac.identity=null",
     "pack:win": "electron-builder -w --dir",
@@ -137,6 +138,7 @@
     "git-last-commit": "1.0.1",
     "gulp": "5.0.0",
     "terser-webpack-plugin": "5.3.10",
-    "webpack": "5.91.0"
+    "webpack": "5.91.0",
+    "webpack-bundle-analyzer": "4.10.2"
   }
 }
