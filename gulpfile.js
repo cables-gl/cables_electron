@@ -42,7 +42,7 @@ const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 const watchers = [];
 function _watch(done)
 {
-    watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/client/*.js", "../shared/client/**/*.js"], { "usePolling": true }, gulp.series(defaultSeries)));
+    watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/**/*.js"], { "usePolling": true }, gulp.series(defaultSeries)));
     done();
 }
 
