@@ -307,7 +307,7 @@ class ElectronSettings
             "_id": project._id,
             "shortId": project.shortId,
             "name": project.name,
-            "thumbnail": project.thumbnail,
+            "thumbnail": project.screenshot,
             "created": project.created,
             "updated": project.updated
         };
@@ -334,12 +334,9 @@ class ElectronSettings
                 project.summary.title = project.name;
                 projectsUtil.writeProjectToFile(projectFile, project);
             }
-            if (!recentProjects.hasOwnProperty(projectFile))
-            {
-                const recent = this._toRecentProjectInfo(project);
-                if (recent) recentProjects[projectFile] = recent;
-                this.setRecentProjects(recentProjects);
-            }
+            const recent = this._toRecentProjectInfo(project);
+            if (recent) recentProjects[projectFile] = recent;
+            this.setRecentProjects(recentProjects);
         }
         this._updateRecentProjects();
         electronApp.updateTitle();

@@ -54,42 +54,16 @@ class ElectronApp
             }
         });
 
-        if (settings.getCurrentProjectFile())
-        {
-            if (fs.existsSync(settings.getCurrentProjectFile()))
-            {
-                patchFile = settings.getCurrentProjectFile();
-            }
-            else
-            {
-                dialog.showMessageBox(this.editorWindow, {
-                    "type": "warning",
-                    "title": "missing project",
-                    "message": "failed to open:\n" + settings.getCurrentProjectFile(),
-                    "buttons": ["create new", "open patch", "open export"],
-                    "defaultId": 0,
-                    "cancelId": 1
-                }).then((button) =>
-                {
-                    if (button && button.response !== 0)
-                    {
-                        const type = button.response === 2 ? "export" : "project";
-                        this.pickProjectFileDialog(type);
-                    }
-                });
-            }
-        }
-
         this._registerListeners();
         this._registerShortcuts();
         this.openPatch(patchFile);
     }
 
-    async pickProjectFileDialog(type)
+    async pickProjectFileDialog()
     {
         let title = "select patch";
         let properties = ["openFile"];
-        return this._projectFileDialog(title, properties, type);
+        return this._projectFileDialog(title, properties);
     }
 
     async pickFileDialog(filePath, asUrl = false, filter = [])
@@ -102,8 +76,7 @@ class ElectronApp
     async saveProjectFileDialog(type = "project")
     {
         const extensions = [];
-        if (type === "project") extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
-        if (type === "export") extensions.push(projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION);
+        extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
 
         let title = "select patch";
         let properties = ["createDirectory"];
@@ -273,11 +246,10 @@ class ElectronApp
         });
     }
 
-    _projectFileDialog(title, properties, type = "project")
+    _projectFileDialog(title, properties)
     {
         const extensions = [];
-        if (type === "project") extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
-        if (type === "export") extensions.push(projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION);
+        extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
 
         return dialog.showOpenDialog(this.editorWindow, {
             "title": title,
@@ -290,39 +262,7 @@ class ElectronApp
         {
             if (!result.canceled)
             {
-                const patchFile = result.filePaths[0];
-                let projectFile = patchFile;
-                if (patchFile.endsWith(projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION))
-                {
-                    let exportedProject = fs.readFileSync(patchFile);
-                    exportedProject = JSON.parse(exportedProject.toString("utf-8"));
-                    projectFile = patchFile.substring(0, patchFile.lastIndexOf(projectsUtil.CABLES_STANDALONE_EXPORT_FILE_EXTENSION)) + projectsUtil.CABLES_PROJECT_FILE_EXTENSION;
-                    if (!fs.existsSync(projectFile))
-                    {
-                        projectsUtil.writeProjectToFile(projectFile, exportedProject);
-                    }
-                    else
-                    {
-                        const choice = dialog.showMessageBoxSync(this.editorWindow, {
-                            "type": "question",
-                            "buttons": ["Cancel", "OK"],
-                            "title": "project file already exists!",
-                            "message": "existing project file will be overwritten",
-                            "detail": projectFile,
-                            "defaultId": 0,
-                            "cancelId": 1
-                        });
-                        const save = (choice === 1);
-                        if (save)
-                        {
-                            projectsUtil.writeProjectToFile(projectFile, exportedProject);
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
-                }
+                let projectFile = result.filePaths[0];
                 settings.loadProject(projectFile);
                 this.openPatch(projectFile);
                 return projectFile;

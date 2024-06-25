@@ -17,7 +17,6 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         super(provider);
         this.CABLES_PROJECT_FILE_EXTENSION = "cables";
-        this.CABLES_STANDALONE_EXPORT_FILE_EXTENSION = "cables.json";
     }
 
     getAssetPath(projectId)
@@ -108,9 +107,12 @@ class ProjectsUtil extends SharedProjectsUtil
                 if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
 
                 const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
-
                 if (qData.ops) project.ops = qData.ops;
                 if (qData.ui) project.ui = qData.ui;
+                if (qData.screenshot)
+                {
+                    project.screenshot = qData.screenshot;
+                }
             }
             catch (e)
             {

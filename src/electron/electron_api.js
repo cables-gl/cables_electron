@@ -505,7 +505,9 @@ class ElectronApi
         {
             return this.error("NO_PROJECT");
         }
-        return this.success(projectsUtil.saveProjectScreenshot(currentProject, data.screenshot), true);
+        currentProject.screenshot = data.screenshot;
+        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
+        return this.success({ "msg": "OK" }, true);
     }
 
     getFilelist(data)
@@ -584,9 +586,14 @@ class ElectronApi
             if (fs.existsSync(projectFile))
             {
                 const recent = recents[projectFile];
-                let screenShotFilename = projectsUtil.getScreenShotFileName(recent, "png");
-                if (!fs.existsSync(screenShotFilename)) screenShotFilename = path.join(cables.getUiDistPath(), "/img/placeholder_dark.png");
-                recent.thumbnail = screenShotFilename;
+                let screenShot = recent.thumbnail;
+                if (!screenShot)
+                {
+                    screenShot = projectsUtil.getScreenShotFileName(recent, "png");
+                    if (!fs.existsSync(screenShot)) screenShot = path.join(cables.getUiDistPath(), "/img/placeholder_dark.png");
+                }
+
+                recent.thumbnail = screenShot;
             }
         });
         return this.success(Object.values(recents).slice(0, 10), true);
@@ -820,8 +827,7 @@ class ElectronApi
         }
         else
         {
-            let type = data.type || "project";
-            const file = await electronApp.pickProjectFileDialog(type);
+            const file = await electronApp.pickProjectFileDialog();
             return this.success({ "projectFile": file });
         }
     }
