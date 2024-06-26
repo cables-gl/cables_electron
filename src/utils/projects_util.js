@@ -109,10 +109,6 @@ class ProjectsUtil extends SharedProjectsUtil
                 const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
                 if (qData.ops) project.ops = qData.ops;
                 if (qData.ui) project.ui = qData.ui;
-                if (qData.screenshot)
-                {
-                    project.screenshot = qData.screenshot;
-                }
             }
             catch (e)
             {
@@ -127,7 +123,6 @@ class ProjectsUtil extends SharedProjectsUtil
             return !(op.storage && op.storage.blueprint);
         });
 
-        project.updated = Date.now();
         project.name = path.basename(projectFile, "." + this.CABLES_PROJECT_FILE_EXTENSION);
         project.summary = project.summary || {};
         project.summary.title = project.name;
@@ -137,7 +132,8 @@ class ProjectsUtil extends SharedProjectsUtil
             .update(JSON.stringify(project.ops))
             .digest("hex");
         project.buildInfo = settings.getBuildInfo();
-        return jsonfile.writeFileSync(projectFile, project);
+        jsonfile.writeFileSync(projectFile, project);
+        settings.addToRecentProjects(projectFile, project);
     }
 
     getUsedAssetFilenames(project, includeLibraryAssets = false)

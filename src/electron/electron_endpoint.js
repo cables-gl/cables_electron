@@ -10,7 +10,6 @@ import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
 import filesUtil from "../utils/files_util.js";
 import helper from "../utils/helper_util.js";
-import projectsUtil from "../utils/projects_util.js";
 
 protocol.registerSchemesAsPrivileged([{
     "scheme": "cables",
@@ -226,6 +225,11 @@ class ElectronEndpoint
             if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             const opsInProjectDir = doc.getOpDocsInProjectDirs(project);
+            opsInProjectDir.forEach((op) =>
+            {
+                op.opId = op._id;
+                op.objName = op.name;
+            });
             missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });

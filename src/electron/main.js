@@ -102,9 +102,7 @@ class ElectronApp
                         currentProject.summary.title = currentProject.name;
                         projectsUtil.writeProjectToFile(patchFile, currentProject);
                     }
-                    settings.loadProject(patchFile);
                 }
-
                 return patchFile;
             }
             else
@@ -159,21 +157,18 @@ class ElectronApp
 
     openPatch(patchFile)
     {
-        doc.rebuildOpCaches((opDocs) =>
+        this.editorWindow.loadFile("index.html").then(() =>
         {
-            this.editorWindow.loadFile("index.html").then(() =>
+            if (patchFile)
             {
-                if (patchFile)
-                {
-                    settings.loadProject(patchFile);
-                }
-                else
-                {
-                    settings.loadProject();
-                }
-                this.updateTitle();
-            });
-        }, ["core", "teams", "extensions"], true);
+                settings.loadProject(patchFile);
+            }
+            else
+            {
+                settings.loadProject();
+            }
+            this.updateTitle();
+        });
     }
 
     updateTitle()
@@ -263,7 +258,6 @@ class ElectronApp
             if (!result.canceled)
             {
                 let projectFile = result.filePaths[0];
-                settings.loadProject(projectFile);
                 this.openPatch(projectFile);
                 return projectFile;
             }

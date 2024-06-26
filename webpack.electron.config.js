@@ -62,7 +62,7 @@ export default (isLiveBuild, buildInfo, minify = false) =>
                             {
                                 buildInfo.platform.node = process.env.npm_package_engines_node;
                             }
-                            console.log("PRO", buildInfo);
+                            console.log("buildInfo", buildInfo, process.env);
                             return JSON.stringify(buildInfo);
                         }
                     },
