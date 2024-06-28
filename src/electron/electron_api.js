@@ -174,6 +174,7 @@ class ElectronApi
                 currentProject = newProject;
             }
         }
+        currentProject.allowEdit = true;
         currentProject.summary = currentProject.summary || {};
         currentProject.summary.title = currentProject.name;
         currentProject.summary.allowEdit = true;
@@ -313,7 +314,7 @@ class ElectronApi
         result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
         const c = doc.getOpDocMd(opName);
         if (c) result.content = marked(c || "");
-        return this.success(opDocs, true);
+        return this.success(result, true);
     }
 
     saveOpCode(data)
@@ -858,8 +859,12 @@ class ElectronApi
     {
         const now = Date.now();
         const project = settings.getCurrentProject();
+        const projectFile = settings.getCurrentProjectFile();
         project.updated = now;
-        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
+        if (projectFile)
+        {
+            projectsUtil.writeProjectToFile(projectFile, project);
+        }
         return this.success(project);
     }
 

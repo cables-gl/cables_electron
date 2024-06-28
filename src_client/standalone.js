@@ -89,6 +89,7 @@ class CablesStandalone
                 "remoteClient": false,
                 "buildInfo": this._settings.buildInfo,
                 "patchConfig": {
+                    "allowEdit": true,
                     "prefixAssetPath": this._settings.currentPatchDir
                 }
             }

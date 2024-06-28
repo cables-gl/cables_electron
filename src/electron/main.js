@@ -157,18 +157,21 @@ class ElectronApp
 
     openPatch(patchFile)
     {
-        this.editorWindow.loadFile("index.html").then(() =>
+        doc.rebuildOpCaches((opDocs) =>
         {
-            if (patchFile)
+            this.editorWindow.loadFile("index.html").then(() =>
             {
-                settings.loadProject(patchFile);
-            }
-            else
-            {
-                settings.loadProject();
-            }
-            this.updateTitle();
-        });
+                if (patchFile)
+                {
+                    settings.loadProject(patchFile);
+                }
+                else
+                {
+                    settings.loadProject();
+                }
+                this.updateTitle();
+            });
+        }, ["core", "teams", "extensions"], true);
     }
 
     updateTitle()

@@ -225,19 +225,45 @@ class ElectronEndpoint
             if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             const opsInProjectDir = doc.getOpDocsInProjectDirs(project);
-            opsInProjectDir.forEach((op) =>
-            {
-                op.opId = op._id;
-                op.objName = op.name;
-            });
             missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-            missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId === obj.opId; }) === index; });
         }
-        code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, false, false, opDocs);
-        filesUtil.registerOpChangeListeners(missingOps.map((missingOp) => { return missingOp.objName; }));
-        return code;
+        const opsWithCode = [];
+        let codeNamespaces = [];
+        missingOps.forEach((missingOp) =>
+        {
+            const opId = missingOp.opId || missingOp.id;
+            const opName = missingOp.name || opsUtil.getOpNameById(opId);
+            if (opId && opName)
+            {
+                if (!opsWithCode.includes(opName))
+                {
+                    const parts = opName.split(".");
+                    for (let k = 1; k < parts.length; k++)
+                    {
+                        let partPartname = "";
+                        for (let j = 0; j < k; j++) partPartname += parts[j] + ".";
+
+                        partPartname = partPartname.substr(0, partPartname.length - 1);
+                        codeNamespaces.push(partPartname + "=" + partPartname + " || {};");
+                    }
+                    code += opsUtil.getOpFullCode(opName, opId);
+                    opsWithCode.push(opName);
+                }
+            }
+        });
+
+        codeNamespaces = helper.sortAndReduce(codeNamespaces);
+        let fullCode = opsUtil.OPS_CODE_PREFIX;
+        if (codeNamespaces && codeNamespaces.length > 0)
+        {
+            codeNamespaces[0] = "var " + codeNamespaces[0];
+            fullCode += codeNamespaces.join("\n") + "\n\n";
+        }
+
+        fullCode += code;
+        return fullCode;
     }
 
     apiGetOpCode(params)

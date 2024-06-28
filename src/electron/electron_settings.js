@@ -122,6 +122,7 @@ class ElectronSettings
                     });
                     filesUtil.registerOpChangeListeners(opNames);
                 }
+                this.addToRecentProjects(projectFile, project);
             }
         }
         else
