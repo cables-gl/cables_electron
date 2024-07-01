@@ -39,6 +39,7 @@ class ElectronApi
 
         ipcMain.on("settings", (event, _cmd, _data) =>
         {
+            settings.data.buildInfo = settings.getBuildInfo();
             event.returnValue = settings.data;
         });
 
