@@ -344,7 +344,7 @@ class ElectronApi
         // }
         // const formatedCode = format.formatedCode;
         const formatedCode = code;
-        if (opsUtil.existingCoreOp(opName) || data.format)
+        if (data.format || opsUtil.isCoreOp(opName))
         {
             returnedCode = formatedCode;
         }

@@ -211,6 +211,7 @@ class ElectronSettings
             }
         }
 
+
         return {
             "updateWarning": false,
             "core": core,
