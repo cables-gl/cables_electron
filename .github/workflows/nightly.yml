@@ -35,29 +35,29 @@ jobs:
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
       release_type: "prerelease"
     secrets: inherit
-  # win:
-  #   needs: draft_release
-  #   uses: ./.github/workflows/build.yml
-  #   with:
-  #     runner: macos-14
-  #     target: win
-  #     branch: develop
-  #     build_version: ${{ needs.draft_release.outputs.date }}-nightly
-  #     exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
-  #     tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-  #     release_type: "prerelease"
-  #   secrets: inherit
-  # mac:
-  #   needs: draft_release
-  #   uses: ./.github/workflows/build.yml
-  #   with:
-  #     runner: macos-14
-  #     target: mac
-  #     branch: develop
-  #     build_version: ${{ needs.draft_release.outputs.date }}-nightly
-  #     exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
-  #     tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-  #     release_type: "prerelease"
-  #     sign: true
-  #     notarize: true
-  #   secrets: inherit
+  win:
+    needs: draft_release
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: win
+      branch: develop
+      build_version: ${{ needs.draft_release.outputs.date }}-nightly
+      exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
+      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      release_type: "prerelease"
+    secrets: inherit
+  mac:
+    needs: draft_release
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: mac
+      branch: develop
+      build_version: ${{ needs.draft_release.outputs.date }}-nightly
+      exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
+      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      release_type: "prerelease"
+      sign: true
+      notarize: true
+    secrets: inherit
