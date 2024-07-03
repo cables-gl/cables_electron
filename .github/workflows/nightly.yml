@@ -1,0 +1,54 @@
+name: nightly build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 3 * * *'
+
+jobs:
+  draft_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - name: create release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "${{ steps.date.outputs.date }}-nightly"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: true
+  linux:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: linux
+      branch: develop
+      build_version: ${{ steps.date.outputs.date }}-nightly
+      exe_name: cables-${{ steps.date.outputs.date }}-nightly
+      tag_name: v${{ steps.date.outputs.date }}
+    secrets: inherit
+  win:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: win
+      branch: develop
+      build_version: ${{ steps.date.outputs.date }}-nightly
+      exe_name: cables-${{ steps.date.outputs.date }}-nightly
+      tag_name: v${{ steps.date.outputs.date }}
+    secrets: inherit
+  mac:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: mac
+      branch: develop
+      build_version: ${{ steps.date.outputs.date }}-nightly
+      exe_name: cables-${{ steps.date.outputs.date }}-nightly
+      tag_name: v${{ steps.date.outputs.date }}
+      sign: true
+      notarize: true
+    secrets: inherit
