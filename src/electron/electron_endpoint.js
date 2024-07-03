@@ -18,6 +18,15 @@ protocol.registerSchemesAsPrivileged([{
     }
 }]);
 
+protocol.registerSchemesAsPrivileged([{
+    "scheme": "file",
+    "privileges": {
+        "stream": true,
+        "bypassCSP": true,
+        "supportFetchAPI": true
+    }
+}]);
+
 class ElectronEndpoint
 {
     constructor()
@@ -29,6 +38,46 @@ class ElectronEndpoint
     {
         const partition = settings.SESSION_PARTITION;
         const ses = session.fromPartition(partition, { "cache": false });
+
+        ses.protocol.handle("file", (request) =>
+        {
+            let urlFile = request.url;
+            let actualFile = helper.fileURLToPath(urlFile, true);
+            if (fs.existsSync(actualFile))
+            {
+                return net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
+            }
+            else
+            {
+                try
+                {
+                    const url = new URL(request.url);
+                    if (url.searchParams.size > 0)
+                    {
+                        const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
+                        if (!fs.existsSync(paramsFile))
+                        {
+                            actualFile = url.pathname.replace("//", "/");
+                        }
+                    }
+                    actualFile = decodeURI(actualFile);
+                    if (fs.existsSync(actualFile))
+                    {
+                        return net.fetch(helper.pathToFileURL(actualFile));
+                    }
+                    else
+                    {
+                        return new Response(null, {
+                            "headers": { "status": 404 }
+                        });
+                    }
+                }
+                catch (e)
+                {
+                    return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
+                }
+            }
+        });
 
         ses.protocol.handle("cables", (request) =>
         {
@@ -183,8 +232,8 @@ class ElectronEndpoint
         {
             if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
 
+            const opsInProjectDir = doc.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
-            const opsInProjectDir = doc.getOpDocsInProjectDirs(project);
             missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });

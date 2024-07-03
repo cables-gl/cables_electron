@@ -108,6 +108,7 @@ class ElectronSettings
                 this._setCurrentProjectFile(projectFile);
                 this._setCurrentProjectDir(path.dirname(projectFile));
                 this._setCurrentProject(projectFile, project);
+                // add ops in project dirs to lookup
                 filesUtil.registerAssetChangeListeners(project, true);
                 if (project.ops)
                 {
@@ -352,7 +353,6 @@ class ElectronSettings
 
     reloadProject()
     {
-        this.loadProject(this.getCurrentProjectFile());
     }
 
     addToRecentProjects(projectFile, project)

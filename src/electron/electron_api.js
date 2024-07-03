@@ -72,7 +72,7 @@ class ElectronApi
                     {
                         const currentProject = settings.getCurrentProject();
                         projectsUtil.writeProjectToFile(newProjectFile, currentProject);
-                        settings.loadProject(newProjectFile);
+                        this.loadProject(newProjectFile);
                     }
                     else
                     {
@@ -130,7 +130,7 @@ class ElectronApi
         currentProject.updated = Date.now();
         currentProject.updatedByUser = settings.getCurrentUser().username;
         projectsUtil.writeProjectToFile(currentProjectFile, currentProject, patch);
-        settings.loadProject(currentProjectFile);
+        this.loadProject(currentProjectFile);
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
         return this.success(re, true);
@@ -171,7 +171,7 @@ class ElectronApi
             if (!currentProject)
             {
                 const newProject = projectsUtil.generateNewProject(settings.getCurrentUser());
-                settings.loadProject(patchPath, newProject);
+                this.loadProject(patchPath, newProject);
                 currentProject = newProject;
             }
         }
@@ -224,7 +224,7 @@ class ElectronApi
         });
 
         // add all ops in any of the project op directory
-        const otherDirsOps = opsUtil.getOpNamesInProjectDirs(project);
+        const otherDirsOps = doc.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
         projectOps = projectOps.concat(otherDirsOps);
 
         // add all userops of the current user
@@ -799,7 +799,7 @@ class ElectronApi
         origProject.visibility = "private";
         origProject.shortId = helper.generateShortId(origProject._id, Date.now());
         projectsUtil.writeProjectToFile(projectFile, origProject);
-        settings.loadProject(settings.getCurrentProjectFile());
+        this.loadProject(settings.getCurrentProjectFile());
         electronApp.reload();
         return this.success(origProject, true);
     }
@@ -905,7 +905,7 @@ class ElectronApi
         fs.renameSync(oldFile, newFile);
         settings.replaceInRecentProjects(oldFile, newFile);
         projectsUtil.writeProjectToFile(newFile, project);
-        settings.loadProject(newFile);
+        this.loadProject(newFile);
         electronApp.updateTitle();
         return this.success({ "name": project.name });
     }
@@ -966,6 +966,12 @@ class ElectronApi
         }
         filesUtil.registerOpChangeListeners(allOpNames, true);
         return this.success(movedOps);
+    }
+
+    loadProject(patchPath, newProject)
+    {
+        const project = settings.loadProject(patchPath, newProject);
+        if (project) doc.getOpDocsInProjectDirs(project);
     }
 
     success(data, raw = false)

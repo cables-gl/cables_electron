@@ -1,7 +1,6 @@
 import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 import path from "path";
 import fs from "fs";
-import helper from "./helper_util.js";
 import settings from "../electron/electron_settings.js";
 import cables from "../cables.js";
 import projectsUtil from "./projects_util.js";
@@ -88,31 +87,6 @@ class OpsUtil extends SharedOpsUtil
     getOpTargetDirs(project, reverse = false)
     {
         return projectsUtil.getProjectOpDirs(project, true, reverse);
-    }
-
-    getOpNamesInProjectDirs(project)
-    {
-        const opNames = [];
-        if (!project) return opNames;
-
-        const opDirs = projectsUtil.getProjectOpDirs(project);
-        opDirs.forEach((opDir) =>
-        {
-            if (fs.existsSync(opDir))
-            {
-                const opJsons = helper.getFilesRecursive(opDir, ".json");
-                for (let jsonPath in opJsons)
-                {
-                    const parts = jsonPath.split("/");
-                    const opName = parts[parts.length - 2];
-                    if (this.isOpNameValid(opName) && !opNames.includes(opName))
-                    {
-                        opNames.push(opName);
-                    }
-                }
-            }
-        });
-        return helper.uniqueArray(opNames);
     }
 
     getOpAssetPorts(op, includeLibraryAssets = false)

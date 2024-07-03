@@ -1,6 +1,5 @@
 import { app, BrowserWindow, dialog, Menu, shell } from "electron";
 import path from "path";
-import fs from "fs";
 import localShortcut from "electron-localshortcut";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
@@ -54,9 +53,12 @@ class ElectronApp
             }
         });
 
-        this._registerListeners();
-        this._registerShortcuts();
-        this.openPatch(patchFile);
+        this._initCaches(() =>
+        {
+            this._registerListeners();
+            this._registerShortcuts();
+            this.openPatch(patchFile);
+        });
     }
 
     async pickProjectFileDialog()
@@ -163,11 +165,11 @@ class ElectronApp
             {
                 if (patchFile)
                 {
-                    settings.loadProject(patchFile);
+                    electronApi.loadProject(patchFile);
                 }
                 else
                 {
-                    settings.loadProject();
+                    electronApi.loadProject();
                 }
                 this.updateTitle();
             });
@@ -274,7 +276,7 @@ class ElectronApp
     reload()
     {
         this.updateTitle();
-        settings.reloadProject();
+        electronApi.loadProject(settings.getCurrentProjectFile());
         this.editorWindow.reload();
     }
 
@@ -403,6 +405,12 @@ class ElectronApp
         {
             settings.set(settings.OPEN_DEV_TOOLS_FIELD, false);
         });
+    }
+
+    _initCaches(cb)
+    {
+        doc.addOpsToLookup([], true);
+        cb();
     }
 }
 Menu.setApplicationMenu(null);
