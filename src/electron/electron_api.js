@@ -39,6 +39,7 @@ class ElectronApi
 
         ipcMain.on("settings", (event, _cmd, _data) =>
         {
+            settings.data.buildInfo = settings.getBuildInfo();
             event.returnValue = settings.data;
         });
 
@@ -121,13 +122,17 @@ class ElectronApi
     async savePatch(patch)
     {
         const currentProject = settings.getCurrentProject();
+        const currentProjectFile = settings.getCurrentProjectFile();
+
         const re = {
             "msg": "PROJECT_SAVED"
         };
-        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject, patch);
+        currentProject.updated = Date.now();
+        currentProject.updatedByUser = settings.getCurrentUser().username;
+        projectsUtil.writeProjectToFile(currentProjectFile, currentProject, patch);
+        settings.loadProject(currentProjectFile);
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
-        settings.loadProject(currentProject);
         return this.success(re, true);
     }
 
@@ -170,6 +175,7 @@ class ElectronApi
                 currentProject = newProject;
             }
         }
+        currentProject.allowEdit = true;
         currentProject.summary = currentProject.summary || {};
         currentProject.summary.title = currentProject.name;
         currentProject.summary.allowEdit = true;
@@ -245,8 +251,7 @@ class ElectronApi
         projectNamespaces = helper.uniqueArray(projectNamespaces);
         projectOps.forEach((opName) =>
         {
-            let opDoc = doc.getDocForOp(opName);
-            if (!opDoc) opDoc = doc.buildOpDocs(opName);
+            let opDoc = doc.buildOpDocs(opName);
             if (opDoc)
             {
                 if (!opDoc.name) opDoc.name = opName;
@@ -310,7 +315,7 @@ class ElectronApi
         result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
         const c = doc.getOpDocMd(opName);
         if (c) result.content = marked(c || "");
-        return this.success(opDocs, true);
+        return this.success(result, true);
     }
 
     saveOpCode(data)
@@ -339,7 +344,7 @@ class ElectronApi
         // }
         // const formatedCode = format.formatedCode;
         const formatedCode = code;
-        if (opsUtil.existingCoreOp(opName) || data.format)
+        if (data.format || opsUtil.isCoreOp(opName))
         {
             returnedCode = formatedCode;
         }
@@ -505,7 +510,9 @@ class ElectronApi
         {
             return this.error("NO_PROJECT");
         }
-        return this.success(projectsUtil.saveProjectScreenshot(currentProject, data.screenshot), true);
+        currentProject.screenshot = data.screenshot;
+        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
+        return this.success({ "msg": "OK" }, true);
     }
 
     getFilelist(data)
@@ -579,17 +586,20 @@ class ElectronApi
     getRecentPatches()
     {
         const recents = settings.getRecentProjects();
-        Object.keys(recents).forEach((projectFile) =>
+        const result = [];
+        for (let i = 0; i < recents.length; i++)
         {
-            if (fs.existsSync(projectFile))
+            const recentProject = recents[i];
+            let screenShot = recentProject.screenshot;
+            if (!screenShot)
             {
-                const recent = recents[projectFile];
-                let screenShotFilename = projectsUtil.getScreenShotFileName(recent, "png");
-                if (!fs.existsSync(screenShotFilename)) screenShotFilename = path.join(cables.getUiDistPath(), "/img/placeholder_dark.png");
-                recent.thumbnail = screenShotFilename;
+                screenShot = projectsUtil.getScreenShotFileName(recentProject, "png");
+                if (!fs.existsSync(screenShot)) screenShot = path.join(cables.getUiDistPath(), "/img/placeholder_dark.png");
             }
-        });
-        return this.success(Object.values(recents).slice(0, 10), true);
+            result[i] = recentProject;
+            result[i].thumbnail = screenShot;
+        }
+        return this.success(result.slice(0, 10), true);
     }
 
     opCreate(data)
@@ -796,32 +806,21 @@ class ElectronApi
 
     async gotoPatch(data)
     {
-        const recent = settings.getRecentProjects();
         let project = null;
         let projectFile = null;
         if (data && data.id)
         {
-            for (const key in recent)
-            {
-                const p = recent[key];
-                if (p && p.shortId === data.id)
-                {
-                    project = p;
-                    projectFile = key;
-                    break;
-                }
-            }
+            projectFile = settings.getRecentProjectFile(data.id);
+            if (projectFile) project = settings.getProjectFromFile(projectFile);
         }
         if (project && projectFile)
         {
-            settings.loadProject(projectFile);
             electronApp.openPatch(projectFile);
             return this.success(true, true);
         }
         else
         {
-            let type = data.type || "project";
-            const file = await electronApp.pickProjectFileDialog(type);
+            const file = await electronApp.pickProjectFileDialog();
             return this.success({ "projectFile": file });
         }
     }
@@ -861,8 +860,12 @@ class ElectronApi
     {
         const now = Date.now();
         const project = settings.getCurrentProject();
+        const projectFile = settings.getCurrentProjectFile();
         project.updated = now;
-        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), project);
+        if (projectFile)
+        {
+            projectsUtil.writeProjectToFile(projectFile, project);
+        }
         return this.success(project);
     }
 
@@ -900,7 +903,7 @@ class ElectronApi
         project.summary = project.summary || {};
         project.summary.title = project.name;
         fs.renameSync(oldFile, newFile);
-        settings.replaceInRecentPatches(oldFile, newFile);
+        settings.replaceInRecentProjects(oldFile, newFile);
         projectsUtil.writeProjectToFile(newFile, project);
         settings.loadProject(newFile);
         electronApp.updateTitle();

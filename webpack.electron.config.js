@@ -23,9 +23,25 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false) =>
                     "to": path.resolve("./dist", "public", "js", "buildinfo.json"),
                     "transform": () =>
                     {
+                        if (!buildInfo.platform)
+                        {
+                            buildInfo.platform = {};
+                        }
                         if (process.env.BUILD_VERSION)
                         {
                             buildInfo.version = process.env.BUILD_VERSION;
+                        }
+                        if (process.env.BUILD_OS)
+                        {
+                            buildInfo.platform.os = process.env.BUILD_OS;
+                        }
+                        if (process.env.npm_config_npm_version)
+                        {
+                            buildInfo.platform.npm = process.env.npm_config_npm_version;
+                        }
+                        if (process.env.npm_package_engines_node)
+                        {
+                            buildInfo.platform.node = process.env.npm_package_engines_node;
                         }
                         return JSON.stringify(buildInfo);
                     }

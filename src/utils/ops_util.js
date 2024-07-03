@@ -36,7 +36,7 @@ class OpsUtil extends SharedOpsUtil
     userHasWriteRightsOp(user, opName, teams = [], project = null)
     {
         const file = this.getOpAbsoluteFileName(opName);
-        if (file)
+        if (file && fs.existsSync(file))
         {
             try
             {

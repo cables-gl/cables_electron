@@ -24,8 +24,8 @@ class ElectronSettings
         }
         this.MAIN_CONFIG_NAME = "cables-electron-preferences";
         this.PATCHID_FIELD = "patchId";
-        this.PATCHFILE_FIELD = "patchFile";
-        this.CURRENTPATCHDIR_FIELD = "currentPatchDir";
+        this.PROJECTFILE_FIELD = "patchFile";
+        this.CURRENTPROJECTDIR_FIELD = "currentPatchDir";
         this.STORAGEDIR_FIELD = "storageDir";
         this.USER_SETTINGS_FIELD = "userSettings";
         this.RECENT_PROJECTS_FIELD = "recentProjects";
@@ -39,8 +39,8 @@ class ElectronSettings
             "showTipps": false
         };
         this.opts.defaults[this.PATCHID_FIELD] = null;
-        this.opts.defaults[this.PATCHFILE_FIELD] = null;
-        this.opts.defaults[this.CURRENTPATCHDIR_FIELD] = null;
+        this.opts.defaults[this.PROJECTFILE_FIELD] = null;
+        this.opts.defaults[this.CURRENTPROJECTDIR_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
         this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
         this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
@@ -87,7 +87,7 @@ class ElectronSettings
 
     getCurrentProjectDir()
     {
-        let value = this.get(this.CURRENTPATCHDIR_FIELD);
+        let value = this.get(this.CURRENTPROJECTDIR_FIELD);
         if (value && !value.endsWith("/")) value += "/";
         return value;
     }
@@ -102,12 +102,11 @@ class ElectronSettings
         let project = newProject;
         if (projectFile)
         {
-            if (fs.existsSync(projectFile))
+            project = this.getProjectFromFile(projectFile);
+            if (project)
             {
                 this._setCurrentProjectFile(projectFile);
                 this._setCurrentProjectDir(path.dirname(projectFile));
-                project = fs.readFileSync(projectFile);
-                project = JSON.parse(project.toString("utf-8"));
                 this._setCurrentProject(projectFile, project);
                 filesUtil.registerAssetChangeListeners(project, true);
                 if (project.ops)
@@ -123,6 +122,7 @@ class ElectronSettings
                     });
                     filesUtil.registerOpChangeListeners(opNames);
                 }
+                this.addToRecentProjects(projectFile, project);
             }
         }
         else
@@ -131,7 +131,7 @@ class ElectronSettings
             this._setCurrentProjectDir(null);
             this._setCurrentProject(null, project);
         }
-        this._updateRecentProjects();
+        return project;
     }
 
     getCurrentUser()
@@ -164,7 +164,7 @@ class ElectronSettings
 
     getCurrentProjectFile()
     {
-        return this.get(this.PATCHFILE_FIELD);
+        return this.get(this.PROJECTFILE_FIELD);
     }
 
     getBuildInfo()
@@ -211,12 +211,6 @@ class ElectronSettings
             }
         }
 
-        this.set("buildInfo", {
-            "updateWarning": false,
-            "core": core,
-            "ui": ui,
-            "api": api
-        });
 
         return {
             "updateWarning": false,
@@ -242,7 +236,22 @@ class ElectronSettings
 
     getRecentProjects()
     {
-        return this.get(this.RECENT_PROJECTS_FIELD) || {};
+        const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        return Object.values(recentProjects);
+    }
+
+    getRecentProjectFile(projectId)
+    {
+        const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        for (const file in recentProjects)
+        {
+            const recent = recentProjects[file];
+            if (recent && (recent._id === projectId || recent.shortId === projectId))
+            {
+                if (fs.existsSync(file)) return file;
+            }
+        }
+        return null;
     }
 
     setRecentProjects(recents)
@@ -251,10 +260,10 @@ class ElectronSettings
         return this.set(this.RECENT_PROJECTS_FIELD, recents);
     }
 
-    replaceInRecentPatches(oldFile, newFile, newProject)
+    replaceInRecentProjects(oldFile, newFile, newProject)
     {
-        const recents = this.getRecentProjects();
-        recents[newFile] = newProject;
+        const recents = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        recents[newFile] = this._toRecentProjectInfo(newProject);
         delete recents[oldFile];
         this._updateRecentProjects();
         return this.getRecentProjects();
@@ -262,7 +271,9 @@ class ElectronSettings
 
     _updateRecentProjects()
     {
-        const recents = this.getRecentProjects();
+        const recents = this.get(this.RECENT_PROJECTS_FIELD) || {};
+
+
         let files = Object.keys(recents);
         files = files.filter((f) => { return fs.existsSync(f); });
         files = files.sort((f1, f2) =>
@@ -279,7 +290,7 @@ class ElectronSettings
         {
             if (i > files.length) break;
             const key = files[i];
-            if (recents.hasOwnProperty(key))
+            if (key)
             {
                 try
                 {
@@ -292,12 +303,12 @@ class ElectronSettings
                 }
             }
         }
-        this.set(this.RECENT_PROJECTS_FIELD, newRecents);
+        this.setRecentProjects(newRecents);
     }
 
     _setCurrentProjectFile(value)
     {
-        this.set(this.PATCHFILE_FIELD, value);
+        this.set(this.PROJECTFILE_FIELD, value);
     }
 
     _toRecentProjectInfo(project)
@@ -307,7 +318,7 @@ class ElectronSettings
             "_id": project._id,
             "shortId": project.shortId,
             "name": project.name,
-            "thumbnail": project.thumbnail,
+            "screenshot": project.screenshot,
             "created": project.created,
             "updated": project.updated
         };
@@ -316,17 +327,16 @@ class ElectronSettings
     _setCurrentProjectDir(value)
     {
         if (value && !value.endsWith("/")) value += "/";
-        this.set(this.CURRENTPATCHDIR_FIELD, value);
+        this.set(this.CURRENTPROJECTDIR_FIELD, value);
     }
 
     _setCurrentProject(projectFile, project)
     {
         this._currentProject = project;
         if (project) this.set(this.PATCHID_FIELD, project._id);
-        const recentProjects = this.getRecentProjects();
         if (projectFile && project)
         {
-            const projectName = path.basename(projectFile);
+            const projectName = path.basename(projectFile, "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
             if (project.name !== projectName)
             {
                 project.name = projectName;
@@ -334,20 +344,40 @@ class ElectronSettings
                 project.summary.title = project.name;
                 projectsUtil.writeProjectToFile(projectFile, project);
             }
-            if (!recentProjects.hasOwnProperty(projectFile))
-            {
-                const recent = this._toRecentProjectInfo(project);
-                if (recent) recentProjects[projectFile] = recent;
-                this.setRecentProjects(recentProjects);
-            }
+            this._updateRecentProjects();
         }
-        this._updateRecentProjects();
+
         electronApp.updateTitle();
     }
 
     reloadProject()
     {
         this.loadProject(this.getCurrentProjectFile());
+    }
+
+    addToRecentProjects(projectFile, project)
+    {
+        if (!projectFile || !project) return;
+        const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        const recent = this._toRecentProjectInfo(project);
+        if (recent) recentProjects[projectFile] = recent;
+        this.setRecentProjects(recentProjects);
+        this._updateRecentProjects();
+    }
+
+    getProjectFromFile(projectFile)
+    {
+        if (!projectFile || !fs.existsSync(projectFile)) return null;
+        const project = fs.readFileSync(projectFile);
+        try
+        {
+            return JSON.parse(project.toString("utf-8"));
+        }
+        catch (e)
+        {
+            this._log.error("failed to parse project from projectfile", projectFile, e);
+        }
+        return null;
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));

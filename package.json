@@ -134,7 +134,7 @@
     "cross-env": "5.2.0",
     "electron": "30.0.6",
     "electron-builder": "24.13.3",
-    "electron-notarize": "1.2.2",
+    "@electron/notarize": "2.3.2",
     "git-last-commit": "1.0.1",
     "gulp": "5.0.0",
     "terser-webpack-plugin": "5.3.10",

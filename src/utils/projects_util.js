@@ -17,7 +17,6 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         super(provider);
         this.CABLES_PROJECT_FILE_EXTENSION = "cables";
-        this.CABLES_STANDALONE_EXPORT_FILE_EXTENSION = "cables.json";
     }
 
     getAssetPath(projectId)
@@ -108,7 +107,6 @@ class ProjectsUtil extends SharedProjectsUtil
                 if (patch.dataB64) buf = Buffer.from(patch.dataB64, "base64");
 
                 const qData = JSON.parse(pako.inflate(buf, { "to": "string" }));
-
                 if (qData.ops) project.ops = qData.ops;
                 if (qData.ui) project.ui = qData.ui;
             }
@@ -125,7 +123,6 @@ class ProjectsUtil extends SharedProjectsUtil
             return !(op.storage && op.storage.blueprint);
         });
 
-        project.updated = Date.now();
         project.name = path.basename(projectFile, "." + this.CABLES_PROJECT_FILE_EXTENSION);
         project.summary = project.summary || {};
         project.summary.title = project.name;
@@ -135,7 +132,8 @@ class ProjectsUtil extends SharedProjectsUtil
             .update(JSON.stringify(project.ops))
             .digest("hex");
         project.buildInfo = settings.getBuildInfo();
-        return jsonfile.writeFileSync(projectFile, project);
+        jsonfile.writeFileSync(projectFile, project);
+        settings.addToRecentProjects(projectFile, project);
     }
 
     getUsedAssetFilenames(project, includeLibraryAssets = false)

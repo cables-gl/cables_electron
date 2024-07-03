@@ -8,9 +8,7 @@ import doc from "../utils/doc_util.js";
 import opsUtil from "../utils/ops_util.js";
 import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
-import filesUtil from "../utils/files_util.js";
 import helper from "../utils/helper_util.js";
-import projectsUtil from "../utils/projects_util.js";
 
 protocol.registerSchemesAsPrivileged([{
     "scheme": "cables",
@@ -31,46 +29,6 @@ class ElectronEndpoint
     {
         const partition = settings.SESSION_PARTITION;
         const ses = session.fromPartition(partition, { "cache": false });
-
-        ses.protocol.handle("file", (request) =>
-        {
-            let urlFile = request.url;
-            let actualFile = helper.fileURLToPath(urlFile, true);
-            if (fs.existsSync(actualFile))
-            {
-                return net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
-            }
-            else
-            {
-                try
-                {
-                    const url = new URL(request.url);
-                    if (url.searchParams.size > 0)
-                    {
-                        const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
-                        if (!fs.existsSync(paramsFile))
-                        {
-                            actualFile = url.pathname.replace("//", "/");
-                        }
-                    }
-                    actualFile = decodeURI(actualFile);
-                    if (fs.existsSync(actualFile))
-                    {
-                        return net.fetch(helper.pathToFileURL(actualFile));
-                    }
-                    else
-                    {
-                        return new Response(null, {
-                            "headers": { "status": 404 }
-                        });
-                    }
-                }
-                catch (e)
-                {
-                    return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
-                }
-            }
-        });
 
         ses.protocol.handle("cables", (request) =>
         {
@@ -224,16 +182,52 @@ class ElectronEndpoint
         if (project)
         {
             if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
+
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             const opsInProjectDir = doc.getOpDocsInProjectDirs(project);
             missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-            missingOps = missingOps.filter((obj, index) => { return missingOps.findIndex((item) => { return item.opId === obj.opId; }) === index; });
         }
-        code = opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, false, false, opDocs);
-        filesUtil.registerOpChangeListeners(missingOps.map((missingOp) => { return missingOp.objName; }));
-        return code;
+        const opsWithCode = [];
+        let codeNamespaces = [];
+        missingOps.forEach((missingOp) =>
+        {
+            const opId = missingOp.opId || missingOp.id;
+            const opName = missingOp.name || opsUtil.getOpNameById(opId);
+            if (opId && opName)
+            {
+                if (!opsWithCode.includes(opName))
+                {
+                    const parts = opName.split(".");
+                    for (let k = 1; k < parts.length; k++)
+                    {
+                        let partPartname = "";
+                        for (let j = 0; j < k; j++) partPartname += parts[j] + ".";
+
+                        partPartname = partPartname.substr(0, partPartname.length - 1);
+                        codeNamespaces.push(partPartname + "=" + partPartname + " || {};");
+                    }
+                    const fn = opsUtil.getOpAbsoluteFileName(opName);
+                    if (fn)
+                    {
+                        code += opsUtil.getOpFullCode(fn, opName, opId);
+                        opsWithCode.push(opName);
+                    }
+                }
+            }
+        });
+
+        codeNamespaces = helper.sortAndReduce(codeNamespaces);
+        let fullCode = opsUtil.OPS_CODE_PREFIX;
+        if (codeNamespaces && codeNamespaces.length > 0)
+        {
+            codeNamespaces[0] = "var " + codeNamespaces[0];
+            fullCode += codeNamespaces.join("\n") + "\n\n";
+        }
+
+        fullCode += code;
+        return fullCode;
     }
 
     apiGetOpCode(params)
