@@ -17,9 +17,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ env.$DATE }}-nightly"
+          name: "${{ env.DATE }}-nightly"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ env.date }}-nightly
+          tag_name: v${{ env.DATE }}-nightly
           draft: false
           prerelease: true
       - name: current date
