@@ -32,7 +32,7 @@ jobs:
     with:
       runner: macos-14
       target: linux
-      branch: develop
+      branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: v${{ inputs.version }}
@@ -42,7 +42,7 @@ jobs:
     with:
       runner: macos-14
       target: win
-      branch: develop
+      branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: v${{ inputs.version }}
@@ -52,7 +52,7 @@ jobs:
     with:
       runner: macos-14
       target: mac
-      branch: develop
+      branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: ${{ inputs.version }}
