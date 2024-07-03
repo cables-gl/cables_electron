@@ -8,16 +8,26 @@ on:
 jobs:
   draft_release:
     runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.date.outputs.date }}
     steps:
       - name: Get current date
         id: date
-        run: |
-          echo "{date}={$(date +'%Y-%m-%d')}" >> $GITHUB_ENV
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - name: create release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "${{ steps.date.outputs.date }}-nightly"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ steps.date.outputs.date }}-nightly
+          draft: false
+          prerelease: true
       - name: Test with environment variables
         run: echo $TAG_NAME - $RELEASE_NAME
         env:
-          TAG_NAME: nightly-tag-${{ env.date }}
-          RELEASE_NAME: nightly-release-${{ env.date }}
+          TAG_NAME: nightly-tag-${{ steps.date.outputs.date }}
+          RELEASE_NAME: nightly-release-${{ steps.date.outputs.date }}
   debug:
     needs: draft_release
     runs-on: ubuntu-latest
@@ -25,5 +35,5 @@ jobs:
       - name: Test with environment variables in other job
         run: echo $TAG_NAME - $RELEASE_NAME
         env:
-          TAG_NAME: nightly-tag-${{ env.date }}
-          RELEASE_NAME: nightly-release-${{ env.date }}
+          TAG_NAME: nightly-tag-${{needs.draft_release.outputs.date}}
+          RELEASE_NAME: nightly-release-${{needs.draft_release.outputs.date}}
