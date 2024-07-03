@@ -23,17 +23,38 @@ jobs:
           tag_name: v${{ steps.date.outputs.date }}-nightly
           draft: false
           prerelease: true
-      - name: Test with environment variables
-        run: echo $TAG_NAME - $RELEASE_NAME
-        env:
-          TAG_NAME: nightly-tag-${{ steps.date.outputs.date }}
-          RELEASE_NAME: nightly-release-${{ steps.date.outputs.date }}
-  debug:
+  linux:
     needs: draft_release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test with environment variables in other job
-        run: echo $TAG_NAME - $RELEASE_NAME
-        env:
-          TAG_NAME: nightly-tag-${{needs.draft_release.outputs.date}}
-          RELEASE_NAME: nightly-release-${{needs.draft_release.outputs.date}}
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: linux
+      branch: develop
+      build_version: ${{needs.draft_release.outputs.date}}
+      exe_name: cables-${{needs.draft_release.outputs.date}}
+      tag_name: v${{needs.draft_release.outputs.date}}
+    secrets: inherit
+  win:
+    needs: draft_release
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: win
+      branch: develop
+      build_version: ${{needs.draft_release.outputs.date}}
+      exe_name: cables-${{needs.draft_release.outputs.date}}
+      tag_name: v${{needs.draft_release.outputs.date}}
+    secrets: inherit
+  mac:
+    needs: draft_release
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-14
+      target: mac
+      branch: develop
+      build_version: ${{needs.draft_release.outputs.date}}
+      exe_name: cables-${{needs.draft_release.outputs.date}}
+      tag_name: ${{needs.draft_release.outputs.date}}
+      sign: true
+      notarize: true
+    secrets: inherit
