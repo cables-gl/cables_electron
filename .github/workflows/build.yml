@@ -36,6 +36,11 @@ on:
         required: false
         type: boolean
         default: false
+      release_type:
+        description: "draft, prerelease, release"
+        required: false
+        type: string
+        default: "draft"
 jobs:
   build:
     runs-on: ${{ inputs.runner }}
@@ -93,6 +98,7 @@ jobs:
         GH_TOKEN: ${{ secrets.github_token }}
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
+        RELEASE_TYPE: ${{ inputs.release_type }}
     - name: build signed electron
       if: ${{ inputs.sign }}
       shell: bash
@@ -109,6 +115,7 @@ jobs:
         NOTARIZE: "${{ inputs.notarize }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
+        RELEASE_TYPE: ${{ inputs.release_type }}
     - name: delete update files
       uses: mknejp/delete-release-assets@v1
       continue-on-error: true

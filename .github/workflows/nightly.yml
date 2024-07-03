@@ -33,6 +33,7 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      release_type: "prerelease"
     secrets: inherit
   win:
     needs: draft_release
@@ -44,6 +45,7 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      release_type: "prerelease"
     secrets: inherit
   mac:
     needs: draft_release
@@ -55,6 +57,7 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      release_type: "prerelease"
       sign: true
       notarize: true
     secrets: inherit
