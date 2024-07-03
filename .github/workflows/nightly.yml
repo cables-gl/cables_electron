@@ -19,6 +19,7 @@ jobs:
         with:
           name: "${{ steps.date.outputs.DATE }}-nightly"
           token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ steps.date.outputs.DATE }}-nightly
           draft: false
           prerelease: true
   linux:
