@@ -12,25 +12,27 @@ jobs:
       - name: Get current date
         id: date
         run: |
-          export DATE=$(date +'%Y-%m-%d')
+          echo "{date}={$(date +'%Y-%m-%d')}" >> $GITHUB_STATE
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ env.DATE }}-nightly"
+          name: "${{ env.date }}-nightly"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ env.DATE }}-nightly
+          tag_name: v${{ env.date }}-nightly
           draft: false
           prerelease: true
       - name: current date
         run: |
-          echo "debug one: "$DATE
+          echo "debug one: "$date
           echo "debug two: "$(date +'%Y-%m-%d')
+          echo "debug three: "${{ env.date }}
   debug:
     needs: draft_release
     runs-on: ubuntu-latest
     steps:
       - name: current date
         run: |
-          echo "debug one: "$DATE
+          echo "debug one: "$date
           echo "debug two: "$(date +'%Y-%m-%d')
+          echo "debug three: "${{ env.date }}
