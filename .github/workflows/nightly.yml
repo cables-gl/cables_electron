@@ -30,9 +30,9 @@ jobs:
       runner: macos-14
       target: linux
       branch: develop
-      build_version: ${{ steps.date.outputs.date }}-nightly
-      exe_name: cables-${{ steps.date.outputs.date }}-nightly
-      tag_name: v${{ steps.date.outputs.date }}-nightly
+      build_version: ${{ needs.draft_release.outputs.date }}-nightly
+      exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
+      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
     secrets: inherit
   win:
     needs: draft_release
@@ -41,9 +41,9 @@ jobs:
       runner: macos-14
       target: win
       branch: develop
-      build_version: ${{ steps.date.outputs.date }}-nightly
-      exe_name: cables-${{ steps.date.outputs.date }}-nightly
-      tag_name: v${{ steps.date.outputs.date }}-nightly
+      build_version: ${{ needs.draft_release.outputs.date }}-nightly
+      exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
+      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
     secrets: inherit
   mac:
     needs: draft_release
@@ -52,9 +52,9 @@ jobs:
       runner: macos-14
       target: mac
       branch: develop
-      build_version: ${{ steps.date.outputs.date }}-nightly
-      exe_name: cables-${{ steps.date.outputs.date }}-nightly
-      tag_name: ${{ steps.date.outputs.date }}-nightly
+      build_version: ${{ needs.draft_release.outputs.date }}-nightly
+      exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
+      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
       sign: true
       notarize: true
     secrets: inherit
