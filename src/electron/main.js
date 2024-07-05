@@ -186,6 +186,13 @@ class ElectronApp
         {
             title = title + " - " + projectFile;
         }
+        const project = settings.getCurrentProject();
+        if (project)
+        {
+            this.sendTalkerMessage("updatePatchName", { "name": project.name });
+            this.sendTalkerMessage("updatePatchSummary", { "summary": project.summary });
+        }
+
         this.editorWindow.setTitle(title);
     }
 

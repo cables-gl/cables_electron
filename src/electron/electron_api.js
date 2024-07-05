@@ -800,7 +800,7 @@ class ElectronApi
         origProject.visibility = "private";
         origProject.shortId = helper.generateShortId(origProject._id, Date.now());
         projectsUtil.writeProjectToFile(projectFile, origProject);
-        this.loadProject(settings.getCurrentProjectFile());
+        this.loadProject(projectFile);
         electronApp.reload();
         return this.success(origProject, true);
     }
@@ -972,6 +972,7 @@ class ElectronApi
     loadProject(patchPath, newProject)
     {
         const project = settings.loadProject(patchPath, newProject);
+        electronApp.updateTitle();
         if (project) doc.getOpDocsInProjectDirs(project);
     }
 
