@@ -10,14 +10,26 @@ CABLES_CMD_ELECTRON.runNpm = () =>
     const options = {};
     standalone.editor.api("installProjectDependencies", options, (_err, r) =>
     {
-        if (r.stdout)
+        if (r.data)
         {
-            loadingModal.setTask(r.stdout);
+            if (r.data.packages && r.data.packages.length > 0)
+            {
+                loadingModal.setTask("found packages");
+                r.data.packages.forEach((p) =>
+                {
+                    loadingModal.setTask(p);
+                });
+            }
+            if (r.data.stdout)
+            {
+                loadingModal.setTask(r.data.stdout);
+            }
+            if (r.data.stderr)
+            {
+                loadingModal.setTask(r.data.stderr);
+            }
         }
-        if (r.stderr)
-        {
-            loadingModal.setTask(r.stderr);
-        }
+        setTimeout(() => { standalone.gui.endModalLoading(); }, 3000);
     });
 };
 

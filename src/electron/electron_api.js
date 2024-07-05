@@ -643,6 +643,8 @@ class ElectronApi
     {
         const currentProjectDir = settings.getCurrentProjectDir();
         const opsDir = cables.getProjectOpsPath();
+
+        let toInstall = [];
         if (opsDir && fs.existsSync(opsDir))
         {
             const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
@@ -651,9 +653,6 @@ class ElectronApi
             let __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
             __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
             const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
-            this._log.debug("NPM", npm);
-
-            let toInstall = [];
             fileNames.forEach((packageFile) =>
             {
                 const fileContents = packageFiles[packageFile];
@@ -680,15 +679,17 @@ class ElectronApi
             {
                 try
                 {
-                    return execaSync(npm, ["install", toInstall, "--legacy-peer-deps"], { "cwd": currentProjectDir });
+                    const out = execaSync(npm, ["install", toInstall, "--legacy-peer-deps"], { "cwd": currentProjectDir });
+                    out.packages = toInstall;
+                    return this.success(out);
                 }
                 catch (e)
                 {
-                    return { "stderr": e };
+                    return { "stderr": e, "packages": toInstall };
                 }
             }
         }
-        return this.success({ "stdout": "nothing to install" }, true);
+        return this.success({ "stdout": "nothing to install", "packages": toInstall });
     }
 
     async openDir(options)

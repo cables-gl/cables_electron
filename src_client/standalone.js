@@ -102,7 +102,11 @@ class CablesStandalone
         {
             if (this.CABLES.Op)
             {
-                this.CABLES.Op.prototype.require = this._opRequire.bind(this);
+                const standAlone = this;
+                this.CABLES.Op.prototype.require = function (moduleName)
+                {
+                    standAlone._opRequire(moduleName, standAlone, this);
+                };
                 Object.defineProperty(this.CABLES.Op.prototype, "__dirname", { "get": function ()
                 {
                     return window.ipcRenderer.sendSync("getOpDir", { "name": this.name, "opId": this.opId });
@@ -142,25 +146,28 @@ class CablesStandalone
         }
     }
 
-    _opRequire(moduleName)
+    _opRequire(moduleName, thisClass, op)
     {
-        if (moduleName === "electron") return this._electron;
+        if (op) op.setUiError("oprequire", null);
+        if (moduleName === "electron") return thisClass._electron;
         try
         {
-            const modulePath = this._path.join(this._settings.currentPatchDir, "node_modules", moduleName);
-            console.info("trying to load", modulePath);
+            const modulePath = thisClass._path.join(thisClass._settings.currentPatchDir, "node_modules", moduleName);
+            console.debug("trying to load", modulePath);
             return window.nodeRequire(modulePath);
         }
         catch (e)
         {
             try
             {
-                console.info("trying to load native module", moduleName);
+                console.debug("trying to load native module", moduleName);
                 return window.nodeRequire(moduleName);
             }
             catch (e2)
             {
-                console.error("failed to load node module \"" + moduleName + "\" do you need to run `npm install`?", e2);
+                const errorMessage = "failed to load node module \"" + moduleName + "\" do you need to run `npm install`?";
+                if (op) op.setUiError("oprequire", errorMessage);
+                console.error(errorMessage, e2);
                 return "";
             }
         }
