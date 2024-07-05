@@ -38,7 +38,7 @@ class HelperUtil extends SharedHelperUtil
         }
         catch (e)
         {
-            this._log.error("failed to create url from path", url, e);
+            this._log.info("failed to create url from path", url);
             return "";
         }
     }

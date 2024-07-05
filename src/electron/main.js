@@ -161,17 +161,11 @@ class ElectronApp
     {
         doc.rebuildOpCaches((opDocs) =>
         {
+            electronApi.loadProject(patchFile);
+            this.updateTitle();
             this.editorWindow.loadFile("index.html").then(() =>
             {
-                if (patchFile)
-                {
-                    electronApi.loadProject(patchFile);
-                }
-                else
-                {
-                    electronApi.loadProject();
-                }
-                this.updateTitle();
+                this._log.verbose("loaded", patchFile);
             });
         }, ["core", "teams", "extensions"], true);
     }
@@ -185,10 +179,6 @@ class ElectronApp
             if (buildInfo.api.version)
             {
                 title += " - " + buildInfo.api.version;
-            }
-            else if (buildInfo.api.git && buildInfo.api.git.tag)
-            {
-                title += " - " + buildInfo.api.git.tag;
             }
         }
         const projectFile = settings.getCurrentProjectFile();

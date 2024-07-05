@@ -17,14 +17,22 @@
     "start": "cross-env npm_config_apiconfig=local gulp watch",
     "build": "cross-env npm_config_apiconfig=local gulp build",
     "analyze": "cross-env npm_config_apiconfig=local gulp analyze",
-    "pack": "electron-builder -mwl --dir",
-    "pack:mac": "electron-builder -m --dir -c.mac.identity=null",
-    "pack:win": "electron-builder -w --dir",
-    "pack:linux": "electron-builder -l --dir",
-    "dist": "electron-builder -mwl",
-    "dist:mac": "electron-builder -m",
-    "dist:win": "electron-builder -w",
-    "dist:linux": "electron-builder -l"
+    "pack": "run-s build _pack",
+    "pack:mac": "run-s build _pack_mac",
+    "pack:win": "run-s build _pack_win",
+    "pack:linux": "run-s build _pack_linux",
+    "dist": "run-s build _dist",
+    "dist:mac": "run-s build _dist_mac",
+    "dist:win": "run-s build _dist_win",
+    "dist:linux": "run-s build _dist_linux",
+    "_pack": "electron-builder -mwl --dir",
+    "_pack_mac": "electron-builder -m --dir -c.mac.identity=null",
+    "_pack_win": "electron-builder -w --dir",
+    "_pack_linux": "electron-builder -l --dir",
+    "_dist": "electron-builder -mwl",
+    "_dist_mac": "electron-builder -m",
+    "_dist_win": "electron-builder -w",
+    "_dist_linux": "electron-builder -l"
   },
   "build": {
     "productName": "cables",
@@ -47,6 +55,9 @@
           "**/*"
         ]
       }
+    ],
+    "asarUnpack": [
+      "node_modules/**/*"
     ],
     "directories": {
       "buildResources": "resources/build"
@@ -137,6 +148,7 @@
     "@electron/notarize": "2.3.2",
     "git-last-commit": "1.0.1",
     "gulp": "5.0.0",
+    "npm-run-all": "4.1.5",
     "terser-webpack-plugin": "5.3.10",
     "webpack": "5.91.0",
     "webpack-bundle-analyzer": "4.10.2"
