@@ -30,6 +30,7 @@ class ElectronSettings
         this.USER_SETTINGS_FIELD = "userSettings";
         this.RECENT_PROJECTS_FIELD = "recentProjects";
         this.OPEN_DEV_TOOLS_FIELD = "openDevTools";
+        this.WINDOW_ZOOM_FACTOR = "windowZoomFactor";
 
         this.opts = {};
         this.opts.defaults = {};

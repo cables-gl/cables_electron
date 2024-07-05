@@ -166,6 +166,8 @@ class ElectronApp
             this.editorWindow.loadFile("index.html").then(() =>
             {
                 this._log.verbose("loaded", patchFile);
+                const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
+                this.editorWindow.webContents.setZoomFactor(1.0);
             });
         }, ["core", "teams", "extensions"], true);
     }
@@ -320,6 +322,9 @@ class ElectronApp
         localShortcut.register(this.editorWindow, "CommandOrControl+R", this._reloadWindow.bind(this));
         localShortcut.register(this.editorWindow, "F5", this._reloadWindow.bind(this));
         localShortcut.register(this.editorWindow, "CmdOrCtrl+O", this.pickProjectFileDialog.bind(this));
+        localShortcut.register(this.editorWindow, "CmdOrCtrl+=", this._zoomIn.bind(this));
+        localShortcut.register(this.editorWindow, "CmdOrCtrl+Plus", this._zoomIn.bind(this));
+        localShortcut.register(this.editorWindow, "CmdOrCtrl+-", this._zoomOut.bind(this));
     }
 
     _toggleDevTools()
@@ -402,6 +407,24 @@ class ElectronApp
         {
             settings.set(settings.OPEN_DEV_TOOLS_FIELD, false);
         });
+    }
+
+    _zoomIn()
+    {
+        let newZoom = this.editorWindow.webContents.getZoomFactor() + 0.2;
+        this.editorWindow.webContents.setZoomFactor(newZoom);
+        settings.set(settings.WINDOW_ZOOM_FACTOR, newZoom);
+    }
+
+    _zoomOut()
+    {
+        let newZoom = this.editorWindow.webContents.getZoomFactor() - 0.2;
+        newZoom = Math.round(newZoom * 100) / 100;
+        if (newZoom > 0)
+        {
+            this.editorWindow.webContents.setZoomFactor(newZoom);
+            settings.set(settings.WINDOW_ZOOM_FACTOR, newZoom);
+        }
     }
 
     _initCaches(cb)
