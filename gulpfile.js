@@ -80,49 +80,89 @@ function _create_ops_dirs(done)
     done();
 }
 
-function _libs_copy()
+function _libs_copy(done)
 {
     const source = path.join("./src", config.sourcePath.libs);
     const target = path.join("./src", defaultConfig.path.libs);
     mkdirp.sync(target);
-    console.info("copying libs from", source, "to", target);
-    return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    if (fs.existsSync(source))
+    {
+        console.info("copying libs from", source, "to", target);
+        return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    }
+    else
+    {
+        console.error("FAILED to copy libs from", source, "to", target);
+        done();
+    }
 }
 
-function _corelibs_copy()
+function _corelibs_copy(done)
 {
     const source = path.join("./src", config.sourcePath.corelibs);
     const target = path.join("./src", defaultConfig.path.corelibs);
     mkdirp.sync(target);
-    console.info("copying corelibs from", source, "to", target);
-    return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    if (fs.existsSync(source))
+    {
+        console.info("copying corelibs from", source, "to", target);
+        return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    }
+    else
+    {
+        console.error("FAILED to copy corelibs from", source, "to", target);
+        done();
+    }
 }
 
-function _core_ops_copy()
+function _core_ops_copy(done)
 {
     const source = path.join("./src", config.sourcePath.ops, "/base/");
     const target = path.join("./src", defaultConfig.path.ops, "/base/");
     mkdirp.sync(target);
-    console.info("copying ops from", source, "to", target);
-    return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    if (fs.existsSync(source))
+    {
+        console.info("copying ops from", source, "to", target);
+        return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    }
+    else
+    {
+        console.error("FAILED to copy ops from", source, "to", target);
+        done();
+    }
 }
 
-function _extension_ops_copy()
+function _extension_ops_copy(done)
 {
     const source = path.join("./src", config.sourcePath.ops, "/extensions/");
     const target = path.join("./src", defaultConfig.path.ops, "/extensions/");
     mkdirp.sync(target);
-    console.info("copying extensions from", source, "to", target);
-    return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    if (fs.existsSync(source))
+    {
+        console.info("copying extensions from", source, "to", target);
+        return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    }
+    else
+    {
+        console.warn("FAILED to copy extensions from", source, "to", target);
+        done();
+    }
 }
 
-function _ui_copy()
+function _ui_copy(done)
 {
     const source = path.join("./src", config.sourcePath.uiDist);
     const target = path.join("./src", defaultConfig.path.uiDist);
     mkdirp.sync(target);
-    console.info("copying ui from", source, "to", target);
-    return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    if (fs.existsSync(source))
+    {
+        console.info("copying ui from", source, "to", target);
+        return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+    }
+    else
+    {
+        console.error("FAILED to copy ui from", source, "to", target);
+        done();
+    }
 }
 
 function _editor_scripts_webpack(done)

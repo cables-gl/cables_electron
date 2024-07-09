@@ -75,19 +75,31 @@ this.editorWindow = new BrowserWindow({
 
 ## Development
 
+## Set up local environment
+
+* the preferred way of developing cables locally is using the cables_dev repository: https://github.com/cables-gl/cables_dev
+* that repo contains scripts that do the described work for you
+
 ### Local Build
 
-- check out this repository
+- set up your local environment (see above)
 - run `npm install --no-save`
-- run `npm run deps` to fetch cables dependencies (shared code, cables ops, ui)
 - run `npm run build` to build the standalone version
 - run `npm run start` to start the standalone from the checked out sources
 
 ### Local Development
 
-- take the steps that are described in "Local Build" above
-- use `npm run build` and/op `npm run build:sources` to rebuild with your changes
-- restart the standalone
+- set up your local environment (see above)
+- run `npm install --no-save` in `cables_electron/`
+- run `npm run build`
+- use `npm run start` to start the app
+    - this will start watchers for changes in clientside javascript dirs (e.g. `src_client` and `../shared/client/`
+    - if you make changes to files in this directory, a reload of the electron app is enough to see the changes (cmd/ctrl+r)
+- if you want to develop on ops and/or the ui, change to cables_dev (`cd ..`) and run `npm run start:electron`
+    - this will create watchers on files in `cables` and `cables_ui` that trigger a rebuild on change
+    - to pick up on these changes, change your `cables_env_local.json` to point to these folders:
+        - `"path.uiDist": "../../cables_ui/dist/"`
+        - `"path.ops": "../../cables/src/ops/"`
 
 ### Building an executable
 
