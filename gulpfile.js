@@ -20,6 +20,10 @@ if (!fs.existsSync(configLocation))
         console.warn("config file not found at", configLocation, "copying from cables.json");
         let defaultConfig = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
         defaultConfig.path.assets = "../resources/assets/";
+        defaultConfig.path.uiDist = "../../cables_ui/dist/";
+        defaultConfig.path.ops = "../../cables/src/ops/";
+        defaultConfig.path.libs = "../../shared/libs/";
+        defaultConfig.path.corelibs = "../../cables/build/libs/";
         jsonfile.writeFileSync(configLocation, defaultConfig, { "encoding": "utf-8", "spaces": 4 });
     }
     else
