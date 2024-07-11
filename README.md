@@ -78,11 +78,12 @@ this.editorWindow = new BrowserWindow({
 ## Set up local environment
 
 * the preferred way of developing cables locally is using the cables_dev repository: https://github.com/cables-gl/cables_dev
-* that repo contains scripts that do the described work for you
+* that repo contains scripts that do the necessary work for you
 
 ### Local Build
 
 - set up your local environment (see above)
+- change to `cables_electron` directory (`cd cables_electron`)
 - run `npm install --no-save`
 - run `npm run build` to build the standalone version
 - run `npm run start` to start the standalone from the checked out sources
@@ -90,16 +91,15 @@ this.editorWindow = new BrowserWindow({
 ### Local Development
 
 - set up your local environment (see above)
-- run `npm install --no-save` in `cables_electron/`
+- change to `cables_electron` directory (`cd cables_electron`)
+- run `npm install --no-save`
 - run `npm run build`
 - use `npm run start` to start the app
-    - this will start watchers for changes in clientside javascript dirs (e.g. `src_client` and `../shared/client/`
-    - if you make changes to files in this directory, a reload of the electron app is enough to see the changes (cmd/ctrl+r)
-- if you want to develop on ops and/or the ui, change to cables_dev (`cd ..`) and run `npm run start:electron`
+    - this will start watchers for changes in client-side javascript dirs (e.g. `src_client` and `../shared/client/`
+    - when making changes to files in these directories, a reload of the electron app is enough to see the changes (Cmd/Ctrl+R)
+- if you want to develop on ops and/or the ui, change to cables_dev (`cd ..`) and run `npm run start:standalone`
     - this will create watchers on files in `cables` and `cables_ui` that trigger a rebuild on change
-    - to pick up on these changes, change your `cables_env_local.json` to point to these folders:
-        - `"path.uiDist": "../../cables_ui/dist/"`
-        - `"path.ops": "../../cables/src/ops/"`
+    - when making changes to files in these directories, a reload of the electron app is enough to see the changes (Cmd/Ctrl+R)
 
 ### Building an executable
 
