@@ -169,10 +169,9 @@ CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
     standalone.editor.api("cycleFullscreen", { }, (_err, r) => {});
 };
 
-CMD_ELECTRON_COMMANDS.orderOpDirs = () =>
+CABLES_CMD_ELECTRON.orderOpDirs = () =>
 {
-    new StandaloneOpDirs(gui.mainTabs);
-    gui.maintabPanel.show(true);
+    standalone.CABLES.platform.openOpDirsTab();
 };
 
 
