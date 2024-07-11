@@ -169,6 +169,13 @@ CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
     standalone.editor.api("cycleFullscreen", { }, (_err, r) => {});
 };
 
+CMD_ELECTRON_COMMANDS.orderOpDirs = () =>
+{
+    new StandaloneOpDirs(gui.mainTabs);
+    gui.maintabPanel.show(true);
+};
+
+
 CMD_ELECTRON_COMMANDS.push(
     {
         "cmd": "install project npm packages",
@@ -187,6 +194,12 @@ CMD_ELECTRON_COMMANDS.push(
         "category": "ops",
         "func": CABLES_CMD_ELECTRON.collectOps,
         "icon": "op"
+    },
+    {
+        "cmd": "set search order of op directories",
+        "category": "ops",
+        "func": CABLES_CMD_ELECTRON.orderOpDirs,
+        "icon": "folder"
     }
 );
 
