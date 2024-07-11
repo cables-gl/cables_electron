@@ -70,7 +70,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getProjectOpDirs(project, includeOsDir = true, reverse = false)
     {
-        const opsDirs = [];
+        let opsDirs = [];
         const projectOpDir = cables.getProjectOpsPath();
         if (projectOpDir) opsDirs.push(projectOpDir);
         if (project && project.dirs && project.dirs.ops)
@@ -88,6 +88,7 @@ class ProjectsUtil extends SharedProjectsUtil
             if (osOpsDir) opsDirs.push(osOpsDir);
         }
         if (reverse) return opsDirs.reverse();
+        opsDirs = helper.uniqueArray(opsDirs);
         return opsDirs;
     }
 

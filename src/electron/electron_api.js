@@ -872,7 +872,15 @@ class ElectronApi
 
     getOpTargetDirs()
     {
-        return this.success(opsUtil.getOpTargetDirs(settings.getCurrentProject()), true);
+        const dirs = opsUtil.getOpTargetDirs(settings.getCurrentProject());
+        const dirInfos = [];
+        dirs.forEach((dir) =>
+        {
+            dirInfos.push({
+                "dir": dir,
+            });
+        });
+        return this.success(dirInfos);
     }
 
     async addProjectOpDir()
