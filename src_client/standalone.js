@@ -2,6 +2,10 @@ import log from "electron-log/renderer.js";
 import ElectronEditor from "./electron_editor.js";
 import electronCommands from "./cmd_electron.js";
 
+/**
+ * frontend class for cables standalone
+ * initializes the ui, starts the editor and adds functions custom to this platform
+ */
 class CablesStandalone
 {
     constructor()
@@ -24,21 +28,40 @@ class CablesStandalone
         if (!this._config.isPackaged) window.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
     }
 
+    /**
+     * the `gui` object of the current editor, if initialized
+     *
+     * @type {Gui|null}
+     */
     get gui()
     {
         return this.editorWindow ? this.editorWindow.gui : null;
     }
 
+    /**
+     * the current editor window, if initialized
+     *
+     * @type {{}|null}
+     */
     get editorWindow()
     {
         return this.editorIframe.contentWindow;
     }
 
+    /**
+     * the CABLES core instance of the current editor window, if initialized
+     *
+     * @type {{}|null}
+     */
     get CABLES()
     {
         return this.editorWindow ? this.editorWindow.CABLES : null;
     }
 
+    /**
+     * initialize the editor, wait for core and ui to be ready, add
+     * custom functionality
+     */
     init()
     {
         this.editorIframe = document.getElementById("editorIframe");
