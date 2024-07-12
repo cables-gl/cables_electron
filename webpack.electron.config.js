@@ -52,7 +52,13 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false) =>
 
     if (analyze)
     {
-        plugins.push(new BundleAnalyzerPlugin({ "analyzerMode": "static", "openAnalyzer": false, "reportTitle": "cables electron", "reportFilename": path.join(__dirname, "dist", "report_selectron.html") }));
+        const analyzeOptions = {
+            "analyzerMode": "static",
+            "openAnalyzer": false,
+            "reportTitle": "cables electron",
+            "reportFilename": path.join(__dirname, "dist", "report_electron.html")
+        };
+        plugins.push(new BundleAnalyzerPlugin(analyzeOptions));
     }
 
     return {
