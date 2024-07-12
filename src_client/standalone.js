@@ -6,7 +6,7 @@ import electronCommands from "./cmd_electron.js";
  * frontend class for cables standalone
  * initializes the ui, starts the editor and adds functions custom to this platform
  */
-class CablesStandalone
+export default class CablesStandalone
 {
     constructor()
     {
@@ -201,4 +201,3 @@ class CablesStandalone
         return this._settings.currentPatchDir;
     }
 }
-export default new CablesStandalone();

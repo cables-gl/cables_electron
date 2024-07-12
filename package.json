@@ -125,7 +125,7 @@
     "jsonfile": "6.1.0",
     "marked": "12.0.2",
     "mkdirp": "2.1.3",
-    "moment": "2.30.1",
+    "moment-mini": "2.29.4",
     "npm": "10.5.2",
     "pako": "2.1.0",
     "project-name-generator": "2.1.9",
