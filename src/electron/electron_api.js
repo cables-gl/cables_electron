@@ -641,55 +641,78 @@ class ElectronApi
 
     async installProjectDependencies()
     {
-        const currentProjectDir = settings.getCurrentProjectDir();
-        const opsDir = cables.getProjectOpsPath();
+        const currentProject = settings.getCurrentProject();
+        if (!currentProject)
+        {
+            return this.success({ "stdout": "nothing to install", "packages": toInstall });
+        }
 
         let toInstall = [];
-        if (opsDir && fs.existsSync(opsDir))
+        let error = "";
+        const opDirs = projectsUtil.getProjectOpDirs(currentProject, false);
+        opDirs.forEach((opsDir) =>
         {
-            const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
-            const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
-
-            let __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
-            __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
-            const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
-            fileNames.forEach((packageFile) =>
+            if (opsDir && fs.existsSync(opsDir))
             {
-                const fileContents = packageFiles[packageFile];
-                const fileJson = JSON.parse(fileContents);
-                let deps = fileJson.dependencies || {};
-                let devDeps = fileJson.devDependencies || {};
-                const allDeps = { ...devDeps, ...deps };
-                Object.keys(allDeps).forEach((lib) =>
+                const packageFiles = helper.getFilesRecursive(opsDir, "package.json");
+                const fileNames = Object.keys(packageFiles).filter((packageFile) => { return !packageFile.includes("node_modules"); });
+                fileNames.forEach((packageFile) =>
                 {
-                    if (lib)
+                    const fileContents = packageFiles[packageFile];
+                    try
                     {
-                        const ver = allDeps[lib];
-                        if (ver)
+                        const fileJson = JSON.parse(fileContents);
+                        let deps = fileJson.dependencies || {};
+                        let devDeps = fileJson.devDependencies || {};
+                        const allDeps = { ...devDeps, ...deps };
+                        Object.keys(allDeps).forEach((lib) =>
                         {
-                            const semVer = lib + "@" + ver;
-                            toInstall.push(semVer);
-                        }
+                            if (lib)
+                            {
+                                const ver = allDeps[lib];
+                                if (ver)
+                                {
+                                    const semVer = lib + "@" + ver;
+                                    toInstall.push(semVer);
+                                }
+                            }
+                        });
+                    }
+                    catch (e)
+                    {
+                        error = "failed to parse package.json: " + packageFile;
                     }
                 });
-            });
+            }
             toInstall = helper.uniqueArray(toInstall);
+        });
 
-            if (toInstall.length > 0)
+        const currentProjectDir = settings.getCurrentProjectDir();
+        if (!error && toInstall.length > 0)
+        {
+            try
             {
-                try
-                {
-                    const out = execaSync(npm, ["install", toInstall, "--legacy-peer-deps"], { "cwd": currentProjectDir });
-                    out.packages = toInstall;
-                    return this.success(out);
-                }
-                catch (e)
-                {
-                    return { "stderr": e, "packages": toInstall };
-                }
+                let __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
+                __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
+                const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
+                const out = execaSync(npm, ["install", toInstall, "--legacy-peer-deps", "--prefix", currentProjectDir], { "cwd": currentProjectDir });
+                out.packages = toInstall;
+                out.targetDir = currentProjectDir;
+                return this.success(out);
+            }
+            catch (e)
+            {
+                return this.error("ERROR", { "stderr": e, "packages": toInstall });
             }
         }
-        return this.success({ "stdout": "nothing to install", "packages": toInstall });
+        else if (error)
+        {
+            return this.error("ERROR", { "stderr": error, "packages": toInstall });
+        }
+        else
+        {
+            return this.success({ "stdout": "nothing to install", "packages": toInstall });
+        }
     }
 
     async openDir(options)

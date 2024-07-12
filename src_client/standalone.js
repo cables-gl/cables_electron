@@ -171,26 +171,27 @@ export default class CablesStandalone
 
     _opRequire(moduleName, thisClass, op)
     {
+        this._log.debug("_opRequire", op.name, moduleName);
         if (op) op.setUiError("oprequire", null);
         if (moduleName === "electron") return thisClass._electron;
         try
         {
             const modulePath = thisClass._path.join(thisClass._settings.currentPatchDir, "node_modules", moduleName);
-            console.debug("trying to load", modulePath);
+            this._log.debug("trying to load", modulePath);
             return window.nodeRequire(modulePath);
         }
         catch (e)
         {
             try
             {
-                console.debug("trying to load native module", moduleName);
+                this._log.debug("trying to load native module", moduleName);
                 return window.nodeRequire(moduleName);
             }
             catch (e2)
             {
                 const errorMessage = "failed to load node module \"" + moduleName + "\" do you need to run `npm install`?";
                 if (op) op.setUiError("oprequire", errorMessage);
-                console.error(errorMessage, e2);
+                this._log.error(errorMessage, e2);
                 return "";
             }
         }

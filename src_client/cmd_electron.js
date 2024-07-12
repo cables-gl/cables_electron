@@ -12,6 +12,10 @@ CABLES_CMD_ELECTRON.runNpm = () =>
     {
         if (r.data)
         {
+            if (r.data.targetDir)
+            {
+                loadingModal.setTask("installing to " + r.data.targetDir);
+            }
             if (r.data.packages && r.data.packages.length > 0)
             {
                 loadingModal.setTask("found packages");
