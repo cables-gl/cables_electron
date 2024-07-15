@@ -8,32 +8,35 @@ CABLES_CMD_ELECTRON.runNpm = () =>
 {
     const loadingModal = standalone.gui.startModalLoading("Installing packages...");
     const options = {};
-    standalone.editor.api("installProjectDependencies", options, (_err, r) =>
+    standalone.editor.api("installProjectDependencies", options, (_err, result) =>
     {
-        if (r.data)
+        if (result.data)
         {
-            if (r.data.targetDir)
+            result.data.forEach((r) =>
             {
-                loadingModal.setTask("installing to " + r.data.targetDir);
-            }
-            if (r.data.packages && r.data.packages.length > 0)
-            {
-                loadingModal.setTask("found packages");
-                r.data.packages.forEach((p) =>
+                if (r.targetDir)
                 {
-                    loadingModal.setTask(p);
-                });
-            }
-            if (r.data.stdout)
-            {
-                loadingModal.setTask(r.data.stdout);
-            }
-            if (r.data.stderr)
-            {
-                loadingModal.setTask(r.data.stderr);
-            }
+                    loadingModal.setTask("installing to " + r.targetDir);
+                }
+                if (r.packages && r.packages.length > 0)
+                {
+                    loadingModal.setTask("found packages");
+                    r.packages.forEach((p) =>
+                    {
+                        loadingModal.setTask(p);
+                    });
+                }
+                if (r.stdout)
+                {
+                    loadingModal.setTask(r.stdout);
+                }
+                if (r.stderr)
+                {
+                    loadingModal.setTask(r.stderr);
+                }
+            });
+            setTimeout(() => { standalone.gui.endModalLoading(); }, 3000);
         }
-        setTimeout(() => { standalone.gui.endModalLoading(); }, 3000);
     });
 };
 

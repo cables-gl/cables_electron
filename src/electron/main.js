@@ -162,12 +162,15 @@ class ElectronApp
         doc.rebuildOpCaches((opDocs) =>
         {
             electronApi.loadProject(patchFile);
-            this.updateTitle();
-            this.editorWindow.loadFile("index.html").then(() =>
+            electronApi.installProjectDependencies().then(() =>
             {
-                this._log.verbose("loaded", patchFile);
-                const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
-                this.editorWindow.webContents.setZoomFactor(1.0);
+                this.updateTitle();
+                this.editorWindow.loadFile("index.html").then(() =>
+                {
+                    this._log.verbose("loaded", patchFile);
+                    const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
+                    this.editorWindow.webContents.setZoomFactor(1.0);
+                });
             });
         }, ["core", "teams", "extensions"], true);
     }

@@ -128,11 +128,11 @@ export default class CablesStandalone
                 const standAlone = this;
                 this.CABLES.Op.prototype.require = function (moduleName)
                 {
-                    standAlone._opRequire(moduleName, standAlone, this);
+                    return standAlone._opRequire(moduleName, this, standAlone);
                 };
                 Object.defineProperty(this.CABLES.Op.prototype, "__dirname", { "get": function ()
                 {
-                    return window.ipcRenderer.sendSync("getOpDir", { "name": this.name, "opId": this.opId });
+                    return window.ipcRenderer.sendSync("getOpDir", { "opName": this.objName || this._name, "opId": this.opId });
                 } });
             }
             if (this.CABLES.Patch)
@@ -169,14 +169,14 @@ export default class CablesStandalone
         }
     }
 
-    _opRequire(moduleName, thisClass, op)
+    _opRequire(moduleName, op, thisClass)
     {
-        this._log.debug("_opRequire", op.name, moduleName);
         if (op) op.setUiError("oprequire", null);
         if (moduleName === "electron") return thisClass._electron;
         try
         {
-            const modulePath = thisClass._path.join(thisClass._settings.currentPatchDir, "node_modules", moduleName);
+            const opDir = window.ipcRenderer.sendSync("getOpDir", { "opName": op.objName || op._name, "opId": op.opId });
+            const modulePath = thisClass._path.join(opDir, "node_modules", moduleName);
             this._log.debug("trying to load", modulePath);
             return window.nodeRequire(modulePath);
         }
