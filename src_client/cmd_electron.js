@@ -1,4 +1,4 @@
-import standalone from "./index_electron.js";
+import standalone from "./renderer.js";
 
 const CABLES_CMD_ELECTRON = {};
 const CABLES_CMD_ELECTRON_OVERRIDES = {};

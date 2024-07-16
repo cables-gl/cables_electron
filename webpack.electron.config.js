@@ -19,7 +19,7 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false) =>
         new CopyPlugin({
             "patterns": [
                 {
-                    "from": path.resolve("./src_client", "index_electron.js"),
+                    "from": path.resolve("./src_client", "renderer.js"),
                     "to": path.resolve("./dist", "public", "js", "buildinfo.json"),
                     "transform": () =>
                     {
@@ -65,7 +65,7 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false) =>
         "mode": isLiveBuild ? "production" : "development",
         "devtool": minify ? "source-map" : false,
         "entry": {
-            "scripts.electron.js": [path.resolve("./src_client", "index_electron.js")],
+            "scripts.electron.js": [path.resolve("./src_client", "renderer.js")],
         },
         "output": {
             "path": path.resolve("./dist", "public", "js"),

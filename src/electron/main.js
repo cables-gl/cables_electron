@@ -1,6 +1,7 @@
-import { app, BrowserWindow, dialog, Menu, shell } from "electron";
+import { app, BrowserWindow, dialog, Menu, shell, clipboard } from "electron";
 import path from "path";
 import localShortcut from "electron-localshortcut";
+import fs from "fs";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
@@ -13,6 +14,7 @@ import helper from "../utils/helper_util.js";
 app.commandLine.appendSwitch("disable-http-cache");
 app.commandLine.appendSwitch("force_high_performance_gpu");
 
+
 logger.info("--- starting");
 
 class ElectronApp
@@ -20,13 +22,27 @@ class ElectronApp
     constructor()
     {
         this._log = logger;
+        this.appName = "name" in app ? app.name : app.getName();
         this.editorWindow = null;
+
+        settings.set("uiLoadStart", this._log.loadStart);
+        this._log.logStartup("started electron");
+
+        process.on("uncaughtException", (error) =>
+        {
+            this._handleError("Unhandled Error", error);
+        });
+
+        process.on("unhandledRejection", (error) =>
+        {
+            this._handleError("Unhandled Promise Rejection", error);
+        });
 
         app.on("browser-window-created", (event, win) =>
         {
             if (settings.get(settings.OPEN_DEV_TOOLS_FIELD))
             {
-                win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
+                // win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
             }
         });
     }
@@ -34,6 +50,12 @@ class ElectronApp
     createWindow()
     {
         let patchFile = null;
+        const openLast = settings.getUserSetting("openlastproject", false);
+        if (openLast)
+        {
+            const projectFile = settings.getCurrentProjectFile();
+            if (fs.existsSync(projectFile)) patchFile = projectFile;
+        }
         this.editorWindow = new BrowserWindow({
             "width": 1920,
             "height": 1080,
@@ -57,7 +79,10 @@ class ElectronApp
         {
             this._registerListeners();
             this._registerShortcuts();
-            this.openPatch(patchFile);
+            this.openPatch(patchFile).then(() =>
+            {
+                this._log.logStartup("electron loaded");
+            });
         });
     }
 
@@ -157,22 +182,37 @@ class ElectronApp
         Menu.setApplicationMenu(menu);
     }
 
-    openPatch(patchFile)
+    async openPatch(patchFile, rebuildCache = true)
     {
-        doc.rebuildOpCaches((opDocs) =>
+        const open = async () =>
         {
             electronApi.loadProject(patchFile);
-            electronApi.installProjectDependencies().then(() =>
+            if (patchFile)
             {
-                this.updateTitle();
-                this.editorWindow.loadFile("index.html").then(() =>
+                const npmResults = await electronApi.installProjectDependencies();
+                if (npmResults.success)
                 {
-                    this._log.verbose("loaded", patchFile);
-                    const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
-                    this.editorWindow.webContents.setZoomFactor(1.0);
-                });
-            });
-        }, ["core", "teams", "extensions"], true);
+                    npmResults.data.forEach((npmResult) =>
+                    {
+                        this._log.logStartup("installed op dependencies for " + npmResult.opName + " (" + npmResult.packages.join(",") + ")");
+                    });
+                }
+            }
+            this.updateTitle();
+            await this.editorWindow.loadFile("index.html");
+            this._log.logStartup("loaded", patchFile);
+            const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
+            this.editorWindow.webContents.setZoomFactor(1.0);
+        };
+
+        if (rebuildCache)
+        {
+            doc.rebuildOpCaches(open, ["core", "teams", "extensions"], true);
+        }
+        else
+        {
+            await open();
+        }
     }
 
     updateTitle()
@@ -277,9 +317,8 @@ class ElectronApp
 
     reload()
     {
-        this.updateTitle();
-        electronApi.loadProject(settings.getCurrentProjectFile());
-        this.editorWindow.reload();
+        const projectFile = settings.getCurrentProjectFile();
+        this.openPatch(projectFile, false).then(() => { this._log.debug("reloaded", projectFile); });
     }
 
     setDocumentEdited(edited)
@@ -369,6 +408,7 @@ class ElectronApp
     {
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
+            event.preventDefault();
             if (this.isDocumentEdited())
             {
                 const choice = dialog.showMessageBoxSync(this.editorWindow, {
@@ -382,12 +422,12 @@ class ElectronApp
                 const leave = (choice === 0);
                 if (leave)
                 {
-                    event.preventDefault();
+                    this.reload();
                 }
             }
             else
             {
-                event.preventDefault();
+                this.reload();
             }
         });
 
@@ -434,6 +474,44 @@ class ElectronApp
     {
         doc.addOpsToLookup([], true);
         cb();
+    }
+
+    _handleError(title, error)
+    {
+        if (!title) title = this.appName + " encountered an error";
+        this._log.error(title, error);
+        if (app.isReady())
+        {
+            const buttons = [
+                "Reload",
+                "New Patch",
+                process.platform === "darwin" ? "Copy Error" : "Copy error",
+            ];
+            const buttonIndex = dialog.showMessageBoxSync({
+                "type": "error",
+                buttons,
+                "defaultId": 0,
+                "noLink": true,
+                "message": title,
+                "detail": error.stack,
+            });
+            if (buttonIndex === 0)
+            {
+                this.reload();
+            }
+            if (buttonIndex === 1)
+            {
+                this.openPatch(null);
+            }
+            if (buttonIndex === 2)
+            {
+                clipboard.writeText(title + "\n" + error.stack);
+            }
+        }
+        else
+        {
+            dialog.showErrorBox(title, (error.stack));
+        }
     }
 }
 Menu.setApplicationMenu(null);

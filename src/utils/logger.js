@@ -12,6 +12,9 @@ class Logger extends SharedLogger
         log.transports.console.format = logFormat;
         log.transports.file.format = logFormat;
         log.transports.ipc.level = "debug";
+
+        this.loadStart = performance.now();
+        this.startUpLog = [];
     }
 
     debug(...args)
@@ -52,6 +55,16 @@ class Logger extends SharedLogger
     warn(...args)
     {
         log.warn("[" + this._initiator + "]", "WARN", args.join(" "));
+    }
+
+    logStartup(title)
+    {
+        const time = Math.round((performance.now() - this.loadStart) / 1000 * 100) / 100;
+        this.startUpLog.push({
+            "title": title,
+            "time": time
+        });
+        this.debug(title + " (" + time + "s)");
     }
 }
 

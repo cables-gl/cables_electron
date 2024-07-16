@@ -1,10 +1,12 @@
 import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 import path from "path";
 import fs from "fs";
+import { execaSync } from "execa";
 import settings from "../electron/electron_settings.js";
 import cables from "../cables.js";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
+import helper from "./helper_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
@@ -161,6 +163,61 @@ class OpsUtil extends SharedOpsUtil
         {
             return super.updateOpCode(opName, author, code);
         });
+    }
+
+    installDependencies(opName)
+    {
+        let result = {};
+        const packageDir = this.getOpAbsolutePath(opName);
+
+        let toInstall = {};
+        const opDoc = this._docsUtil.getDocForOp(opName);
+        if (opDoc && opDoc.hasOwnProperty("dependencies"))
+        {
+            const npmDeps = opDoc.dependencies.filter((dep) => { return dep.type === "npm"; });
+            npmDeps.forEach((npmDep) =>
+            {
+                const version = npmDep.version || "";
+                if (npmDep.src)
+                {
+                    npmDep.src.forEach((src) =>
+                    {
+                        if (!toInstall.hasOwnProperty(src))
+                        {
+                            toInstall[src] = version;
+                        }
+                    });
+                }
+            });
+        }
+        const packageNames = Object.keys(toInstall);
+        if (packageNames.length > 0)
+        {
+            try
+            {
+                const npmArgs = [
+                    "install",
+                    "--no-save",
+                    "--legacy-peer-deps",
+                    "--prefix", packageDir,
+                    ...packageNames];
+
+                let __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
+                __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
+                const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
+                this._log.debug("RUNNING", npm, npmArgs.join(" "));
+                const out = execaSync(npm, npmArgs, { "cwd": packageDir });
+                out.packages = packageNames;
+                out.targetDir = packageDir;
+                out.opName = opName;
+                result = out;
+            }
+            catch (e)
+            {
+                result = { "stderr": e, "packages": packageNames, "targetDir": packageDir, "opName": opName };
+            }
+        }
+        return result;
     }
 }
 export default new OpsUtil(utilProvider);

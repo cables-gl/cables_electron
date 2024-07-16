@@ -3,6 +3,7 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import { app } from "electron";
 import jsonfile from "jsonfile";
+import * as os from "os";
 import helper from "../utils/helper_util.js";
 import logger from "../utils/logger.js";
 import projectsUtil from "../utils/projects_util.js";
@@ -138,7 +139,8 @@ class ElectronSettings
 
     getCurrentUser()
     {
-        const username = "electron";
+        let username = "standalone";
+        if (os.userInfo) username = os.userInfo().username || "standalone";
         return {
             "username": username,
             "_id": helper.generateRandomId(),
@@ -381,5 +383,5 @@ class ElectronSettings
         return null;
     }
 }
-export default new ElectronSettings(path.join(app.getPath("userData"), "settings"));
+export default new ElectronSettings(path.join(app.getPath("userData")));
 

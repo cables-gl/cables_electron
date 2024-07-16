@@ -21,9 +21,11 @@ export default class CablesStandalone
         Object.assign(console, this._log.functions);
 
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
-        this._settings = this._electron.ipcRenderer.sendSync("settings");
-        this._config = this._electron.ipcRenderer.sendSync("config");
+        this._settings = this._electron.ipcRenderer.sendSync("platformSettings") || {};
+        this._config = this._electron.ipcRenderer.sendSync("cablesConfig") || {};
         this.editorIframe = null;
+
+        this._startUpLogItems = this._electron.ipcRenderer.sendSync("getStartupLog") || [];
 
         if (!this._config.isPackaged) window.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
     }
@@ -73,10 +75,18 @@ export default class CablesStandalone
         this.editorIframe.src = src;
         this.editorIframe.onload = () =>
         {
-            if (this.editorWindow && this.editorWindow.loadjs)
+            if (this.editorWindow)
             {
-                this.editorWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
-                this.editorWindow.loadjs.ready("cablesuinew", this._uiReady.bind(this));
+                if (this._settings.uiLoadStart) this.editorWindow.CABLESUILOADER.uiLoadStart -= this._settings.uiLoadStart;
+                this._startUpLogItems.forEach((logEntry) =>
+                {
+                    this._logStartup(logEntry.title);
+                });
+                if (this.editorWindow.loadjs)
+                {
+                    this.editorWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
+                    this.editorWindow.loadjs.ready("cablesuinew", this._uiReady.bind(this));
+                }
             }
         };
 
@@ -130,14 +140,14 @@ export default class CablesStandalone
                 {
                     return standAlone._opRequire(moduleName, this, standAlone);
                 };
-                Object.defineProperty(this.CABLES.Op.prototype, "__dirname", { "get": function ()
+                Object.defineProperty(this.CABLES.Op.prototype, "opDir", { "get": function ()
                 {
                     return window.ipcRenderer.sendSync("getOpDir", { "opName": this.objName || this._name, "opId": this.opId });
                 } });
             }
             if (this.CABLES.Patch)
             {
-                Object.defineProperty(this.CABLES.Patch.prototype, "__dirname", { "get": this._patchDir.bind(this) });
+                Object.defineProperty(this.CABLES.Patch.prototype, "patchDir", { "get": this._patchDir.bind(this) });
             }
         }
     }
@@ -177,8 +187,9 @@ export default class CablesStandalone
         {
             const opDir = window.ipcRenderer.sendSync("getOpDir", { "opName": op.objName || op._name, "opId": op.opId });
             const modulePath = thisClass._path.join(opDir, "node_modules", moduleName);
-            this._log.debug("trying to load", modulePath);
-            return window.nodeRequire(modulePath);
+            const theModule = window.nodeRequire(modulePath);
+            this._log.debug("trying to load", modulePath, theModule);
+            return theModule;
         }
         catch (e)
         {
@@ -200,5 +211,10 @@ export default class CablesStandalone
     _patchDir(...args)
     {
         return this._settings.currentPatchDir;
+    }
+
+    _logStartup(title)
+    {
+        if (this.editorWindow && this.editorWindow.logStartup) this.editorWindow.logStartup(title);
     }
 }
