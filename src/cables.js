@@ -14,6 +14,7 @@ class CablesElectron extends Cables
         super(provider, dirName, writableDirName, configLocation);
         this._config.isPackaged = app.isPackaged;
         this._config.uiIndexHtml = path.join(this.getUiDistPath(), "index.html");
+        if (writableDirName && !fs.existsSync(path.join(writableDirName, "/ops"))) mkdirp.sync(path.join(writableDirName, "/ops"));
     }
 
     getStandaloneDistPath()

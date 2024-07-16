@@ -167,7 +167,7 @@ class OpsUtil extends SharedOpsUtil
 
     installDependencies(opName)
     {
-        let result = {};
+        let result = null;
         const packageDir = this.getOpAbsolutePath(opName);
 
         let toInstall = {};

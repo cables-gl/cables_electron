@@ -4,7 +4,6 @@ import path from "path";
 import { marked } from "marked";
 import mkdirp from "mkdirp";
 
-import { execaSync } from "execa";
 import jsonfile from "jsonfile";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
@@ -107,13 +106,13 @@ class ElectronApi
             {
                 const result = { "warns": warns };
                 result.attachmentFiles = opsUtil.getAttachmentFiles(name);
-                return this.success(result, true);
+                return this.success("OK", result, true);
             }
             else
             {
                 const result = { "warns": warns };
                 result.attachmentFiles = [];
-                return this.success(result, true);
+                return this.success("OK", result, true);
             }
         }
         catch (e)
@@ -121,7 +120,7 @@ class ElectronApi
             this._log.warn("error when getting opinfo", name, e.message);
             const result = { "warns": warns };
             result.attachmentFiles = [];
-            return this.success(result, true);
+            return this.success("OK", result, true);
         }
     }
 
@@ -139,7 +138,7 @@ class ElectronApi
         this.loadProject(currentProjectFile);
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
-        return this.success(re, true);
+        return this.success("OK", re, true);
     }
 
     async patchCreateBackup()
@@ -157,7 +156,7 @@ class ElectronApi
 
         const backupProject = projectsUtil.getBackup(currentProject);
         fs.writeFileSync(projectFile, JSON.stringify(backupProject));
-        return this.success(re, true);
+        return this.success("OK", re, true);
     }
 
     getPatch()
@@ -185,13 +184,13 @@ class ElectronApi
         currentProject.summary = currentProject.summary || {};
         currentProject.summary.title = currentProject.name;
         currentProject.summary.allowEdit = true;
-        return this.success(currentProject, true);
+        return this.success("OK", currentProject, true);
     }
 
     async newPatch()
     {
         electronApp.openPatch();
-        return this.success(true, true);
+        return this.success("OK", true, true);
     }
 
     fileUpload(data)
@@ -204,7 +203,7 @@ class ElectronApi
         }
         const buffer = Buffer.from(data.fileStr.split(",")[1], "base64");
         fs.writeFileSync(path.join(target, data.filename), buffer);
-        return this.success(true, true);
+        return this.success("OK", true, true);
     }
 
     async getAllProjectOps()
@@ -216,7 +215,7 @@ class ElectronApi
 
         if (!project)
         {
-            return this.success(opDocs, true);
+            return this.success("OK", opDocs, true);
         }
 
         let projectOps = [];
@@ -269,7 +268,7 @@ class ElectronApi
         opsUtil.addVersionInfoToOps(opDocs);
 
         opDocs = doc.makeReadable(opDocs);
-        return this.success(opDocs, true);
+        return this.success("OK", opDocs, true);
     }
 
 
@@ -286,7 +285,7 @@ class ElectronApi
         const libs = projectsUtil.getAvailableLibs(currentProject);
         const coreLibs = projectsUtil.getCoreLibs();
 
-        return this.success({
+        return this.success("OK", {
             "opDocs": cleanDocs,
             "extensions": extensions,
             "teamNamespaces": [],
@@ -315,7 +314,7 @@ class ElectronApi
         result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
         const c = doc.getOpDocMd(opName);
         if (c) result.content = marked(c || "");
-        return this.success(result, true);
+        return this.success("OK", result, true);
     }
 
     saveOpCode(data)
@@ -351,7 +350,7 @@ class ElectronApi
         returnedCode = opsUtil.updateOpCode(opName, settings.getCurrentUser(), returnedCode);
         doc.updateOpDocs(opName);
 
-        return this.success({ "opFullCode": returnedCode }, true);
+        return this.success("OK", { "opFullCode": returnedCode }, true);
     }
 
     getOpCode(data)
@@ -360,7 +359,7 @@ class ElectronApi
         if (opsUtil.opExists(opName))
         {
             let code = opsUtil.getOpCode(opName);
-            return this.success({
+            return this.success("OK", {
                 "name": opName,
                 "id": data.opId,
                 "code": code
@@ -369,7 +368,7 @@ class ElectronApi
         else
         {
             let code = "//empty file...";
-            return this.success({
+            return this.success("OK", {
                 "name": opName,
                 "id": null,
                 "code": code
@@ -389,13 +388,13 @@ class ElectronApi
             opDocs = opsUtil.addVersionInfoToOps(opDocs);
             opDocs = opsUtil.addPermissionsToOps(opDocs, currentUser);
         }
-        return this.success({ "opDocs": doc.makeReadable(opDocs) }, true);
+        return this.success("OK", { "opDocs": doc.makeReadable(opDocs) }, true);
     }
 
 
     getBuildInfo()
     {
-        return this.success(settings.getBuildInfo(), true);
+        return this.success("OK", settings.getBuildInfo(), true);
     }
 
     formatOpCode(data)
@@ -425,13 +424,13 @@ class ElectronApi
             //     };
             // }
 
-            return this.success({
+            return this.success("OK", {
                 "opFullCode": code
             }, true);
         }
         else
         {
-            return this.success({
+            return this.success("OK", {
                 "opFullCode": ""
             }, true);
         }
@@ -450,7 +449,7 @@ class ElectronApi
         const project = settings.getCurrentProject();
         if (project)
         {
-            return this.success({
+            return this.success("OK", {
                 "updated": project.updated,
                 "updatedByUser": project.updatedByUser,
                 "buildInfo": project.buildInfo,
@@ -460,7 +459,7 @@ class ElectronApi
         }
         else
         {
-            return this.success({
+            return this.success("OK", {
                 "updated": "",
                 "updatedByUser": "",
                 "buildInfo": settings.getBuildInfo(),
@@ -475,7 +474,7 @@ class ElectronApi
         const obj = {};
         obj.items = [];
         obj.ts = Date.now();
-        return this.success(obj, true);
+        return this.success("OK", obj, true);
     }
 
     opAttachmentSave(data)
@@ -483,7 +482,7 @@ class ElectronApi
         let opName = data.opname;
         if (opsUtil.isOpId(data.opname)) opName = opsUtil.getOpNameById(data.opname);
         const result = opsUtil.updateAttachment(opName, data.name, data.content, false);
-        return this.success(result, true);
+        return this.success("OK", result, true);
     }
 
     setIconSaved()
@@ -512,7 +511,7 @@ class ElectronApi
         }
         currentProject.screenshot = data.screenshot;
         projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
-        return this.success({ "msg": "OK" }, true);
+        return this.success("OK", { "msg": "OK" }, true);
     }
 
     getFilelist(data)
@@ -530,14 +529,14 @@ class ElectronApi
             files = [];
             break;
         }
-        return this.success(files, true);
+        return this.success("OK", files, true);
     }
 
     getFileDetails(data)
     {
         let filePath = helper.fileURLToPath(data.filename);
         const fileDb = filesUtil.getFileDb(filePath, settings.getCurrentProject(), settings.getCurrentUser());
-        return this.success(filesUtil.getFileInfo(fileDb), true);
+        return this.success("OK", filesUtil.getFileInfo(fileDb), true);
     }
 
     getLibraryFileInfo(data)
@@ -551,7 +550,7 @@ class ElectronApi
 
         if (!fs.existsSync(finalPath))
         {
-            return this.success({}, true);
+            return this.success("OK", {}, true);
         }
         else
         {
@@ -562,12 +561,12 @@ class ElectronApi
 
             if (filename === "")
             {
-                return this.success({}, true);
+                return this.success("OK", {}, true);
             }
             else
             {
                 const fileInfo = JSON.parse(fs.readFileSync(filename));
-                return this.success(fileInfo, true);
+                return this.success("OK", fileInfo, true);
             }
         }
     }
@@ -580,7 +579,7 @@ class ElectronApi
         const currentUser = settings.getCurrentUser();
         const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, false, data.opTargetDir);
         result.checkedName = newName;
-        return this.success(result, true);
+        return this.success("OK", result, true);
     }
 
     getRecentPatches()
@@ -599,7 +598,7 @@ class ElectronApi
             result[i] = recentProject;
             result[i].thumbnail = screenShot;
         }
-        return this.success(result.slice(0, 10), true);
+        return this.success("OK", result.slice(0, 10), true);
     }
 
     opCreate(data)
@@ -614,21 +613,21 @@ class ElectronApi
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, data.opTargetDir);
         filesUtil.registerOpChangeListeners([opName]);
 
-        return this.success(result, true);
+        return this.success("OK", result, true);
     }
 
     opUpdate(data)
     {
         const opName = data.opname;
         const currentUser = settings.getCurrentUser();
-        return this.success({ "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) }, true);
+        return this.success("OK", { "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) }, true);
     }
 
     opSaveLayout(data)
     {
         const layout = data.layout;
         const opName = opsUtil.getOpNameById(data.opname) || layout.name;
-        return this.success(opsUtil.saveLayout(opName, layout), true);
+        return this.success("OK", opsUtil.saveLayout(opName, layout), true);
     }
 
     opClone(data)
@@ -636,7 +635,7 @@ class ElectronApi
         const newName = data.name;
         const oldName = opsUtil.getOpNameById(data.opname) || data.opname;
         const currentUser = settings.getCurrentUser();
-        return this.success(opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir), true);
+        return this.success("OK", opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir), true);
     }
 
     async installProjectDependencies()
@@ -656,14 +655,23 @@ class ElectronApi
             if (opName)
             {
                 const result = opsUtil.installDependencies(opName);
-                results.push(result);
-                if (result.error) hasError = true;
+                if (result)
+                {
+                    results.push(result);
+                    if (result.error) hasError = true;
+                }
             }
         });
         if (!hasError)
         {
-            if (results.length === 0) results.push({ "stdout": "nothing to install", "packages": [] });
-            return this.success(results);
+            let msg = "OK";
+            if (results.length === 0)
+            {
+                results.push({ "stdout": "nothing to install", "packages": [] });
+                msg = "EMPTY";
+            }
+            const response = this.success("OK", results, false, msg);
+            return response;
         }
         else
         {
@@ -676,7 +684,7 @@ class ElectronApi
         if (options && options.dir)
         {
             await shell.openPath(options.dir);
-            return this.success({}, true);
+            return this.success("OK", {}, true);
         }
     }
 
@@ -688,7 +696,7 @@ class ElectronApi
         if (opDir)
         {
             shell.showItemInFolder(opDir);
-            return this.success({}, true);
+            return this.success("OK", {}, true);
         }
     }
 
@@ -698,7 +706,7 @@ class ElectronApi
         if (projectFile)
         {
             shell.showItemInFolder(projectFile);
-            return this.success({});
+            return this.success("OK", {});
         }
     }
 
@@ -711,18 +719,18 @@ class ElectronApi
             if (stats.isDirectory())
             {
                 shell.openPath(assetPath);
-                return this.success({});
+                return this.success("OK", {});
             }
             else
             {
                 shell.showItemInFolder(assetPath);
-                return this.success({});
+                return this.success("OK", {});
             }
         }
         else
         {
             shell.openPath(cables.getAssetPath());
-            return this.success({});
+            return this.success("OK", {});
         }
     }
 
@@ -737,7 +745,7 @@ class ElectronApi
                 filter = filesUtil.FILETYPES[data.filter] || ["*"];
             }
             const pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filter);
-            return this.success(pickedFileUrl, true);
+            return this.success("OK", pickedFileUrl, true);
         }
         else
         {
@@ -748,7 +756,7 @@ class ElectronApi
 
     checkNumAssetPatches()
     {
-        return this.success({ "assets": [], "countPatches": 0, "countOps": 0 }, true);
+        return this.success("OK", { "assets": [], "countPatches": 0, "countOps": 0 }, true);
     }
 
     async saveProjectAs()
@@ -781,7 +789,7 @@ class ElectronApi
         projectsUtil.writeProjectToFile(projectFile, origProject);
         this.loadProject(projectFile);
         electronApp.reload();
-        return this.success(origProject, true);
+        return this.success("OK", origProject, true);
     }
 
     async gotoPatch(data)
@@ -796,12 +804,12 @@ class ElectronApi
         if (project && projectFile)
         {
             electronApp.openPatch(projectFile);
-            return this.success(true, true);
+            return this.success("OK", true, true);
         }
         else
         {
             const file = await electronApp.pickProjectFileDialog();
-            return this.success({ "projectFile": file });
+            return this.success("OK", { "projectFile": file });
         }
     }
 
@@ -833,7 +841,7 @@ class ElectronApi
         this._log.info("edit file", newPath + sanitizedFileName);
 
         fs.writeFileSync(newPath + sanitizedFileName, data.content);
-        return this.success({ "filename": sanitizedFileName }, true);
+        return this.success("OK", { "filename": sanitizedFileName }, true);
     }
 
     async setProjectUpdated()
@@ -846,39 +854,98 @@ class ElectronApi
         {
             projectsUtil.writeProjectToFile(projectFile, project);
         }
-        return this.success(project);
+        return this.success("OK", project);
     }
 
     getOpTargetDirs()
     {
-        const dirs = opsUtil.getOpTargetDirs(settings.getCurrentProject());
+        const currentProject = settings.getCurrentProject();
+        const dirs = opsUtil.getOpTargetDirs(currentProject);
         const dirInfos = [];
+        const usedOpFiles = {};
+        if (currentProject && currentProject.ops)
+        {
+            currentProject.ops.forEach((op) =>
+            {
+                const opName = opsUtil.getOpNameById(op.opId);
+                if (opName)
+                {
+                    const opDir = opsUtil.getOpAbsolutePath(opName);
+                    if (opDir)
+                    {
+                        if (!usedOpFiles.hasOwnProperty(opName)) usedOpFiles[opName] = opDir;
+                    }
+                }
+            });
+        }
         dirs.forEach((dir) =>
         {
+            const opJsons = helper.getFileNamesRecursive(dir, ".json").map((fileName) => { return path.basename(fileName, ".json"); });
+            const opNames = opJsons.filter((jsonName) => { return opsUtil.isOpNameValid(jsonName); });
+            let numUsedOps = 0;
+            opNames.forEach((opName) =>
+            {
+                const opFile = usedOpFiles[opName];
+                if (opFile && opFile.startsWith(dir) && opFile.endsWith(path.join(opName, "/"))) numUsedOps++;
+            });
             dirInfos.push({
                 "dir": dir,
+                "opNames": opNames,
+                "numOps": opNames.length,
+                "numUsedOps": numUsedOps
             });
         });
-        return this.success(dirInfos);
+        return this.success("OK", dirInfos);
     }
 
     async addProjectOpDir()
     {
-        const project = settings.getCurrentProject();
-        if (!project) return;
+        const currentProject = settings.getCurrentProject();
+        if (!currentProject) return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         const opDir = await electronApp.pickOpDirDialog();
         if (opDir)
         {
-            if (!project.dirs) project.dirs = {};
-            if (!project.dirs.ops) project.dirs.ops = [];
-            project.dirs.ops.unshift(opDir);
-            return this.success(projectsUtil.getProjectOpDirs(project, false), true);
+            if (!currentProject.dirs) currentProject.dirs = {};
+            if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
+            currentProject.dirs.ops.unshift(opDir);
+            return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         }
         else
         {
             logger.info("no project dir chosen");
             return this.error("no project dir chosen", []);
         }
+    }
+
+    async removeProjectOpDir(dirName)
+    {
+        const currentProject = settings.getCurrentProject();
+        if (!currentProject || !dirName) return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
+        dirName = path.resolve(dirName);
+        if (!currentProject.dirs) currentProject.dirs = {};
+        if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
+        currentProject.dirs.ops = currentProject.dirs.ops.filter((opDir) =>
+        {
+            return opDir !== dirName;
+        });
+        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
+    }
+
+    saveProjectOpDirOrder(order)
+    {
+        const currentProject = settings.getCurrentProject();
+        const currentProjectFile = settings.getCurrentProjectFile();
+        if (!currentProject || !order) return this.error("NO_PROJECT");
+        const newOrder = [];
+        order.forEach((opDir) =>
+        {
+            if (fs.existsSync(opDir)) newOrder.push(opDir);
+        });
+        if (!currentProject.dirs) currentProject.dirs = {};
+        if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
+        currentProject.dirs.ops = newOrder;
+        projectsUtil.writeProjectToFile(currentProjectFile, currentProject);
+        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 
     setProjectName(options)
@@ -895,7 +962,7 @@ class ElectronApi
         projectsUtil.writeProjectToFile(newFile, project);
         this.loadProject(newFile);
         electronApp.updateTitle();
-        return this.success({ "name": project.name });
+        return this.success("OK", { "name": project.name });
     }
 
     cycleFullscreen()
@@ -922,7 +989,7 @@ class ElectronApi
             }
         });
         this._log.debug("collectAssets", oldNew);
-        return this.success(oldNew);
+        return this.success("OK", oldNew);
     }
 
     collectOps()
@@ -953,7 +1020,7 @@ class ElectronApi
             });
         }
         filesUtil.registerOpChangeListeners(allOpNames, true);
-        return this.success(movedOps);
+        return this.success("OK", movedOps);
     }
 
     loadProject(patchPath, newProject = null)
@@ -989,7 +1056,7 @@ class ElectronApi
             jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
             doc.updateOpDocs();
             await this.installProjectDependencies();
-            return this.success(opDoc);
+            return this.success("OK", opDoc);
         }
         else
         {
@@ -1016,7 +1083,7 @@ class ElectronApi
             doc.updateOpDocs();
             this.installProjectDependencies().then(() =>
             {
-                return this.success(opDoc);
+                return this.success("OK", opDoc);
             });
         }
         else
@@ -1025,9 +1092,7 @@ class ElectronApi
         }
     }
 
-
-
-    success(data, raw = false)
+    success(msg, data, raw = false)
     {
         if (raw)
         {
@@ -1036,13 +1101,15 @@ class ElectronApi
         }
         else
         {
-            return { "success": true, "msg": "OK", "data": data };
+            return { "success": true, "msg": msg, "data": data };
         }
     }
 
-    error(msg, data)
+    error(msg, data = null)
     {
-        return { "error": true, "msg": msg, "data": data };
+        const error = { "error": true, "msg": msg };
+        if (data) error.data = data;
+        return error;
     }
 
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false, targetDir = false)

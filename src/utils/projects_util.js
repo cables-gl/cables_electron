@@ -72,8 +72,6 @@ class ProjectsUtil extends SharedProjectsUtil
     getProjectOpDirs(project, includeOsDir = true, reverse = false)
     {
         let opsDirs = [];
-        const projectOpDir = cables.getProjectOpsPath();
-        if (projectOpDir) opsDirs.push(projectOpDir);
         if (project && project.dirs && project.dirs.ops)
         {
             const projectDir = settings.getCurrentProjectDir();
@@ -134,7 +132,7 @@ class ProjectsUtil extends SharedProjectsUtil
             .update(JSON.stringify(project.ops))
             .digest("hex");
         project.buildInfo = settings.getBuildInfo();
-        jsonfile.writeFileSync(projectFile, project);
+        jsonfile.writeFileSync(projectFile, project, { "encoding": "utf-8", "spaces": 4 });
         settings.addToRecentProjects(projectFile, project);
     }
 

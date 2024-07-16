@@ -140,6 +140,14 @@ export default class ElectronEditor
             });
         });
 
+        this._talker.addEventListener("removeProjectOpDir", (data, next) =>
+        {
+            window.ipcRenderer.invoke("talkerMessage", "removeProjectOpDir", data, {}).then((r) =>
+            {
+                this._talker.send("projectOpDirsChanged", r);
+            });
+        });
+
         this._talkerTopics = {
             "getOpInfo": {},
             "savePatch": { "needsProjectFile": true },
@@ -183,7 +191,8 @@ export default class ElectronEditor
             "getCollectionOpDocs": {},
             "patchCreateBackup": { "needsProjectFile": true },
             "addOpDependency": {},
-            "removeOpDependency": {}
+            "removeOpDependency": {},
+            "saveProjectOpDirOrder": { "needsProjectFile": true },
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
@@ -215,5 +224,10 @@ export default class ElectronEditor
             const error = r && r.hasOwnProperty("error") ? r.error : null;
             next(error, r);
         });
+    }
+
+    sendTalkerMessage(cmd, data, next)
+    {
+        this._talker.send(cmd, data, next);
     }
 }

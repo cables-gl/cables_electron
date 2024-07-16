@@ -190,11 +190,13 @@ class ElectronApp
             if (patchFile)
             {
                 const npmResults = await electronApi.installProjectDependencies();
-                if (npmResults.success)
+                if (npmResults.success && npmResults.msg !== "EMPTY" && npmResults.data.length > 0)
                 {
                     npmResults.data.forEach((npmResult) =>
                     {
-                        this._log.logStartup("installed op dependencies for " + npmResult.opName + " (" + npmResult.packages.join(",") + ")");
+                        let logEntry = "installed op dependencies for " + npmResult.opName;
+                        if (npmResult.packages) logEntry += " (" + npmResult.packages.join(",") + ")";
+                        this._log.logStartup(logEntry);
                     });
                 }
             }

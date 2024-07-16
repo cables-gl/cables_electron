@@ -55,9 +55,12 @@ CABLES_CMD_ELECTRON.openAssetDir = (options) =>
     standalone.editor.api("openAssetDir", options, (_err, r) => {});
 };
 
-CABLES_CMD_ELECTRON.addProjectOpDir = (options) =>
+CABLES_CMD_ELECTRON.addProjectOpDir = (options = {}, cb = null) =>
 {
-    standalone.editor.api("addProjectOpDir", options, (_err, r) => {});
+    standalone.editor.api("addProjectOpDir", options, (err, r) =>
+    {
+        if (!err) standalone.editor.sendTalkerMessage("projectOpDirsChanged", r.data, cb);
+    });
 };
 
 CABLES_CMD_ELECTRON.collectAssets = (options) =>
