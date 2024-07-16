@@ -188,7 +188,7 @@ export default class CablesStandalone
             const opDir = window.ipcRenderer.sendSync("getOpDir", { "opName": op.objName || op._name, "opId": op.opId });
             const modulePath = thisClass._path.join(opDir, "node_modules", moduleName);
             const theModule = window.nodeRequire(modulePath);
-            this._log.debug("trying to load", modulePath, theModule);
+            this._log.debug("trying to load", modulePath);
             return theModule;
         }
         catch (e)
