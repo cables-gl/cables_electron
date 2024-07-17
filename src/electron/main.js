@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, Menu, shell, clipboard } from "electron";
+import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme } from "electron";
 import path from "path";
 import localShortcut from "electron-localshortcut";
 import fs from "fs";
@@ -45,6 +45,8 @@ class ElectronApp
                 // win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
             }
         });
+
+        nativeTheme.themeSource = "dark";
     }
 
     createWindow()
