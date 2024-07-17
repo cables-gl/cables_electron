@@ -30,12 +30,12 @@ class ElectronApp
 
         process.on("uncaughtException", (error) =>
         {
-            this._handleError("Unhandled Error", error);
+            this._handleError(this.appName + " encountered an error", error);
         });
 
         process.on("unhandledRejection", (error) =>
         {
-            this._handleError("Unhandled Promise Rejection", error);
+            this._handleError(this.appName + " encountered an error", error);
         });
 
         app.on("browser-window-created", (event, win) =>
@@ -482,7 +482,6 @@ class ElectronApp
 
     _handleError(title, error)
     {
-        if (!title) title = this.appName + " encountered an error";
         this._log.error(title, error);
         if (app.isReady())
         {

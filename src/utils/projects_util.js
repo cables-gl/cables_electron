@@ -11,7 +11,6 @@ import helper from "./helper_util.js";
 import cables from "../cables.js";
 import filesUtil from "./files_util.js";
 
-
 class ProjectsUtil extends SharedProjectsUtil
 {
     constructor(provider)

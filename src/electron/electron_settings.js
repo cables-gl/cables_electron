@@ -99,42 +99,15 @@ class ElectronSettings
         return this._currentProject;
     }
 
-    loadProject(projectFile = null, newProject = null)
+
+    setProject(projectFile, newProject)
     {
-        let project = newProject;
-        if (projectFile)
-        {
-            project = this.getProjectFromFile(projectFile);
-            if (project)
-            {
-                this._setCurrentProjectFile(projectFile);
-                this._setCurrentProjectDir(path.dirname(projectFile));
-                this._setCurrentProject(projectFile, project);
-                // add ops in project dirs to lookup
-                filesUtil.registerAssetChangeListeners(project, true);
-                if (project.ops)
-                {
-                    const opNames = [];
-                    project.ops.forEach((op) =>
-                    {
-                        const opName = opsUtil.getOpNameById(op.opId);
-                        if (opName)
-                        {
-                            opNames.push(opsUtil.getOpAbsoluteFileName(opName));
-                        }
-                    });
-                    filesUtil.registerOpChangeListeners(opNames);
-                }
-                this.addToRecentProjects(projectFile, project);
-            }
-        }
-        else
-        {
-            this._setCurrentProjectFile(null);
-            this._setCurrentProjectDir(null);
-            this._setCurrentProject(null, project);
-        }
-        return project;
+        let projectDir = null;
+        if (projectFile) projectDir = path.dirname(projectFile);
+        this._setCurrentProjectFile(projectFile);
+        this._setCurrentProjectDir(projectDir);
+        this._setCurrentProject(projectFile, newProject);
+        this.addToRecentProjects(projectFile, newProject);
     }
 
     getCurrentUser()

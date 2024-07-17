@@ -1,5 +1,7 @@
-import { utilProvider, SharedDocUtil } from "cables-shared-api";
+import { SharedDocUtil, utilProvider } from "cables-shared-api";
 import fs from "fs";
+import path from "path";
+import jsonfile from "jsonfile";
 import opsUtil from "./ops_util.js";
 import projectsUtil from "./projects_util.js";
 import helper from "./helper_util.js";
@@ -27,26 +29,9 @@ class DocUtil extends SharedDocUtil
 
     getOpDocsInProjectDirs(project)
     {
-        const projectOpDocs = [];
-        if (!project) return projectOpDocs;
-        const opNames = this._getOpNamesInProjectDirs(project);
-        opNames.forEach((opName) =>
-        {
-            const opId = opsUtil.getOpIdByObjName(opName);
-            if (opId)
-            {
-                projectOpDocs.push(this.getDocForOp(opName));
-            }
-        });
-        this.addOpsToLookup(projectOpDocs);
-        return projectOpDocs;
-    }
+        if (!project) return [];
 
-    _getOpNamesInProjectDirs(project)
-    {
-        const opNames = [];
-        if (!project) return opNames;
-
+        const opDocs = {};
         const opDirs = projectsUtil.getProjectOpDirs(project);
         opDirs.forEach((opDir) =>
         {
@@ -57,14 +42,25 @@ class DocUtil extends SharedDocUtil
                 {
                     const parts = jsonPath.split("/");
                     const opName = parts[parts.length - 2];
-                    if (opsUtil.isOpNameValid(opName) && !opNames.includes(opName))
+                    if (opsUtil.isOpNameValid(opName) && !opDocs.hasOwnProperty(opName))
                     {
-                        opNames.push(opName);
+                        try
+                        {
+                            const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
+                            opDoc.name = opName;
+                            opDocs[opName] = opDoc;
+                        }
+                        catch (e)
+                        {
+                            this._log.warn("failed to parse opdocs for", opName, "from", jsonPath);
+                        }
                     }
                 }
             }
         });
-        return helper.uniqueArray(opNames);
+        const projectOpDocs = Object.values(opDocs);
+        this.addOpsToLookup(projectOpDocs);
+        return projectOpDocs;
     }
 }
 export default new DocUtil(utilProvider);

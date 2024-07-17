@@ -84,7 +84,7 @@ class FilesUtil extends SharedFilesUtil
         this._assetChangeWatcher.add(fileNames);
     }
 
-    registerOpChangeListeners(opNames, removeOthers = true)
+    registerOpChangeListeners(opNames, removeOthers = false)
     {
         if (!opNames) return;
         if (removeOthers) this._opChangeWatcher.removeAllListeners();

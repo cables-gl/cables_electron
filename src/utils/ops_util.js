@@ -3,7 +3,6 @@ import path from "path";
 import fs from "fs";
 import { execaSync } from "execa";
 import settings from "../electron/electron_settings.js";
-import cables from "../cables.js";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
 import helper from "./helper_util.js";
@@ -132,9 +131,6 @@ class OpsUtil extends SharedOpsUtil
 
     _getAbsoluteOpDirFromHierarchy(opName, defaultDir)
     {
-        const projectDir = settings.getCurrentProjectDir();
-        let projectOpDir = null;
-        if (projectDir) projectOpDir = cables.getProjectOpsPath();
         const relativePath = super.getOpSourceDir(opName, true);
         if (relativePath)
         {

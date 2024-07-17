@@ -1023,11 +1023,34 @@ class ElectronApi
         return this.success("OK", movedOps);
     }
 
-    loadProject(patchPath, newProject = null)
+    loadProject(projectFile, newProject = null)
     {
-        const project = settings.loadProject(patchPath, newProject);
+        let project = newProject;
+        if (projectFile)
+        {
+            project = settings.getProjectFromFile(projectFile);
+            if (project)
+            {
+                settings.setProject(projectFile, project);
+                doc.getOpDocsInProjectDirs(project);
+                // add ops in project dirs to lookup
+                filesUtil.registerAssetChangeListeners(project, true);
+                if (project.ops)
+                {
+                    const opNames = [];
+                    project.ops.forEach((op) =>
+                    {
+                        const opName = opsUtil.getOpNameById(op.opId);
+                        if (opName)
+                        {
+                            opNames.push(opName);
+                        }
+                    });
+                    filesUtil.registerOpChangeListeners(opNames);
+                }
+            }
+        }
         electronApp.updateTitle();
-        if (project) doc.getOpDocsInProjectDirs(project);
     }
 
     async addOpDependency(options)

@@ -29,7 +29,7 @@ class Logger extends SharedLogger
 
     error(...args)
     {
-        log.error("[" + this._initiator + "]", "ERROR", args.join(" "), this._getContext());
+        log.error("[" + this._initiator + "]", "ERROR", args.join(" "), this._getContext(args));
     }
 
     info(...args)
@@ -44,7 +44,7 @@ class Logger extends SharedLogger
 
     uncaught(...args)
     {
-        log.error("[" + this._initiator + "]", "UNCAUGHT", args.join(" "), this._getContext());
+        log.error("[" + this._initiator + "]", "UNCAUGHT", args.join(" "), this._getContext(args));
     }
 
     verbose(...args)
