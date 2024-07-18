@@ -57,19 +57,6 @@ export default class ElectronEditor
         });
 
         /**
-         * send browser info to ui, no-op in electron
-         *
-         * @name ElectronEditor#sendBrowserInfo
-         * @param {*} data unused
-         * @param {function} next callback
-         * @listens TalkerAPI#sendBrowserInfo
-         */
-        this._talker.addEventListener("sendBrowserInfo", (data, next) =>
-        {
-            if (next) next();
-        });
-
-        /**
          * notify ui of patch name change
          *
          * @name ElectronEditor#updatePatchName
