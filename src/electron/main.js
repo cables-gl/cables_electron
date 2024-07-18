@@ -186,6 +186,7 @@ class ElectronApp
 
     async openPatch(patchFile, rebuildCache = true)
     {
+        this._unsavedContentLeave = false;
         const open = async () =>
         {
             electronApi.loadProject(patchFile);
@@ -209,13 +210,31 @@ class ElectronApp
             this.editorWindow.webContents.setZoomFactor(1.0);
         };
 
-        if (rebuildCache)
+        if (this.isDocumentEdited())
         {
-            doc.rebuildOpCaches(open, ["core", "teams", "extensions"], true);
+            const leave = this._unsavedContentDialog();
+            if (leave)
+            {
+                if (rebuildCache)
+                {
+                    doc.rebuildOpCaches(open, ["core", "teams", "extensions"], true);
+                }
+                else
+                {
+                    await open();
+                }
+            }
         }
         else
         {
-            await open();
+            if (rebuildCache)
+            {
+                doc.rebuildOpCaches(open, ["core", "teams", "extensions"], true);
+            }
+            else
+            {
+                await open();
+            }
         }
     }
 
@@ -412,29 +431,16 @@ class ElectronApp
     {
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
-            event.preventDefault();
-            if (this.isDocumentEdited())
+            if (!this._unsavedContentLeave && this.isDocumentEdited())
             {
-                const choice = dialog.showMessageBoxSync(this.editorWindow, {
-                    "type": "question",
-                    "buttons": ["Leave", "Stay"],
-                    "title": "unsaved content!",
-                    "message": "unsaved content!",
-                    "defaultId": 0,
-                    "cancelId": 1
-                });
-                const leave = (choice === 0);
-                if (leave)
-                {
-                    this.reload();
-                }
+                const leave = this._unsavedContentDialog();
+                if (leave) event.preventDefault();
             }
             else
             {
-                this.reload();
+                event.preventDefault();
             }
         });
-
         this.editorWindow.webContents.setWindowOpenHandler(({ url }) =>
         {
             if (url && url.startsWith("http"))
@@ -515,6 +521,21 @@ class ElectronApp
         {
             dialog.showErrorBox(title, (error.stack));
         }
+    }
+
+    _unsavedContentDialog()
+    {
+        if (this._unsavedContentLeave) return true;
+        const choice = dialog.showMessageBoxSync(this.editorWindow, {
+            "type": "question",
+            "buttons": ["Leave", "Stay"],
+            "title": "unsaved content!",
+            "message": "unsaved content!",
+            "defaultId": 0,
+            "cancelId": 1
+        });
+        this._unsavedContentLeave = (choice === 0);
+        return this._unsavedContentLeave;
     }
 }
 Menu.setApplicationMenu(null);
