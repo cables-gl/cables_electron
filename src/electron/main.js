@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme } from "electron";
+import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme, nativeImage } from "electron";
 import path from "path";
 import localShortcut from "electron-localshortcut";
 import fs from "fs";
@@ -23,6 +23,8 @@ class ElectronApp
     {
         this._log = logger;
         this.appName = "name" in app ? app.name : app.getName();
+        this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
+
         this.editorWindow = null;
 
         settings.set("uiLoadStart", this._log.loadStart);
@@ -42,7 +44,7 @@ class ElectronApp
         {
             if (settings.get(settings.OPEN_DEV_TOOLS_FIELD))
             {
-                // win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
+                win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
             }
         });
 
@@ -61,6 +63,7 @@ class ElectronApp
         this.editorWindow = new BrowserWindow({
             "width": 1920,
             "height": 1080,
+            "icon": this.appIcon,
             "autoHideMenuBar": true,
             "webPreferences": {
                 "partition": settings.SESSION_PARTITION,
@@ -150,19 +153,36 @@ class ElectronApp
 
     createMenu()
     {
+        const isOsX = process.platform === "darwin";
+        let devToolsAcc = "CmdOrCtrl+Shift+I";
+        let inspectElementAcc = "CmdOrCtrl+Shift+C";
+        let consoleAcc = "CmdOrCtrl+Shift+J";
+        if (isOsX)
+        {
+            devToolsAcc = "CmdOrCtrl+Option+I";
+            inspectElementAcc = "CmdOrCtrl+Option+C";
+            consoleAcc = "CmdOrCtrl+Option+J";
+        }
+
         let menu = Menu.buildFromTemplate([
             {
+                "role": "appMenu",
                 "label": "Menu",
                 "submenu": [
                     {
-                        "label": "New patch",
+                        "role": "about",
+                        "label": "About Cables",
                         "click": () =>
                         {
-                            this.openPatch();
+                            this._showAbout();
                         }
                     },
                     {
-                        "label": "Exit",
+                        "type": "separator"
+                    },
+                    {
+                        "role": "quit",
+                        "label": "Quit",
                         "accelerator": "CmdOrCtrl+Q",
                         "click": () =>
                         {
@@ -172,11 +192,97 @@ class ElectronApp
                 ]
             },
             {
+                "label": "File",
+                "submenu": [
+                    {
+                        "label": "New patch",
+                        "accelerator": "CmdOrCtrl+N",
+                        "click": () =>
+                        {
+                            this.openPatch();
+                        }
+                    },
+                    {
+                        "label": "Open patch",
+                        "accelerator": "CmdOrCtrl+O",
+                        "click": () =>
+                        {
+                            this.pickProjectFileDialog();
+                        }
+                    },
+                ]
+            },
+            {
                 "label": "Edit",
                 "submenu": [
+                    { "role": "undo" }, { "role": "redo" },
+                    { "type": "separator" },
                     { "role": "cut" },
                     { "role": "copy" },
-                    { "role": "paste" }
+                    { "role": "paste" },
+                ]
+            },
+            {
+                "label": "Window",
+                "submenu": [
+                    {
+                        "role": "minimize",
+                    },
+                    {
+                        "role": "zoom",
+                        "visible": isOsX
+                    },
+                    { "role": "togglefullscreen" },
+                    { "type": "separator" },
+                    {
+                        "label": "Zoom In",
+                        "accelerator": "CmdOrCtrl+Plus",
+                        "click": () =>
+                        {
+                            this._zoomIn();
+                        }
+                    },
+                    {
+                        "label": "Zoom Out",
+                        "accelerator": "CmdOrCtrl+-",
+                        "click": () =>
+                        {
+                            this._zoomOut();
+                        }
+                    },
+                    {
+                        "label": "Reset Zoom",
+                        "click": () =>
+                        {
+                            this._resetZoom();
+                        }
+                    },
+                    { "type": "separator" },
+                    {
+                        "label": "Developer Tools",
+                        "accelerator": devToolsAcc,
+                        "click": () =>
+                        {
+                            this._toggleDevTools();
+                        }
+                    },
+                    {
+                        "label": "Insepect elements",
+                        "accelerator": inspectElementAcc,
+                        "click": () =>
+                        {
+                            this._inspectElements();
+                        }
+                    },
+                    {
+                        "label": "JavaScript Console",
+                        "accelerator": consoleAcc,
+                        "click": () =>
+                        {
+                            this._toggleDevTools();
+                        }
+                    },
+                    { "role": "close", "visible": false }
                 ]
             }
         ]);
@@ -207,7 +313,7 @@ class ElectronApp
             await this.editorWindow.loadFile("index.html");
             this._log.logStartup("loaded", patchFile);
             const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
-            this.editorWindow.webContents.setZoomFactor(1.0);
+            this._resetZoom();
         };
 
         if (this.isDocumentEdited())
@@ -480,6 +586,11 @@ class ElectronApp
         }
     }
 
+    _resetZoom()
+    {
+        this.editorWindow.webContents.setZoomFactor(1.0);
+    }
+
     _initCaches(cb)
     {
         doc.addOpsToLookup([], true);
@@ -536,6 +647,47 @@ class ElectronApp
         });
         this._unsavedContentLeave = (choice === 0);
         return this._unsavedContentLeave;
+    }
+
+    _showAbout()
+    {
+        const options = {
+            "icon": this.appIcon,
+            "type": "info",
+            "buttons": [],
+            "message": "cables standalone",
+        };
+
+        const buildInfo = settings.getBuildInfo();
+        if (buildInfo)
+        {
+            let versionText = "";
+            if (buildInfo.api.git)
+            {
+                if (buildInfo.api.version)
+                {
+                    versionText += "version: " + buildInfo.api.version + "\n";
+                }
+                else
+                {
+                    versionText += "local build" + "\n\n";
+                    if (buildInfo.api.git)
+                    {
+                        versionText += "branch: " + buildInfo.api.git.branch + "\n";
+                        versionText += "message: " + buildInfo.api.git.message + "\n";
+                    }
+                }
+                if (buildInfo.api.git.tag) versionText += "tag: " + buildInfo.api.git.tag + "\n";
+            }
+            if (buildInfo.api.platform)
+            {
+                versionText += "\n";
+                if (buildInfo.api.platform.node) versionText += "node: " + buildInfo.api.platform.node + "\n";
+                if (buildInfo.api.platform.npm) versionText += "npm: " + buildInfo.api.platform.npm;
+            }
+            options.detail = versionText;
+        }
+        dialog.showMessageBox(options);
     }
 }
 Menu.setApplicationMenu(null);
