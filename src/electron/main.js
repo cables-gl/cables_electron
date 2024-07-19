@@ -296,19 +296,6 @@ class ElectronApp
         const open = async () =>
         {
             electronApi.loadProject(patchFile);
-            if (patchFile)
-            {
-                const npmResults = await electronApi.installProjectDependencies();
-                if (npmResults.success && npmResults.msg !== "EMPTY" && npmResults.data.length > 0)
-                {
-                    npmResults.data.forEach((npmResult) =>
-                    {
-                        let logEntry = "installed op dependencies for " + npmResult.opName;
-                        if (npmResult.packages) logEntry += " (" + npmResult.packages.join(",") + ")";
-                        this._log.logStartup(logEntry);
-                    });
-                }
-            }
             this.updateTitle();
             await this.editorWindow.loadFile("index.html");
             this._log.logStartup("loaded", patchFile);

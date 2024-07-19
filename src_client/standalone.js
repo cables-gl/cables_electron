@@ -77,6 +77,23 @@ export default class CablesStandalone
         {
             if (this.editorWindow)
             {
+                const waitForAce = this.editorWindow.waitForAce;
+                this.editorWindow.waitForAce = () =>
+                {
+                    this._logStartup("checking/installing op dependencies...");
+                    this._electron.ipcRenderer.invoke("talkerMessage", "installProjectDependencies").then((npmResult) =>
+                    {
+                        if (npmResult.msg !== "EMPTY")
+                        {
+                            npmResult.data.forEach((result) =>
+                            {
+                                const npmText = result.stderr || result.stdout;
+                                this._logStartup(result.opName + ": " + npmText);
+                            });
+                        }
+                        waitForAce();
+                    });
+                };
                 if (this._settings.uiLoadStart) this.editorWindow.CABLESUILOADER.uiLoadStart -= this._settings.uiLoadStart;
                 this._startUpLogItems.forEach((logEntry) =>
                 {

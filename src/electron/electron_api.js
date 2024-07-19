@@ -670,8 +670,7 @@ class ElectronApi
                 results.push({ "stdout": "nothing to install", "packages": [] });
                 msg = "EMPTY";
             }
-            const response = this.success("OK", results, false, msg);
-            return response;
+            return this.success(msg, results, false);
         }
         else
         {

@@ -161,12 +161,9 @@ class OpsUtil extends SharedOpsUtil
         });
     }
 
-    installDependencies(opName)
+    getOpDependencies(opName)
     {
-        let result = null;
-        const packageDir = this.getOpAbsolutePath(opName);
-
-        let toInstall = {};
+        let toInstall = [];
         const opDoc = this._docsUtil.getDocForOp(opName);
         if (opDoc && opDoc.hasOwnProperty("dependencies"))
         {
@@ -178,15 +175,23 @@ class OpsUtil extends SharedOpsUtil
                 {
                     npmDep.src.forEach((src) =>
                     {
-                        if (!toInstall.hasOwnProperty(src))
+                        if (version && !src.includes("@")) src = src + "@" + version;
+                        if (!toInstall.includes(src))
                         {
-                            toInstall[src] = version;
+                            toInstall.push(src);
                         }
                     });
                 }
             });
         }
-        const packageNames = Object.keys(toInstall);
+        return toInstall;
+    }
+
+    installDependencies(opName)
+    {
+        let result = null;
+        const packageDir = this.getOpAbsolutePath(opName);
+        const packageNames = this.getOpDependencies(opName);
         if (packageNames.length > 0)
         {
             try
