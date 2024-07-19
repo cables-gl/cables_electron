@@ -309,7 +309,7 @@ class ElectronApi
 
         const opDocs = [];
         if (opDoc) opDocs.push(opDoc);
-        if (opDoc.dependencies) opsUtil.installDependencies(opName);
+        if (opDoc.dependencies) result.dependenciesOutput = opsUtil.installDependencies(opName);
         result.opDocs = doc.makeReadable(opDocs);
         result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
         const c = doc.getOpDocMd(opName);
@@ -907,6 +907,7 @@ class ElectronApi
             if (!currentProject.dirs) currentProject.dirs = {};
             if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
             currentProject.dirs.ops.unshift(opDir);
+            projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
             return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         }
         else
@@ -927,6 +928,7 @@ class ElectronApi
         {
             return opDir !== dirName;
         });
+        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 

@@ -59,7 +59,7 @@ CABLES_CMD_ELECTRON.addProjectOpDir = (options = {}, cb = null) =>
 {
     standalone.editor.api("addProjectOpDir", options, (err, r) =>
     {
-        if (!err) standalone.editor.sendTalkerMessage("projectOpDirsChanged", r.data, cb);
+        if (cb) cb(err, r.data);
     });
 };
 

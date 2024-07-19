@@ -131,7 +131,7 @@ export default class ElectronEditor
         {
             window.ipcRenderer.invoke("talkerMessage", "removeProjectOpDir", data, {}).then((r) =>
             {
-                this._talker.send("projectOpDirsChanged", r);
+                if (next) next(r);
             });
         });
 
