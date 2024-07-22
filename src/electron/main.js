@@ -678,17 +678,21 @@ class ElectronApp
     }
 }
 Menu.setApplicationMenu(null);
+
+
 app.whenReady().then(() =>
 {
-    electronApi.init();
-    electronEndpoint.init();
     electronApp.createWindow();
     electronApp.createMenu();
+    electronApi.init();
+    electronEndpoint.init();
     app.on("activate", () =>
     {
         if (BrowserWindow.getAllWindows().length === 0) electronApp.createWindow();
     });
 });
+
+
 
 app.on("window-all-closed", () =>
 {
