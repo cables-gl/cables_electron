@@ -170,7 +170,6 @@ class ElectronApp
                 "label": "Menu",
                 "submenu": [
                     {
-                        "role": "about",
                         "label": "About Cables",
                         "click": () =>
                         {
