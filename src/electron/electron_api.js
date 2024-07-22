@@ -1050,6 +1050,10 @@ class ElectronApi
                 }
             }
         }
+        else
+        {
+            settings.setProject(null, null);
+        }
         electronApp.updateTitle();
     }
 
