@@ -83,7 +83,7 @@ export default class CablesStandalone
                     this._logStartup("checking/installing op dependencies...");
                     this._electron.ipcRenderer.invoke("talkerMessage", "installProjectDependencies").then((npmResult) =>
                     {
-                        if (npmResult.msg !== "EMPTY")
+                        if (npmResult.msg !== "EMPTY" && npmResult.msg !== "UNSAVED_PROJECT")
                         {
                             npmResult.data.forEach((result) =>
                             {

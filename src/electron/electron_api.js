@@ -643,10 +643,9 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         if (!currentProject)
         {
-            return this.error("UNSAVED_PROJECT", { "stdout": "please save your project first", "packages": [] });
+            return this.error("UNSAVED_PROJECT", [{ "stdout": "please save your project first", "packages": [] }]);
         }
 
-        if (!currentProject) return { "error": true, "stderr": "project not saved/found", "packages": [] };
         const results = [];
         let hasError = false;
         currentProject.ops.forEach((op) =>
