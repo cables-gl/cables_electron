@@ -63,6 +63,7 @@ class ElectronApp
         this.editorWindow = new BrowserWindow({
             "width": 1920,
             "height": 1080,
+            "backgroundColor": "#222",
             "icon": this.appIcon,
             "autoHideMenuBar": true,
             "webPreferences": {
