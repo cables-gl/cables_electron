@@ -1063,7 +1063,16 @@ class ElectronApi
         let version = "";
         if (options.type === "npm")
         {
-            version = options.name.split("@")[1] || "";
+            const parts = options.name.split("@");
+            if (options.name.startsWith("@"))
+            {
+                version = parts[2] || "";
+                options.name = "@" + parts[1];
+            }
+            else
+            {
+                version = parts[1] || "";
+            }
         }
         const opName = options.opName;
         const dep = {

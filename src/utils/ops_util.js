@@ -175,7 +175,14 @@ class OpsUtil extends SharedOpsUtil
                 {
                     npmDep.src.forEach((src) =>
                     {
-                        if (version && !src.includes("@")) src = src + "@" + version;
+                        if (version)
+                        {
+                            src = src + "@" + version;
+                        }
+                        else
+                        {
+                            if (npmDep.name.includes("@")) src = npmDep.name;
+                        }
                         if (!toInstall.includes(src))
                         {
                             toInstall.push(src);
@@ -189,9 +196,10 @@ class OpsUtil extends SharedOpsUtil
 
     installDependencies(opName)
     {
-        let result = null;
         const packageDir = this.getOpAbsolutePath(opName);
         const packageNames = this.getOpDependencies(opName);
+        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": packageDir, "opName": opName };
+        if (packageNames.length === 0) return result;
         if (packageNames.length > 0)
         {
             try
@@ -208,14 +216,12 @@ class OpsUtil extends SharedOpsUtil
                 const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
                 this._log.debug("RUNNING", npm, npmArgs.join(" "));
                 const out = execaSync(npm, npmArgs, { "cwd": packageDir });
-                out.packages = packageNames;
-                out.targetDir = packageDir;
-                out.opName = opName;
-                result = out;
+                result.stdout = out.stdout;
+                result.stderr = out.stderr;
             }
             catch (e)
             {
-                result = { "stderr": e, "packages": packageNames, "targetDir": packageDir, "opName": opName };
+                result.stderr = e;
             }
         }
         return result;
