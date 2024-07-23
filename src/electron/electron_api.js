@@ -308,8 +308,11 @@ class ElectronApi
         result.content = "No docs yet...";
 
         const opDocs = [];
-        if (opDoc) opDocs.push(opDoc);
-        if (opDoc.dependencies) result.dependenciesOutput = opsUtil.installDependencies(opName);
+        if (opDoc)
+        {
+            opDocs.push(opDoc);
+            if (opDoc.dependencies) result.dependenciesOutput = opsUtil.installDependencies(opName);
+        }
         result.opDocs = doc.makeReadable(opDocs);
         result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
         const c = doc.getOpDocMd(opName);
