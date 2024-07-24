@@ -14,7 +14,6 @@ import helper from "../utils/helper_util.js";
 app.commandLine.appendSwitch("disable-http-cache");
 app.commandLine.appendSwitch("force_high_performance_gpu");
 
-
 logger.info("--- starting");
 
 class ElectronApp
@@ -579,6 +578,7 @@ class ElectronApp
             const buttons = [
                 "Reload",
                 "New Patch",
+                "Close",
                 process.platform === "darwin" ? "Copy Error" : "Copy error",
             ];
             const buttonIndex = dialog.showMessageBoxSync({
@@ -598,6 +598,10 @@ class ElectronApp
                 this.openPatch(null);
             }
             if (buttonIndex === 2)
+            {
+                app.quit();
+            }
+            if (buttonIndex === 3)
             {
                 clipboard.writeText(title + "\n" + error.stack);
             }
