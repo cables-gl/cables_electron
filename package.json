@@ -49,7 +49,7 @@
       }
     ],
     "asarUnpack": [
-      "node_modules/npm/**/*"
+      "node_modules/**/*"
     ],
     "directories": {
       "buildResources": "resources/build"

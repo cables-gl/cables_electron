@@ -39,13 +39,15 @@ class ElectronEndpoint
         const partition = settings.SESSION_PARTITION;
         const ses = session.fromPartition(partition, { "cache": false });
 
-        ses.protocol.handle("file", (request) =>
+        ses.protocol.handle("file", async (request) =>
         {
             let urlFile = request.url;
             let actualFile = helper.fileURLToPath(urlFile, true);
             if (fs.existsSync(actualFile))
             {
-                return net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
+                const response = await net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(response, actualFile);
+                return response;
             }
             else
             {
@@ -63,13 +65,13 @@ class ElectronEndpoint
                     actualFile = decodeURI(actualFile);
                     if (fs.existsSync(actualFile))
                     {
-                        return net.fetch(helper.pathToFileURL(actualFile));
+                        const response = await net.fetch(helper.pathToFileURL(actualFile));
+                        this._addDefaultHeaders(response, actualFile);
+                        return response;
                     }
                     else
                     {
-                        return new Response(null, {
-                            "headers": { "status": 404 }
-                        });
+                        return new Response(null, { "headers": { "status": 404 } });
                     }
                 }
                 catch (e)
@@ -377,6 +379,23 @@ class ElectronEndpoint
     apiOpLayout(opName)
     {
         return opsUtil.getOpSVG(opName);
+    }
+
+    _addDefaultHeaders(response, existingFile)
+    {
+        try
+        {
+            const stats = fs.statSync(existingFile);
+            if (stats)
+            {
+                response.headers.append("Accept-Ranges", "bytes");
+                response.headers.append("Content-Length", stats.size);
+                response.headers.append("Content-Range", "bytes 0-" + stats.size + "/" + (stats.size + 1));
+                response.headers.append("Last-Modified", stats.mtime.toUTCString());
+            }
+        }
+        catch (e) {}
+        return response;
     }
 }
 
