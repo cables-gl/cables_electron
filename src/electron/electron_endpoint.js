@@ -9,6 +9,7 @@ import opsUtil from "../utils/ops_util.js";
 import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
 import helper from "../utils/helper_util.js";
+import electronApp from "./main.js";
 
 protocol.registerSchemesAsPrivileged([{
     "scheme": "cables",
@@ -81,7 +82,7 @@ class ElectronEndpoint
             }
         });
 
-        ses.protocol.handle("cables", (request) =>
+        ses.protocol.handle("cables", async (request) =>
         {
             const url = new URL(request.url);
             const urlPath = url.pathname;
@@ -204,6 +205,24 @@ class ElectronEndpoint
                         "status": 500
                     });
                 }
+            }
+            else if (urlPath.startsWith("/edit/"))
+            {
+                let patchId = urlPath.split("/", 3)[2];
+                let projectFile = null;
+                if (patchId)
+                {
+                    projectFile = settings.getRecentProjectFile(patchId);
+                }
+                if (projectFile)
+                {
+                    await electronApp.openPatch(projectFile, true);
+                }
+                else
+                {
+                    await electronApp.pickProjectFileDialog();
+                }
+                return new Response(null, { "status": 302 });
             }
             else
             {
