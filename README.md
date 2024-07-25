@@ -73,7 +73,7 @@ this.editorWindow = new BrowserWindow({
 
 ## Development
 
-## Set up local environment
+### Set up local environment
 
 * the preferred way of developing cables locally is using the `cables_dev` repository: https://github.com/cables-gl/cables_dev
 * that repo contains scripts that will set up everything for you to get started
