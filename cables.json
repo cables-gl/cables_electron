@@ -1,5 +1,5 @@
 {
-  "env": "electron",
+  "env": "dev",
   "minifyJs": true,
   "sourcePath": {
     "libs": "../../shared/libs/",
