@@ -161,7 +161,7 @@ class OpsUtil extends SharedOpsUtil
         });
     }
 
-    getOpDependencies(opName)
+    getOpNpmPackages(opName)
     {
         let toInstall = [];
         const opDoc = this._docsUtil.getDocForOp(opName);

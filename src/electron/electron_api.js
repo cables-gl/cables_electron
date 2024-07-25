@@ -294,7 +294,7 @@ class ElectronApi
         }, true);
     }
 
-    getOpDocs(data)
+    async getOpDocs(data)
     {
         const opName = data.op.objName || opsUtil.getOpNameById(data.op.opId || data.op.id);
         if (!opName)
@@ -311,7 +311,12 @@ class ElectronApi
         if (opDoc)
         {
             opDocs.push(opDoc);
-            if (opDoc.dependencies) result.dependenciesOutput = opsUtil.installDependencies(opName);
+            if (opDoc.dependencies)
+            {
+                const opPackages = opsUtil.getOpNpmPackages(opName);
+                const packageDir = opsUtil.getOpAbsolutePath(opName);
+                result.dependenciesOutput = await electronApp.installPackages(packageDir, opPackages, opName);
+            }
         }
         result.opDocs = doc.makeReadable(opDocs);
         result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
@@ -650,33 +655,40 @@ class ElectronApi
         }
 
         const results = [];
-        let hasError = false;
+        let projectPackages = {};
         currentProject.ops.forEach((op) =>
         {
             const opName = opsUtil.getOpNameById(op.opId);
             if (opName)
             {
-                const result = opsUtil.installDependencies(opName);
-                if (result)
+                const targetDir = opsUtil.getOpAbsolutePath(opName);
+                const opPackages = opsUtil.getOpNpmPackages(opName);
+                if (opPackages.length > 0)
                 {
-                    results.push(result);
-                    if (result.error) hasError = true;
+                    if (!projectPackages.hasOwnProperty(targetDir)) projectPackages[targetDir] = [];
+                    projectPackages[targetDir] = {
+                        "opName": opName,
+                        "packages": projectPackages[targetDir].concat(opPackages)
+                    };
                 }
             }
         });
-        if (!hasError)
+        if (Object.keys(projectPackages).length === 0)
         {
-            let msg = "OK";
-            if (results.length === 0)
-            {
-                results.push({ "stdout": "nothing to install", "packages": [] });
-                msg = "EMPTY";
-            }
-            return this.success(msg, results, false);
+            results.push({ "stdout": "nothing to install", "packages": [] });
+            return this.success("EMPTY", results, false);
         }
         else
         {
-            return this.error("ERROR", results);
+            const allNpmInstalls = [];
+            for (let targetDir in projectPackages)
+            {
+                const opData = projectPackages[targetDir];
+                allNpmInstalls.push(electronApp.installPackages(targetDir, opData.packages, opData.opName));
+            }
+
+            const npmResults = await Promise.all(allNpmInstalls);
+            return this.success("OK", npmResults);
         }
     }
 

@@ -10,6 +10,8 @@ import doc from "../utils/doc_util.js";
 import projectsUtil from "../utils/projects_util.js";
 import filesUtil from "../utils/files_util.js";
 import helper from "../utils/helper_util.js";
+// this needs to be imported like this to not have to asarUnpack the entire nodejs world - sm,25.07.2024
+import Npm from "../../node_modules/npm/lib/npm.js";
 
 app.commandLine.appendSwitch("disable-http-cache");
 app.commandLine.appendSwitch("force_high_performance_gpu");
@@ -50,7 +52,85 @@ class ElectronApp
         nativeTheme.themeSource = "dark";
     }
 
-    createWindow()
+    init()
+    {
+        this._createWindow();
+        this._createMenu();
+        this._loadNpm();
+    }
+
+    _loadNpm(cb = null)
+    {
+        try
+        {
+            this._npm = new Npm({
+                "argv": [
+                    "--no-save",
+                    "--no-package-lock",
+                    "--legacy-peer-deps",
+                    "--no-progress",
+                    "--no-color",
+                    "--yes",
+                    "--no-fund",
+                    "--no-audit"
+                ],
+                "excludeNpmCwd": true,
+            });
+            this._npm.load().then(() =>
+            {
+                this._log.info("loaded npm", this._npm.version);
+            });
+        }
+        catch (e)
+        {
+            this._log.error("failed to load npm", e);
+        }
+    }
+
+    async installPackages(targetDir, packageNames, opName = null)
+    {
+        if (!targetDir || !packageNames || packageNames.length === 0) return { "stdout": "nothing to install", "packages": [] };
+        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
+        if (opName) result.opName = opName;
+        this._npm.config.localPrefix = targetDir;
+        const logToVariable = (level, ...args) =>
+        {
+            switch (level)
+            {
+            case "standard":
+                args.forEach((arg) =>
+                {
+                    result.stdout += arg;
+                });
+                break;
+            case "error":
+                args.forEach((arg) =>
+                {
+                    result.stderr += arg;
+                });
+                break;
+            case "buffer":
+            case "flush":
+            default:
+            }
+        };
+        process.on("output", logToVariable);
+        this._log.debug("installing", packageNames, "to", opName, targetDir);
+        try
+        {
+            await this._npm.exec("install", packageNames);
+        }
+        catch (e)
+        {
+            result.stderr += e;
+        }
+        process.off("output", logToVariable);
+        if (fs.existsSync(path.join(targetDir, "package.json"))) fs.rmSync(path.join(targetDir, "package.json"));
+        if (fs.existsSync(path.join(targetDir, "package-lock.json"))) fs.rmSync(path.join(targetDir, "package-lock.json"));
+        return result;
+    }
+
+    _createWindow()
     {
         let patchFile = null;
         const openLast = settings.getUserSetting("openlastproject", false);
@@ -151,7 +231,7 @@ class ElectronApp
         return this._dirDialog(title, properties);
     }
 
-    createMenu()
+    _createMenu()
     {
         const isOsX = process.platform === "darwin";
         let devToolsAcc = "CmdOrCtrl+Shift+I";
@@ -576,9 +656,9 @@ class ElectronApp
         if (app.isReady())
         {
             const buttons = [
-                "Reload",
-                "New Patch",
-                "Close",
+                "&Reload",
+                "&New Patch",
+                "&Quit",
                 process.platform === "darwin" ? "Copy Error" : "Copy error",
             ];
             const buttonIndex = dialog.showMessageBoxSync({
@@ -588,6 +668,7 @@ class ElectronApp
                 "noLink": true,
                 "message": title,
                 "detail": error.stack,
+                "normalizeAccessKeys": true
             });
             if (buttonIndex === 0)
             {
@@ -673,13 +754,12 @@ Menu.setApplicationMenu(null);
 
 app.whenReady().then(() =>
 {
-    electronApp.createWindow();
-    electronApp.createMenu();
+    electronApp.init();
     electronApi.init();
     electronEndpoint.init();
     app.on("activate", () =>
     {
-        if (BrowserWindow.getAllWindows().length === 0) electronApp.createWindow();
+        if (BrowserWindow.getAllWindows().length === 0) electronApp.init();
     });
 });
 

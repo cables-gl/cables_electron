@@ -217,7 +217,7 @@ export default class CablesStandalone
             }
             catch (e2)
             {
-                const errorMessage = "failed to load node module \"" + moduleName + "\" do you need to run `npm install`?";
+                const errorMessage = "failed to load node module \"" + moduleName + "\", try to <a onclick='CABLES.CMD.STANDALONE.runNpm()'>install project npm packages</a>?";
                 if (op) op.setUiError("oprequire", errorMessage);
                 this._log.error(errorMessage, e2);
                 return "";

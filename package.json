@@ -1,8 +1,8 @@
 {
   "name": "cables_electron",
-  "version": "0.0.9",
+  "version": "0.0.1-local",
   "author": "undefined development",
-  "description": "current templates for the different exe-exports in cables.gl",
+  "description": "cables standalone version",
   "repository": {
     "type": "git",
     "url": "git@github.com:cables-gl/cables_electron.git"
@@ -47,9 +47,6 @@
           "**/*"
         ]
       }
-    ],
-    "asarUnpack": [
-      "node_modules/**/*"
     ],
     "directories": {
       "buildResources": "resources/build"
