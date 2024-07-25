@@ -327,10 +327,6 @@ class ElectronSettings
         electronApp.updateTitle();
     }
 
-    reloadProject()
-    {
-    }
-
     addToRecentProjects(projectFile, project)
     {
         if (!projectFile || !project) return;
