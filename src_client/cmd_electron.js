@@ -164,9 +164,18 @@ CABLES_CMD_STANDALONE.orderOpDirs = () =>
     standalone.CABLES.platform.openOpDirsTab();
 };
 
-CABLES_CMD_STANDALONE.renameOp = (what) =>
+CABLES_CMD_STANDALONE.renameOp = () =>
 {
-    console.log("RENAME THE OP", what);
+    const gui = standalone.gui;
+    if (gui)
+    {
+        const ops = gui.patchView.getSelectedOps();
+        if (!ops.length) return;
+
+        const op = ops[0];
+
+        gui.serverOps.renameDialog(op.objName);
+    }
 };
 
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};

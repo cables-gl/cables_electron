@@ -651,6 +651,83 @@ class ElectronApi
         return this.success("OK", opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir), true);
     }
 
+    opRename(data)
+    {
+        const oldId = data.opname;
+        const newName = data.name;
+        const oldName = opsUtil.getOpNameById(oldId);
+
+        const currentUser = settings.getCurrentUser();
+        let opNamespace = opsUtil.getNamespace(newName);
+
+        let renameLog = [];
+
+        const opDocs = doc.getOpDocs(false, false);
+        const renameResults = this._getFullRenameResponse(opDocs, newName, oldName, currentUser, opsUtil.isPrivateOp(newName), true);
+        if (!oldName)
+        {
+            renameResults.problems.push("No name for source op given.");
+        }
+
+        const result = renameResults;
+        result.title = "rename - " + oldName + " - " + newName;
+        result.opname = oldName;
+        result.opNamespace = opNamespace;
+        result.newopname = newName;
+        result.shortname = opsUtil.getOpShortName(newName);
+        result.oldShortName = opsUtil.getOpShortName(oldName);
+        const versions = opsUtil.getOpVersionNumbers(oldName, opDocs);
+        result.otherVersions = versions.length > 1 ? versions.filter((v) => { return v.name !== oldName; }) : [];
+        result.renamePossible = renameResults.problems.length === 0;
+
+        if (Object.keys(renameResults.problems).length > 0)
+        {
+            result.problems = Object.values(renameResults.problems);
+            return this.success("PROBLEMS", result);
+        }
+
+        const start = Date.now();
+
+        result.user = currentUser;
+        result.showresult = true;
+        const callback = (err, log) =>
+        {
+            renameLog = renameLog.concat(log);
+            if (err)
+            {
+                return this.error("ERROR", 500);
+            }
+            else
+            {
+                result.log = renameLog;
+                this._log.verbose("*" + currentUser.username + " finished after " + Math.round((Date.now() - start) / 1000) + " seconds ");
+                return this.success("OK", result);
+            }
+        };
+
+        let removeOld = true;
+        if (opsUtil.isUserOp(newName))
+        {
+            opsUtil.renameToUserOp(oldName, newName, currentUser, removeOld, callback);
+        }
+        else if (opsUtil.isTeamOp(newName))
+        {
+            opsUtil.renameToTeamOp(oldName, newName, currentUser, removeOld, callback);
+        }
+        else if (opsUtil.isExtensionOp(newName))
+        {
+            opsUtil.renameToExtensionOp(oldName, newName, currentUser, removeOld, callback);
+        }
+        else if (opsUtil.isPatchOp(newName))
+        {
+            opsUtil.renameToPatchOp(oldName, newName, currentUser, removeOld, false, callback);
+        }
+        else
+        {
+            opsUtil.renameToCoreOp(oldName, newName, currentUser, removeOld, callback);
+        }
+    }
+
     async installProjectDependencies()
     {
         const currentProject = settings.getCurrentProject();

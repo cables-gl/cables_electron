@@ -165,6 +165,7 @@ export default class ElectronEditor
             "opUpdate": {},
             "opSaveLayout": { },
             "opClone": { },
+            "opRename": { },
             "checkNumAssetPatches": {},
             "saveProjectAs": {},
             "gotoPatch": {},
