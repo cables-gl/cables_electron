@@ -109,6 +109,8 @@ this.editorWindow = new BrowserWindow({
 
 ## Appreciation
 
-This project was funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust/), a fund established by [NLnet](https://nlnet.nl/) with financial support
+Thanks to the [cables community](https://discord.gg/cablesgl) and our [supporters](https://cables.gl/credits) for making this possible. If you like this project, think about supporting it on [patreon](https://www.patreon.com/cables_gl).
+
+This project was partly funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust/), a fund established by [NLnet](https://nlnet.nl/) with financial support
 from the European Commission's [Next Generation Internet](https://www.ngi.eu/) programme, under the aegis of [DG Communications Networks](https://commission.europa.eu/about-european-commission/departments-and-executive-agencies/communications-networks-content-and-technology_en),
 Content and Technology under grant agreement No 101069594. Navigate projects
