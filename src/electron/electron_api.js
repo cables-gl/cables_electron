@@ -75,8 +75,13 @@ class ElectronApi
                     const newProjectFile = await electronApp.saveProjectFileDialog();
                     if (newProjectFile)
                     {
-                        const currentProject = settings.getCurrentProject();
-                        projectsUtil.writeProjectToFile(newProjectFile, currentProject);
+                        let patchData = null;
+                        let currentProject = settings.getCurrentProject();
+                        if (cmd === "savePatch" && data)
+                        {
+                            patchData = data;
+                        }
+                        projectsUtil.writeProjectToFile(newProjectFile, currentProject, patchData);
                         this.loadProject(newProjectFile);
                     }
                     else

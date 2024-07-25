@@ -42,6 +42,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     generateNewProject(owner)
     {
+        if (!owner) owner = settings.getCurrentUser();
         const now = Date.now();
         const projectId = helper.generateRandomId();
         const shortId = helper.generateShortId(projectId, now);
@@ -95,8 +96,9 @@ class ProjectsUtil extends SharedProjectsUtil
         return sanitizeFileName(project.name).replace(/ /g, "_") + ".".this._se;
     }
 
-    writeProjectToFile(projectFile, project, patch = null)
+    writeProjectToFile(projectFile, project = null, patch = null)
     {
+        if (!project) project = this.generateNewProject();
         if (!project.ops) project.ops = [];
         if (patch && (patch.data || patch.dataB64))
         {
