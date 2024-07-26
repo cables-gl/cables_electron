@@ -152,7 +152,7 @@ class ElectronApi
             "msg": "BACKUP_CREATED"
         };
         const currentProject = settings.getCurrentProject();
-        const projectFile = await electronApp.saveProjectFileDialog("export");
+        const projectFile = await electronApp.saveProjectFileDialog();
         if (!projectFile)
         {
             logger.info("no backup file chosen");

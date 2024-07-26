@@ -7,6 +7,19 @@ import projectsUtil from "./projects_util.js";
 
 class HelperUtil extends SharedHelperUtil
 {
+    constructor(provider)
+    {
+        super(provider);
+        this._localFiles = [
+            "file://./",
+            "file:///assets/",
+            "./",
+            "/",
+            "assets/",
+            "/assets/"
+        ];
+    }
+
     fileURLToPath(url, convertRelativeToProject = false)
     {
         if (!url || url === "0") return "";
@@ -15,12 +28,24 @@ class HelperUtil extends SharedHelperUtil
         {
             const currentProject = settings.getCurrentProject();
             const assetPathUrl = projectsUtil.getAssetPathUrl(currentProject);
-            let filePath = fileUrl.replace("file://./", "");
-            if (filePath.startsWith("./" + assetPathUrl)) filePath = filePath.replace("./" + assetPathUrl, "");
-            if (filePath.startsWith(assetPathUrl)) filePath = filePath.replace(assetPathUrl, "");
-            if (filePath.startsWith("assets/")) filePath = filePath.replace("assets/", "");
+            let filePath = fileUrl;
+            const filePatterns = [
+                "file://./",
+                "file:///assets/",
+                "./" + assetPathUrl,
+                assetPathUrl,
+                "assets/",
+                "/assets/",
+                "./"
+            ];
+            filePatterns.forEach((filePattern) =>
+            {
+                if (filePath.startsWith(filePattern))
+                {
+                    filePath = filePath.replace(filePattern, "");
+                }
+            });
 
-            filePath = filePath.replace("./", "");
             filePath = path.join(cables.getAssetPath(), filePath);
             try
             {
@@ -59,7 +84,13 @@ class HelperUtil extends SharedHelperUtil
 
     isLocalAssetUrl(url)
     {
-        return (url && (url.startsWith("file://./") || url.startsWith("./") || url.startsWith("/") || url.startsWith("assets/")));
+        if (!url) return false;
+
+        for (let i = 0; i < this._localFiles.length; i++)
+        {
+            if (url.startsWith(this._localFiles[i])) return true;
+        }
+        return false;
     }
 
     isLocalAssetPath(thePath)

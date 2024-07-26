@@ -185,7 +185,7 @@ class ElectronApp
         return this._fileDialog(title, filePath, asUrl, filter, properties);
     }
 
-    async saveProjectFileDialog(type = "project")
+    async saveProjectFileDialog()
     {
         const extensions = [];
         extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
@@ -203,17 +203,18 @@ class ElectronApp
         {
             if (!result.canceled)
             {
-                const patchFile = result.filePath;
-                if (type === "project")
+                let patchFile = result.filePath;
+                if (!patchFile.endsWith(projectsUtil.CABLES_PROJECT_FILE_EXTENSION))
                 {
-                    const currentProject = settings.getCurrentProject();
-                    if (currentProject)
-                    {
-                        currentProject.name = path.basename(patchFile);
-                        currentProject.summary = currentProject.summary || {};
-                        currentProject.summary.title = currentProject.name;
-                        projectsUtil.writeProjectToFile(patchFile, currentProject);
-                    }
+                    patchFile += "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION;
+                }
+                const currentProject = settings.getCurrentProject();
+                if (currentProject)
+                {
+                    currentProject.name = path.basename(patchFile);
+                    currentProject.summary = currentProject.summary || {};
+                    currentProject.summary.title = currentProject.name;
+                    projectsUtil.writeProjectToFile(patchFile, currentProject);
                 }
                 return patchFile;
             }

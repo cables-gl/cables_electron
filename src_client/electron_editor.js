@@ -38,6 +38,16 @@ export default class ElectronEditor
         this._talker = new TalkerAPI(frame.contentWindow);
         this._patchId = this._config.patchId;
 
+        window.addEventListener("unhandledrejection", (e) =>
+        {
+            this._talker.send("logError", { "level": "error", "message": e.reason });
+        });
+
+        window.addEventListener("error", (e) =>
+        {
+            this._talker.send("logError", { "level": "error", "message": e.error });
+        });
+
         window.ipcRenderer.on("talkerMessage", (_event, data) =>
         {
             this._talker.send(data.cmd, data.data);
@@ -102,6 +112,8 @@ export default class ElectronEditor
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
                 this._talker.send("refreshFileManager");
                 this._talker.send("fileUpdated", { "filename": data.filename });
+
+                if (error) this._talker.send("logError", { "level": "error", "message": error });
                 next(error, r);
             });
         });
@@ -122,6 +134,7 @@ export default class ElectronEditor
             window.ipcRenderer.invoke("talkerMessage", "updateFile", data, {}).then((r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
+                if (error) this._talker.send("logError", { "level": "error", "message": error });
                 next(error, r);
                 this._talker.send("fileUpdated", { "filename": data.fileName });
             });
@@ -191,6 +204,7 @@ export default class ElectronEditor
                 window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig).then((r) =>
                 {
                     const error = r && r.hasOwnProperty("error") ? r.error : null;
+                    if (error) this._talker.send("logError", { "level": "error", "message": error });
                     next(error, r);
                 });
             });
@@ -210,11 +224,12 @@ export default class ElectronEditor
         window.ipcRenderer.invoke("talkerMessage", cmd, data, topicConfig).then((r) =>
         {
             const error = r && r.hasOwnProperty("error") ? r.error : null;
+            if (error) this._talker.send("logError", { "level": "error", "message": error });
             next(error, r);
         });
     }
 
-    sendTalkerMessage(cmd, data, next)
+    editor(cmd, data, next)
     {
         this._talker.send(cmd, data, next);
     }

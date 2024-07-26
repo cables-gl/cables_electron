@@ -80,6 +80,7 @@ export default class CablesStandalone
                 const waitForAce = this.editorWindow.waitForAce;
                 this.editorWindow.waitForAce = () =>
                 {
+                    this._incrementStartup();
                     this._logStartup("checking/installing op dependencies...");
                     this._electron.ipcRenderer.invoke("talkerMessage", "installProjectDependencies").then((npmResult) =>
                     {
@@ -233,5 +234,10 @@ export default class CablesStandalone
     _logStartup(title)
     {
         if (this.editorWindow && this.editorWindow.logStartup) this.editorWindow.logStartup(title);
+    }
+
+    _incrementStartup()
+    {
+        if (this.editorWindow && this.editorWindow.logStartup) this.editorWindow.incrementStartup();
     }
 }
