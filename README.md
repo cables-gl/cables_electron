@@ -16,17 +16,17 @@ mac/win/linux: [cables standalone](https://cables.gl/downloads)
 
 ### Mac
 
-[Download](https://cables.gl/downloads) the latest version for mac (`.mac-arm64.dmg` for `m1/m2` or `.mac-x64.dmg` for `intel macs`).
+[Download](https://cables.gl/downloads) the latest version for mac (`m1/m2` or `intel macs`).
 Open the `.dmg`, drag the icon to your applications folder or any other place you want and start it. Acknowledge that this software has been
 downloaded form the internet (the executable is signed and notarized, though) and start patching!
 
 ### Win
-[Download](https://cables.gl/downloads) the latest version for windows (`-win.zip ` for a portable executable).
+[Download](https://cables.gl/downloads) the latest version for windows (portable executable).
 Unpack the software and run it. You might need to acknowledge that this software is not signed and select "more info" and/or "run anyhow" on
 the shown dialog. Once that is done, start patching!
 
 ### Linux
-[Download](https://cables.gl/downloads) the latest version for linux (`linux.AppImage`).
+[Download](https://cables.gl/downloads) the latest version for linux (AppImage).
 Once you downloaded the package, set its permissions to executable via your file-manager or using the terminal (`chmod +x ...AppImage`).
 Open the AppImage and start patching!
 
