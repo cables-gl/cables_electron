@@ -5,7 +5,7 @@ with contributions by the [cables community](https://discord.gg/cablesgl) and su
 
 ## In Development
 
-This is development version of [cables.gl](https://cables.gl) packages into a standalone, executable application using electron for mac/windows/linux.
+This is the development version of [cables.gl](https://cables.gl) packages into a standalone, executable application using electron for mac/windows/linux.
 
 ***This is under heavy development, things may (and will) break, use it at your own peril. Please provide feedback in
 the issue tracker attached to this repository.***
