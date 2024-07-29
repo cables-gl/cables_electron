@@ -3,10 +3,9 @@
 [cables.gl](https://cables.gl) and [cables standalone](https://cables.gl/downloads) are mainly developed by [undev](https://undev.studio/),
 with contributions by the [cables community](https://discord.gg/cablesgl) and support by [various other parties and projects](https://cables.gl/credits).
 
-## Early-Access
+## In Development
 
-This is an early-access version of [cables.gl](https://cables.gl) core and editor part, packaged into an electron
-executable for mac/windows/linux.
+This is development version of [cables.gl](https://cables.gl) packages into a standalone, executable application using electron for mac/windows/linux.
 
 ***This is under heavy development, things may (and will) break, use it at your own peril. Please provide feedback in
 the issue tracker attached to this repository.***
