@@ -54,19 +54,13 @@ class ElectronEndpoint
             {
                 try
                 {
-                    const url = new URL(request.url);
-                    if (url.searchParams.size > 0)
+                    if (actualFile.includes("?"))
                     {
-                        const paramsFile = url.href.replace(url.protocol, "").replace("//", "");
-                        if (!fs.existsSync(paramsFile))
-                        {
-                            actualFile = url.pathname.replace("//", "/");
-                        }
+                        actualFile = actualFile.split("?")[0];
                     }
-                    actualFile = decodeURI(actualFile);
                     if (fs.existsSync(actualFile))
                     {
-                        const response = await net.fetch(helper.pathToFileURL(actualFile));
+                        const response = await net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
                         this._addDefaultHeaders(response, actualFile);
                         return response;
                     }

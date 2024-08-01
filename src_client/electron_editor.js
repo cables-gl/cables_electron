@@ -183,7 +183,7 @@ export default class ElectronEditor
             "saveProjectAs": {},
             "gotoPatch": {},
             "setProjectUpdated": {},
-            "getOpTargetDirs": {},
+            "getProjectOpDirs": {},
             "openDir": {},
             "selectFile": {},
             "setProjectName": { "needsProjectFile": true },

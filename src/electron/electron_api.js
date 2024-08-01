@@ -952,10 +952,10 @@ class ElectronApi
         return this.success("OK", project);
     }
 
-    getOpTargetDirs()
+    getProjectOpDirs()
     {
         const currentProject = settings.getCurrentProject();
-        const dirs = opsUtil.getOpTargetDirs(currentProject);
+        const dirs = projectsUtil.getProjectOpDirs(currentProject, true);
         const dirInfos = [];
         const usedOpFiles = {};
         if (currentProject && currentProject.ops)
@@ -995,14 +995,12 @@ class ElectronApi
 
     async addProjectOpDir()
     {
-        const currentProject = settings.getCurrentProject();
+        let currentProject = settings.getCurrentProject();
         if (!currentProject) return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         const opDir = await electronApp.pickOpDirDialog();
         if (opDir)
         {
-            if (!currentProject.dirs) currentProject.dirs = {};
-            if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
-            currentProject.dirs.ops.unshift(opDir);
+            currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
             projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
             return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         }
@@ -1015,15 +1013,11 @@ class ElectronApi
 
     async removeProjectOpDir(dirName)
     {
-        const currentProject = settings.getCurrentProject();
+        let currentProject = settings.getCurrentProject();
         if (!currentProject || !dirName) return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         dirName = path.resolve(dirName);
-        if (!currentProject.dirs) currentProject.dirs = {};
-        if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
-        currentProject.dirs.ops = currentProject.dirs.ops.filter((opDir) =>
-        {
-            return opDir !== dirName;
-        });
+        currentProject = projectsUtil.removeOpDir(currentProject, dirName);
+
         projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
@@ -1041,6 +1035,7 @@ class ElectronApi
         if (!currentProject.dirs) currentProject.dirs = {};
         if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
         currentProject.dirs.ops = newOrder;
+        currentProject.dirs.ops = helper.uniqueArray(currentProject.dirs.ops);
         projectsUtil.writeProjectToFile(currentProjectFile, currentProject);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }

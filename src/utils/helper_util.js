@@ -28,6 +28,7 @@ class HelperUtil extends SharedHelperUtil
         {
             const currentProject = settings.getCurrentProject();
             const assetPathUrl = projectsUtil.getAssetPathUrl(currentProject);
+
             let filePath = fileUrl;
             const filePatterns = [
                 "file://./",
@@ -38,6 +39,7 @@ class HelperUtil extends SharedHelperUtil
                 "/assets/",
                 "./"
             ];
+
             filePatterns.forEach((filePattern) =>
             {
                 if (filePath.startsWith(filePattern))
@@ -45,7 +47,6 @@ class HelperUtil extends SharedHelperUtil
                     filePath = filePath.replace(filePattern, "");
                 }
             });
-
             filePath = path.join(cables.getAssetPath(), filePath);
             try
             {

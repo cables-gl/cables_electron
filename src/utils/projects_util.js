@@ -157,5 +157,33 @@ class ProjectsUtil extends SharedProjectsUtil
         });
         return helper.uniqueArray(fileNames);
     }
+
+    addOpDir(project, opDir, atTop = false)
+    {
+        if (!project.dirs) project.dirs = {};
+        if (!project.dirs.ops) project.dirs.ops = [];
+        if (atTop)
+        {
+            project.dirs.ops.unshift(opDir);
+        }
+        else
+        {
+            project.dirs.ops.push(opDir);
+        }
+        project.dirs.ops = helper.uniqueArray(project.dirs.ops);
+        return project;
+    }
+
+    removeOpDir(project, opDir)
+    {
+        if (!project.dirs) project.dirs = {};
+        if (!project.dirs.ops) project.dirs.ops = [];
+        project.dirs.ops = project.dirs.ops.filter((dirName) =>
+        {
+            return dirName !== opDir;
+        });
+        project.dirs.ops = helper.uniqueArray(project.dirs.ops);
+        return project;
+    }
 }
 export default new ProjectsUtil(utilProvider);
