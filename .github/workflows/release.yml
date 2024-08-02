@@ -9,58 +9,57 @@ on:
         type: string
 
 jobs:
-  draft_release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: fetch latest changelog
-        id: fetch_changelog
-        uses: tyrrrz/action-http-request@master
-        with:
-          url: "https://dev.cables.gl/api/changelog?num=1&format=md"
-      - name: create release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "${{ inputs.version }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ inputs.version }}
-          draft: true
-          prerelease: true
-          body: ${{ steps.fetch_changelog.outputs.body }}
-  linux:
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: macos-14
-      target: linux
-      branch: ${{ github.ref_name }}
-      build_version: ${{ inputs.version }}
-      exe_name: cables-${{ inputs.version }}
-      tag_name: v${{ inputs.version }}
-    secrets: inherit
-  win:
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: macos-14
-      target: win
-      branch: ${{ github.ref_name }}
-      build_version: ${{ inputs.version }}
-      exe_name: cables-${{ inputs.version }}
-      tag_name: v${{ inputs.version }}
-    secrets: inherit
-  mac:
-    uses: ./.github/workflows/build.yml
-    with:
-      runner: macos-14
-      target: mac
-      branch: ${{ github.ref_name }}
-      build_version: ${{ inputs.version }}
-      exe_name: cables-${{ inputs.version }}
-      tag_name: ${{ inputs.version }}
-      sign: true
-      notarize: true
-    secrets: inherit
+  # draft_release:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: fetch latest changelog
+  #       id: fetch_changelog
+  #       uses: tyrrrz/action-http-request@master
+  #       with:
+  #         url: "https://dev.cables.gl/api/changelog?num=1&format=md"
+  #     - name: create release
+  #       id: create_release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         name: "${{ inputs.version }}"
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         tag_name: v${{ inputs.version }}
+  #         draft: true
+  #         prerelease: true
+  #         body: ${{ steps.fetch_changelog.outputs.body }}
+  # linux:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     runner: macos-14
+  #     target: linux
+  #     branch: ${{ github.ref_name }}
+  #     build_version: ${{ inputs.version }}
+  #     exe_name: cables-${{ inputs.version }}
+  #     tag_name: v${{ inputs.version }}
+  #   secrets: inherit
+  # win:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     runner: macos-14
+  #     target: win
+  #     branch: ${{ github.ref_name }}
+  #     build_version: ${{ inputs.version }}
+  #     exe_name: cables-${{ inputs.version }}
+  #     tag_name: v${{ inputs.version }}
+  #   secrets: inherit
+  # mac:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     runner: macos-14
+  #     target: mac
+  #     branch: ${{ github.ref_name }}
+  #     build_version: ${{ inputs.version }}
+  #     exe_name: cables-${{ inputs.version }}
+  #     tag_name: ${{ inputs.version }}
+  #     sign: true
+  #     notarize: true
+  #   secrets: inherit
   webhooks:
-    needs: [draft_release, linux, win, mac]
     steps:
       - name: notify dev
         uses: distributhor/workflow-webhook@v3
