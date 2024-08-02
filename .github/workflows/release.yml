@@ -60,6 +60,7 @@ jobs:
   #     notarize: true
   #   secrets: inherit
   webhooks:
+    runs-on: ubuntu-latest
     steps:
       - name: notify dev
         uses: distributhor/workflow-webhook@v3
