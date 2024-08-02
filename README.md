@@ -1,6 +1,6 @@
 # Cables Standalone Version
 
-[cables.gl](https://cables.gl) and [cables standalone](https://cables.gl/downloads) are mainly developed by [undev](https://undev.studio/),
+[cables.gl](https://cables.gl) and [cables standalone](https://cables.gl/standalone) are mainly developed by [undev](https://undev.studio/),
 with contributions by the [cables community](https://discord.gg/cablesgl) and support by [various other parties and projects](https://cables.gl/credits).
 
 ## In Development
@@ -12,21 +12,21 @@ the issue tracker attached to this repository.***
 
 ## Download
 
-mac/win/linux: [cables standalone](https://cables.gl/downloads)
+mac/win/linux: [cables standalone](https://cables.gl/standalone)
 
 ### Mac
 
-[Download](https://cables.gl/downloads) the latest version for mac (`m1/m2` or `intel macs`).
+[Download](https://cables.gl/standalone) the latest version for mac (`m1/m2` or `intel macs`).
 Open the `.dmg`, drag the icon to your applications folder or any other place you want and start it. Acknowledge that this software has been
 downloaded form the internet (the executable is signed and notarized, though) and start patching!
 
 ### Win
-[Download](https://cables.gl/downloads) the latest version for windows (portable executable).
+[Download](https://cables.gl/standalone) the latest version for windows (portable executable).
 Unpack the software and run it. You might need to acknowledge that this software is not signed and select "more info" and/or "run anyhow" on
 the shown dialog. Once that is done, start patching!
 
 ### Linux
-[Download](https://cables.gl/downloads) the latest version for linux (AppImage).
+[Download](https://cables.gl/standalone) the latest version for linux (AppImage).
 Once you downloaded the package, set its permissions to executable via your file-manager or using the terminal (`chmod +x ...AppImage`).
 Open the AppImage and start patching!
 
