@@ -247,10 +247,10 @@ class ElectronApp
             consoleAcc = "CmdOrCtrl+Option+J";
         }
 
-        let menu = Menu.buildFromTemplate([
+        const menuTemplate = [
             {
                 "role": "appMenu",
-                "label": "Menu",
+                "label": "cables",
                 "submenu": [
                     {
                         "label": "About Cables",
@@ -367,7 +367,10 @@ class ElectronApp
                     { "role": "close", "visible": false }
                 ]
             }
-        ]);
+        ];
+        // prevent osx from showin currently running process as name (e.g. `npm`)
+        if (process.platform == "darwin") { menuTemplate.unshift({ "label": "" }); }
+        let menu = Menu.buildFromTemplate(menuTemplate);
 
         Menu.setApplicationMenu(menu);
     }
