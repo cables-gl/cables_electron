@@ -11,22 +11,24 @@ import settings from "./electron_settings.js";
 import helper from "../utils/helper_util.js";
 import electronApp from "./main.js";
 
-protocol.registerSchemesAsPrivileged([{
-    "scheme": "cables",
-    "privileges": {
-        "bypassCSP": true,
-        "supportFetchAPI": true
-    }
-}]);
 
-protocol.registerSchemesAsPrivileged([{
-    "scheme": "file",
-    "privileges": {
-        "stream": true,
-        "bypassCSP": true,
-        "supportFetchAPI": true
+protocol.registerSchemesAsPrivileged([
+    {
+        "scheme": "cables",
+        "privileges": {
+            "bypassCSP": true,
+            "supportFetchAPI": true
+        }
+    },
+    {
+        "scheme": "file",
+        "privileges": {
+            "stream": true,
+            "bypassCSP": true,
+            "supportFetchAPI": true
+        }
     }
-}]);
+]);
 
 class ElectronEndpoint
 {
@@ -118,17 +120,11 @@ class ElectronEndpoint
             }
             else if (urlPath === "/api/errorReport")
             {
-                return new Response(JSON.stringify({ "success": true }));
+                return new Response(JSON.stringify(this.apiErrorReport(request)));
             }
             else if (urlPath === "/api/changelog")
             {
                 return new Response(JSON.stringify(this.apiGetChangelog()), {
-                    "headers": { "content-type": "application/json" }
-                });
-            }
-            else if (urlPath === "/api/ping")
-            {
-                return new Response(JSON.stringify({ "maintenance": false }), {
                     "headers": { "content-type": "application/json" }
                 });
             }
@@ -409,6 +405,39 @@ class ElectronEndpoint
         }
         catch (e) {}
         return response;
+    }
+
+    apiErrorReport(request)
+    {
+        try
+        {
+            request.json().then((report) =>
+            {
+                const communityUrl = cables.getCommunityUrl();
+                if (cables.isPackaged() && communityUrl)
+                {
+                    try
+                    {
+                        const errorReportSend = net.request({
+                            "url": path.join(communityUrl, "/api/errorReport"),
+                            "method": "POST",
+                        });
+                        report.username = "standalone";
+                        errorReportSend.setHeader("Content-Type", "application/json");
+                        errorReportSend.write(JSON.stringify(report), "utf-8");
+                        errorReportSend.end();
+                    }
+                    catch (e)
+                    {
+                    }
+                }
+            });
+        }
+        catch (e)
+        {
+            this._log.info("failed to parse error report", e);
+        }
+        return { "success": true };
     }
 }
 

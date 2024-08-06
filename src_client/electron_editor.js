@@ -140,6 +140,11 @@ export default class ElectronEditor
             });
         });
 
+        /**
+         * remove directory with ops from project
+         *
+         * @param string data directory name
+         */
         this._talker.addEventListener("removeProjectOpDir", (data, next) =>
         {
             window.ipcRenderer.invoke("talkerMessage", "removeProjectOpDir", data, {}).then((r) =>
@@ -153,7 +158,6 @@ export default class ElectronEditor
             "savePatch": { "needsProjectFile": true },
             "getPatch": {},
             "newPatch": { },
-            "getBuildInfo": {},
             "getAllProjectOps": {},
             "getOpDocsAll": {},
             "getOpDocs": {},
@@ -193,7 +197,7 @@ export default class ElectronEditor
             "patchCreateBackup": { "needsProjectFile": true },
             "addOpDependency": {},
             "removeOpDependency": {},
-            "saveProjectOpDirOrder": { "needsProjectFile": true },
+            "saveProjectOpDirOrder": { "needsProjectFile": true }
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
