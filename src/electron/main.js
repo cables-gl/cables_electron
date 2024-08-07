@@ -17,6 +17,8 @@ app.commandLine.appendSwitch("disable-http-cache");
 app.commandLine.appendSwitch("force_high_performance_gpu");
 app.commandLine.appendSwitch("unsafely-disable-devtools-self-xss-warnings");
 app.commandLine.appendSwitch("lang", "EN");
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+app.commandLine.appendSwitch("no-user-gesture-required", "true");
 
 logger.info("--- starting");
 

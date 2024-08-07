@@ -301,7 +301,7 @@ class ElectronApi
 
     async getOpDocs(data)
     {
-        const opName = data.op.objName || opsUtil.getOpNameById(data.op.opId || data.op.id);
+        const opName = opsUtil.getOpNameById(data) || data;
         if (!opName)
         {
             return {};
