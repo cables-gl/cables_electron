@@ -599,6 +599,11 @@ class ElectronApp
 
     _registerListeners()
     {
+        app.on("browser-window-created", (e, win) =>
+        {
+            win.setMenuBarVisibility(false);
+        });
+
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
             if (!this._unsavedContentLeave && this.isDocumentEdited())
