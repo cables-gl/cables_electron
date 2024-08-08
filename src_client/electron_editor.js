@@ -163,6 +163,7 @@ export default class ElectronEditor
             "getOpDocs": {},
             "saveOpCode": {},
             "getOpCode": {},
+            "opAttachmentGet": {},
             "formatOpCode": {},
             "saveUserSettings": {},
             "checkProjectUpdated": {},

@@ -414,7 +414,7 @@ class ElectronEndpoint
             request.json().then((report) =>
             {
                 const communityUrl = cables.getCommunityUrl();
-                if (cables.isPackaged() && communityUrl)
+                if (cables.sendErrorReports() && communityUrl)
                 {
                     try
                     {
@@ -429,6 +429,7 @@ class ElectronEndpoint
                     }
                     catch (e)
                     {
+                        this._log.debug("failed to send error report", e);
                     }
                 }
             });

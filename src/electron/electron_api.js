@@ -101,7 +101,7 @@ class ElectronApi
 
     getOpInfo(data)
     {
-        const name = data.opName;
+        const name = opsUtil.getOpNameById(data.opName) || data.opName;
         let warns = [];
         try
         {
@@ -387,6 +387,14 @@ class ElectronApi
                 "code": code
             }, true);
         }
+    }
+
+    async opAttachmentGet(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const attName = data.name;
+        const content = opsUtil.getAttachment(opName, attName);
+        return this.success("OK", { "content": content }, true);
     }
 
     async getCollectionOpDocs(data)

@@ -27,6 +27,11 @@ class CablesElectron extends Cables
         return this._config.isPackaged;
     }
 
+    sendErrorReports()
+    {
+        return this._config.isPackaged || this._config.forceSendErrorReports;
+    }
+
     getStandaloneDistPath()
     {
         if (this._config.path.standaloneDist)
