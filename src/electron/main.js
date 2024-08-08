@@ -150,6 +150,7 @@ class ElectronApp
             "icon": this.appIcon,
             "autoHideMenuBar": true,
             "webPreferences": {
+                "defaultEncoding": "utf-8",
                 "partition": settings.SESSION_PARTITION,
                 "nodeIntegration": true,
                 "nodeIntegrationInWorker": true,
@@ -160,7 +161,9 @@ class ElectronApp
                 "allowRunningInsecureContent": true,
                 "plugins": true,
                 "experimentalFeatures": true,
-                "v8CacheOptions": "none"
+                "v8CacheOptions": "none",
+                "backgroundThrottling": false,
+                "autoplayPolicy": "no-user-gesture-required"
             }
         });
 
