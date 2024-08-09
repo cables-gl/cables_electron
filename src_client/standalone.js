@@ -194,6 +194,15 @@ export default class CablesStandalone
             this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(electronCommands.commands);
             Object.assign(this.CABLES.CMD.PATCH, electronCommands.functionOverrides.PATCH);
             Object.assign(this.CABLES.CMD.RENDERER, electronCommands.functionOverrides.RENDERER);
+            const commandOverrides = electronCommands.commandOverrides;
+            this.CABLES.CMD.commands.forEach((command) =>
+            {
+                const commandOverride = electronCommands.commandOverrides.find((override) => { return override.cmd === command.cmd; });
+                if (commandOverride)
+                {
+                    Object.assign(command, commandOverride);
+                }
+            });
         }
     }
 

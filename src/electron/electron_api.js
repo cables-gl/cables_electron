@@ -597,7 +597,7 @@ class ElectronApi
         const newName = data.namespace + data.v;
         const sourceName = data.sourceName || null;
         const currentUser = settings.getCurrentUser();
-        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, false, data.opTargetDir);
+        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, data.rename, data.opTargetDir);
         result.checkedName = newName;
         return this.success("OK", result, true);
     }
@@ -618,7 +618,7 @@ class ElectronApi
             result[i] = recentProject;
             result[i].thumbnail = screenShot;
         }
-        return this.success("OK", result.slice(0, 10), true);
+        return this.success("OK", result.reverse().slice(0, 10), true);
     }
 
     opCreate(data)
@@ -667,8 +667,6 @@ class ElectronApi
         const currentUser = settings.getCurrentUser();
         let opNamespace = opsUtil.getNamespace(newName);
 
-        let renameLog = [];
-
         const opDocs = doc.getOpDocs(false, false);
         const renameResults = this._getFullRenameResponse(opDocs, newName, oldName, currentUser, opsUtil.isPrivateOp(newName), true);
         if (!oldName)
@@ -678,6 +676,9 @@ class ElectronApi
 
         const result = renameResults;
         result.title = "rename - " + oldName + " - " + newName;
+        result.objName = newName;
+        result.oldName = oldName;
+        result.opId = oldId;
         result.opname = oldName;
         result.opNamespace = opNamespace;
         result.newopname = newName;
@@ -697,41 +698,38 @@ class ElectronApi
 
         result.user = currentUser;
         result.showresult = true;
-        const callback = (err, log) =>
-        {
-            renameLog = renameLog.concat(log);
-            if (err)
-            {
-                return this.error("ERROR", 500);
-            }
-            else
-            {
-                result.log = renameLog;
-                this._log.verbose("*" + currentUser.username + " finished after " + Math.round((Date.now() - start) / 1000) + " seconds ");
-                return this.success("OK", result);
-            }
-        };
 
         let removeOld = true;
+        let renameSuccess = false;
         if (opsUtil.isUserOp(newName))
         {
-            opsUtil.renameToUserOp(oldName, newName, currentUser, removeOld, callback);
+            renameSuccess = opsUtil.renameToUserOp(oldName, newName, currentUser, removeOld);
         }
         else if (opsUtil.isTeamOp(newName))
         {
-            opsUtil.renameToTeamOp(oldName, newName, currentUser, removeOld, callback);
+            renameSuccess = opsUtil.renameToTeamOp(oldName, newName, currentUser, removeOld);
         }
         else if (opsUtil.isExtensionOp(newName))
         {
-            opsUtil.renameToExtensionOp(oldName, newName, currentUser, removeOld, callback);
+            renameSuccess = opsUtil.renameToExtensionOp(oldName, newName, currentUser, removeOld);
         }
         else if (opsUtil.isPatchOp(newName))
         {
-            opsUtil.renameToPatchOp(oldName, newName, currentUser, removeOld, false, callback);
+            renameSuccess = opsUtil.renameToPatchOp(oldName, newName, currentUser, removeOld, false);
         }
         else
         {
-            opsUtil.renameToCoreOp(oldName, newName, currentUser, removeOld, callback);
+            renameSuccess = opsUtil.renameToCoreOp(oldName, newName, currentUser, removeOld);
+        }
+
+        if (!renameSuccess)
+        {
+            return this.error("ERROR", 500);
+        }
+        else
+        {
+            this._log.verbose("*" + currentUser.username + " finished after " + Math.round((Date.now() - start) / 1000) + " seconds ");
+            return this.success("OK", result);
         }
     }
 
@@ -1252,6 +1250,7 @@ class ElectronApi
     {
         let opNamespace = opsUtil.getNamespace(newName);
         let availableNamespaces = ["Ops."];
+        if (fromRename) availableNamespaces.unshift(opNamespace);
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         if (opNamespace && !opsUtil.isPatchOp(opNamespace) && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
 

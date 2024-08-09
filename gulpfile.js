@@ -54,7 +54,7 @@ function _watch(done)
 
 function electronChanges(done)
 {
-    console.log("\x1b[33m Registered changes that need a restart! \x1b[0m");
+    console.log("\x1b[33m Registered changes that require a restart of electron! \x1b[0m");
     done();
 }
 
