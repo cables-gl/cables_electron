@@ -17,6 +17,11 @@ class CablesElectron extends Cables
         if (writableDirName && !fs.existsSync(path.join(writableDirName, "/ops"))) mkdirp.sync(path.join(writableDirName, "/ops"));
     }
 
+    isStandalone()
+    {
+        return true;
+    }
+
     getCommunityUrl()
     {
         return this._config.communityUrl;

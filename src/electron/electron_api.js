@@ -282,7 +282,6 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
         opDocs = opDocs.concat(doc.getOpDocsInProjectDirs(currentProject));
-
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
 
@@ -964,6 +963,7 @@ class ElectronApi
     {
         const currentProject = settings.getCurrentProject();
         const dirs = projectsUtil.getProjectOpDirs(currentProject, true);
+        if (!cables.isPackaged()) dirs.unshift(cables.getOpsPath());
         const dirInfos = [];
         const usedOpFiles = {};
         if (currentProject && currentProject.ops)
@@ -1004,7 +1004,7 @@ class ElectronApi
     async addProjectOpDir()
     {
         let currentProject = settings.getCurrentProject();
-        if (!currentProject) return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
+        if (!currentProject) return this.error("Please save your project before adding op directories");
         const opDir = await electronApp.pickOpDirDialog();
         if (opDir)
         {
@@ -1251,7 +1251,7 @@ class ElectronApi
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false, targetDir = false)
     {
         let opNamespace = opsUtil.getNamespace(newName);
-        let availableNamespaces = ["Ops.Standalone.", "Ops."];
+        let availableNamespaces = ["Ops."];
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         if (opNamespace && !opsUtil.isPatchOp(opNamespace) && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
 
