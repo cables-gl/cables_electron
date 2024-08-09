@@ -207,13 +207,13 @@ CMD_STANDALONE_COMMANDS.push(
         "icon": "electron"
     },
     {
-        "cmd": "copy assets into project dir",
+        "cmd": "copy assets into patch dir",
         "category": "patch",
         "func": CABLES_CMD_STANDALONE.collectAssets,
         "icon": "file"
     },
     {
-        "cmd": "copy ops into project dir",
+        "cmd": "copy ops into patch dir",
         "category": "ops",
         "func": CABLES_CMD_STANDALONE.collectOps,
         "icon": "op"
