@@ -40,8 +40,7 @@ class DocUtil extends SharedDocUtil
                 const opJsons = helper.getFilesRecursive(opDir, ".json");
                 for (let jsonPath in opJsons)
                 {
-                    const parts = jsonPath.split("/");
-                    const opName = parts[parts.length - 2];
+                    const opName = path.basename(jsonPath, ".json");
                     if (opsUtil.isOpNameValid(opName))
                     {
                         if (opDocs.hasOwnProperty(opName))
@@ -62,10 +61,6 @@ class DocUtil extends SharedDocUtil
                                 this._log.warn("failed to parse opdocs for", opName, "from", jsonPath);
                             }
                         }
-                    }
-                    if (opsUtil.isOpNameValid(opName) && !opDocs.hasOwnProperty(opName))
-                    {
-
                     }
                 }
             }
