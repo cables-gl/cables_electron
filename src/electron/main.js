@@ -20,6 +20,8 @@ app.commandLine.appendSwitch("lang", "EN");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
 
+app.disableDomainBlockingFor3DAPIs();
+
 logger.info("--- starting");
 
 class ElectronApp
