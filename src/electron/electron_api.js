@@ -102,10 +102,32 @@ class ElectronApi
     getOpInfo(data)
     {
         const name = opsUtil.getOpNameById(data.opName) || data.opName;
-        let warns = [];
+
         try
         {
-            warns = opsUtil.getOpCodeWarnings(name);
+            let warns = [];
+
+            const currentProject = settings.getCurrentProject();
+            if (currentProject)
+            {
+                const opDocs = doc.getOpDocsInProjectDirs(currentProject);
+                opDocs.forEach((opDoc) =>
+                {
+                    if (opDoc.overrides)
+                    {
+                        opDoc.overrides.forEach((override) =>
+                        {
+                            warns.push({
+                                "type": "project",
+                                "id": "",
+                                "text": "this op overrides another op in <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + override + "'});\">" + override + "</a>"
+                            });
+                        });
+                    }
+                });
+            }
+
+            warns = warns.concat(opsUtil.getOpCodeWarnings(name));
 
             if (opsUtil.isOpNameValid(name))
             {
@@ -115,7 +137,7 @@ class ElectronApi
             }
             else
             {
-                const result = { "warns": warns };
+                const result = { "warns": [] };
                 result.attachmentFiles = [];
                 return this.success("OK", result, true);
             }
@@ -755,7 +777,7 @@ class ElectronApi
                     if (!projectPackages.hasOwnProperty(targetDir)) projectPackages[targetDir] = [];
                     projectPackages[targetDir] = {
                         "opName": opName,
-                        "packages": projectPackages[targetDir].concat(opPackages)
+                        "packages": opPackages
                     };
                 }
             }
@@ -993,7 +1015,8 @@ class ElectronApi
                 "dir": dir,
                 "opNames": opNames,
                 "numOps": opNames.length,
-                "numUsedOps": numUsedOps
+                "numUsedOps": numUsedOps,
+                "fixedPlace": projectsUtil.isFixedPositionOpDir(dir)
             });
         });
         return this.success("OK", dirInfos);
@@ -1040,7 +1063,7 @@ class ElectronApi
         });
         if (!currentProject.dirs) currentProject.dirs = {};
         if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
-        currentProject.dirs.ops = newOrder;
+        currentProject.dirs.ops = newOrder.filter((dir) => { return !projectsUtil.isFixedPositionOpDir(dir); });
         currentProject.dirs.ops = helper.uniqueArray(currentProject.dirs.ops);
         projectsUtil.writeProjectToFile(currentProjectFile, currentProject);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));

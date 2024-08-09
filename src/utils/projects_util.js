@@ -91,6 +91,11 @@ class ProjectsUtil extends SharedProjectsUtil
         return opsDirs;
     }
 
+    isFixedPositionOpDir(dir)
+    {
+        return dir === cables.getOsOpsDir() || (!cables.isPackaged() && dir === cables.getOpsPath());
+    }
+
     getProjectFileName(project)
     {
         return sanitizeFileName(project.name).replace(/ /g, "_") + ".".this._se;

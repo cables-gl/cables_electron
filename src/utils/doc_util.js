@@ -42,18 +42,30 @@ class DocUtil extends SharedDocUtil
                 {
                     const parts = jsonPath.split("/");
                     const opName = parts[parts.length - 2];
+                    if (opsUtil.isOpNameValid(opName))
+                    {
+                        if (opDocs.hasOwnProperty(opName))
+                        {
+                            if (!opDocs[opName].hasOwnProperty("overrides")) opDocs[opName].overrides = [];
+                            opDocs[opName].overrides.push(path.join(opDir, path.dirname(jsonPath)));
+                        }
+                        else
+                        {
+                            try
+                            {
+                                const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
+                                opDoc.name = opName;
+                                opDocs[opName] = opDoc;
+                            }
+                            catch (e)
+                            {
+                                this._log.warn("failed to parse opdocs for", opName, "from", jsonPath);
+                            }
+                        }
+                    }
                     if (opsUtil.isOpNameValid(opName) && !opDocs.hasOwnProperty(opName))
                     {
-                        try
-                        {
-                            const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
-                            opDoc.name = opName;
-                            opDocs[opName] = opDoc;
-                        }
-                        catch (e)
-                        {
-                            this._log.warn("failed to parse opdocs for", opName, "from", jsonPath);
-                        }
+
                     }
                 }
             }

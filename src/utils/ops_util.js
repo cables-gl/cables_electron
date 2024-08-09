@@ -85,11 +85,6 @@ class OpsUtil extends SharedOpsUtil
         return problems;
     }
 
-    getOpTargetDirs(project, reverse = false)
-    {
-        return projectsUtil.getProjectOpDirs(project, true, reverse);
-    }
-
     getOpAssetPorts(op, includeLibraryAssets = false)
     {
         const assetPorts = [];
@@ -192,39 +187,6 @@ class OpsUtil extends SharedOpsUtil
             });
         }
         return toInstall;
-    }
-
-    installDependencies(opName)
-    {
-        const packageDir = this.getOpAbsolutePath(opName);
-        const packageNames = this.getOpDependencies(opName);
-        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": packageDir, "opName": opName };
-        if (packageNames.length === 0) return result;
-        if (packageNames.length > 0)
-        {
-            try
-            {
-                const npmArgs = [
-                    "install",
-                    "--no-save",
-                    "--legacy-peer-deps",
-                    "--prefix", packageDir,
-                    ...packageNames];
-
-                let __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
-                __dirname = __dirname.includes(".asar") ? __dirname.replace(".asar", ".asar.unpacked") : __dirname;
-                const npm = path.join(__dirname, "../../node_modules/npm/bin/npm-cli.js");
-                this._log.debug("RUNNING", npm, npmArgs.join(" "));
-                const out = execaSync(npm, npmArgs, { "cwd": packageDir });
-                result.stdout = out.stdout;
-                result.stderr = out.stderr;
-            }
-            catch (e)
-            {
-                result.stderr = e;
-            }
-        }
-        return result;
     }
 }
 export default new OpsUtil(utilProvider);
