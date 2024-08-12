@@ -147,9 +147,9 @@ export default class CablesStandalone
         });
     }
 
-    _coreReady(depsNotFound)
+    _coreReady()
     {
-        if (!depsNotFound && this.CABLES)
+        if (this.CABLES)
         {
             if (this.CABLES.Op)
             {
@@ -170,7 +170,7 @@ export default class CablesStandalone
         }
     }
 
-    _uiReady(depsNotFound)
+    _uiReady()
     {
         if (this.CABLES)
         {
