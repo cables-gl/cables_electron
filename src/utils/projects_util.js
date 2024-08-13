@@ -75,6 +75,7 @@ class ProjectsUtil extends SharedProjectsUtil
         if (project && project.dirs && project.dirs.ops)
         {
             const projectDir = settings.getCurrentProjectDir();
+            opsDirs.push(path.join(projectDir, "ops"));
             project.dirs.ops.forEach((dir) =>
             {
                 if (!path.isAbsolute(dir)) dir = path.join(projectDir, dir);

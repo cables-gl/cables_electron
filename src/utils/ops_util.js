@@ -1,14 +1,21 @@
 import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 import path from "path";
 import fs from "fs";
-import { execaSync } from "execa";
 import settings from "../electron/electron_settings.js";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
-import helper from "./helper_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
+    validateAndFormatOpCode(code)
+    {
+        return {
+            "formatedCode": this._helperUtil.removeTrailingSpaces(code),
+            "error": false,
+            "message": null
+        };
+    }
+
     addPermissionsToOps(opDocs, user, teams = [], project = null)
     {
         if (!opDocs) return opDocs;
