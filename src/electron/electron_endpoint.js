@@ -422,6 +422,28 @@ class ElectronEndpoint
                             "url": path.join(communityUrl, "/api/errorReport"),
                             "method": "POST",
                         });
+                        delete report.url;
+                        delete report.file;
+                        if (report.log)
+                        {
+                            report.log.forEach((log) =>
+                            {
+                                if (log.errorStack)
+                                {
+                                    log.errorStack.forEach((stack) =>
+                                    {
+                                        if (stack.fileName)
+                                        {
+                                            stack.fileName = path.basename(stack.fileName);
+                                        }
+                                        if (stack.source)
+                                        {
+                                            delete stack.source;
+                                        }
+                                    });
+                                }
+                            });
+                        }
                         report.username = "standalone";
                         errorReportSend.setHeader("Content-Type", "application/json");
                         errorReportSend.write(JSON.stringify(report), "utf-8");

@@ -1409,6 +1409,13 @@ class ElectronApi
         }
     }
 
+    async createFile(data)
+    {
+        data.fileName = data.name;
+        data.content = "this is an empty file...";
+        return this.updateFile(data);
+    }
+
     success(msg, data, raw = false)
     {
         if (raw)

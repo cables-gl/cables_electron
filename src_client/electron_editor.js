@@ -193,6 +193,7 @@ export default class ElectronEditor
             "setProjectUpdated": {},
             "getProjectOpDirs": {},
             "openDir": {},
+            "createFile": {},
             "selectFile": {},
             "setProjectName": { "needsProjectFile": true },
             "collectAssets": { "needsProjectFile": true },
