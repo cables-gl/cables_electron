@@ -5,6 +5,7 @@ import { marked } from "marked";
 import mkdirp from "mkdirp";
 
 import jsonfile from "jsonfile";
+import sanitizeFileName from "sanitize-filename";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
@@ -15,6 +16,7 @@ import settings from "./electron_settings.js";
 import projectsUtil from "../utils/projects_util.js";
 import electronApp from "./main.js";
 import filesUtil from "../utils/files_util.js";
+import libsUtil from "../utils/libs_util.js";
 
 class ElectronApi
 {
@@ -407,6 +409,164 @@ class ElectronApi
                 "id": null,
                 "code": code
             }, true);
+        }
+    }
+
+    async opAttachmentAdd(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const attName = data.name;
+        const p = opsUtil.addAttachment(opName, "att_" + attName, "hello attachment");
+        this._log.info("created attachment!", p);
+        doc.updateOpDocs(opName);
+        this.success("OK");
+    }
+
+    async opAddCoreLib(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const libName = sanitizeFileName(data.name);
+        const opFilename = opsUtil.getOpJsonPath(data.opname);
+        const libFilename = cables.getCoreLibsPath() + libName;
+        const existsLib = fs.existsSync(libFilename + ".js");
+        if (!existsLib)
+        {
+            this.error("LIB_NOT_FOUND");
+            return;
+        }
+
+        try
+        {
+            const obj = jsonfile.readFileSync(opFilename);
+            obj.coreLibs = obj.coreLibs || [];
+
+            if (obj.coreLibs.indexOf(libName) === -1) obj.coreLibs.push(libName);
+
+            try
+            {
+                jsonfile.writeFileSync(opFilename, obj, {
+                    "encoding": "utf-8",
+                    "spaces": 4
+                });
+                doc.updateOpDocs(opName);
+                this.success("OK", {});
+            }
+            catch (writeErr)
+            {
+                this.error("WRITE_ERROR");
+            }
+        }
+        catch (err)
+        {
+            this.error("UNKNOWN_ERROR");
+        }
+    }
+
+    async opAddLib(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const libName = sanitizeFileName(data.name);
+
+        const filename = opsUtil.getOpJsonPath(opName);
+
+        const libExists = libsUtil.libExists(libName);
+        if (!libExists)
+        {
+            this.error("LIB_NOT_FOUND", 400);
+            return;
+        }
+
+        try
+        {
+            const obj = jsonfile.readFileSync(filename);
+            obj.libs = obj.libs || [];
+
+            if (obj.libs.indexOf(libName) === -1) obj.libs.push(libName);
+
+            try
+            {
+                jsonfile.writeFileSync(filename, obj, {
+                    "encoding": "utf-8",
+                    "spaces": 4
+                });
+                doc.updateOpDocs(opName);
+                this.success("OK");
+            }
+            catch (writeErr)
+            {
+                this.error("WRITE_ERROR", 500);
+            }
+        }
+        catch (err)
+        {
+            this.error("UNKNOWN_ERROR", 500);
+        }
+    }
+
+    async opRemoveLib(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const libName = sanitizeFileName(data.name);
+
+        const filename = opsUtil.getOpJsonPath(opName);
+
+        try
+        {
+            const obj = jsonfile.readFileSync(filename);
+            obj.libs = obj.libs || [];
+
+            if (obj.libs.includes(libName)) obj.libs = obj.libs.filter((lib) => { return lib !== libName; });
+
+            try
+            {
+                jsonfile.writeFileSync(filename, obj, {
+                    "encoding": "utf-8",
+                    "spaces": 4
+                });
+                doc.updateOpDocs(opName);
+                this.success("OK");
+            }
+            catch (writeErr)
+            {
+                this.error("WRITE_ERROR", 500);
+            }
+        }
+        catch (err)
+        {
+            this.error("UNKNOWN_ERROR", 500);
+        }
+    }
+
+    async opRemoveCoreLib(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const libName = sanitizeFileName(data.name);
+        const opFilename = opsUtil.getOpJsonPath(opName);
+
+        try
+        {
+            const obj = jsonfile.readFileSync(opFilename);
+            obj.coreLibs = obj.coreLibs || [];
+
+            if (obj.coreLibs.includes(libName)) obj.coreLibs = obj.coreLibs.filter((lib) => { return lib !== libName; });
+
+            try
+            {
+                jsonfile.writeFileSync(opFilename, obj, {
+                    "encoding": "utf-8",
+                    "spaces": 4
+                });
+                doc.updateOpDocs(opName);
+                this.success("OK");
+            }
+            catch (writeErr)
+            {
+                this.error("WRITE_ERROR", 500);
+            }
+        }
+        catch (err)
+        {
+            this.error("UNKNOWN_ERROR", 500);
         }
     }
 
