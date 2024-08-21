@@ -309,6 +309,8 @@ class ElectronApp
                     { "role": "cut" },
                     { "role": "copy" },
                     { "role": "paste" },
+                    { "role": "selectAll" },
+
                 ]
             },
             {
