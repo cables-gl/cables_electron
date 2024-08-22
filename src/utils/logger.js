@@ -57,6 +57,11 @@ class Logger extends SharedLogger
         log.warn("[" + this._initiator + "]", "WARN", args.join(" "));
     }
 
+    event(...args)
+    {
+        log.verbose("[" + this._initiator + "]", args.join(" "));
+    }
+
     logStartup(title)
     {
         const time = Math.round((performance.now() - this.loadStart) / 1000 * 100) / 100;

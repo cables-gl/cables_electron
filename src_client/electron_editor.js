@@ -203,7 +203,8 @@ export default class ElectronEditor
             "patchCreateBackup": { "needsProjectFile": true },
             "addOpDependency": {},
             "removeOpDependency": {},
-            "saveProjectOpDirOrder": { "needsProjectFile": true }
+            "saveProjectOpDirOrder": { "needsProjectFile": true },
+            "exportPatch": { "needsProjectFile": true }
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
