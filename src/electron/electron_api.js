@@ -422,6 +422,14 @@ class ElectronApi
         this.success("OK");
     }
 
+    async opAttachmentDelete(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const attName = data.name;
+        opsUtil.deleteAttachment(opName, attName);
+        this.success("OK");
+    }
+
     async opAddCoreLib(data)
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;

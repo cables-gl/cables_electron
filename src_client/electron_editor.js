@@ -170,6 +170,7 @@ export default class ElectronEditor
             "opAddLib": {},
             "opAddCoreLib": {},
             "opAttachmentAdd": {},
+            "opAttachmentDelete": {},
             "opRemoveLib": {},
             "opRemoveCoreLib": {},
             "getChangelog": {},
