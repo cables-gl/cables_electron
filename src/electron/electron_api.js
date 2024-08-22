@@ -915,6 +915,40 @@ class ElectronApi
         }
     }
 
+    async installOpDependencies(opName)
+    {
+        const results = [];
+        if (opName)
+        {
+            const targetDir = opsUtil.getOpAbsolutePath(opName);
+            const opPackages = opsUtil.getOpNpmPackages(opName);
+            if (opPackages.length === 0)
+            {
+                const nodeModulesDir = path.join(targetDir, "node_modules");
+                if (fs.existsSync(nodeModulesDir)) fs.rmSync(nodeModulesDir, { "recursive": true });
+                results.push({ "stdout": "nothing to install", "packages": [] });
+                return this.success("EMPTY", results, false);
+            }
+            else
+            {
+                const npmResults = await electronApp.installPackages(targetDir, opPackages, opName);
+                if (npmResults.stderr)
+                {
+                    return this.error(npmResults.stderr);
+                }
+                else
+                {
+                    return this.success("OK", npmResults);
+                }
+            }
+        }
+        else
+        {
+            results.push({ "stdout": "nothing to install", "packages": [] });
+            return this.success("EMPTY", results, false);
+        }
+    }
+
     async installProjectDependencies()
     {
         const currentProject = settings.getCurrentProject();
@@ -1372,8 +1406,21 @@ class ElectronApi
             opDoc = doc.cleanOpDocData(opDoc);
             jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
             doc.updateOpDocs();
-            await this.installProjectDependencies();
-            return this.success("OK", opDoc);
+            const npmResult = await this.installOpDependencies(opName);
+            if (npmResult.error)
+            {
+                // remove deps again on install error
+                const newDeps = [];
+                opDoc.dependencies.forEach((opDep) =>
+                {
+                    if (!(options.name === opDep.name && options.type === opDep.type)) newDeps.push(opDep);
+                });
+                opDoc.dependencies = newDeps;
+                jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
+                doc.updateOpDocs();
+                await this.installOpDependencies(opName);
+            }
+            return npmResult;
         }
         else
         {
@@ -1381,7 +1428,7 @@ class ElectronApi
         }
     }
 
-    removeOpDependency(options)
+    async removeOpDependency(options)
     {
         if (!options.opName || !options.name || !options.type) return this.error("INVALID_DATA");
         const opName = options.opName;
@@ -1396,12 +1443,9 @@ class ElectronApi
                 if (!(dep.name === options.name && dep.type === options.type)) newDeps.push(dep);
             });
             opDoc.dependencies = newDeps;
-            jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
+            if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
             doc.updateOpDocs();
-            this.installProjectDependencies().then(() =>
-            {
-                return this.success("OK", opDoc);
-            });
+            return this.installOpDependencies(opName);
         }
         else
         {

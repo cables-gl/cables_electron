@@ -1,4 +1,4 @@
-import log from "electron-log/renderer.js";
+import { Logger } from "cables-shared-client";
 import ElectronEditor from "./electron_editor.js";
 import electronCommands from "./cmd_electron.js";
 
@@ -12,14 +12,6 @@ export default class CablesStandalone
     {
         this._path = window.nodeRequire("path");
         this._electron = window.nodeRequire("electron");
-        this._log = log;
-        const logFormat = "{text}";
-        this._log.initialize();
-        this._log.transports.console.format = logFormat;
-        this._log.transports.ipc.level = "debug";
-
-        Object.assign(console, this._log.functions);
-
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
         this._settings = this._electron.ipcRenderer.sendSync("platformSettings") || {};
         this._config = this._electron.ipcRenderer.sendSync("cablesConfig") || {};
@@ -172,6 +164,12 @@ export default class CablesStandalone
 
     _uiReady()
     {
+        this.CABLES.UI.standaloneLogger = () =>
+        {
+            CABLES.UI = this.CABLES.UI;
+            return new Logger("standalone");
+        };
+        this._log = this.CABLES.UI.standaloneLogger();
         if (this.CABLES)
         {
             const getOpsForFilename = this.CABLES.UI.getOpsForFilename;
@@ -197,7 +195,7 @@ export default class CablesStandalone
             const commandOverrides = electronCommands.commandOverrides;
             this.CABLES.CMD.commands.forEach((command) =>
             {
-                const commandOverride = electronCommands.commandOverrides.find((override) => { return override.cmd === command.cmd; });
+                const commandOverride = commandOverrides.find((override) => { return override.cmd === command.cmd; });
                 if (commandOverride)
                 {
                     Object.assign(command, commandOverride);
@@ -215,21 +213,21 @@ export default class CablesStandalone
             const opDir = window.ipcRenderer.sendSync("getOpDir", { "opName": op.objName || op._name, "opId": op.opId });
             const modulePath = thisClass._path.join(opDir, "node_modules", moduleName);
             const theModule = window.nodeRequire(modulePath);
-            this._log.debug("trying to load", modulePath);
+            this._log.info("trying to load", modulePath);
             return theModule;
         }
         catch (e)
         {
             try
             {
-                this._log.debug("trying to load native module", moduleName);
+                this._log.info("trying to load native module", moduleName);
                 return window.nodeRequire(moduleName);
             }
             catch (e2)
             {
-                const errorMessage = "failed to load node module \"" + moduleName + "\", try to <a onclick='CABLES.CMD.STANDALONE.runNpm()'>install project npm packages</a>?";
+                const errorMessage = "failed to load node module: " + moduleName;
                 if (op) op.setUiError("oprequire", errorMessage);
-                this._log.error(errorMessage, e2);
+                this._log.error(errorMessage, e, e2);
                 return "";
             }
         }
