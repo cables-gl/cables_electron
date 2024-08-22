@@ -227,7 +227,7 @@ export default class CablesStandalone
             {
                 const errorMessage = "failed to load node module: " + moduleName;
                 if (op) op.setUiError("oprequire", errorMessage);
-                this._log.error(errorMessage, e, e2);
+                this._log.error(errorMessage, e2, e);
                 return "";
             }
         }
