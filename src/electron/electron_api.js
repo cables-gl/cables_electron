@@ -88,7 +88,7 @@ class ElectronApi
                     }
                     else
                     {
-                        return this.error("no project dir chosen");
+                        return this.error("no project dir chosen", null, "info");
                     }
                 }
             }
@@ -1237,8 +1237,7 @@ class ElectronApi
         }
         else
         {
-            logger.info("no project dir chosen");
-            return this.error("no project dir chosen", []);
+            return this.error("no project dir chosen", [], "info");
         }
     }
 
@@ -1482,9 +1481,9 @@ class ElectronApi
         }
     }
 
-    error(msg, data = null)
+    error(msg, data = null, level = "error")
     {
-        const error = { "error": true, "msg": msg };
+        const error = { "error": true, "msg": msg, "level": level };
         if (data) error.data = data;
         return error;
     }

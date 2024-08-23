@@ -12,8 +12,11 @@ export default class CablesStandalone
     {
         this._path = window.nodeRequire("path");
         this._electron = window.nodeRequire("electron");
+
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
         this._settings = this._electron.ipcRenderer.sendSync("platformSettings") || {};
+        this._usersettings = this._settings.userSettings;
+        delete this._settings.userSettings;
         this._config = this._electron.ipcRenderer.sendSync("cablesConfig") || {};
         this.editorIframe = null;
 
@@ -118,12 +121,13 @@ export default class CablesStandalone
 
         this.editor = new ElectronEditor({
             "config": {
+                ...this._settings,
                 "isTrustedPatch": true,
                 "platformClass": "PlatformStandalone",
                 "urlCables": "cables://",
                 "urlSandbox": "cables://",
                 "user": this._settings.currentUser,
-                "usersettings": { "settings": this._settings.userSettings },
+                "usersettings": { "settings": this._usersettings },
                 "isDevEnv": !this._config.isPackaged,
                 "env": this._config.env,
                 "patchId": this._settings.patchId,
@@ -133,8 +137,9 @@ export default class CablesStandalone
                 "buildInfo": this._settings.buildInfo,
                 "patchConfig": {
                     "allowEdit": true,
-                    "prefixAssetPath": this._settings.currentPatchDir
-                }
+                    "prefixAssetPath": this._settings.currentPatchDir,
+                    // "assetPath": this._settings.currentPatchDir
+                },
             }
         });
     }
@@ -204,6 +209,7 @@ export default class CablesStandalone
     {
         if (op) op.setUiError("oprequire", null);
         if (moduleName === "electron") return thisClass._electron;
+
         try
         {
             const opDir = window.ipcRenderer.sendSync("getOpDir", { "opName": op.objName || op._name, "opId": op.opId });

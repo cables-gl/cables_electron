@@ -113,7 +113,7 @@ export default class ElectronEditor
                 this._talker.send("refreshFileManager");
                 this._talker.send("fileUpdated", { "filename": data.filename });
 
-                if (error) this._talker.send("logError", { "level": "error", "message": error.msg || error });
+                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                 next(error, r);
             });
         });
@@ -134,7 +134,7 @@ export default class ElectronEditor
             window.ipcRenderer.invoke("talkerMessage", "updateFile", data, {}).then((r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
-                if (error) this._talker.send("logError", { "level": "error", "message": error.msg || error });
+                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                 next(error, r);
                 this._talker.send("fileUpdated", { "filename": data.fileName });
             });
@@ -214,7 +214,7 @@ export default class ElectronEditor
                 window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig).then((r) =>
                 {
                     const error = r && r.hasOwnProperty("error") ? r : null;
-                    if (error) this._talker.send("logError", { "level": "error", "message": error.msg || error });
+                    if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                     next(error, r);
                 });
             });
@@ -234,7 +234,7 @@ export default class ElectronEditor
         window.ipcRenderer.invoke("talkerMessage", cmd, data, topicConfig).then((r) =>
         {
             const error = r && r.hasOwnProperty("error") ? r : null;
-            if (error) this._talker.send("logError", { "level": "error", "message": error.msg || error });
+            if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
             next(error, r);
         });
     }

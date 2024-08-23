@@ -56,7 +56,7 @@ class CablesElectron extends Cables
         }
         else
         {
-            assetPath = path.join(currentProject, "assets/");
+            assetPath = path.join(currentProject);
         }
         if (!fs.existsSync(assetPath)) mkdirp.sync(assetPath);
         return assetPath;
