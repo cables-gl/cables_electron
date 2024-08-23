@@ -150,10 +150,6 @@ export default class CablesStandalone
                 {
                     return standAlone._opRequire(moduleName, this, standAlone);
                 };
-                Object.defineProperty(this.CABLES.Op.prototype, "opDir", { "get": function ()
-                {
-                    return window.ipcRenderer.sendSync("getOpDir", { "opName": this.objName || this._name, "opId": this.opId });
-                } });
             }
             if (this.CABLES.Patch)
             {

@@ -133,6 +133,7 @@ class ElectronApp
         process.off("output", logToVariable);
         if (fs.existsSync(path.join(targetDir, "package.json"))) fs.rmSync(path.join(targetDir, "package.json"));
         if (fs.existsSync(path.join(targetDir, "package-lock.json"))) fs.rmSync(path.join(targetDir, "package-lock.json"));
+        console.log("result", result);
         return result;
     }
 
