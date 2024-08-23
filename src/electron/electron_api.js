@@ -1376,6 +1376,7 @@ class ElectronApi
         else
         {
             settings.setProject(null, null);
+            doc.getOpDocsInProjectDirs(project);
         }
         electronApp.updateTitle();
     }

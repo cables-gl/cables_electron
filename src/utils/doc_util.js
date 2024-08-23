@@ -29,8 +29,6 @@ class DocUtil extends SharedDocUtil
 
     getOpDocsInProjectDirs(project)
     {
-        if (!project) return [];
-
         const opDocs = {};
         const opDirs = projectsUtil.getProjectOpDirs(project);
         opDirs.forEach((opDir) =>
