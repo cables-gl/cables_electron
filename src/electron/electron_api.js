@@ -1416,7 +1416,6 @@ class ElectronApi
             jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
             doc.updateOpDocs();
             const npmResult = await this.installOpDependencies(opName);
-            console.log("RES", npmResult);
             if (npmResult.error)
             {
                 // remove deps again on install error
