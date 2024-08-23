@@ -138,7 +138,7 @@ export default class CablesStandalone
                 "patchConfig": {
                     "allowEdit": true,
                     "prefixAssetPath": this._settings.currentPatchDir,
-                    // "assetPath": this._settings.currentPatchDir
+                    "assetPath": this._settings.currentPatchDir
                 },
             }
         });

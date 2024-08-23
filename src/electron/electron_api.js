@@ -1073,7 +1073,7 @@ class ElectronApi
         }
         else
         {
-            return this.error("NO_FILE_SELECTED");
+            return this.error("NO_FILE_SELECTED", null, "info");
         }
     }
 

@@ -124,7 +124,9 @@ class CablesElectron extends Cables
         if (!fs.existsSync(this.getOpLookupFile())) fs.writeFileSync(this.getOpLookupFile(), JSON.stringify({ "names": {}, "ids": {} }));
     }
 }
-const __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
+
+const metaUrl = new URL(".", import.meta.url);
+const __dirname = helper.fileURLToPath(metaUrl.href);
 const customConfig = process.env.npm_config_apiconfig;
 let configLocation = null;
 if (customConfig)

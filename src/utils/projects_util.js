@@ -152,13 +152,16 @@ class ProjectsUtil extends SharedProjectsUtil
         urls.forEach((url) =>
         {
             let fullPath = helper.fileURLToPath(url, true);
-            if (fs.existsSync(fullPath))
+            if (fullPath)
             {
-                fileNames.push(fullPath);
-            }
-            else
-            {
-                this._log.warn("missing file", url, fullPath);
+                if (fs.existsSync(fullPath))
+                {
+                    fileNames.push(fullPath);
+                }
+                else
+                {
+                    this._log.warn("missing file", url, fullPath);
+                }
             }
         });
         return helper.uniqueArray(fileNames);
