@@ -61,6 +61,14 @@ class ElectronApi
             if (!opName) opName = data.opName;
             event.returnValue = opsUtil.getOpAbsolutePath(opName);
         });
+
+        ipcMain.on("getOpModuleDir", (event, data) =>
+        {
+            let opName = opsUtil.getOpNameById(data.opId);
+            if (!opName) opName = data.opName;
+            const opDir = opsUtil.getOpAbsolutePath(opName);
+            event.returnValue = path.join(opDir, "node_modules", data.moduleName);
+        });
     }
 
     async talkerMessage(cmd, data, topicConfig = {})

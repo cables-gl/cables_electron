@@ -10,7 +10,6 @@ export default class CablesStandalone
 {
     constructor()
     {
-        this._path = window.nodeRequire("path");
         this._electron = window.nodeRequire("electron");
 
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
@@ -212,8 +211,7 @@ export default class CablesStandalone
 
         try
         {
-            const opDir = window.ipcRenderer.sendSync("getOpDir", { "opName": op.objName || op._name, "opId": op.opId });
-            const modulePath = thisClass._path.join(opDir, "node_modules", moduleName);
+            const modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
             const theModule = window.nodeRequire(modulePath);
             this._log.info("trying to load", modulePath);
             return theModule;
