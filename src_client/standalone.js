@@ -137,7 +137,8 @@ export default class CablesStandalone
                 "patchConfig": {
                     "allowEdit": true,
                     "prefixAssetPath": this._settings.currentPatchDir,
-                    "assetPath": this._settings.currentPatchDir
+                    "assetPath": this._settings.currentPatchDir,
+                    "paths": this._settings.paths
                 },
             }
         });
@@ -213,14 +214,14 @@ export default class CablesStandalone
         {
             const modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
             const theModule = window.nodeRequire(modulePath);
-            this._log.info("trying to load", modulePath);
+            this._log.info("trying to load ", modulePath);
             return theModule;
         }
         catch (e)
         {
             try
             {
-                this._log.info("trying to load native module", moduleName);
+                this._log.info("trying to load native module ", moduleName);
                 return window.nodeRequire(moduleName);
             }
             catch (e2)
