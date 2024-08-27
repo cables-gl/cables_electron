@@ -113,10 +113,9 @@ class ElectronApi
     {
         const name = opsUtil.getOpNameById(data.opName) || data.opName;
 
+        let warns = [];
         try
         {
-            let warns = [];
-
             const currentProject = settings.getCurrentProject();
             if (currentProject)
             {
@@ -816,7 +815,7 @@ class ElectronApi
             result[i] = recentProject;
             result[i].thumbnail = screenShot;
         }
-        return this.success("OK", result.reverse().slice(0, 10), true);
+        return this.success("OK", result.slice(0, 10), true);
     }
 
     opCreate(data)

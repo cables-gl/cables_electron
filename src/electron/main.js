@@ -299,6 +299,16 @@ class ElectronApp
                             this.pickProjectFileDialog();
                         }
                     },
+                    {
+                        "label": "Open Recent",
+                        "role": "recentdocuments",
+                        "submenu": [
+                            {
+                                "label": "Clear Recent",
+                                "role": "clearrecentdocuments"
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -603,6 +613,13 @@ class ElectronApp
 
     _registerListeners()
     {
+        app.on("open-file", (e, p) =>
+        {
+            if (p.endsWith("." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION) && fs.existsSync(p))
+            {
+                this.openPatch(p, true);
+            }
+        });
         app.on("browser-window-created", (e, win) =>
         {
             win.setMenuBarVisibility(false);

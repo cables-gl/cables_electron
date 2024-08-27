@@ -36,10 +36,7 @@ class ElectronSettings
         this.opts = {};
         this.opts.defaults = {};
         this.opts.configName = this.MAIN_CONFIG_NAME;
-        this.opts.defaults[this.USER_SETTINGS_FIELD] = {
-            "introCompleted": true,
-            "showTipps": false
-        };
+        this.opts.defaults[this.USER_SETTINGS_FIELD] = {};
         this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.PROJECTFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPROJECTDIR_FIELD] = null;
@@ -350,6 +347,7 @@ class ElectronSettings
     addToRecentProjects(projectFile, project)
     {
         if (!projectFile || !project) return;
+        app.addRecentDocument(projectFile);
         const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
         const recent = this._toRecentProjectInfo(project);
         if (recent) recentProjects[projectFile] = recent;
