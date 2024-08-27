@@ -310,8 +310,10 @@ class ElectronApi
 
     async getOpDocsAll()
     {
+        const currentUser = settings.getCurrentUser();
         const currentProject = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
+        opDocs = opDocs.concat(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser));
         opDocs = opDocs.concat(doc.getOpDocsInProjectDirs(currentProject));
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
