@@ -41,7 +41,7 @@ class HelperUtil extends SharedHelperUtil
 
             try
             {
-                fileUrl = pathToFileURL(filePath, { "windows": false });
+                fileUrl = pathToFileURL(filePath);
             }
             catch (e)
             {
@@ -51,7 +51,7 @@ class HelperUtil extends SharedHelperUtil
         }
         try
         {
-            return fileURLToPath(fileUrl, { "windows": false });
+            return fileURLToPath(fileUrl);
         }
         catch (e)
         {
