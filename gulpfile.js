@@ -48,6 +48,13 @@ function _watch(done)
 {
     const watchOptions = { "usePolling": true, "ignored": (fileName) => { return fileName.includes("node_modules"); } };
     watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/**/*.js"], watchOptions, gulp.series(defaultSeries)));
+    watchers.push(gulp.watch(["src/*.js", "src/**/*.js"], watchOptions, gulp.series(electronChanges)));
+    done();
+}
+
+function electronChanges(done)
+{
+    console.log("\x1b[33m Registered changes that require a restart of electron! \x1b[0m");
     done();
 }
 

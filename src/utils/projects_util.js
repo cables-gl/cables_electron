@@ -75,6 +75,7 @@ class ProjectsUtil extends SharedProjectsUtil
         if (project && project.dirs && project.dirs.ops)
         {
             const projectDir = settings.getCurrentProjectDir();
+            opsDirs.push(path.join(projectDir, "ops"));
             project.dirs.ops.forEach((dir) =>
             {
                 if (!path.isAbsolute(dir)) dir = path.join(projectDir, dir);
@@ -89,6 +90,11 @@ class ProjectsUtil extends SharedProjectsUtil
         if (reverse) return opsDirs.reverse();
         opsDirs = helper.uniqueArray(opsDirs);
         return opsDirs;
+    }
+
+    isFixedPositionOpDir(dir)
+    {
+        return dir === cables.getOsOpsDir() || (!cables.isPackaged() && dir === cables.getOpsPath());
     }
 
     getProjectFileName(project)
@@ -146,13 +152,16 @@ class ProjectsUtil extends SharedProjectsUtil
         urls.forEach((url) =>
         {
             let fullPath = helper.fileURLToPath(url, true);
-            if (fs.existsSync(fullPath))
+            if (fullPath)
             {
-                fileNames.push(fullPath);
-            }
-            else
-            {
-                this._log.warn("missing file", url, fullPath);
+                if (fs.existsSync(fullPath))
+                {
+                    fileNames.push(fullPath);
+                }
+                else
+                {
+                    this._log.warn("missing file", url, fullPath);
+                }
             }
         });
         return helper.uniqueArray(fileNames);

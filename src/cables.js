@@ -17,6 +17,26 @@ class CablesElectron extends Cables
         if (writableDirName && !fs.existsSync(path.join(writableDirName, "/ops"))) mkdirp.sync(path.join(writableDirName, "/ops"));
     }
 
+    isStandalone()
+    {
+        return true;
+    }
+
+    getCommunityUrl()
+    {
+        return this._config.communityUrl;
+    }
+
+    isPackaged()
+    {
+        return this._config.isPackaged;
+    }
+
+    sendErrorReports()
+    {
+        return this._config.isPackaged || this._config.forceSendErrorReports;
+    }
+
     getStandaloneDistPath()
     {
         if (this._config.path.standaloneDist)
@@ -36,7 +56,7 @@ class CablesElectron extends Cables
         }
         else
         {
-            assetPath = path.join(currentProject, "assets/");
+            assetPath = path.join(currentProject);
         }
         if (!fs.existsSync(assetPath)) mkdirp.sync(assetPath);
         return assetPath;
@@ -104,7 +124,9 @@ class CablesElectron extends Cables
         if (!fs.existsSync(this.getOpLookupFile())) fs.writeFileSync(this.getOpLookupFile(), JSON.stringify({ "names": {}, "ids": {} }));
     }
 }
-const __dirname = helper.fileURLToPath(new URL(".", import.meta.url));
+
+const metaUrl = new URL(".", import.meta.url);
+const __dirname = helper.fileURLToPath(metaUrl.href);
 const customConfig = process.env.npm_config_apiconfig;
 let configLocation = null;
 if (customConfig)

@@ -36,10 +36,7 @@ class ElectronSettings
         this.opts = {};
         this.opts.defaults = {};
         this.opts.configName = this.MAIN_CONFIG_NAME;
-        this.opts.defaults[this.USER_SETTINGS_FIELD] = {
-            "introCompleted": true,
-            "showTipps": false
-        };
+        this.opts.defaults[this.USER_SETTINGS_FIELD] = {};
         this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.PROJECTFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPROJECTDIR_FIELD] = null;
@@ -64,6 +61,27 @@ class ElectronSettings
                 if (!storedData.hasOwnProperty(key)) storedData[key] = this.opts.defaults[key];
             });
             this.data = storedData;
+            this.data.paths = {
+                "home": app.getPath("home"),
+                "appData": app.getPath("appData"),
+                "userData": app.getPath("userData"),
+                "sessionData": app.getPath("sessionData"),
+                "temp": app.getPath("temp"),
+                "exe": app.getPath("exe"),
+                "module": app.getPath("module"),
+                "desktop": app.getPath("desktop"),
+                "documents": app.getPath("documents"),
+                "downloads": app.getPath("downloads"),
+                "music": app.getPath("music"),
+                "pictures": app.getPath("pictures"),
+                "videos": app.getPath("videos"),
+                "logs": app.getPath("logs"),
+                "crashDumps": app.getPath("crashDumps")
+            };
+            if (process.platform === "win32")
+            {
+                this.data.paths.recent = app.getPath("recent");
+            }
         }
     }
 
@@ -112,8 +130,7 @@ class ElectronSettings
 
     getCurrentUser()
     {
-        let username = "standalone";
-        if (os.userInfo) username = os.userInfo().username || "standalone";
+        let username = "";
         return {
             "username": username,
             "_id": helper.generateRandomId(),
@@ -330,6 +347,7 @@ class ElectronSettings
     addToRecentProjects(projectFile, project)
     {
         if (!projectFile || !project) return;
+        app.addRecentDocument(projectFile);
         const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
         const recent = this._toRecentProjectInfo(project);
         if (recent) recentProjects[projectFile] = recent;

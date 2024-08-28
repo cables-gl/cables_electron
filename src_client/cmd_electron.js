@@ -164,20 +164,6 @@ CABLES_CMD_STANDALONE.orderOpDirs = () =>
     standalone.CABLES.platform.openOpDirsTab();
 };
 
-CABLES_CMD_STANDALONE.renameOp = () =>
-{
-    const gui = standalone.gui;
-    if (gui)
-    {
-        const ops = gui.patchView.getSelectedOps();
-        if (!ops.length) return;
-
-        const op = ops[0];
-
-        gui.serverOps.renameDialog(op.objName);
-    }
-};
-
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = () =>
 {
@@ -192,12 +178,44 @@ CABLES_CMD_STANDALONE_OVERRIDES.PATCH.newPatch = () =>
     standalone.editor.api("newPatch", { }, (_err, r) => {});
 };
 
+CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp = () =>
+{
+    const gui = standalone.gui;
+    if (gui)
+    {
+        const ops = gui.patchView.getSelectedOps();
+        if (!ops.length) return;
+
+        const op = ops[0];
+
+        gui.serverOps.renameDialog(op.objName);
+    }
+};
 
 CABLES_CMD_STANDALONE_OVERRIDES.RENDERER = {};
 CABLES_CMD_STANDALONE_OVERRIDES.RENDERER.fullscreen = () =>
 {
     standalone.editor.api("cycleFullscreen", { }, (_err, r) => {});
 };
+
+const CABLES_CMD_COMMAND_OVERRIDES = [
+    {
+        "cmd": "save patch as...",
+        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs
+    },
+    {
+        "cmd": "upload file dialog",
+        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.uploadFileDialog
+    },
+    {
+        "cmd": "create new patch",
+        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.newPatch
+    },
+    {
+        "cmd": "rename op",
+        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp
+    },
+];
 
 CMD_STANDALONE_COMMANDS.push(
     {
@@ -207,13 +225,13 @@ CMD_STANDALONE_COMMANDS.push(
         "icon": "electron"
     },
     {
-        "cmd": "copy assets into project dir",
+        "cmd": "copy assets into patch dir",
         "category": "patch",
         "func": CABLES_CMD_STANDALONE.collectAssets,
         "icon": "file"
     },
     {
-        "cmd": "copy ops into project dir",
+        "cmd": "copy ops into patch dir",
         "category": "ops",
         "func": CABLES_CMD_STANDALONE.collectOps,
         "icon": "op"
@@ -223,17 +241,12 @@ CMD_STANDALONE_COMMANDS.push(
         "category": "ops",
         "func": CABLES_CMD_STANDALONE.orderOpDirs,
         "icon": "folder"
-    },
-    {
-        "cmd": "rename op",
-        "category": "op",
-        "func": CABLES_CMD_STANDALONE.renameOp,
-        "icon": "edit"
-    },
+    }
 );
 
 export default {
     "commands": CMD_STANDALONE_COMMANDS,
     "functions": CABLES_CMD_STANDALONE,
-    "functionOverrides": CABLES_CMD_STANDALONE_OVERRIDES
+    "functionOverrides": CABLES_CMD_STANDALONE_OVERRIDES,
+    "commandOverrides": CABLES_CMD_COMMAND_OVERRIDES,
 };

@@ -1,0 +1,25 @@
+name: notify cables.gl
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  webhooks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: notify dev
+        uses: distributhor/workflow-webhook@v3
+        with:
+          curl_opts: "--retry 5 --retry-all-errors"
+          webhook_type: "json-extended"
+          webhook_url: "https://dev.cables.gl/api/webhooks/standalone/newversion?secret=${{ secrets.WEBHOOK_SECRET }}&version=${{ inputs.version }}"
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+      - name: notify live
+        uses: distributhor/workflow-webhook@v3
+        with:
+          curl_opts: "--retry 5 --retry-all-errors"
+          webhook_type: "json-extended"
+          webhook_url: "https://cables.gl/api/webhooks/standalone/newversion?secret=${{ secrets.WEBHOOK_SECRET }}&version=${{ inputs.version }}"
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}

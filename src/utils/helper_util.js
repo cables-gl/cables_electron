@@ -10,35 +10,25 @@ class HelperUtil extends SharedHelperUtil
     constructor(provider)
     {
         super(provider);
-        this._localFiles = [
-            "file://./",
-            "file:///assets/",
-            "./",
-            "/",
-            "assets/",
-            "/assets/"
-        ];
+        this.LOCAL_ASSETS_PREFIX = "./";
     }
 
     fileURLToPath(url, convertRelativeToProject = false)
     {
         if (!url || url === "0") return "";
-        let fileUrl = decodeURI(url);
-        if (convertRelativeToProject && this.isLocalAssetUrl(fileUrl))
+        if (url.includes("://") && !url.startsWith("file://"))
         {
-            const currentProject = settings.getCurrentProject();
-            const assetPathUrl = projectsUtil.getAssetPathUrl(currentProject);
+            return "";
+        }
 
-            let filePath = fileUrl;
-            const filePatterns = [
-                "file://./",
-                "file:///assets/",
-                "./" + assetPathUrl,
-                assetPathUrl,
-                "assets/",
-                "/assets/",
-                "./"
-            ];
+        let fileUrl = decodeURI(url);
+        let filePath = fileUrl;
+
+        const currentProject = settings.getCurrentProject();
+        const assetPathUrl = projectsUtil.getAssetPathUrl(currentProject);
+        if (convertRelativeToProject && this.isLocalAssetUrl(fileUrl, assetPathUrl))
+        {
+            const filePatterns = this._localFilePrefixes(assetPathUrl);
 
             filePatterns.forEach((filePattern) =>
             {
@@ -48,23 +38,24 @@ class HelperUtil extends SharedHelperUtil
                 }
             });
             filePath = path.join(cables.getAssetPath(), filePath);
+
             try
             {
-                fileUrl = pathToFileURL(filePath).href;
+                fileUrl = pathToFileURL(filePath, { "windows": false });
             }
             catch (e)
             {
-                this._log.error("failed to convert to project path", url, filePath);
+                this._log.error("failed to convert to project path", url, filePath, e);
                 return "";
             }
         }
         try
         {
-            return fileURLToPath(fileUrl);
+            return fileURLToPath(fileUrl, { "windows": false });
         }
         catch (e)
         {
-            this._log.info("failed to create url from path", url);
+            this._log.info("failed to create path from url", convertRelativeToProject, fileUrl, url, e);
             return "";
         }
     }
@@ -75,7 +66,7 @@ class HelperUtil extends SharedHelperUtil
         if (convertProjectToRelative && this.isLocalAssetPath(filePath))
         {
             const currentProjectDir = settings.getCurrentProjectDir();
-            return filePath.replace(currentProjectDir, "/");
+            return filePath.replace(currentProjectDir, this.LOCAL_ASSETS_PREFIX);
         }
         else
         {
@@ -83,14 +74,16 @@ class HelperUtil extends SharedHelperUtil
         }
     }
 
-    isLocalAssetUrl(url)
+    isLocalAssetUrl(url, assetPathUrl)
     {
         if (!url) return false;
 
-        for (let i = 0; i < this._localFiles.length; i++)
+        const filePatterns = this._localFilePrefixes(assetPathUrl);
+        for (let i = 0; i < filePatterns.length; i++)
         {
-            if (url.startsWith(this._localFiles[i])) return true;
+            if (url.startsWith(filePatterns[i])) return true;
         }
+        if (!url.includes("://")) return true;
         return false;
     }
 
@@ -98,6 +91,20 @@ class HelperUtil extends SharedHelperUtil
     {
         const currentProjectDir = settings.getCurrentProjectDir();
         return (currentProjectDir && thePath.startsWith(currentProjectDir));
+    }
+
+    _localFilePrefixes(assetPathUrl)
+    {
+        return [
+            "file://./",
+            "file:///assets/",
+            "./" + assetPathUrl,
+            assetPathUrl,
+            "assets/",
+            "/assets/",
+            this.LOCAL_ASSETS_PREFIX,
+            "/"
+        ];
     }
 }
 export default new HelperUtil(utilProvider);

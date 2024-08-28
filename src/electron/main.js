@@ -17,6 +17,10 @@ app.commandLine.appendSwitch("disable-http-cache");
 app.commandLine.appendSwitch("force_high_performance_gpu");
 app.commandLine.appendSwitch("unsafely-disable-devtools-self-xss-warnings");
 app.commandLine.appendSwitch("lang", "EN");
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+app.commandLine.appendSwitch("no-user-gesture-required", "true");
+
+app.disableDomainBlockingFor3DAPIs();
 
 logger.info("--- starting");
 
@@ -148,6 +152,7 @@ class ElectronApp
             "icon": this.appIcon,
             "autoHideMenuBar": true,
             "webPreferences": {
+                "defaultEncoding": "utf-8",
                 "partition": settings.SESSION_PARTITION,
                 "nodeIntegration": true,
                 "nodeIntegrationInWorker": true,
@@ -158,7 +163,9 @@ class ElectronApp
                 "allowRunningInsecureContent": true,
                 "plugins": true,
                 "experimentalFeatures": true,
-                "v8CacheOptions": "none"
+                "v8CacheOptions": "none",
+                "backgroundThrottling": false,
+                "autoplayPolicy": "no-user-gesture-required"
             }
         });
 
@@ -292,6 +299,16 @@ class ElectronApp
                             this.pickProjectFileDialog();
                         }
                     },
+                    {
+                        "label": "Open Recent",
+                        "role": "recentdocuments",
+                        "submenu": [
+                            {
+                                "label": "Clear Recent",
+                                "role": "clearrecentdocuments"
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -302,6 +319,8 @@ class ElectronApp
                     { "role": "cut" },
                     { "role": "copy" },
                     { "role": "paste" },
+                    { "role": "selectAll" },
+
                 ]
             },
             {
@@ -594,6 +613,18 @@ class ElectronApp
 
     _registerListeners()
     {
+        app.on("open-file", (e, p) =>
+        {
+            if (p.endsWith("." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION) && fs.existsSync(p))
+            {
+                this.openPatch(p, true);
+            }
+        });
+        app.on("browser-window-created", (e, win) =>
+        {
+            win.setMenuBarVisibility(false);
+        });
+
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
             if (!this._unsavedContentLeave && this.isDocumentEdited())

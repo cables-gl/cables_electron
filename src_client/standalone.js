@@ -1,4 +1,4 @@
-import log from "electron-log/renderer.js";
+import { Logger } from "cables-shared-client";
 import ElectronEditor from "./electron_editor.js";
 import electronCommands from "./cmd_electron.js";
 
@@ -10,18 +10,12 @@ export default class CablesStandalone
 {
     constructor()
     {
-        this._path = window.nodeRequire("path");
         this._electron = window.nodeRequire("electron");
-        this._log = log;
-        const logFormat = "{text}";
-        this._log.initialize();
-        this._log.transports.console.format = logFormat;
-        this._log.transports.ipc.level = "debug";
-
-        Object.assign(console, this._log.functions);
 
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
         this._settings = this._electron.ipcRenderer.sendSync("platformSettings") || {};
+        this._usersettings = this._settings.userSettings;
+        delete this._settings.userSettings;
         this._config = this._electron.ipcRenderer.sendSync("cablesConfig") || {};
         this.editorIframe = null;
 
@@ -126,12 +120,13 @@ export default class CablesStandalone
 
         this.editor = new ElectronEditor({
             "config": {
+                ...this._settings,
                 "isTrustedPatch": true,
                 "platformClass": "PlatformStandalone",
                 "urlCables": "cables://",
                 "urlSandbox": "cables://",
                 "user": this._settings.currentUser,
-                "usersettings": { "settings": this._settings.userSettings },
+                "usersettings": { "settings": this._usersettings },
                 "isDevEnv": !this._config.isPackaged,
                 "env": this._config.env,
                 "patchId": this._settings.patchId,
@@ -141,8 +136,10 @@ export default class CablesStandalone
                 "buildInfo": this._settings.buildInfo,
                 "patchConfig": {
                     "allowEdit": true,
-                    "prefixAssetPath": this._settings.currentPatchDir
-                }
+                    "prefixAssetPath": this._settings.currentPatchDir,
+                    "assetPath": this._settings.currentPatchDir,
+                    "paths": this._settings.paths
+                },
             }
         });
     }
@@ -158,10 +155,6 @@ export default class CablesStandalone
                 {
                     return standAlone._opRequire(moduleName, this, standAlone);
                 };
-                Object.defineProperty(this.CABLES.Op.prototype, "opDir", { "get": function ()
-                {
-                    return window.ipcRenderer.sendSync("getOpDir", { "opName": this.objName || this._name, "opId": this.opId });
-                } });
             }
             if (this.CABLES.Patch)
             {
@@ -172,6 +165,12 @@ export default class CablesStandalone
 
     _uiReady()
     {
+        this.CABLES.UI.standaloneLogger = () =>
+        {
+            CABLES.UI = this.CABLES.UI;
+            return new Logger("standalone");
+        };
+        this._log = this.CABLES.UI.standaloneLogger();
         if (this.CABLES)
         {
             const getOpsForFilename = this.CABLES.UI.getOpsForFilename;
@@ -194,6 +193,15 @@ export default class CablesStandalone
             this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(electronCommands.commands);
             Object.assign(this.CABLES.CMD.PATCH, electronCommands.functionOverrides.PATCH);
             Object.assign(this.CABLES.CMD.RENDERER, electronCommands.functionOverrides.RENDERER);
+            const commandOverrides = electronCommands.commandOverrides;
+            this.CABLES.CMD.commands.forEach((command) =>
+            {
+                const commandOverride = commandOverrides.find((override) => { return override.cmd === command.cmd; });
+                if (commandOverride)
+                {
+                    Object.assign(command, commandOverride);
+                }
+            });
         }
     }
 
@@ -201,26 +209,26 @@ export default class CablesStandalone
     {
         if (op) op.setUiError("oprequire", null);
         if (moduleName === "electron") return thisClass._electron;
+
         try
         {
-            const opDir = window.ipcRenderer.sendSync("getOpDir", { "opName": op.objName || op._name, "opId": op.opId });
-            const modulePath = thisClass._path.join(opDir, "node_modules", moduleName);
+            const modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
             const theModule = window.nodeRequire(modulePath);
-            this._log.debug("trying to load", modulePath);
+            this._log.info("trying to load ", modulePath);
             return theModule;
         }
         catch (e)
         {
             try
             {
-                this._log.debug("trying to load native module", moduleName);
+                this._log.info("trying to load native module ", moduleName);
                 return window.nodeRequire(moduleName);
             }
             catch (e2)
             {
-                const errorMessage = "failed to load node module \"" + moduleName + "\", try to <a onclick='CABLES.CMD.STANDALONE.runNpm()'>install project npm packages</a>?";
+                const errorMessage = "failed to load node module: " + moduleName;
                 if (op) op.setUiError("oprequire", errorMessage);
-                this._log.error(errorMessage, e2);
+                this._log.error(errorMessage, e2, e);
                 return "";
             }
         }

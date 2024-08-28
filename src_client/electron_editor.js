@@ -113,7 +113,7 @@ export default class ElectronEditor
                 this._talker.send("refreshFileManager");
                 this._talker.send("fileUpdated", { "filename": data.filename });
 
-                if (error) this._talker.send("logError", { "level": "error", "message": error });
+                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                 next(error, r);
             });
         });
@@ -134,12 +134,17 @@ export default class ElectronEditor
             window.ipcRenderer.invoke("talkerMessage", "updateFile", data, {}).then((r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
-                if (error) this._talker.send("logError", { "level": "error", "message": error });
+                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                 next(error, r);
                 this._talker.send("fileUpdated", { "filename": data.fileName });
             });
         });
 
+        /**
+         * remove directory with ops from project
+         *
+         * @param string data directory name
+         */
         this._talker.addEventListener("removeProjectOpDir", (data, next) =>
         {
             window.ipcRenderer.invoke("talkerMessage", "removeProjectOpDir", data, {}).then((r) =>
@@ -153,17 +158,21 @@ export default class ElectronEditor
             "savePatch": { "needsProjectFile": true },
             "getPatch": {},
             "newPatch": { },
-            "getBuildInfo": {},
             "getAllProjectOps": {},
             "getOpDocsAll": {},
             "getOpDocs": {},
             "saveOpCode": {},
             "getOpCode": {},
+            "opAttachmentGet": {},
             "formatOpCode": {},
             "saveUserSettings": {},
             "checkProjectUpdated": {},
-            "getCoreLibCode": {},
-            "getLibCode": {},
+            "opAddLib": {},
+            "opAddCoreLib": {},
+            "opAttachmentAdd": {},
+            "opAttachmentDelete": {},
+            "opRemoveLib": {},
+            "opRemoveCoreLib": {},
             "getChangelog": {},
             "opAttachmentSave": {},
             "setIconSaved": {},
@@ -185,6 +194,7 @@ export default class ElectronEditor
             "setProjectUpdated": {},
             "getProjectOpDirs": {},
             "openDir": {},
+            "createFile": {},
             "selectFile": {},
             "setProjectName": { "needsProjectFile": true },
             "collectAssets": { "needsProjectFile": true },
@@ -193,7 +203,7 @@ export default class ElectronEditor
             "patchCreateBackup": { "needsProjectFile": true },
             "addOpDependency": {},
             "removeOpDependency": {},
-            "saveProjectOpDirOrder": { "needsProjectFile": true },
+            "saveProjectOpDirOrder": { "needsProjectFile": true }
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
@@ -203,8 +213,8 @@ export default class ElectronEditor
                 const topicConfig = this._talkerTopics[talkerTopic];
                 window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig).then((r) =>
                 {
-                    const error = r && r.hasOwnProperty("error") ? r.error : null;
-                    if (error) this._talker.send("logError", { "level": "error", "message": error });
+                    const error = r && r.hasOwnProperty("error") ? r : null;
+                    if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                     next(error, r);
                 });
             });
@@ -223,8 +233,8 @@ export default class ElectronEditor
         const topicConfig = this._talkerTopics[cmd];
         window.ipcRenderer.invoke("talkerMessage", cmd, data, topicConfig).then((r) =>
         {
-            const error = r && r.hasOwnProperty("error") ? r.error : null;
-            if (error) this._talker.send("logError", { "level": "error", "message": error });
+            const error = r && r.hasOwnProperty("error") ? r : null;
+            if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
             next(error, r);
         });
     }
