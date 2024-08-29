@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{projectName}</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+            overflow: hidden; /* disable scrolling / rubberband effect on mobile */
+            height:100vh;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            outline:0;
+        }
+
+        * {
+            /* disable on touch highlights of html elements, especially on mobile! */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+    </style>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
+    <meta itemprop="name" content="{projectName}">
+    <meta itemprop="description" content="made with cables">
+    <meta itemprop="image" content="screenshot.png">
+    <meta name="description" content="made with cables"/>
+
+</head>
+<body>
+    <canvas id="glcanvas" width="100vw" height="100vh" tabindex="1"></canvas>
+
+    <libs/>
+    <cablesjs/>
+    <corelibs/>
+
+    <script type="text/javascript">
+
+        function showError(errId, errMsg)
+        {
+            // handle critical errors here if needed
+        }
+
+        function patchInitialized(patch)
+        {
+            // You can now access the patch object (patch), register variable watchers and so on
+        }
+
+        function patchFinishedLoading(patch)
+        {
+            // The patch is ready now, all assets have been loaded
+        }
+
+        document.addEventListener("CABLES.jsLoaded", function (event)
+        {
+            CABLES.patch = new CABLES.Patch({
+                {patchSource},
+                "prefixAssetPath": "",
+                "assetPath": "{assetPath}",
+                "jsPath": "{jsPath}",
+                "glCanvasId": "glcanvas",
+                "glCanvasResizeToWindow": true,
+                "onError": showError,
+                "onPatchLoaded": patchInitialized,
+                "onFinishedLoading": patchFinishedLoading,
+                "canvas": {"alpha":true, "premultipliedAlpha":true } // make canvas transparent
+            });
+        });
+
+        // disable rubberband effect on mobile devices
+        document.getElementById('glcanvas').addEventListener('touchmove', (e)=>{ e.preventDefault(); }, false);
+    </script>
+</body>
+</html>

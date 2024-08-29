@@ -6,6 +6,7 @@ import mkdirp from "mkdirp";
 
 import jsonfile from "jsonfile";
 import sanitizeFileName from "sanitize-filename";
+import { utilProvider } from "cables-shared-api";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
@@ -17,6 +18,7 @@ import projectsUtil from "../utils/projects_util.js";
 import electronApp from "./main.js";
 import filesUtil from "../utils/files_util.js";
 import libsUtil from "../utils/libs_util.js";
+import StandaloneZipExport from "../export/export_zip_standalone.js";
 
 class ElectronApi
 {
@@ -1483,6 +1485,35 @@ class ElectronApi
         data.fileName = data.name;
         data.content = "this is an empty file...";
         return this.updateFile(data);
+    }
+
+    async exportPatch(data)
+    {
+        const exportRequest = {
+            "query": {
+                "hideMadeWithCables": true,
+                "combineJs": false,
+                "skipBackups": true,
+                "minify": false,
+                "handleAssets": "auto"
+            },
+            "session": {
+                "user": settings.getCurrentUser()
+            }
+        };
+
+        const service = new StandaloneZipExport(utilProvider, exportRequest);
+        service.doExport(null, (err, result, errorCode) =>
+        {
+            if (!err)
+            {
+                this.success("OK", result, true);
+            }
+            else
+            {
+                this.error(err);
+            }
+        });
     }
 
     success(msg, data, raw = false)

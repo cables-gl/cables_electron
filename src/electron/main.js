@@ -256,6 +256,33 @@ class ElectronApp
         return this._fileDialog(title, filePath, asUrl, filter, properties);
     }
 
+    async exportProjectFileDialog()
+    {
+        const extensions = [];
+        extensions.push("zip");
+
+        let title = "select directory";
+        let properties = ["createDirectory"];
+        return dialog.showSaveDialog(this.editorWindow, {
+            "title": title,
+            "properties": properties,
+            "filters": [{
+                "name": "cables project",
+                "extensions": extensions,
+            }]
+        }).then((result) =>
+        {
+            if (!result.canceled)
+            {
+                return result.filePath;
+            }
+            else
+            {
+                return null;
+            }
+        });
+    }
+
     async saveProjectFileDialog()
     {
         const extensions = [];
@@ -294,6 +321,13 @@ class ElectronApp
                 return null;
             }
         });
+    }
+
+    async pickOpDirDialog()
+    {
+        const title = "select op directory";
+        const properties = ["openDirectory", "createDirectory"];
+        return this._dirDialog(title, properties);
     }
 
     async pickOpDirDialog()

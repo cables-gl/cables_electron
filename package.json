@@ -128,7 +128,10 @@
     "pako": "2.1.0",
     "project-name-generator": "2.1.9",
     "sanitize-filename": "1.6.3",
-    "uuid-v4": "0.1.0"
+    "uuid-v4": "0.1.0",
+    "md5-file": "5.0.0",
+    "archiver": "5.3.1"
+
   },
   "devDependencies": {
     "copy-webpack-plugin": "12.0.2",
