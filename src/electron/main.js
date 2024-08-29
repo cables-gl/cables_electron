@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme, native
 import path from "path";
 import localShortcut from "electron-localshortcut";
 import fs from "fs";
+import os from "os";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
@@ -12,6 +13,7 @@ import filesUtil from "../utils/files_util.js";
 import helper from "../utils/helper_util.js";
 // this needs to be imported like this to not have to asarUnpack the entire nodejs world - sm,25.07.2024
 import Npm from "../../node_modules/npm/lib/npm.js";
+import opsUtil from "../utils/ops_util.js";
 
 app.commandLine.appendSwitch("disable-http-cache");
 app.commandLine.appendSwitch("force_high_performance_gpu");
@@ -133,6 +135,66 @@ class ElectronApp
         process.off("output", logToVariable);
         if (fs.existsSync(path.join(targetDir, "package.json"))) fs.rmSync(path.join(targetDir, "package.json"));
         if (fs.existsSync(path.join(targetDir, "package-lock.json"))) fs.rmSync(path.join(targetDir, "package-lock.json"));
+        return result;
+    }
+
+    async addOpPackage(targetDir, opPackageLocation)
+    {
+        if (!targetDir || !opPackageLocation) return { "stdout": "nothing to install", "packages": [] };
+
+        const dirName = path.join(os.tmpdir(), "cables-oppackage-");
+        const tmpDir = fs.mkdtempSync(dirName);
+
+        let result = { "stdout": "", "stderr": "", "packages": [], "targetDir": targetDir };
+        this._npm.config.localPrefix = tmpDir;
+
+        const logToVariable = (level, ...args) =>
+        {
+            switch (level)
+            {
+            case "standard":
+                args.forEach((arg) =>
+                {
+                    result.stdout += arg;
+                });
+                break;
+            case "error":
+                args.forEach((arg) =>
+                {
+                    result.stderr += arg;
+                });
+                break;
+            case "buffer":
+            case "flush":
+            default:
+            }
+        };
+        process.on("output", logToVariable);
+        this._log.debug("installing op package", opPackageLocation, "to", targetDir);
+        try
+        {
+            await this._npm.exec("install", [opPackageLocation]);
+        }
+        catch (e)
+        {
+            result.stderr += e;
+        }
+        process.off("output", logToVariable);
+        const nodeModulesDir = path.join(tmpDir, "node_modules");
+        if (fs.existsSync(nodeModulesDir))
+        {
+            const importedDocs = doc.getOpDocsInDir(nodeModulesDir);
+            Object.keys(importedDocs).forEach((opDocFile) =>
+            {
+                const opDoc = importedDocs[opDocFile];
+                const opName = opDoc.name;
+                const sourceDir = path.join(nodeModulesDir, path.dirname(opDocFile));
+                let opTargetDir = path.join(targetDir, opsUtil.getOpTargetDir(opName, true));
+                fs.cpSync(sourceDir, opTargetDir, { "recursive": true });
+                result.packages.push(opName);
+            });
+            fs.rmSync(tmpDir, { "recursive": true });
+        }
         return result;
     }
 

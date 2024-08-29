@@ -67,5 +67,32 @@ class DocUtil extends SharedDocUtil
         this.addOpsToLookup(projectOpDocs);
         return projectOpDocs;
     }
+
+    getOpDocsInDir(opDir)
+    {
+        const opDocs = [];
+        if (fs.existsSync(opDir))
+        {
+            const opJsons = helper.getFilesRecursive(opDir, ".json");
+            for (let jsonPath in opJsons)
+            {
+                const opName = path.basename(jsonPath, ".json");
+                if (opsUtil.isOpNameValid(opName))
+                {
+                    try
+                    {
+                        const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
+                        opDoc.name = opName;
+                        opDocs[jsonPath] = opDoc;
+                    }
+                    catch (e)
+                    {
+                        this._log.warn("failed to parse opdocs for", opName, "from", jsonPath);
+                    }
+                }
+            }
+        }
+        return opDocs;
+    }
 }
 export default new DocUtil(utilProvider);

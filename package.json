@@ -53,13 +53,6 @@
     },
     "fileAssociations": [
       {
-        "ext": "cables.json",
-        "name": "cables patch",
-        "description": "cables patch",
-        "role": "Editor",
-        "rank": "Owner"
-      },
-      {
         "ext": "cables",
         "name": "cables patch",
         "description": "cables patch",

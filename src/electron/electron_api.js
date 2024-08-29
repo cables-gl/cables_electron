@@ -1012,6 +1012,14 @@ class ElectronApi
         }
     }
 
+    async addOpPackage(data)
+    {
+        const currentProjectDir = settings.getCurrentProjectDir();
+        const targetDir = data.targetDir || currentProjectDir;
+        const npmResults = await electronApp.addOpPackage(targetDir, data.package);
+        return this.success("OK", npmResults);
+    }
+
     async openDir(options)
     {
         if (options && options.dir)
