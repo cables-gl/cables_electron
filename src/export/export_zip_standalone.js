@@ -2,32 +2,40 @@ import fs from "fs";
 import archiver from "archiver";
 import sanitizeFileName from "sanitize-filename";
 import { SharedExportService } from "cables-shared-api";
+import path from "path";
 import projectsUtil from "../utils/projects_util.js";
 import settings from "../electron/electron_settings.js";
 import electronApp from "../electron/main.js";
 
 export default class StandaloneZipExport extends SharedExportService
 {
-    constructor(provider, req)
+    constructor(provider)
     {
-        super(provider, req);
+        super(provider, {});
         this.archive = archiver.create("zip", {});
+
+        this.options.hideMadeWithCables = true;
+        this.options.combineJs = false;
+        this.options.skipBackups = true;
+        this.options.minify = false;
+        this.options.handleAssets = "auto";
+        this.options.rewriteAssetPorts = true;
+        this.options.flattenAssetNames = true;
+
+        this.finalAssetPath = "/assets/";
     }
 
     static getName()
     {
-        return "download";
+        return "zip";
     }
 
     static getExportOptions(user, teams, project, exportQuota)
     {
-        const allowed = true;
-        let possible = true;
-        if (exportQuota && exportQuota.overQuota) possible = false;
         return {
             "type": this.getName(),
-            "allowed": allowed,
-            "possible": possible,
+            "allowed": true,
+            "possible": true,
             "fields": {}
         };
     }
@@ -51,7 +59,7 @@ export default class StandaloneZipExport extends SharedExportService
     {
         const projectNameVer = sanitizeFileName(project.name).replace(/ /g, "_") + project.exports;
         const zipFileName = "cables_" + sanitizeFileName(projectNameVer) + ".zip";
-        electronApp.exportProjectFileDialog().then((finalZipFileName) =>
+        electronApp.exportProjectFileDialog(zipFileName).then((finalZipFileName) =>
         {
             if (finalZipFileName)
             {
@@ -63,12 +71,7 @@ export default class StandaloneZipExport extends SharedExportService
 
                     const result = {};
                     result.size = this.archive.pointer() / 1000000.0;
-                    const exportUrl = projectsUtil.getAssetPathUrl(project._id) + "/_exports/";
-
-                    result.path = exportUrl + zipFileName;
-                    result.urls = {
-                        "downloadUrl": exportUrl + encodeURIComponent(zipFileName)
-                    };
+                    result.path = finalZipFileName;
                     result.log = this.exportLog;
                     callbackFinished(result);
                 });
@@ -132,10 +135,52 @@ export default class StandaloneZipExport extends SharedExportService
 
     _getFilesForProjects(theProjects, options, cb)
     {
-        cb([]);
+        const user = settings.getCurrentUser();
+        if (!theProjects)
+        {
+            cb([]);
+            return;
+        }
+        const theFiles = [];
+        theProjects.forEach((project) =>
+        {
+            const assetFilenames = this._projectsUtil.getUsedAssetFilenames(project, true);
+            assetFilenames.forEach((fileName) =>
+            {
+                const fileDb = this._filesUtil.getFileDb(fileName, user, project);
+                theFiles.push(fileDb);
+            });
+        });
+        cb(theFiles);
     }
 
     _doAfterExport(originalProject)
     {
+    }
+
+    _resolveFileName(filePathAndName)
+    {
+        return this._helperUtil.fileURLToPath(filePathAndName, true);
+    }
+
+    _getNameForZipEntry(fn, allFiles, options)
+    {
+        if (fn.substr(0, 1) === "/") fn = fn.substr(1);
+        let fnNew = path.basename(fn);
+        if (options.flattenAssetNames)
+        {
+            fnNew = fnNew.replaceAll("/", "_");
+        }
+        let assetDir = this.finalAssetPath;
+        if (allFiles.includes(fnNew))
+        {
+            fnNew = path.join(this._helperUtil.generateUUID(), fnNew);
+        }
+        return path.join(assetDir, fnNew);
+    }
+
+    _getPortValueReplacement(filePathAndName, fn, lzipFileName)
+    {
+        return lzipFileName;
     }
 }

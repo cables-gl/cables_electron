@@ -264,7 +264,8 @@ class FilesUtil extends SharedFilesUtil
                 "l": 0,
                 "p": fileUrl,
                 "type": type,
-                "updated": "bla"
+                "updated": "bla",
+                "isReference": true
             };
             fileData.icon = this.getFileIconName(fileData);
 
@@ -302,6 +303,12 @@ class FilesUtil extends SharedFilesUtil
             });
         }
         return arr;
+    }
+
+    isAssetLibraryLocation(filePath)
+    {
+        if (!filePath) return false;
+        return filePath.toLowerCase().includes(cables.getAssetLibraryPath());
     }
 }
 

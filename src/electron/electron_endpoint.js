@@ -45,25 +45,32 @@ class ElectronEndpoint
         ses.protocol.handle("file", async (request) =>
         {
             let urlFile = request.url;
-            let actualFile = helper.fileURLToPath(urlFile, true);
-            if (fs.existsSync(actualFile))
+            let absoluteFile = helper.fileURLToPath(urlFile, false);
+            let projectFile = helper.fileURLToPath(urlFile, true);
+            if (fs.existsSync(absoluteFile))
             {
-                const response = await net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
-                this._addDefaultHeaders(response, actualFile);
+                const response = await net.fetch(helper.pathToFileURL(absoluteFile), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(response, absoluteFile);
+                return response;
+            }
+            else if (fs.existsSync(projectFile))
+            {
+                const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(response, projectFile);
                 return response;
             }
             else
             {
                 try
                 {
-                    if (actualFile.includes("?"))
+                    if (projectFile.includes("?"))
                     {
-                        actualFile = actualFile.split("?")[0];
+                        projectFile = projectFile.split("?")[0];
                     }
-                    if (fs.existsSync(actualFile))
+                    if (fs.existsSync(projectFile))
                     {
-                        const response = await net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
-                        this._addDefaultHeaders(response, actualFile);
+                        const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
+                        this._addDefaultHeaders(response, projectFile);
                         return response;
                     }
                     else

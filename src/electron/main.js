@@ -256,7 +256,7 @@ class ElectronApp
         return this._fileDialog(title, filePath, asUrl, filter, properties);
     }
 
-    async exportProjectFileDialog()
+    async exportProjectFileDialog(exportName)
     {
         const extensions = [];
         extensions.push("zip");
@@ -265,6 +265,7 @@ class ElectronApp
         let properties = ["createDirectory"];
         return dialog.showSaveDialog(this.editorWindow, {
             "title": title,
+            "defaultPath": exportName,
             "properties": properties,
             "filters": [{
                 "name": "cables project",
@@ -582,7 +583,7 @@ class ElectronApp
             if (!result.canceled)
             {
                 if (!asUrl) return result.filePaths[0];
-                return helper.pathToFileURL(result.filePaths[0], true);
+                return helper.pathToFileURL(result.filePaths[0]);
             }
             else
             {

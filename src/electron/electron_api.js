@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { marked } from "marked";
 import mkdirp from "mkdirp";
+import { promisify } from "util";
 
 import jsonfile from "jsonfile";
 import sanitizeFileName from "sanitize-filename";
@@ -1487,33 +1488,21 @@ class ElectronApi
         return this.updateFile(data);
     }
 
-    async exportPatch(data)
+    async exportPatch()
     {
-        const exportRequest = {
-            "query": {
-                "hideMadeWithCables": true,
-                "combineJs": false,
-                "skipBackups": true,
-                "minify": false,
-                "handleAssets": "auto"
-            },
-            "session": {
-                "user": settings.getCurrentUser()
-            }
-        };
+        const service = new StandaloneZipExport(utilProvider);
 
-        const service = new StandaloneZipExport(utilProvider, exportRequest);
-        service.doExport(null, (err, result, errorCode) =>
+        const exportPromise = promisify(service.doExport.bind(service));
+
+        try
         {
-            if (!err)
-            {
-                this.success("OK", result, true);
-            }
-            else
-            {
-                this.error(err);
-            }
-        });
+            const result = await exportPromise(null);
+            return this.success("OK", result);
+        }
+        catch (e)
+        {
+            return this.error("ERROR", e);
+        }
     }
 
     success(msg, data, raw = false)
