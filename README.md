@@ -106,7 +106,7 @@ this.editorWindow = new BrowserWindow({
 - use `npm run start` to start the app
     - this will start watchers for changes in client-side javascript dirs (e.g. `src_client` and `../shared/client/`
     - when making changes to files in these directories, a reload of the electron app is enough to see the changes (Cmd/Ctrl+R)
-- if you want to develop on ops and/or the ui, change to cables_dev (`cd ..`) and run `npm run start:standalone`
+- if you want to develop on ops and/or the ui, change to cables_dev (`cd ..`) and run `npm run watch:standalone`
     - this will create watchers on files in `cables` and `cables_ui` that trigger a rebuild on change
     - when making changes to files in these directories, a reload of the electron app is enough to see the changes (Cmd/Ctrl+R)
 
