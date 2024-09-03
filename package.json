@@ -41,6 +41,7 @@
       "dist/ops/**/*",
       "dist/public/**/*",
       "LICENCE",
+      "cables.txt",
       {
         "from": "resources/assets/",
         "to": "resources/assets/",
