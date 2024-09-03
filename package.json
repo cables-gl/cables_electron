@@ -36,6 +36,7 @@
       "cables.json",
       "src/**/*",
       "src_client/**/*",
+      "views/**/*",
       "index.html",
       "dist/ui/**/*",
       "dist/ops/**/*",
