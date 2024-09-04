@@ -3,7 +3,6 @@ import archiver from "archiver";
 import sanitizeFileName from "sanitize-filename";
 import { SharedExportService } from "cables-shared-api";
 import path from "path";
-import projectsUtil from "../utils/projects_util.js";
 import settings from "../electron/electron_settings.js";
 import electronApp from "../electron/main.js";
 
@@ -156,9 +155,10 @@ export default class StandaloneZipExport extends SharedExportService
 
     _doAfterExport(originalProject)
     {
+        return originalProject;
     }
 
-    _resolveFileName(filePathAndName)
+    _resolveFileName(filePathAndName, pathStr, project)
     {
         return this._helperUtil.fileURLToPath(filePathAndName, true);
     }
@@ -182,5 +182,10 @@ export default class StandaloneZipExport extends SharedExportService
     _getPortValueReplacement(filePathAndName, fn, lzipFileName)
     {
         return lzipFileName;
+    }
+
+    _doAfterCombine(jsCode, options)
+    {
+        return jsCode;
     }
 }
