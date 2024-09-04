@@ -99,7 +99,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getProjectFileName(project)
     {
-        return sanitizeFileName(project.name).replace(/ /g, "_") + ".".this._se;
+        return sanitizeFileName(project.name).replace(/ /g, "_") + "." + this.CABLES_PROJECT_FILE_EXTENSION;
     }
 
     writeProjectToFile(projectFile, project = null, patch = null)
