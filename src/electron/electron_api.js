@@ -406,6 +406,7 @@ class ElectronApi
         const opName = opsUtil.getOpNameById(data.opId || data.opname);
         if (opsUtil.opExists(opName))
         {
+            filesUtil.registerOpChangeListeners([opName]);
             let code = opsUtil.getOpCode(opName);
             return this.success("OK", {
                 "name": opName,

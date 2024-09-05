@@ -157,10 +157,13 @@ class OpsUtil extends SharedOpsUtil
 
     updateOpCode(opName, author, code)
     {
-        return filesUtil.runUnWatched(opName, () =>
+        filesUtil.unregisterOpChangeListeners([opName]);
+        const newCode = super.updateOpCode(opName, author, code);
+        setTimeout(() =>
         {
-            return super.updateOpCode(opName, author, code);
-        });
+            filesUtil.registerOpChangeListeners([opName]);
+        }, 1000);
+        return newCode;
     }
 
     getOpNpmPackages(opName)
