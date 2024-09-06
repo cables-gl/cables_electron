@@ -201,12 +201,14 @@ class ElectronApp
     _createWindow()
     {
         let patchFile = null;
-        const openLast = settings.getUserSetting("openlastproject", false);
+        const openLast = settings.getUserSetting("openlastproject", false) || this._initialPatchFile;
         if (openLast)
         {
-            const projectFile = settings.getCurrentProjectFile();
+            const projectFile = this._initialPatchFile || settings.getCurrentProjectFile();
             if (fs.existsSync(projectFile)) patchFile = projectFile;
+            this._initialPatchFile = null;
         }
+
         this.editorWindow = new BrowserWindow({
             "width": 1920,
             "height": 1080,
@@ -322,13 +324,6 @@ class ElectronApp
                 return null;
             }
         });
-    }
-
-    async pickOpDirDialog()
-    {
-        const title = "select op directory";
-        const properties = ["openDirectory", "createDirectory"];
-        return this._dirDialog(title, properties);
     }
 
     async pickOpDirDialog()
@@ -491,6 +486,19 @@ class ElectronApp
         Menu.setApplicationMenu(menu);
     }
 
+    openFile(patchFile)
+    {
+        if (this.editorWindow)
+        {
+            this.openPatch(patchFile, true);
+        }
+        else
+        {
+            // opened by double-clicking and starting the app
+            this._initialPatchFile = patchFile;
+        }
+    }
+
     async openPatch(patchFile, rebuildCache = true)
     {
         this._unsavedContentLeave = false;
@@ -539,7 +547,7 @@ class ElectronApp
         if (project)
         {
             this.sendTalkerMessage("updatePatchName", { "name": project.name });
-            this.sendTalkerMessage("updatePatchSummary", { "summary": project.summary });
+            this.sendTalkerMessage("updatePatchSummary", project.summary);
         }
 
         this.editorWindow.setTitle(title);
@@ -710,13 +718,6 @@ class ElectronApp
 
     _registerListeners()
     {
-        app.on("open-file", (e, p) =>
-        {
-            if (p.endsWith("." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION) && fs.existsSync(p))
-            {
-                this.openPatch(p, true);
-            }
-        });
         app.on("browser-window-created", (e, win) =>
         {
             win.setMenuBarVisibility(false);
@@ -885,19 +886,15 @@ class ElectronApp
 }
 Menu.setApplicationMenu(null);
 
+const electronApp = new ElectronApp();
 
-app.whenReady().then(() =>
+app.on("open-file", (e, p) =>
 {
-    electronApp.init();
-    electronApi.init();
-    electronEndpoint.init();
-    app.on("activate", () =>
+    if (p.endsWith("." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION) && fs.existsSync(p))
     {
-        if (BrowserWindow.getAllWindows().length === 0) electronApp.init();
-    });
+        electronApp.openFile(p);
+    }
 });
-
-
 
 app.on("window-all-closed", () =>
 {
@@ -915,7 +912,18 @@ app.on("will-quit", (event) =>
         process.exit(1);
     });
 });
-const electronApp = new ElectronApp();
+
+app.whenReady().then(() =>
+{
+    electronApp.init();
+    electronApi.init();
+    electronEndpoint.init();
+    app.on("activate", () =>
+    {
+        if (BrowserWindow.getAllWindows().length === 0) electronApp.init();
+    });
+});
+
 export default electronApp;
 
 

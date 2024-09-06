@@ -130,7 +130,7 @@ class ElectronSettings
 
     getCurrentUser()
     {
-        let username = "";
+        let username = this.getUserSetting("authorName", "") || "";
         return {
             "username": username,
             "_id": helper.generateRandomId(),
@@ -274,8 +274,8 @@ class ElectronSettings
         {
             const p1 = recents[f1];
             const p2 = recents[f2];
-            if (!p1.updated) return 1;
-            if (!p2.updated) return -1;
+            if (!p1 || !p1.updated) return 1;
+            if (!p2 || !p2.updated) return -1;
             return p2.updated - p1.updated;
         });
         files = helper.uniqueArray(files);

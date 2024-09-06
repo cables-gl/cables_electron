@@ -22,7 +22,9 @@ class FilesUtil extends SharedFilesUtil
             "persistent": true,
             "followSymlinks": true,
             "disableGlobbing": true,
-            "awaitWriteFinish": false
+            "awaitWriteFinish": {
+                "stabilityThreshold": 1000
+            }
         };
 
         this._opChangeWatcher = chokidar.watch([], watcherOptions);
@@ -31,7 +33,8 @@ class FilesUtil extends SharedFilesUtil
             const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
             if (opName)
             {
-                electronApp.sendTalkerMessage("executeOp", { "name": opName });
+                const opId = opsUtil.getOpIdByObjName(opName);
+                electronApp.sendTalkerMessage("executeOp", { "name": opName, "forceReload": true, "id": opId });
             }
         });
 
@@ -56,26 +59,6 @@ class FilesUtil extends SharedFilesUtil
         });
     }
 
-    runUnWatched(opName, command)
-    {
-        const opFile = opsUtil.getOpAbsoluteFileName(opName);
-        this._opChangeWatcher.unwatch(opFile);
-        let returnValue;
-        try
-        {
-            returnValue = command();
-        }
-        catch (e)
-        {
-            this._log.error("failed to run unwatched command for", opName, command, e);
-        }
-        finally
-        {
-            this._opChangeWatcher.add(opFile);
-        }
-        return returnValue;
-    }
-
     registerAssetChangeListeners(project, removeOthers = false)
     {
         if (!project || !project.ops) return;
@@ -91,10 +74,34 @@ class FilesUtil extends SharedFilesUtil
         const fileNames = [];
         opNames.forEach((opName) =>
         {
-            const opFile = opsUtil.getOpAbsoluteFileName(opName);
-            if (opFile) fileNames.push(opFile);
+            if (opsUtil.isOpNameValid(opName))
+            {
+                const opFile = opsUtil.getOpAbsoluteFileName(opName);
+                if (opFile)
+                {
+                    fileNames.push(opFile);
+                }
+            }
         });
         this._opChangeWatcher.add(fileNames);
+    }
+
+    unregisterOpChangeListeners(opNames)
+    {
+        if (!opNames) return;
+        const fileNames = [];
+        opNames.forEach((opName) =>
+        {
+            if (opsUtil.isOpNameValid(opName))
+            {
+                const opFile = opsUtil.getOpAbsoluteFileName(opName);
+                if (opFile)
+                {
+                    fileNames.push(opFile);
+                }
+            }
+        });
+        this._opChangeWatcher.unwatch(fileNames);
     }
 
     async unregisterChangeListeners()

@@ -406,6 +406,7 @@ class ElectronApi
         const opName = opsUtil.getOpNameById(data.opId || data.opname);
         if (opsUtil.opExists(opName))
         {
+            filesUtil.registerOpChangeListeners([opName]);
             let code = opsUtil.getOpCode(opName);
             return this.success("OK", {
                 "name": opName,
@@ -1189,11 +1190,14 @@ class ElectronApi
     {
         const now = Date.now();
         const project = settings.getCurrentProject();
-        const projectFile = settings.getCurrentProjectFile();
-        project.updated = now;
-        if (projectFile)
+        if (project)
         {
-            projectsUtil.writeProjectToFile(projectFile, project);
+            const projectFile = settings.getCurrentProjectFile();
+            project.updated = now;
+            if (projectFile)
+            {
+                projectsUtil.writeProjectToFile(projectFile, project);
+            }
         }
         return this.success("OK", project);
     }
@@ -1300,8 +1304,9 @@ class ElectronApi
         settings.replaceInRecentProjects(oldFile, newFile);
         projectsUtil.writeProjectToFile(newFile, project);
         this.loadProject(newFile);
+        const summary = projectsUtil.getSummary(settings.getCurrentProject());
         electronApp.updateTitle();
-        return this.success("OK", { "name": project.name });
+        return this.success("OK", { "name": project.name, "summary": summary });
     }
 
     cycleFullscreen()

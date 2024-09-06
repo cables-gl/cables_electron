@@ -75,7 +75,8 @@ class ProjectsUtil extends SharedProjectsUtil
         if (project && project.dirs && project.dirs.ops)
         {
             const projectDir = settings.getCurrentProjectDir();
-            opsDirs.push(path.join(projectDir, "ops"));
+            const currentDir = path.join(projectDir, "ops");
+            if (fs.existsSync(currentDir)) opsDirs.push(currentDir);
             project.dirs.ops.forEach((dir) =>
             {
                 if (!path.isAbsolute(dir)) dir = path.join(projectDir, dir);
@@ -99,7 +100,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getProjectFileName(project)
     {
-        return sanitizeFileName(project.name).replace(/ /g, "_") + ".".this._se;
+        return sanitizeFileName(project.name).replace(/ /g, "_") + "." + this.CABLES_PROJECT_FILE_EXTENSION;
     }
 
     writeProjectToFile(projectFile, project = null, patch = null)
@@ -193,6 +194,20 @@ class ProjectsUtil extends SharedProjectsUtil
         });
         project.dirs.ops = helper.uniqueArray(project.dirs.ops);
         return project;
+    }
+
+    getSummary(project)
+    {
+        if (!project) return {};
+        return {
+            "allowEdit": true,
+            "title": project.name,
+            "owner": settings.getCurrentUser(),
+            "description": project.description,
+            "licence": {
+                "name": "No licence chosen"
+            }
+        };
     }
 }
 export default new ProjectsUtil(utilProvider);
