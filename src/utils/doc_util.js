@@ -108,6 +108,7 @@ class DocUtil extends SharedDocUtil
             {
                 opDoc.opDir = opDir;
             }
+            opDoc.opDirFull = absolute;
         });
         return readables;
     }

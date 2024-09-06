@@ -1554,7 +1554,7 @@ class ElectronApi
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false, targetDir = false)
     {
         let opNamespace = opsUtil.getNamespace(newName);
-        let availableNamespaces = ["Ops."];
+        let availableNamespaces = ["Ops.Standalone.", "Ops."];
         if (fromRename) availableNamespaces.unshift(opNamespace);
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         if (opNamespace && !opsUtil.isPatchOp(opNamespace) && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
