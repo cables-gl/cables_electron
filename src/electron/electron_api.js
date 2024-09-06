@@ -1,4 +1,4 @@
-import { ipcMain, shell } from "electron";
+import { app, ipcMain, shell } from "electron";
 import fs from "fs";
 import path from "path";
 import { marked } from "marked";
@@ -1023,13 +1023,10 @@ class ElectronApi
         return this.success("OK", npmResults);
     }
 
-    async openDir(options)
+    async openDir(options = {})
     {
-        if (options && options.dir)
-        {
-            await shell.openPath(options.dir);
-            return this.success("OK", {}, true);
-        }
+        await shell.openPath(options.dir || app.getPath("home"));
+        return this.success("OK", {}, true);
     }
 
     async openOpDir(options)

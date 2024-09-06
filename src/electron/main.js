@@ -917,3 +917,5 @@ app.on("will-quit", (event) =>
 });
 const electronApp = new ElectronApp();
 export default electronApp;
+
+
