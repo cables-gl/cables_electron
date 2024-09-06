@@ -204,7 +204,8 @@ export default class ElectronEditor
             "addOpDependency": {},
             "removeOpDependency": {},
             "saveProjectOpDirOrder": { "needsProjectFile": true },
-            "exportPatch": { "needsProjectFile": true }
+            "exportPatch": { "needsProjectFile": true },
+            "exportPatchBundle": { "needsProjectFile": true }
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>

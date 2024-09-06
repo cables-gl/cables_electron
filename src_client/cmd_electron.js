@@ -103,6 +103,7 @@ CABLES_CMD_STANDALONE.collectAssets = (options) =>
                             }
                         });
                     });
+                    standalone.gui.setStateUnsaved();
                 }
                 else
                 {
@@ -157,6 +158,11 @@ CABLES_CMD_STANDALONE.collectOps = (options) =>
             setTimeout(() => { standalone.gui.endModalLoading(); }, closeTimeout);
         }
     });
+};
+
+CABLES_CMD_STANDALONE.exportPatch = () =>
+{
+
 };
 
 CABLES_CMD_STANDALONE.orderOpDirs = () =>

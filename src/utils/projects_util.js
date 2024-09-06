@@ -26,7 +26,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getAssetPathUrl(projectId)
     {
-        return "/assets/";
+        return "./assets/";
     }
 
     getScreenShotPath(pId)

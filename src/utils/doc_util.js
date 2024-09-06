@@ -5,6 +5,7 @@ import jsonfile from "jsonfile";
 import opsUtil from "./ops_util.js";
 import projectsUtil from "./projects_util.js";
 import helper from "./helper_util.js";
+import cables from "../cables.js";
 
 class DocUtil extends SharedDocUtil
 {
@@ -93,6 +94,22 @@ class DocUtil extends SharedDocUtil
             }
         }
         return opDocs;
+    }
+
+    makeReadable(opDocs)
+    {
+        const readables = super.makeReadable(opDocs);
+        readables.forEach((opDoc) =>
+        {
+            const relativeDir = opsUtil.getOpSourceDir(opDoc.name, true);
+            const absolute = opsUtil.getOpSourceDir(opDoc.name);
+            const opDir = absolute.replace(relativeDir, "");
+            if (opDir !== cables.getOpsPath())
+            {
+                opDoc.opDir = opDir;
+            }
+        });
+        return readables;
     }
 }
 export default new DocUtil(utilProvider);
