@@ -1307,8 +1307,9 @@ class ElectronApi
         settings.replaceInRecentProjects(oldFile, newFile);
         projectsUtil.writeProjectToFile(newFile, project);
         this.loadProject(newFile);
+        const summary = projectsUtil.getSummary(settings.getCurrentProject());
         electronApp.updateTitle();
-        return this.success("OK", { "name": project.name });
+        return this.success("OK", { "name": project.name, "summary": summary });
     }
 
     cycleFullscreen()

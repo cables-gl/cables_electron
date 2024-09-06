@@ -547,7 +547,7 @@ class ElectronApp
         if (project)
         {
             this.sendTalkerMessage("updatePatchName", { "name": project.name });
-            this.sendTalkerMessage("updatePatchSummary", { "summary": project.summary });
+            this.sendTalkerMessage("updatePatchSummary", project.summary);
         }
 
         this.editorWindow.setTitle(title);

@@ -194,5 +194,19 @@ class ProjectsUtil extends SharedProjectsUtil
         project.dirs.ops = helper.uniqueArray(project.dirs.ops);
         return project;
     }
+
+    getSummary(project)
+    {
+        if (!project) return {};
+        return {
+            "allowEdit": true,
+            "title": project.name,
+            "owner": settings.getCurrentUser(),
+            "description": project.description,
+            "licence": {
+                "name": "No licence chosen"
+            }
+        };
+    }
 }
 export default new ProjectsUtil(utilProvider);

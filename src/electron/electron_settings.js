@@ -130,7 +130,7 @@ class ElectronSettings
 
     getCurrentUser()
     {
-        let username = this.getUserSetting("authorName", "");
+        let username = this.getUserSetting("authorName", "") || "";
         return {
             "username": username,
             "_id": helper.generateRandomId(),
