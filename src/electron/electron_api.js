@@ -20,6 +20,7 @@ import electronApp from "./main.js";
 import filesUtil from "../utils/files_util.js";
 import libsUtil from "../utils/libs_util.js";
 import StandaloneZipExport from "../export/export_zip_standalone.js";
+import StandaloneExport from "../export/export_patch_standalone.js";
 
 class ElectronApi
 {
@@ -371,26 +372,25 @@ class ElectronApi
         const code = data.code;
         let returnedCode = code;
 
-        // const format = opsUtil.validateAndFormatOpCode(code);
-        // if (format.error)
-        // {
-        //     const {
-        //         line,
-        //         message
-        //     } = format.message;
-        //     this._log.info({
-        //         line,
-        //         message
-        //     });
-        //     return {
-        //         "error": {
-        //             line,
-        //             message
-        //         }
-        //     };
-        // }
-        // const formatedCode = format.formatedCode;
-        const formatedCode = code;
+        const format = opsUtil.validateAndFormatOpCode(code);
+        if (format.error)
+        {
+            const {
+                line,
+                message
+            } = format.message;
+            this._log.info({
+                line,
+                message
+            });
+            return {
+                "error": {
+                    line,
+                    message
+                }
+            };
+        }
+        const formatedCode = format.formatedCode;
         if (data.format || opsUtil.isCoreOp(opName))
         {
             returnedCode = formatedCode;
@@ -1317,22 +1317,26 @@ class ElectronApi
     collectAssets()
     {
         const currentProject = settings.getCurrentProject();
-        const assetFilenames = projectsUtil.getUsedAssetFilenames(currentProject, true);
+        const assetPorts = projectsUtil.getProjectAssetPorts(currentProject, true);
+
         const oldNew = {};
-        const projectAssetPath = cables.getAssetPath();
-        assetFilenames.forEach((oldFile) =>
+        let projectAssetPath = cables.getAssetPath();
+        projectAssetPath = path.join(projectAssetPath, "assets");
+        if (!fs.existsSync(projectAssetPath)) mkdirp.sync(projectAssetPath);
+        assetPorts.forEach((assetPort) =>
         {
-            const oldUrl = helper.pathToFileURL(oldFile);
-            if (!helper.isLocalAssetPath(oldFile) && !oldNew.hasOwnProperty(oldUrl) && fs.existsSync(oldFile))
+            const portValue = assetPort.value;
+            let oldFile = helper.fileURLToPath(portValue, true);
+            if (!helper.isLocalAssetPath(oldFile) && !oldNew.hasOwnProperty(portValue) && fs.existsSync(oldFile))
             {
                 const baseName = path.basename(oldFile);
                 const newName = this._findNewAssetFilename(projectAssetPath, baseName);
                 const newLocation = path.join(projectAssetPath, newName);
                 fs.copyFileSync(oldFile, newLocation);
-                oldNew[oldUrl] = path.join(projectsUtil.getAssetPathUrl(currentProject), newName);
+                // cant use path.join here since we need to keep the ./
+                oldNew[assetPort.value] = projectsUtil.getAssetPathUrl(currentProject) + newName;
             }
         });
-        this._log.debug("collectAssets", oldNew);
         return this.success("OK", oldNew);
     }
 
@@ -1507,6 +1511,23 @@ class ElectronApi
         }
     }
 
+    async exportPatchBundle()
+    {
+        const service = new StandaloneExport(utilProvider);
+
+        const exportPromise = promisify(service.doExport.bind(service));
+
+        try
+        {
+            const result = await exportPromise(null);
+            return this.success("OK", result);
+        }
+        catch (e)
+        {
+            return this.error("ERROR", e);
+        }
+    }
+
     success(msg, data, raw = false)
     {
         if (raw)
@@ -1530,7 +1551,7 @@ class ElectronApi
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false, targetDir = false)
     {
         let opNamespace = opsUtil.getNamespace(newName);
-        let availableNamespaces = ["Ops."];
+        let availableNamespaces = ["Ops.Standalone.", "Ops."];
         if (fromRename) availableNamespaces.unshift(opNamespace);
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         if (opNamespace && !opsUtil.isPatchOp(opNamespace) && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
