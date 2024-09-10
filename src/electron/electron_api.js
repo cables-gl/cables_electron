@@ -115,7 +115,7 @@ class ElectronApi
 
     getOpInfo(data)
     {
-        const name = opsUtil.getOpNameById(data.opName) || data.opName;
+        const opName = opsUtil.getOpNameById(data.opName) || data.opName;
 
         let warns = [];
         try
@@ -140,12 +140,30 @@ class ElectronApi
                 });
             }
 
-            warns = warns.concat(opsUtil.getOpCodeWarnings(name));
+            warns = warns.concat(opsUtil.getOpCodeWarnings(opName));
 
-            if (opsUtil.isOpNameValid(name))
+            if (opsUtil.isOpNameValid(opName))
             {
                 const result = { "warns": warns };
-                result.attachmentFiles = opsUtil.getAttachmentFiles(name);
+                result.attachmentFiles = opsUtil.getAttachmentFiles(opName);
+
+                const opDocs = doc.getDocForOp(opName);
+                let changelogEntries = [];
+                if (opDocs && opDocs.changelog)
+                {
+                    // copy array to not modify reference
+                    changelogEntries = changelogEntries.concat(opDocs.changelog);
+                    if (data.sort === "asc")
+                    {
+                        changelogEntries.sort((a, b) => { return a.date - b.date; });
+                    }
+                    else
+                    {
+                        changelogEntries.sort((a, b) => { return b.date - a.date; });
+                    }
+                    const numChangelogEntries = data.cl || 5;
+                    result.changelog = changelogEntries.slice(0, numChangelogEntries);
+                }
                 return this.success("OK", result, true);
             }
             else
@@ -157,7 +175,7 @@ class ElectronApi
         }
         catch (e)
         {
-            this._log.warn("error when getting opinfo", name, e.message);
+            this._log.warn("error when getting opinfo", opName, e.message);
             const result = { "warns": warns };
             result.attachmentFiles = [];
             return this.success("OK", result, true);
