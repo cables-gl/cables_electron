@@ -841,7 +841,8 @@ class ElectronApi
 
     opUpdate(data)
     {
-        const opName = data.opname;
+        let opName = data.opname;
+        if (opsUtil.isOpId(data.opname)) opName = opsUtil.getOpNameById(data.opname);
         const currentUser = settings.getCurrentUser();
         return this.success("OK", { "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) }, true);
     }
@@ -1208,16 +1209,22 @@ class ElectronApi
     {
         const now = Date.now();
         const project = settings.getCurrentProject();
+        let data = {};
         if (project)
         {
-            const projectFile = settings.getCurrentProjectFile();
             project.updated = now;
+            const projectFile = settings.getCurrentProjectFile();
             if (projectFile)
             {
                 projectsUtil.writeProjectToFile(projectFile, project);
             }
+            data = project;
         }
-        return this.success("OK", project);
+        else
+        {
+            data.updated = now;
+        }
+        return this.success("OK", data);
     }
 
     getProjectOpDirs()
