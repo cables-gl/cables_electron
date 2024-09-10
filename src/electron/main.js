@@ -258,6 +258,35 @@ class ElectronApp
         return this._fileDialog(title, filePath, asUrl, filter, properties);
     }
 
+    async saveFileDialog(defaultPath, title = null, properties = [], filters = [])
+    {
+        title = title || "select directory";
+        properties = properties || ["createDirectory"];
+        return dialog.showSaveDialog(this.editorWindow, {
+            "title": title,
+            "defaultPath": defaultPath,
+            "properties": properties,
+            "filters": filters
+        }).then((result) =>
+        {
+            if (!result.canceled)
+            {
+                return result.filePath;
+            }
+            else
+            {
+                return null;
+            }
+        });
+    }
+
+    async pickDirDialog(defaultPath = null)
+    {
+        let title = "select file";
+        let properties = ["openDirectory", "createDirectory"];
+        return this._dirDialog(title, properties, defaultPath);
+    }
+
     async exportProjectFileDialog(exportName)
     {
         const extensions = [];
@@ -553,12 +582,14 @@ class ElectronApp
         this.editorWindow.setTitle(title);
     }
 
-    _dirDialog(title, properties)
+    _dirDialog(title, properties, defaultPath = null)
     {
-        return dialog.showOpenDialog(this.editorWindow, {
+        const options = {
             "title": title,
             "properties": properties
-        }).then((result) =>
+        };
+        if (defaultPath) options.defaultPath = defaultPath;
+        return dialog.showOpenDialog(this.editorWindow, options).then((result) =>
         {
             if (!result.canceled)
             {

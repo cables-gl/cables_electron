@@ -1081,21 +1081,36 @@ class ElectronApi
 
     async selectFile(data)
     {
-        if (data && data.url)
+        if (data)
         {
-            let assetUrl = helper.fileURLToPath(data.url, true);
-            let filter = ["*"];
-            if (data.filter)
+            let pickedFileUrl = null;
+            if (data.url)
             {
-                filter = filesUtil.FILETYPES[data.filter] || ["*"];
+                let assetUrl = helper.fileURLToPath(data.url, true);
+                let filter = ["*"];
+                if (data.filter)
+                {
+                    filter = filesUtil.FILETYPES[data.filter] || ["*"];
+                }
+                pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filter);
             }
-            const pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filter);
+            else
+            {
+                let file = data.dir;
+                pickedFileUrl = await electronApp.pickFileDialog(file);
+            }
             return this.success("OK", pickedFileUrl, true);
         }
         else
         {
             return this.error("NO_FILE_SELECTED", null, "info");
         }
+    }
+
+    async selectDir(data)
+    {
+        const pickedFileUrl = await electronApp.pickDirDialog(data.dir);
+        return this.success("OK", pickedFileUrl, true);
     }
 
 
@@ -1492,9 +1507,10 @@ class ElectronApi
 
     async createFile(data)
     {
-        data.fileName = data.name;
-        data.content = "this is an empty file...";
-        return this.updateFile(data);
+        let file = data.name;
+        let pickedFileUrl = await electronApp.saveFileDialog(file);
+        if (pickedFileUrl && !fs.existsSync(pickedFileUrl)) fs.writeFileSync(pickedFileUrl, "");
+        return this.success("OK", pickedFileUrl, true);
     }
 
     async exportPatch()

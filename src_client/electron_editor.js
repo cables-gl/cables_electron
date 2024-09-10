@@ -196,6 +196,7 @@ export default class ElectronEditor
             "openDir": {},
             "createFile": {},
             "selectFile": {},
+            "selectDir": {},
             "setProjectName": { "needsProjectFile": true },
             "collectAssets": { "needsProjectFile": true },
             "collectOps": { "needsProjectFile": true },
