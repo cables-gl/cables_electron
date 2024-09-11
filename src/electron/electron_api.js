@@ -115,7 +115,7 @@ class ElectronApi
 
     getOpInfo(data)
     {
-        const name = opsUtil.getOpNameById(data.opName) || data.opName;
+        const opName = opsUtil.getOpNameById(data.opName) || data.opName;
 
         let warns = [];
         try
@@ -140,12 +140,30 @@ class ElectronApi
                 });
             }
 
-            warns = warns.concat(opsUtil.getOpCodeWarnings(name));
+            warns = warns.concat(opsUtil.getOpCodeWarnings(opName));
 
-            if (opsUtil.isOpNameValid(name))
+            if (opsUtil.isOpNameValid(opName))
             {
                 const result = { "warns": warns };
-                result.attachmentFiles = opsUtil.getAttachmentFiles(name);
+                result.attachmentFiles = opsUtil.getAttachmentFiles(opName);
+
+                const opDocs = doc.getDocForOp(opName);
+                let changelogEntries = [];
+                if (opDocs && opDocs.changelog)
+                {
+                    // copy array to not modify reference
+                    changelogEntries = changelogEntries.concat(opDocs.changelog);
+                    if (data.sort === "asc")
+                    {
+                        changelogEntries.sort((a, b) => { return a.date - b.date; });
+                    }
+                    else
+                    {
+                        changelogEntries.sort((a, b) => { return b.date - a.date; });
+                    }
+                    const numChangelogEntries = data.cl || 5;
+                    result.changelog = changelogEntries.slice(0, numChangelogEntries);
+                }
                 return this.success("OK", result, true);
             }
             else
@@ -157,7 +175,7 @@ class ElectronApi
         }
         catch (e)
         {
-            this._log.warn("error when getting opinfo", name, e.message);
+            this._log.warn("error when getting opinfo", opName, e.message);
             const result = { "warns": warns };
             result.attachmentFiles = [];
             return this.success("OK", result, true);
@@ -841,7 +859,8 @@ class ElectronApi
 
     opUpdate(data)
     {
-        const opName = data.opname;
+        let opName = data.opname;
+        if (opsUtil.isOpId(data.opname)) opName = opsUtil.getOpNameById(data.opname);
         const currentUser = settings.getCurrentUser();
         return this.success("OK", { "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) }, true);
     }
@@ -1078,21 +1097,36 @@ class ElectronApi
 
     async selectFile(data)
     {
-        if (data && data.url)
+        if (data)
         {
-            let assetUrl = helper.fileURLToPath(data.url, true);
-            let filter = ["*"];
-            if (data.filter)
+            let pickedFileUrl = null;
+            if (data.url)
             {
-                filter = filesUtil.FILETYPES[data.filter] || ["*"];
+                let assetUrl = helper.fileURLToPath(data.url, true);
+                let filter = ["*"];
+                if (data.filter)
+                {
+                    filter = filesUtil.FILETYPES[data.filter] || ["*"];
+                }
+                pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filter);
             }
-            const pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filter);
+            else
+            {
+                let file = data.dir;
+                pickedFileUrl = await electronApp.pickFileDialog(file);
+            }
             return this.success("OK", pickedFileUrl, true);
         }
         else
         {
             return this.error("NO_FILE_SELECTED", null, "info");
         }
+    }
+
+    async selectDir(data)
+    {
+        const pickedFileUrl = await electronApp.pickDirDialog(data.dir);
+        return this.success("OK", pickedFileUrl, true);
     }
 
 
@@ -1190,16 +1224,22 @@ class ElectronApi
     {
         const now = Date.now();
         const project = settings.getCurrentProject();
+        let data = {};
         if (project)
         {
-            const projectFile = settings.getCurrentProjectFile();
             project.updated = now;
+            const projectFile = settings.getCurrentProjectFile();
             if (projectFile)
             {
                 projectsUtil.writeProjectToFile(projectFile, project);
             }
+            data = project;
         }
-        return this.success("OK", project);
+        else
+        {
+            data.updated = now;
+        }
+        return this.success("OK", data);
     }
 
     getProjectOpDirs()
@@ -1489,9 +1529,10 @@ class ElectronApi
 
     async createFile(data)
     {
-        data.fileName = data.name;
-        data.content = "this is an empty file...";
-        return this.updateFile(data);
+        let file = data.name;
+        let pickedFileUrl = await electronApp.saveFileDialog(file);
+        if (pickedFileUrl && !fs.existsSync(pickedFileUrl)) fs.writeFileSync(pickedFileUrl, "");
+        return this.success("OK", pickedFileUrl, true);
     }
 
     async exportPatch()

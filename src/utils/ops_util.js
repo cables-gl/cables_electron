@@ -18,9 +18,9 @@ class OpsUtil extends SharedOpsUtil
 
     isCoreOp(opName)
     {
-        const opsDir = this._cables.getOpsPath();
+        const opsDir = this._cables.getCoreOpsPath();
         const opDir = this.getOpSourceDir(opName);
-        return opDir.includes(opsDir);
+        return opDir.startsWith(opsDir);
     }
 
     addPermissionsToOps(opDocs, user, teams = [], project = null)

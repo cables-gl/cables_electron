@@ -125,6 +125,7 @@ export default class CablesStandalone
                 "platformClass": "PlatformStandalone",
                 "urlCables": "cables://",
                 "urlSandbox": "cables://",
+                "communityUrl": this._config.communityUrl,
                 "user": this._settings.currentUser,
                 "usersettings": { "settings": this._usersettings },
                 "isDevEnv": !this._config.isPackaged,

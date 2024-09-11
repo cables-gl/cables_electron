@@ -1,7 +1,7 @@
 {
   "env": "dev",
   "minifyJs": true,
-  "communityUrl": "https://cables.gl/",
+  "communityUrl": "https://cables.gl",
   "sourcePath": {
     "libs": "../../shared/libs/",
     "corelibs": "../../cables/build/libs/",
