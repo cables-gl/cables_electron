@@ -1470,31 +1470,39 @@ class ElectronApi
             "src": [options.name],
             "version": version
         };
-        let opDoc = doc.getDocForOp(opName);
         const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
-        if (opDoc && fs.existsSync(opDocFile))
+        if (fs.existsSync(opDocFile))
         {
-            const deps = opDoc.dependencies || [];
-            deps.push(dep);
-            opDoc.dependencies = deps;
-            opDoc = doc.cleanOpDocData(opDoc);
-            jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
-            doc.updateOpDocs();
-            const npmResult = await this.installOpDependencies(opName);
-            if (npmResult.error)
+            let opDoc = jsonfile.readFileSync(opDocFile);
+            if (opDoc)
             {
-                // remove deps again on install error
-                const newDeps = [];
-                opDoc.dependencies.forEach((opDep) =>
-                {
-                    if (!(options.name === opDep.name && options.type === opDep.type)) newDeps.push(opDep);
-                });
-                opDoc.dependencies = newDeps;
+                const deps = opDoc.dependencies || [];
+                deps.push(dep);
+                opDoc.dependencies = deps;
+                opDoc = doc.cleanOpDocData(opDoc);
                 jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
                 doc.updateOpDocs();
-                await this.installOpDependencies(opName);
+                const npmResult = await this.installOpDependencies(opName);
+                if (npmResult.error)
+                {
+                    // remove deps again on install error
+                    const newDeps = [];
+                    opDoc.dependencies.forEach((opDep) =>
+                    {
+                        if (!(options.name === opDep.name && options.type === opDep.type)) newDeps.push(opDep);
+                    });
+                    opDoc.dependencies = newDeps;
+                    opDoc = doc.cleanOpDocData(opDoc);
+                    jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
+                    doc.updateOpDocs();
+                    await this.installOpDependencies(opName);
+                }
+                return npmResult;
             }
-            return npmResult;
+            else
+            {
+                return this.error("OP_NOT_FOUND");
+            }
         }
         else
         {
@@ -1506,20 +1514,27 @@ class ElectronApi
     {
         if (!options.opName || !options.name || !options.type) return this.error("INVALID_DATA");
         const opName = options.opName;
-        const opDoc = doc.getDocForOp(opName);
         const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
-        if (opDoc && fs.existsSync(opDocFile))
+        if (fs.existsSync(opDocFile))
         {
-            const newDeps = [];
-            const deps = opDoc.dependencies || [];
-            deps.forEach((dep) =>
+            let opDoc = jsonfile.readFileSync(opDocFile);
+            if (opDoc)
             {
-                if (!(dep.name === options.name && dep.type === options.type)) newDeps.push(dep);
-            });
-            opDoc.dependencies = newDeps;
-            if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
-            doc.updateOpDocs();
-            return this.installOpDependencies(opName);
+                const newDeps = [];
+                const deps = opDoc.dependencies || [];
+                deps.forEach((dep) =>
+                {
+                    if (!(dep.name === options.name && dep.type === options.type)) newDeps.push(dep);
+                });
+                opDoc.dependencies = newDeps;
+                if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
+                doc.updateOpDocs();
+                return this.installOpDependencies(opName);
+            }
+            else
+            {
+                return this.error("OP_NOT_FOUND");
+            }
         }
         else
         {
