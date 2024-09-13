@@ -77,8 +77,13 @@ class ElectronSettings
                 "videos": app.getPath("videos"),
                 "logs": app.getPath("logs"),
                 "crashDumps": app.getPath("crashDumps"),
-                "assetPath": path.join(this.get(this.CURRENTPROJECTDIR_FIELD), "assets", this.get(this.PATCHID_FIELD), "/")
             };
+            const dir = this.get(this.CURRENTPROJECTDIR_FIELD);
+            const id = this.get(this.PATCHID_FIELD);
+            if (dir && id)
+            {
+                this.data.paths.assetPath = path.join(dir, "assets", id, "/");
+            }
             if (process.platform === "win32")
             {
                 this.data.paths.recent = app.getPath("recent");
