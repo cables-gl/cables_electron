@@ -1292,7 +1292,7 @@ class ElectronApi
     async addProjectOpDir()
     {
         let currentProject = settings.getCurrentProject();
-        if (!currentProject) return this.error("Please save your project before adding op directories");
+        if (!currentProject) return this.error("Please save your project before adding op directories", null, "warn");
         const opDir = await electronApp.pickOpDirDialog();
         if (opDir)
         {
@@ -1611,11 +1611,20 @@ class ElectronApi
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, project = null, ignoreVersionGap = false, fromRename = false, targetDir = false)
     {
         let opNamespace = opsUtil.getNamespace(newName, true);
-        let availableNamespaces = ["Ops.Standalone.", "Ops."];
+        let availableNamespaces = [];
 
+        if (project)
+        {
+            const projectOpDocs = doc.getOpDocsInProjectDirs(project);
+            availableNamespaces = projectOpDocs.map((opDoc) => { return opsUtil.getNamespace(opDoc.name, true); });
+        }
+
+        availableNamespaces.unshift("Ops.Standalone.");
         availableNamespaces = availableNamespaces.map((availableNamespace) => { return availableNamespace.endsWith(".") ? availableNamespace : availableNamespace + "."; });
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         availableNamespaces = availableNamespaces.sort((a, b) => { return a.localeCompare(b); });
+
+        availableNamespaces.unshift("Ops.");
 
         if (project)
         {
