@@ -815,10 +815,11 @@ class ElectronApi
     checkOpName(data)
     {
         const opDocs = doc.getOpDocs(false, false);
-        const newName = data.namespace + data.v;
+        const newName = data.v;
         const sourceName = data.sourceName || null;
         const currentUser = settings.getCurrentUser();
-        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, true, data.rename, data.opTargetDir);
+        const currentProject = settings.getCurrentProject();
+        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, currentProject, true, data.rename, data.opTargetDir);
         result.checkedName = newName;
         return this.success("OK", result, true);
     }
@@ -887,10 +888,11 @@ class ElectronApi
         const oldName = opsUtil.getOpNameById(oldId);
 
         const currentUser = settings.getCurrentUser();
+        const currentProject = settings.getCurrentProject();
         let opNamespace = opsUtil.getNamespace(newName);
 
         const opDocs = doc.getOpDocs(false, false);
-        const renameResults = this._getFullRenameResponse(opDocs, newName, oldName, currentUser, opsUtil.isPrivateOp(newName), true);
+        const renameResults = this._getFullRenameResponse(opDocs, newName, oldName, currentUser, currentProject, opsUtil.isPrivateOp(newName), true);
         if (!oldName)
         {
             renameResults.problems.push("No name for source op given.");
@@ -1604,13 +1606,21 @@ class ElectronApi
         return error;
     }
 
-    _getFullRenameResponse(opDocs, newName, oldName, currentUser, ignoreVersionGap = false, fromRename = false, targetDir = false)
+    _getFullRenameResponse(opDocs, newName, oldName, currentUser, project = null, ignoreVersionGap = false, fromRename = false, targetDir = false)
     {
-        let opNamespace = opsUtil.getNamespace(newName);
+        let opNamespace = opsUtil.getNamespace(newName, true);
         let availableNamespaces = ["Ops.Standalone.", "Ops."];
-        if (fromRename) availableNamespaces.unshift(opNamespace);
+
+        availableNamespaces = availableNamespaces.map((availableNamespace) => { return availableNamespace.endsWith(".") ? availableNamespace : availableNamespace + "."; });
         availableNamespaces = helper.uniqueArray(availableNamespaces);
-        if (opNamespace && !opsUtil.isPatchOp(opNamespace) && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
+        availableNamespaces = availableNamespaces.sort((a, b) => { return a.localeCompare(b); });
+
+        if (project)
+        {
+            availableNamespaces.unshift(opsUtil.getPatchOpsNamespaceForProject(project));
+        }
+        if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
+        availableNamespaces = availableNamespaces.filter((availableNamespace) => { return availableNamespace.startsWith(opsUtil.PREFIX_OPS); });
 
         let removeOld = newName && !(opsUtil.isExtensionOp(newName) && opsUtil.isCoreOp(newName));
         const result = {
@@ -1680,7 +1690,7 @@ class ElectronApi
 
         if (suggestVersion)
         {
-            const text = "Try creating a new version <a class='button-small versionSuggestion' data-short-name='" + nextShort + "'>" + nextOpName + "</a>";
+            const text = "Try creating a new version <a class='button-small versionSuggestion' data-short-name='" + nextShort + "' data-next-name='" + nextOpName + "'>" + nextOpName + "</a>";
             nextVersion = {
                 "fullName": nextOpName,
                 "namespace": opsUtil.getNamespace(nextOpName),

@@ -76,7 +76,8 @@ class ElectronSettings
                 "pictures": app.getPath("pictures"),
                 "videos": app.getPath("videos"),
                 "logs": app.getPath("logs"),
-                "crashDumps": app.getPath("crashDumps")
+                "crashDumps": app.getPath("crashDumps"),
+                "assetPath": path.join(this.get(this.CURRENTPROJECTDIR_FIELD), "assets", this.get(this.PATCHID_FIELD), "/")
             };
             if (process.platform === "win32")
             {
