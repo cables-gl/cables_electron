@@ -107,11 +107,11 @@ export default class ElectronEditor
          */
         this._talker.addEventListener("fileUploadStr", (data, next) =>
         {
-            window.ipcRenderer.invoke("talkerMessage", "fileUpload", data, {}).then((r) =>
+            this.api("fileUpload", data, (err, r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
                 this._talker.send("refreshFileManager");
-                this._talker.send("fileUpdated", { "filename": data.filename });
+                this._talker.send("fileUpdated", { "filename": r.filename });
 
                 if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                 next(error, r);
@@ -131,25 +131,12 @@ export default class ElectronEditor
          */
         this._talker.addEventListener("updateFile", (data, next) =>
         {
-            window.ipcRenderer.invoke("talkerMessage", "updateFile", data, {}).then((r) =>
+            this.api("updateFile", data, (err, r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
                 if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                 next(error, r);
                 this._talker.send("fileUpdated", { "filename": data.fileName });
-            });
-        });
-
-        /**
-         * remove directory with ops from project
-         *
-         * @param string data directory name
-         */
-        this._talker.addEventListener("removeProjectOpDir", (data, next) =>
-        {
-            window.ipcRenderer.invoke("talkerMessage", "removeProjectOpDir", data, {}).then((r) =>
-            {
-                if (next) next(r);
             });
         });
 
@@ -205,6 +192,7 @@ export default class ElectronEditor
             "addOpDependency": {},
             "removeOpDependency": {},
             "saveProjectOpDirOrder": { "needsProjectFile": true },
+            "removeProjectOpDir": { "needsProjectFile": true },
             "exportPatch": { "needsProjectFile": true },
             "exportPatchBundle": { "needsProjectFile": true }
         };

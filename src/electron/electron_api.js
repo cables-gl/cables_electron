@@ -259,9 +259,11 @@ class ElectronApi
         {
             return;
         }
+        let saveAs = data.filename;
+        if (!path.isAbsolute(data.filename)) saveAs = path.join(target, data.filename);
         const buffer = Buffer.from(data.fileStr.split(",")[1], "base64");
-        fs.writeFileSync(path.join(target, data.filename), buffer);
-        return this.success("OK", true, true);
+        fs.writeFileSync(saveAs, buffer);
+        return this.success("OK", { "filename": path.basename(saveAs) }, true);
     }
 
     async getAllProjectOps()
@@ -776,7 +778,7 @@ class ElectronApi
     getFileDetails(data)
     {
         let filePath = helper.fileURLToPath(data.filename);
-        const fileDb = filesUtil.getFileDb(filePath, settings.getCurrentProject(), settings.getCurrentUser());
+        const fileDb = filesUtil.getFileDb(filePath, settings.getCurrentProject(), settings.getCurrentUser(), new Date().getTime());
         return this.success("OK", filesUtil.getFileInfo(fileDb), true);
     }
 

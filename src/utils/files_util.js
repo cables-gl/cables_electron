@@ -110,7 +110,7 @@ class FilesUtil extends SharedFilesUtil
         await this._opChangeWatcher.close();
     }
 
-    getFileDb(filePath, user, project)
+    getFileDb(filePath, user, project, cachebuster = "")
     {
         const stats = fs.statSync(filePath);
         const fileName = path.basename(filePath);
@@ -125,7 +125,7 @@ class FilesUtil extends SharedFilesUtil
             "userId": user._id,
             "updated": stats.mtime,
             "created": stats.ctime,
-            "cachebuster": "",
+            "cachebuster": cachebuster,
             "isLibraryFile": filePath.includes(cables.getAssetLibraryPath()),
             "__v": 0,
             "size": stats.size,
