@@ -187,7 +187,7 @@ CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
         opDirSelect += "</select>";
         opDirSelect += "<hr/>";
         html += opDirSelect;
-        html += "Enter package.json location (url, zip, git, npm, ...):";
+        html += "Enter <a href=\"https://docs.npmjs.com/cli/v10/commands/npm-install\">package.json</a> location (git, npm, thz, url, ...):";
 
         new CABLES.UI.ModalDialog({
             "prompt": true,
