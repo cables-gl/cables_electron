@@ -10,6 +10,7 @@ import settings from "../electron/electron_settings.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
 import filesUtil from "./files_util.js";
+import opsUtil from "./ops_util.js";
 
 class ProjectsUtil extends SharedProjectsUtil
 {
@@ -17,6 +18,9 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         super(provider);
         this.CABLES_PROJECT_FILE_EXTENSION = "cables";
+
+        this._dirInfos = null;
+        this._projectOpDocs = null;
     }
 
     getAssetPath(projectId)
@@ -75,8 +79,8 @@ class ProjectsUtil extends SharedProjectsUtil
         if (project && project.dirs && project.dirs.ops)
         {
             const projectDir = settings.getCurrentProjectDir();
-            const currentDir = path.join(projectDir, "ops");
-            if (fs.existsSync(currentDir)) opsDirs.push(currentDir);
+            // const currentDir = path.join(projectDir, "ops");
+            // if (fs.existsSync(currentDir)) opsDirs.push(currentDir);
             project.dirs.ops.forEach((dir) =>
             {
                 if (!path.isAbsolute(dir)) dir = path.join(projectDir, dir);
@@ -88,14 +92,22 @@ class ProjectsUtil extends SharedProjectsUtil
             const osOpsDir = cables.getOsOpsDir();
             if (osOpsDir) opsDirs.push(osOpsDir);
         }
-        if (reverse) return opsDirs.reverse();
+        if (!cables.isPackaged())
+        {
+            opsDirs.push(cables.getExtensionOpsPath());
+            opsDirs.push(cables.getCoreOpsPath());
+        }
         opsDirs = helper.uniqueArray(opsDirs);
+        if (reverse) return opsDirs.reverse();
         return opsDirs;
     }
 
     isFixedPositionOpDir(dir)
     {
-        return dir === cables.getOsOpsDir() || (!cables.isPackaged() && dir === cables.getOpsPath());
+        if (dir === cables.getOsOpsDir()) return true;
+        if (cables.isPackaged()) return false;
+        if (dir === cables.getExtensionOpsPath()) return true;
+        return dir === cables.getCoreOpsPath();
     }
 
     getProjectFileName(project)
@@ -181,6 +193,7 @@ class ProjectsUtil extends SharedProjectsUtil
             project.dirs.ops.push(opDir);
         }
         project.dirs.ops = helper.uniqueArray(project.dirs.ops);
+        this.invalidateProjectCaches(opDir, atTop);
         return project;
     }
 
@@ -193,6 +206,7 @@ class ProjectsUtil extends SharedProjectsUtil
             return dirName !== opDir;
         });
         project.dirs.ops = helper.uniqueArray(project.dirs.ops);
+        this.invalidateProjectCaches(opDir);
         return project;
     }
 
@@ -208,6 +222,123 @@ class ProjectsUtil extends SharedProjectsUtil
                 "name": "No licence chosen"
             }
         };
+    }
+
+    getOpDirs(currentProject)
+    {
+        const dirs = this.getProjectOpDirs(currentProject, true);
+        const dirInfos = [];
+
+        dirs.forEach((dir) =>
+        {
+            const opJsons = helper.getFileNamesRecursive(dir, ".json");
+            const opLocations = {};
+            opJsons.forEach((jsonLocation) =>
+            {
+                const jsonName = path.basename(jsonLocation, ".json");
+                if (opsUtil.isOpNameValid(jsonName))
+                {
+                    opLocations[jsonName] = path.dirname(path.join(dir, jsonLocation));
+                }
+            });
+            let numUsedOps = 0;
+            const opNames = Object.keys(opLocations);
+
+            dirInfos.push({
+                "dir": dir,
+                "opLocations": opLocations,
+                "numOps": opNames.length,
+                "numUsedOps": numUsedOps,
+                "fixedPlace": this.isFixedPositionOpDir(dir)
+            });
+        });
+        return dirInfos;
+    }
+
+    reorderOpDirs(currentProject, order)
+    {
+        const currentProjectFile = settings.getCurrentProjectFile();
+        const newOrder = [];
+        order.forEach((opDir) =>
+        {
+            if (fs.existsSync(opDir)) newOrder.push(opDir);
+        });
+        if (!currentProject.dirs) currentProject.dirs = {};
+        if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
+        currentProject.dirs.ops = newOrder.filter((dir) => { return !this.isFixedPositionOpDir(dir); });
+        currentProject.dirs.ops = helper.uniqueArray(currentProject.dirs.ops);
+        this.writeProjectToFile(currentProjectFile, currentProject);
+        this.reorderOpDirHierarchy(newOrder);
+        return currentProject;
+    }
+
+    getAbsoluteOpDirFromHierarchy(opName)
+    {
+        const currentProject = settings.getCurrentProject();
+        if (currentProject && !this._dirInfos)
+        {
+            this._dirInfos = this.getOpDirs(currentProject);
+        }
+        if (!this._dirInfos) return this._opsUtil.getOpSourceNoHierarchy(opName);
+        for (let i = 0; i < this._dirInfos.length; i++)
+        {
+            const dirInfo = this._dirInfos[i];
+            const opNames = dirInfo.opLocations ? Object.keys(dirInfo.opLocations) : [];
+            if (opNames.includes(opName))
+            {
+                return dirInfo.opLocations[opName];
+            }
+        }
+        return this._opsUtil.getOpSourceNoHierarchy(opName);
+    }
+
+    invalidateProjectCaches()
+    {
+        this._dirInfos = null;
+        this._projectOpDocs = null;
+    }
+
+    getOpDocsInProjectDirs(project, rebuildCache = false)
+    {
+        if (this._projectOpDocs && !rebuildCache) return this._projectOpDocs;
+
+        const opDocs = {};
+        const opDirs = this.getProjectOpDirs(project, true);
+        opDirs.forEach((opDir) =>
+        {
+            if (fs.existsSync(opDir))
+            {
+                const opJsons = helper.getFilesRecursive(opDir, ".json");
+                for (let jsonPath in opJsons)
+                {
+                    const opName = path.basename(jsonPath, ".json");
+                    if (opsUtil.isOpNameValid(opName))
+                    {
+                        if (opDocs.hasOwnProperty(opName))
+                        {
+                            if (!opDocs[opName].hasOwnProperty("overrides")) opDocs[opName].overrides = [];
+                            opDocs[opName].overrides.push(path.join(opDir, path.dirname(jsonPath)));
+                        }
+                        else
+                        {
+                            try
+                            {
+                                const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
+                                opDoc.name = opName;
+                                opDocs[opName] = opDoc;
+                            }
+                            catch (e)
+                            {
+                                this._log.warn("failed to parse opDoc for", opName, "from", jsonPath);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        this._projectOpDocs = Object.values(opDocs);
+        this._docsUtil.addOpsToLookup(this._projectOpDocs);
+        return this._projectOpDocs;
     }
 }
 export default new ProjectsUtil(utilProvider);

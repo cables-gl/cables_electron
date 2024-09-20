@@ -24,7 +24,7 @@ class Logger extends SharedLogger
 
     endTime(...args)
     {
-        super.endTime("[" + this._initiator + "]", args.join(" "));
+        super.endTime(...args);
     }
 
     error(...args)
@@ -39,7 +39,7 @@ class Logger extends SharedLogger
 
     startTime(...args)
     {
-        super.startTime("[" + this._initiator + "]", "startTime", args.join(" "));
+        super.startTime(...args);
     }
 
     uncaught(...args)

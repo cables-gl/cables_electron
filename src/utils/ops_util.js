@@ -69,13 +69,18 @@ class OpsUtil extends SharedOpsUtil
 
     getOpAbsolutePath(opName)
     {
-        return this._getAbsoluteOpDirFromHierarchy(opName, super.getOpAbsolutePath(opName));
+        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
     }
 
     getOpSourceDir(opName, relative = false)
     {
         if (relative) return super.getOpSourceDir(opName, relative);
-        return this._getAbsoluteOpDirFromHierarchy(opName, super.getOpSourceDir(opName));
+        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+    }
+
+    getOpSourceNoHierarchy(opName, relative = false)
+    {
+        return super.getOpSourceDir(opName, relative);
     }
 
     getOpRenameConsequences(newName, oldName, targetDir = null)
@@ -136,22 +141,6 @@ class OpsUtil extends SharedOpsUtil
             }
         }
         return assetPorts;
-    }
-
-    _getAbsoluteOpDirFromHierarchy(opName, defaultDir)
-    {
-        const relativePath = super.getOpSourceDir(opName, true);
-        if (relativePath)
-        {
-            const dirs = projectsUtil.getProjectOpDirs(settings.getCurrentProject());
-            for (let i = 0; i < dirs.length; i++)
-            {
-                const dir = dirs[i];
-                const opPath = path.join(dir, relativePath);
-                if (fs.existsSync(opPath)) return opPath;
-            }
-        }
-        return defaultDir;
     }
 
     getOpNameByAbsoluteFileName(fileName)

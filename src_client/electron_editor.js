@@ -178,7 +178,6 @@ export default class ElectronEditor
             "checkNumAssetPatches": {},
             "saveProjectAs": {},
             "gotoPatch": {},
-            "setProjectUpdated": {},
             "getProjectOpDirs": {},
             "openDir": {},
             "createFile": {},

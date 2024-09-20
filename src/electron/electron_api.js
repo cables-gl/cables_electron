@@ -123,7 +123,8 @@ class ElectronApi
             const currentProject = settings.getCurrentProject();
             if (currentProject)
             {
-                const opDocs = doc.getOpDocsInProjectDirs(currentProject);
+                let opDocs = projectsUtil.getOpDocsInProjectDirs(currentProject);
+                opDocs = opDocs.filter((opDoc) => { return opDoc.name === opName; });
                 opDocs.forEach((opDoc) =>
                 {
                     if (opDoc.overrides)
@@ -133,7 +134,7 @@ class ElectronApi
                             warns.push({
                                 "type": "project",
                                 "id": "",
-                                "text": "this op overrides another op in <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + override + "'});\">" + override + "</a>"
+                                "text": "<a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + override + "'});\"><span class=\"icon icon-folder\"></span> this op overrides another op</a>"
                             });
                         });
                     }
@@ -289,7 +290,7 @@ class ElectronApi
         });
 
         // add all ops in any of the project op directory
-        const otherDirsOps = doc.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
+        const otherDirsOps = projectsUtil.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
         projectOps = projectOps.concat(otherDirsOps);
 
         // now we should have all the ops that are used in the project, walk subPatchOps
@@ -338,7 +339,7 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
         opDocs = opDocs.concat(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser));
-        opDocs = opDocs.concat(doc.getOpDocsInProjectDirs(currentProject));
+        opDocs = opDocs.concat(projectsUtil.getOpDocsInProjectDirs(currentProject));
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
 
@@ -845,7 +846,7 @@ class ElectronApi
         return this.success("OK", result.slice(0, 10), true);
     }
 
-    opCreate(data)
+    async opCreate(data)
     {
         let opName = data.opname;
         const currentUser = settings.getCurrentUser();
@@ -1224,68 +1225,10 @@ class ElectronApi
         return this.success("OK", { "filename": sanitizedFileName }, true);
     }
 
-    async setProjectUpdated()
-    {
-        const now = Date.now();
-        const project = settings.getCurrentProject();
-        let data = {};
-        if (project)
-        {
-            project.updated = now;
-            const projectFile = settings.getCurrentProjectFile();
-            if (projectFile)
-            {
-                projectsUtil.writeProjectToFile(projectFile, project);
-            }
-            data = project;
-        }
-        else
-        {
-            data.updated = now;
-        }
-        return this.success("OK", data);
-    }
-
     getProjectOpDirs()
     {
         const currentProject = settings.getCurrentProject();
-        const dirs = projectsUtil.getProjectOpDirs(currentProject, true);
-        if (!cables.isPackaged()) dirs.unshift(cables.getOpsPath());
-        const dirInfos = [];
-        const usedOpFiles = {};
-        if (currentProject && currentProject.ops)
-        {
-            currentProject.ops.forEach((op) =>
-            {
-                const opName = opsUtil.getOpNameById(op.opId);
-                if (opName)
-                {
-                    const opDir = opsUtil.getOpAbsolutePath(opName);
-                    if (opDir)
-                    {
-                        if (!usedOpFiles.hasOwnProperty(opName)) usedOpFiles[opName] = opDir;
-                    }
-                }
-            });
-        }
-        dirs.forEach((dir) =>
-        {
-            const opJsons = helper.getFileNamesRecursive(dir, ".json").map((fileName) => { return path.basename(fileName, ".json"); });
-            const opNames = opJsons.filter((jsonName) => { return opsUtil.isOpNameValid(jsonName); });
-            let numUsedOps = 0;
-            opNames.forEach((opName) =>
-            {
-                const opFile = usedOpFiles[opName];
-                if (opFile && opFile.startsWith(dir) && opFile.endsWith(path.join(opName, "/"))) numUsedOps++;
-            });
-            dirInfos.push({
-                "dir": dir,
-                "opNames": opNames,
-                "numOps": opNames.length,
-                "numUsedOps": numUsedOps,
-                "fixedPlace": projectsUtil.isFixedPositionOpDir(dir)
-            });
-        });
+        const dirInfos = projectsUtil.getOpDirs(currentProject);
         return this.success("OK", dirInfos);
     }
 
@@ -1319,19 +1262,9 @@ class ElectronApi
 
     saveProjectOpDirOrder(order)
     {
-        const currentProject = settings.getCurrentProject();
-        const currentProjectFile = settings.getCurrentProjectFile();
+        let currentProject = settings.getCurrentProject();
         if (!currentProject || !order) return this.error("NO_PROJECT");
-        const newOrder = [];
-        order.forEach((opDir) =>
-        {
-            if (fs.existsSync(opDir)) newOrder.push(opDir);
-        });
-        if (!currentProject.dirs) currentProject.dirs = {};
-        if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
-        currentProject.dirs.ops = newOrder.filter((dir) => { return !projectsUtil.isFixedPositionOpDir(dir); });
-        currentProject.dirs.ops = helper.uniqueArray(currentProject.dirs.ops);
-        projectsUtil.writeProjectToFile(currentProjectFile, currentProject);
+        currentProject = projectsUtil.reorderOpDirs(currentProject, order);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 
@@ -1424,7 +1357,8 @@ class ElectronApi
             if (project)
             {
                 settings.setProject(projectFile, project);
-                doc.getOpDocsInProjectDirs(project);
+                projectsUtil.invalidateProjectCaches();
+                projectsUtil.getOpDocsInProjectDirs(project);
                 // add ops in project dirs to lookup
                 filesUtil.registerAssetChangeListeners(project, true);
                 if (project.ops)
@@ -1445,7 +1379,7 @@ class ElectronApi
         else
         {
             settings.setProject(null, null);
-            doc.getOpDocsInProjectDirs(project);
+            projectsUtil.getOpDocsInProjectDirs(project);
         }
         electronApp.updateTitle();
     }
@@ -1615,7 +1549,7 @@ class ElectronApi
 
         if (project)
         {
-            const projectOpDocs = doc.getOpDocsInProjectDirs(project);
+            const projectOpDocs = projectsUtil.getOpDocsInProjectDirs(project);
             availableNamespaces = projectOpDocs.map((opDoc) => { return opsUtil.getNamespace(opDoc.name, true); });
         }
 

@@ -10,6 +10,7 @@ import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
 import helper from "../utils/helper_util.js";
 import electronApp from "./main.js";
+import projectsUtil from "../utils/projects_util.js";
 
 
 protocol.registerSchemesAsPrivileged([
@@ -203,6 +204,23 @@ class ElectronEndpoint
                     });
                 }
             }
+            else if (urlPath.startsWith("/op/screenshot"))
+            {
+                let opName = urlPath.split("/", 4)[3];
+                if (opName) opName = opName.replace(/.png$/, "");
+                const buffer = opsUtil.getScreenshot(opName);
+                const bufferSize = buffer ? Buffer.byteLength(buffer) : 0;
+                const headers = {
+                    "Content-Type": "image/png",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": bufferSize,
+                    "Content-Range": "bytes 0-" + bufferSize + "/" + (bufferSize + 1),
+                };
+                return new Response(buffer, {
+                    "data": buffer,
+                    "headers": headers
+                });
+            }
             else if (urlPath.startsWith("/edit/"))
             {
                 let patchId = urlPath.split("/", 3)[2];
@@ -249,8 +267,7 @@ class ElectronEndpoint
         if (project)
         {
             if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-
-            const opsInProjectDir = doc.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
+            const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.concat(ops);
@@ -258,6 +275,7 @@ class ElectronEndpoint
         }
         const opsWithCode = [];
         let codeNamespaces = [];
+
         missingOps.forEach((missingOp) =>
         {
             const opId = missingOp.opId || missingOp.id;
@@ -326,6 +344,7 @@ class ElectronEndpoint
                 {
                     const collectionName = opsUtil.getCollectionNamespace(opName);
                     opNames = opNames.concat(opsUtil.getCollectionOpNames(collectionName));
+                    opNames.push(opName);
                 }
                 else
                 {

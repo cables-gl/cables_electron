@@ -14,60 +14,11 @@ class DocUtil extends SharedDocUtil
         if (!opName) return null;
         if (!this._opsUtil.isOpNameValid(opName)) return null;
 
-        if (!docs) docs = this.getOpDocs();
-        for (let i = 0; i < docs.length; i++)
-        {
-            if (docs[i].name === opName)
-            {
-                return docs[i];
-            }
-        }
-
         const fromFile = this.getOpDocsFromFile(opName);
         if (fromFile) fromFile.name = opName;
         return fromFile;
     }
 
-    getOpDocsInProjectDirs(project)
-    {
-        const opDocs = {};
-        const opDirs = projectsUtil.getProjectOpDirs(project);
-        opDirs.forEach((opDir) =>
-        {
-            if (fs.existsSync(opDir))
-            {
-                const opJsons = helper.getFilesRecursive(opDir, ".json");
-                for (let jsonPath in opJsons)
-                {
-                    const opName = path.basename(jsonPath, ".json");
-                    if (opsUtil.isOpNameValid(opName))
-                    {
-                        if (opDocs.hasOwnProperty(opName))
-                        {
-                            if (!opDocs[opName].hasOwnProperty("overrides")) opDocs[opName].overrides = [];
-                            opDocs[opName].overrides.push(path.join(opDir, path.dirname(jsonPath)));
-                        }
-                        else
-                        {
-                            try
-                            {
-                                const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
-                                opDoc.name = opName;
-                                opDocs[opName] = opDoc;
-                            }
-                            catch (e)
-                            {
-                                this._log.warn("failed to parse opdocs for", opName, "from", jsonPath);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        const projectOpDocs = Object.values(opDocs);
-        this.addOpsToLookup(projectOpDocs);
-        return projectOpDocs;
-    }
 
     getOpDocsInDir(opDir)
     {
