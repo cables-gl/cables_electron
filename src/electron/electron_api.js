@@ -857,6 +857,7 @@ class ElectronApi
         };
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, data.opTargetDir);
         filesUtil.registerOpChangeListeners([opName]);
+        projectsUtil.invalidateProjectCaches();
 
         return this.success("OK", result, true);
     }

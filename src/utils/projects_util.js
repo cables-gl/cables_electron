@@ -275,11 +275,9 @@ class ProjectsUtil extends SharedProjectsUtil
     getAbsoluteOpDirFromHierarchy(opName)
     {
         const currentProject = settings.getCurrentProject();
-        if (currentProject && !this._dirInfos)
-        {
-            this._dirInfos = this.getOpDirs(currentProject);
-        }
+        if (currentProject && !this._dirInfos) this._dirInfos = this.getOpDirs(currentProject);
         if (!this._dirInfos) return this._opsUtil.getOpSourceNoHierarchy(opName);
+
         for (let i = 0; i < this._dirInfos.length; i++)
         {
             const dirInfo = this._dirInfos[i];
