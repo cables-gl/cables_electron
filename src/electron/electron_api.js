@@ -1358,8 +1358,8 @@ class ElectronApi
             {
                 settings.setProject(projectFile, project);
                 projectsUtil.invalidateProjectCaches();
-                projectsUtil.getOpDocsInProjectDirs(project);
                 // add ops in project dirs to lookup
+                projectsUtil.getOpDocsInProjectDirs(project, true);
                 filesUtil.registerAssetChangeListeners(project, true);
                 if (project.ops)
                 {
@@ -1589,7 +1589,7 @@ class ElectronApi
         const existingNamespace = opsUtil.namespaceExists(newNamespace, opDocs);
         if (!existingNamespace)
         {
-            hints.new_namespace = "Renaming will create a new namespace " + newNamespace;
+            hints.new_namespace = "New op will create a new namespace " + newNamespace;
         }
 
         let newOpDocs = opDocs;

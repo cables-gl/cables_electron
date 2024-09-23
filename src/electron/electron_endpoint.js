@@ -267,12 +267,13 @@ class ElectronEndpoint
         if (project)
         {
             if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-            const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
+            const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project);
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
             missingOps = missingOps.concat(opsInProjectDir);
             missingOps = missingOps.concat(ops);
             missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
         }
+
         const opsWithCode = [];
         let codeNamespaces = [];
 

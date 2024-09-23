@@ -304,6 +304,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
         const opDocs = {};
         const opDirs = this.getProjectOpDirs(project, true);
+
         opDirs.forEach((opDir) =>
         {
             if (fs.existsSync(opDir))
