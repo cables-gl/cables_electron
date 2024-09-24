@@ -32,6 +32,7 @@
     "nodeVersion": "20.13.1",
     "asar": true,
     "includeSubNodeModules": true,
+    "electronLanguages": ["en-US"],
     "files": [
       "cables.json",
       "src/**/*",
@@ -89,7 +90,7 @@
       "signAndEditExecutable": false,
       "target": [
         {
-          "target": "zip",
+          "target": "portable",
           "arch": [
             "x64"
           ]
