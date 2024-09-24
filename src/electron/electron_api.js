@@ -877,6 +877,33 @@ class ElectronApi
         return this.success("OK", opsUtil.saveLayout(opName, layout), true);
     }
 
+    opSetSummary(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opId) || data.name;
+        let summary = data.summary || "";
+        if (summary === "No Summary") summary = "";
+        const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
+        if (fs.existsSync(opDocFile))
+        {
+            let opDoc = jsonfile.readFileSync(opDocFile);
+            if (opDoc)
+            {
+                opDoc.summary = summary;
+                opDoc = doc.cleanOpDocData(opDoc);
+                jsonfile.writeFileSync(opDocFile, opDoc, {
+                    "encoding": "utf-8",
+                    "spaces": 4
+                });
+                doc.updateOpDocs();
+            }
+            return this.success("OK", opDoc, true);
+        }
+        else
+        {
+            return this.error("UNKNOWN_OP", null, "error");
+        }
+    }
+
     opClone(data)
     {
         const newName = data.name;

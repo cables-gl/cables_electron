@@ -140,6 +140,16 @@ export default class ElectronEditor
             });
         });
 
+        this._talker.addEventListener("createFile", (data, next) =>
+        {
+            this.api("createFile", data, (r) =>
+            {
+                const error = r && r.hasOwnProperty("error") ? r.error : null;
+                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+                next(error, r);
+            });
+        });
+
         this._talkerTopics = {
             "getOpInfo": {},
             "savePatch": { "needsProjectFile": true },
@@ -173,6 +183,7 @@ export default class ElectronEditor
             "opCreate": { },
             "opUpdate": {},
             "opSaveLayout": { },
+            "opSetSummary": { },
             "opClone": { },
             "opRename": { },
             "checkNumAssetPatches": {},
@@ -180,7 +191,6 @@ export default class ElectronEditor
             "gotoPatch": {},
             "getProjectOpDirs": {},
             "openDir": {},
-            "createFile": {},
             "selectFile": {},
             "selectDir": {},
             "setProjectName": { "needsProjectFile": true },
