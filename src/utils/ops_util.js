@@ -49,21 +49,42 @@ class OpsUtil extends SharedOpsUtil
 
     userHasWriteRightsOp(user, opName, teams = [], project = null)
     {
+        if (!user) return false;
+        if (!opName) return false;
+        if (!opName.startsWith(this.PREFIX_OPS)) return false;
+        if (opName.indexOf("..") > -1) return false;
+        if (opName.indexOf(" ") > -1) return false;
+        if (opName.startsWith(".")) return false;
+        if (opName.endsWith(".")) return false;
+
+        const validName = this.isOpNameValid(opName);
+        if (!validName) return false;
+
         const file = this.getOpAbsoluteFileName(opName);
-        if (file && fs.existsSync(file))
+        if (file)
         {
-            try
+            if (fs.existsSync(file))
             {
-                fs.accessSync(file, fs.constants.R_OK | fs.constants.W_OK);
-                return true;
+                try
+                {
+                    fs.accessSync(file, fs.constants.R_OK | fs.constants.W_OK);
+                    return true;
+                }
+                catch (e)
+                {
+                    // not allowed to read/write
+                    return false;
+                }
             }
-            catch (e)
+            else if (this._cables.isPackaged() && file.startsWith(this._cables.getOpsPath()))
             {
-                // not allowed to read/write
                 return false;
             }
+            else
+            {
+                return true;
+            }
         }
-
         return true;
     }
 
