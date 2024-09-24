@@ -268,14 +268,14 @@ class ProjectsUtil extends SharedProjectsUtil
         currentProject.dirs.ops = newOrder.filter((dir) => { return !this.isFixedPositionOpDir(dir); });
         currentProject.dirs.ops = helper.uniqueArray(currentProject.dirs.ops);
         this.writeProjectToFile(currentProjectFile, currentProject);
-        this.reorderOpDirHierarchy(newOrder);
+        this.invalidateProjectCaches();
         return currentProject;
     }
 
     getAbsoluteOpDirFromHierarchy(opName)
     {
         const currentProject = settings.getCurrentProject();
-        if (currentProject && !this._dirInfos) this._dirInfos = this.getOpDirs(currentProject);
+        if (!this._dirInfos) this._dirInfos = this.getOpDirs(currentProject);
         if (!this._dirInfos) return this._opsUtil.getOpSourceNoHierarchy(opName);
 
         for (let i = 0; i < this._dirInfos.length; i++)
