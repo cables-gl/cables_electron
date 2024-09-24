@@ -90,7 +90,7 @@
       "signAndEditExecutable": false,
       "target": [
         {
-          "target": "portable",
+          "target": "zip",
           "arch": [
             "x64"
           ]
