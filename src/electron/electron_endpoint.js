@@ -261,17 +261,19 @@ class ElectronEndpoint
     apiGetProjectOpsCode()
     {
         const project = settings.getCurrentProject();
-        let opDocs = doc.getOpDocs(true, true);
+        let opDocs = doc.getOpDocs(false, false);
+
         let code = "";
         let missingOps = [];
         if (project)
         {
-            if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
+            let allOps = [];
+            if (project.ops) allOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project);
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
-            missingOps = missingOps.concat(opsInProjectDir);
-            missingOps = missingOps.concat(ops);
-            missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
+            allOps = allOps.concat(opsInProjectDir);
+            allOps = allOps.concat(ops);
+            missingOps = allOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId || d.id === op.id; }); });
         }
 
         const opsWithCode = [];
@@ -325,6 +327,7 @@ class ElectronEndpoint
         {
             const attachmentOps = opsUtil.getSubPatchOpAttachment(opName);
             const bpOps = subPatchOpUtil.getOpsUsedInSubPatches(attachmentOps);
+
             if (!bpOps)
             {
                 return code;
@@ -360,6 +363,7 @@ class ElectronEndpoint
                         "opId": opsUtil.getOpIdByObjName(name)
                     });
                 });
+
                 code = opsUtil.buildFullCode(ops, "none");
                 return code;
             }
