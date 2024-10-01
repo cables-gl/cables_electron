@@ -988,6 +988,13 @@ class ElectronApi
         }
     }
 
+    opDelete(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opId) || data.opName;
+        opsUtil.deleteOp(opName);
+        return this.success("OP_DELETED", { "opNames": [opName] });
+    }
+
     async installOpDependencies(opName)
     {
         const results = [];
