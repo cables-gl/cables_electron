@@ -50,6 +50,7 @@ class HelperUtil extends SharedHelperUtil
 
     pathToFileURL(thePath)
     {
+        if (thePath && thePath.startsWith("file:")) return thePath;
         return pathToFileURL(thePath).href;
     }
 

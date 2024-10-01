@@ -1237,27 +1237,22 @@ class ElectronApi
             return this.error("UNKNOWN_FILE");
         }
 
-
-        const project = settings.getCurrentProject();
-        const newPath = path.join(projectsUtil.getAssetPath(project._id), "/");
+        const newPath = helper.fileURLToPath(data.fileName, true);
         if (!fs.existsSync(newPath)) mkdirp.sync(newPath);
-
-        const sanitizedFileName = filesUtil.realSanitizeFilename(data.fileName);
-
         try
         {
-            if (fs.existsSync(newPath + sanitizedFileName))
+            if (fs.existsSync(newPath))
             {
-                this._log.info("delete old file ", sanitizedFileName);
-                fs.unlinkSync(newPath + sanitizedFileName);
+                this._log.info("delete old file ", newPath);
+                fs.unlinkSync(newPath);
             }
         }
         catch (e) {}
 
-        this._log.info("edit file", newPath + sanitizedFileName);
+        this._log.info("edit file", newPath);
 
-        fs.writeFileSync(newPath + sanitizedFileName, data.content);
-        return this.success("OK", { "filename": sanitizedFileName }, true);
+        fs.writeFileSync(newPath, data.content);
+        return this.success("OK", { "filename": newPath }, true);
     }
 
     getProjectOpDirs()
@@ -1519,7 +1514,7 @@ class ElectronApi
     {
         let file = data.name;
         let pickedFileUrl = await electronApp.saveFileDialog(file);
-        if (pickedFileUrl && !fs.existsSync(pickedFileUrl)) fs.writeFileSync(pickedFileUrl, "");
+        if (pickedFileUrl) fs.writeFileSync(pickedFileUrl, "");
         return this.success("OK", pickedFileUrl, true);
     }
 

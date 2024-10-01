@@ -142,10 +142,14 @@ export default class ElectronEditor
 
         this._talker.addEventListener("createFile", (data, next) =>
         {
-            this.api("createFile", data, (r) =>
+            this.api("createFile", data, (error, r) =>
             {
-                const error = r && r.hasOwnProperty("error") ? r.error : null;
                 if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+                if (window.standalone && window.standalone.gui)
+                {
+                    window.standalone.gui.patchView.addAssetOpAuto(r);
+                    window.standalone.gui.fileManagerEditor.editAssetTextFile("file:" + r, "text");
+                }
                 next(error, r);
             });
         });
