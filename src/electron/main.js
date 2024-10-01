@@ -785,6 +785,21 @@ class ElectronApp
         {
             settings.set(settings.OPEN_DEV_TOOLS_FIELD, false);
         });
+
+        this.editorWindow.webContents.session.on("will-download", (event, item, webContents) =>
+        {
+            if (item)
+            {
+                const filename = item.getFilename();
+                const savePath = path.join(settings.getDownloadPath(), filename);
+                // Set the save path, making Electron not to prompt a save dialog.
+                item.setSavePath(savePath);
+                const fileUrl = helper.pathToFileURL(savePath);
+                const cablesUrl = fileUrl.replace("file:", "cables:///openDir/");
+                const link = "<a href=\"" + cablesUrl + "\" download>" + savePath + "</a>";
+                this.sendTalkerMessage("notify", { "msg": "File saved to " + link });
+            }
+        });
     }
 
     _zoomIn()

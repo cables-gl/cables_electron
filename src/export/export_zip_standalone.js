@@ -15,7 +15,6 @@ export default class StandaloneZipExport extends SharedExportService
 
         this.options.hideMadeWithCables = true;
         this.options.combineJs = false;
-        this.options.skipBackups = true;
         this.options.minify = false;
         this.options.handleAssets = "auto";
         this.options.rewriteAssetPorts = true;

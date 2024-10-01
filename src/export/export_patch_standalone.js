@@ -16,7 +16,6 @@ export default class StandaloneExport extends StandaloneZipExport
         this.options.removeIndexHtml = true;
         this.options.rewriteAssetPorts = true;
         this.options.flattenAssetNames = false;
-        this.options.skipBackups = true;
         this.options.handleAssets = "auto";
         this.options.assetsInSubdirs = true;
 

@@ -32,6 +32,7 @@ class ElectronSettings
         this.RECENT_PROJECTS_FIELD = "recentProjects";
         this.OPEN_DEV_TOOLS_FIELD = "openDevTools";
         this.WINDOW_ZOOM_FACTOR = "windowZoomFactor";
+        this.DOWNLOAD_PATH = "downloadPath";
 
         this.opts = {};
         this.opts.defaults = {};
@@ -43,6 +44,7 @@ class ElectronSettings
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
         this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
         this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
+        this.opts.defaults[this.DOWNLOAD_PATH] = app.getPath("downloads");
 
         this.data = this.opts.defaults;
         mkdirp(this.data[this.STORAGEDIR_FIELD]);
@@ -374,6 +376,12 @@ class ElectronSettings
             this._log.error("failed to parse project from projectfile", projectFile, e);
         }
         return null;
+    }
+
+    getDownloadPath()
+    {
+        const customDownloadPath = this.get(this.DOWNLOAD_PATH);
+        return customDownloadPath || app.getPath("downloads");
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData")));

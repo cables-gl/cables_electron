@@ -1,4 +1,4 @@
-import { protocol, session, net } from "electron";
+import { protocol, session, net, shell } from "electron";
 import fs from "fs";
 import path from "path";
 
@@ -238,6 +238,13 @@ class ElectronEndpoint
                     await electronApp.pickProjectFileDialog();
                 }
                 return new Response(null, { "status": 302 });
+            }
+            else if (urlPath.startsWith("/openDir/"))
+            {
+                let dir = urlPath.replace("/openDir/", "");
+                // dir = path.dirname(dir);
+                await shell.showItemInFolder(dir);
+                return new Response(null, { "status": 404 });
             }
             else
             {
