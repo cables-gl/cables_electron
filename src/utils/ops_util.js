@@ -99,6 +99,12 @@ class OpsUtil extends SharedOpsUtil
         return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
     }
 
+    getOpTargetDir(opName, relative = false)
+    {
+        if (relative) return super.getOpTargetDir(opName, relative);
+        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+    }
+
     getOpSourceNoHierarchy(opName, relative = false)
     {
         return super.getOpSourceDir(opName, relative);
@@ -214,6 +220,41 @@ class OpsUtil extends SharedOpsUtil
             });
         }
         return toInstall;
+    }
+
+    renameToCoreOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, true, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToExtensionOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, true, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToTeamOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, false, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToUserOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, false, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToPatchOp(oldName, newName, currentUser, removeOld, newId, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
     }
 }
 export default new OpsUtil(utilProvider);

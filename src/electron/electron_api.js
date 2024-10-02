@@ -909,11 +909,15 @@ class ElectronApi
         const newName = data.name;
         const oldName = opsUtil.getOpNameById(data.opname) || data.opname;
         const currentUser = settings.getCurrentUser();
-        return this.success("OK", opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir), true);
+        const cloned = opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir);
+        projectsUtil.invalidateProjectCaches();
+        return this.success("OK", cloned, true);
     }
 
     opRename(data)
     {
+        projectsUtil.invalidateProjectCaches();
+
         const oldId = data.opname;
         const newName = data.name;
         const oldName = opsUtil.getOpNameById(oldId);
@@ -976,6 +980,8 @@ class ElectronApi
         {
             renameSuccess = opsUtil.renameToCoreOp(oldName, newName, currentUser, removeOld);
         }
+
+        projectsUtil.invalidateProjectCaches();
 
         if (!renameSuccess)
         {

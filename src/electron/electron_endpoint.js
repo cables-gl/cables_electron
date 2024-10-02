@@ -310,6 +310,7 @@ class ElectronEndpoint
                         opsWithCode.push(opName);
                     }
                 }
+                doc.addOpToLookup(opId, opName);
             }
         });
 
