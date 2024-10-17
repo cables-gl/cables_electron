@@ -379,12 +379,33 @@ class ElectronApi
                 const packageDir = opsUtil.getOpAbsolutePath(opName);
                 result.dependenciesOutput = await electronApp.installPackages(packageDir, opPackages, opName);
             }
+            result.opDocs = doc.makeReadable(opDocs);
+            result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
+            const c = doc.getOpDocMd(opName);
+            if (c) result.content = marked(c || "");
+            return this.success("OK", result, true);
         }
-        result.opDocs = doc.makeReadable(opDocs);
-        result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
-        const c = doc.getOpDocMd(opName);
-        if (c) result.content = marked(c || "");
-        return this.success("OK", result, true);
+        else
+        {
+            let title = "Failed to load op";
+            const reasons = [
+                "Could not find op with id " + data + " in:",
+                ""
+            ];
+
+            const currentProject = settings.getCurrentProject();
+            console.log("current", currentProject);
+            const projectOpDirs = projectsUtil.getProjectOpDirs(currentProject, true);
+            projectOpDirs.forEach((projectOpDir) =>
+            {
+                const link = "<a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + projectOpDir + "'});\"><span class=\"icon icon-folder\"></span> " + projectOpDir + "</a>";
+                reasons.push(link);
+            });
+
+            reasons.push("", "Try adding other directories via 'Manage Op Directories' after loading the patch.");
+
+            return this.error({ "title": title, "reasons": reasons }, {}, "error");
+        }
     }
 
     saveOpCode(data)
@@ -694,7 +715,7 @@ class ElectronApi
         if (project)
         {
             return this.success("OK", {
-                "updated": project.updated,
+                "updated": null,
                 "updatedByUser": project.updatedByUser,
                 "buildInfo": project.buildInfo,
                 "maintenance": false,
@@ -867,7 +888,8 @@ class ElectronApi
         let opName = data.opname;
         if (opsUtil.isOpId(data.opname)) opName = opsUtil.getOpNameById(data.opname);
         const currentUser = settings.getCurrentUser();
-        return this.success("OK", { "data": opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode }) }, true);
+        const result = opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode });
+        return this.success("OK", { "data": result }, true);
     }
 
     opSaveLayout(data)
@@ -1264,7 +1286,7 @@ class ElectronApi
     getProjectOpDirs()
     {
         const currentProject = settings.getCurrentProject();
-        const dirInfos = projectsUtil.getOpDirs(currentProject);
+        const dirInfos = projectsUtil.getOpDirs(currentProject, false);
         return this.success("OK", dirInfos);
     }
 

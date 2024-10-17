@@ -85,9 +85,10 @@ class ElectronSettings
             if (dir && id)
             {
                 this.data.paths.assetPath = path.join(dir, "assets", id, "/");
-            }else{
+            }
+            else
+            {
                 this.data.paths.assetPath = path.join(".", "assets", id, "/");
-
             }
             if (process.platform === "win32")
             {
@@ -119,7 +120,7 @@ class ElectronSettings
     getCurrentProjectDir()
     {
         let value = this.get(this.CURRENTPROJECTDIR_FIELD);
-        if (value && !value.endsWith("/")) value += "/";
+        if (value && !value.endsWith("/")) value = path.join(value, "/");
         return value;
     }
 

@@ -184,7 +184,7 @@ export default class ElectronEditor
             "getLibraryFileInfo": {},
             "checkOpName": {},
             "getRecentPatches": {},
-            "opCreate": { },
+            "opCreate": { "needsProjectFile": true },
             "opRename": { },
             "opUpdate": {},
             "opDelete": {},

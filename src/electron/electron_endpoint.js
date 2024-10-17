@@ -189,18 +189,28 @@ class ElectronEndpoint
                 {
                     opName = opsUtil.getOpNameById(opName);
                 }
-                const opCode = this.apiGetOpCode({ "opName": opName });
-                if (opCode)
+                if (opName)
                 {
-                    return new Response(opCode, {
-                        "headers": { "content-type": "application/javascript" }
-                    });
+                    const opCode = this.apiGetOpCode({ "opName": opName });
+                    if (opCode)
+                    {
+                        return new Response(opCode, {
+                            "headers": { "content-type": "application/javascript" }
+                        });
+                    }
+                    else
+                    {
+                        return new Response(opCode, {
+                            "headers": { "content-type": "application/javascript" },
+                            "status": 500
+                        });
+                    }
                 }
                 else
                 {
-                    return new Response(opCode, {
+                    return new Response("", {
                         "headers": { "content-type": "application/javascript" },
-                        "status": 500
+                        "status": 404
                     });
                 }
             }

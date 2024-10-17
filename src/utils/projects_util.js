@@ -76,14 +76,19 @@ class ProjectsUtil extends SharedProjectsUtil
     getProjectOpDirs(project, includeOsDir = true, reverse = false)
     {
         let opsDirs = [];
+
+        const projectDir = settings.getCurrentProjectDir();
+        if (projectDir)
+        {
+            const currentDir = path.join(projectDir, "ops/");
+            if (fs.existsSync(currentDir)) opsDirs.push(currentDir);
+        }
+
         if (project && project.dirs && project.dirs.ops)
         {
-            const projectDir = settings.getCurrentProjectDir();
-            // const currentDir = path.join(projectDir, "ops");
-            // if (fs.existsSync(currentDir)) opsDirs.push(currentDir);
             project.dirs.ops.forEach((dir) =>
             {
-                if (!path.isAbsolute(dir)) dir = path.join(projectDir, dir);
+                if (projectDir && !path.isAbsolute(dir)) dir = path.join(projectDir, dir);
                 opsDirs.push(dir);
             });
         }
