@@ -48,10 +48,17 @@ class HelperUtil extends SharedHelperUtil
         }
     }
 
-    pathToFileURL(thePath)
+    pathToFileURL(thePath, convertRelativeToProject = false)
     {
         if (thePath && thePath.startsWith("file:")) return thePath;
-        return pathToFileURL(thePath).href;
+        if (convertRelativeToProject && !path.isAbsolute(thePath))
+        {
+            return pathToFileURL(path.join(cables.getAssetPath(), thePath)).href;
+        }
+        else
+        {
+            return pathToFileURL(thePath).href;
+        }
     }
 
     isLocalAssetPath(thePath)
