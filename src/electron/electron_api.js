@@ -394,7 +394,6 @@ class ElectronApi
             ];
 
             const currentProject = settings.getCurrentProject();
-            console.log("current", currentProject);
             const projectOpDirs = projectsUtil.getProjectOpDirs(currentProject, true);
             projectOpDirs.forEach((projectOpDir) =>
             {
