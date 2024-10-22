@@ -248,7 +248,14 @@ CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = () =>
 };
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.uploadFileDialog = () =>
 {
-    standalone.editor.api("openAssetDir", (_err, r) => {});
+    standalone.editor.api("selectFile", {}, (_err, filepath) =>
+    {
+        if (!_err && filepath)
+        {
+            const gui = standalone.gui;
+            if (gui) gui.patchView.addAssetOpAuto(filepath);
+        }
+    });
 };
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.newPatch = () =>
 {
