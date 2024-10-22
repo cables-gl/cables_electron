@@ -33,10 +33,10 @@ export default class ElectronEditor
 {
     constructor(params)
     {
-        this._config = params.config;
+        this.config = params.config;
         const frame = document.getElementById("editorIframe");
         this._talker = new TalkerAPI(frame.contentWindow);
-        this._patchId = this._config.patchId;
+        this._patchId = this.config.patchId;
 
         window.addEventListener("unhandledrejection", (e) =>
         {
@@ -63,7 +63,7 @@ export default class ElectronEditor
          */
         this._talker.addEventListener("requestPatchData", (data, next) =>
         {
-            if (next) next(this._config);
+            if (next) next(this.config);
         });
 
         /**
