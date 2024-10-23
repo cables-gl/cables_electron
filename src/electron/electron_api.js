@@ -78,7 +78,7 @@ class ElectronApi
     async talkerMessage(cmd, data, topicConfig = {})
     {
         let response = null;
-        if (!cmd) return this.error("UNKNOWN_COMMAND");
+        if (!cmd) return this.error("UNKNOWN_COMMAND", null, "warn");
         if (typeof this[cmd] === "function")
         {
             if (topicConfig.needsProjectFile)
@@ -210,7 +210,7 @@ class ElectronApi
         if (!projectFile)
         {
             logger.info("no backup file chosen");
-            return this.error("UNKNOWN_PROJECT");
+            return this.error("no backup file chosen", null, "info");
         }
 
         const backupProject = projectsUtil.getBackup(currentProject);
@@ -308,9 +308,10 @@ class ElectronApi
         projectOps = helper.uniqueArray(projectOps);
         usedOpIds = helper.uniqueArray(usedOpIds);
         projectNamespaces = helper.uniqueArray(projectNamespaces);
+        const coreOpDocs = doc.getOpDocs();
         projectOps.forEach((opName) =>
         {
-            let opDoc = doc.buildOpDocs(opName);
+            let opDoc = doc.getDocForOp(opName, coreOpDocs);
             if (opDoc)
             {
                 if (!opDoc.name) opDoc.name = opName;
@@ -1209,7 +1210,7 @@ class ElectronApi
         if (!projectFile)
         {
             logger.info("no project dir chosen");
-            return this.error("UNKNOWN_PROJECT");
+            return this.error("no project dir chosen", null, "info");
         }
 
         let collaborators = [];
@@ -1321,7 +1322,7 @@ class ElectronApi
     saveProjectOpDirOrder(order)
     {
         let currentProject = settings.getCurrentProject();
-        if (!currentProject || !order) return this.error("NO_PROJECT");
+        if (!currentProject || !order) return this.error("NO_PROJECT", null, "warn");
         currentProject = projectsUtil.reorderOpDirs(currentProject, order);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
@@ -1406,7 +1407,7 @@ class ElectronApi
         return this.success("OK", movedOps);
     }
 
-    loadProject(projectFile, newProject = null)
+    loadProject(projectFile, newProject = null, rebuildCache = true)
     {
         let project = newProject;
         if (projectFile)
@@ -1415,7 +1416,7 @@ class ElectronApi
             if (project)
             {
                 settings.setProject(projectFile, project);
-                projectsUtil.invalidateProjectCaches();
+                if (rebuildCache) projectsUtil.invalidateProjectCaches();
                 // add ops in project dirs to lookup
                 projectsUtil.getOpDocsInProjectDirs(project, true);
                 filesUtil.registerAssetChangeListeners(project, true);

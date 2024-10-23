@@ -73,7 +73,7 @@ class ProjectsUtil extends SharedProjectsUtil
         };
     }
 
-    getProjectOpDirs(project, includeOsDir = true, reverse = false)
+    getProjectOpDirs(project, includeOsDir = true, reverse = false, addLocalCoreIfPackaged = true)
     {
         let opsDirs = [];
 
@@ -97,7 +97,7 @@ class ProjectsUtil extends SharedProjectsUtil
             const osOpsDir = cables.getOsOpsDir();
             if (osOpsDir) opsDirs.push(osOpsDir);
         }
-        if (!cables.isPackaged())
+        if (addLocalCoreIfPackaged && !cables.isPackaged())
         {
             opsDirs.push(cables.getExtensionOpsPath());
             opsDirs.push(cables.getCoreOpsPath());
@@ -310,7 +310,7 @@ class ProjectsUtil extends SharedProjectsUtil
         if (this._projectOpDocs && !rebuildCache) return this._projectOpDocs;
 
         const opDocs = {};
-        const opDirs = this.getProjectOpDirs(project, true);
+        const opDirs = this.getProjectOpDirs(project, true, false, false);
 
         opDirs.forEach((opDir) =>
         {

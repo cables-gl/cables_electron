@@ -278,12 +278,12 @@ class ElectronEndpoint
     apiGetProjectOpsCode()
     {
         const project = settings.getCurrentProject();
-        let opDocs = doc.getOpDocs(false, false);
 
         let code = "";
         let missingOps = [];
         if (project)
         {
+            let opDocs = doc.getOpDocs(false, false);
             let allOps = [];
             if (project.ops) allOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project);

@@ -237,7 +237,7 @@ class ElectronApp
         {
             this._registerListeners();
             this._registerShortcuts();
-            this.openPatch(patchFile).then(() =>
+            this.openPatch(patchFile, false).then(() =>
             {
                 this._log.logStartup("electron loaded");
             });
@@ -533,10 +533,9 @@ class ElectronApp
         this._unsavedContentLeave = false;
         const open = async () =>
         {
-            electronApi.loadProject(patchFile);
+            electronApi.loadProject(patchFile, null, rebuildCache);
             this.updateTitle();
             await this.editorWindow.loadFile("index.html");
-            this._log.logStartup("loaded", patchFile);
             const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
             this._resetZoom();
             if (rebuildCache) doc.rebuildOpCaches(() => { this._log.logStartup("rebuild op caches"); }, ["core", "teams", "extensions"], true);
@@ -959,6 +958,7 @@ app.on("will-quit", (event) =>
     });
 });
 
+Menu.setApplicationMenu(null);
 app.whenReady().then(() =>
 {
     electronApp.init();
