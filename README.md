@@ -1,7 +1,7 @@
 # Cables Standalone Version
 
 [cables.gl](https://cables.gl) and [cables standalone](https://cables.gl/standalone) are mainly developed by [undev](https://undev.studio/),
-with contributions by the [cables community](https://discord.gg/cablesgl) and support by [various other parties and projects](https://cables.gl/credits).
+with contributions by the [cables community](https://discord.gg/cablesgl) and support by [various other parties and projects](https://cables.gl/support).
 
 ## In Development
 
@@ -118,7 +118,7 @@ this.editorWindow = new BrowserWindow({
 
 ## Appreciation
 
-Thanks to the [cables community](https://discord.gg/cablesgl) and our [supporters](https://cables.gl/credits) for making this possible. If you like this project, think about supporting it on [patreon](https://www.patreon.com/cables_gl).
+Thanks to the [cables community](https://discord.gg/cablesgl) and our [supporters](https://cables.gl/support) for making this possible. If you like this project, think about supporting it on [patreon](https://www.patreon.com/cables_gl).
 
 This project was partly funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust/), a fund established by [NLnet](https://nlnet.nl/) with financial support
 from the European Commission's [Next Generation Internet](https://www.ngi.eu/) programme, under the aegis of [DG Communications Networks](https://commission.europa.eu/about-european-commission/departments-and-executive-agencies/communications-networks-content-and-technology_en),
