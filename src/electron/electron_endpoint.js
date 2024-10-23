@@ -218,18 +218,11 @@ class ElectronEndpoint
             {
                 let opName = urlPath.split("/", 4)[3];
                 if (opName) opName = opName.replace(/.png$/, "");
-                const buffer = opsUtil.getScreenshot(opName);
-                const bufferSize = buffer ? Buffer.byteLength(buffer) : 0;
-                const headers = {
-                    "Content-Type": "image/png",
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": bufferSize,
-                    "Content-Range": "bytes 0-" + bufferSize + "/" + (bufferSize + 1),
-                };
-                return new Response(buffer, {
-                    "data": buffer,
-                    "headers": headers
-                });
+                const absoluteFile = opsUtil.getOpAbsolutePath(opName);
+                const file = path.join(absoluteFile, "screenshot.png");
+                const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(response, file);
+                return response;
             }
             else if (urlPath.startsWith("/edit/"))
             {
