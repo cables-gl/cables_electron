@@ -1182,6 +1182,7 @@ class ElectronApi
                 let file = data.dir;
                 pickedFileUrl = await electronApp.pickFileDialog(file);
             }
+            pickedFileUrl = helper.pathToFileURL(pickedFileUrl);
             return this.success("OK", pickedFileUrl, true);
         }
         else

@@ -286,19 +286,7 @@ class FilesUtil extends SharedFilesUtil
         const dirNames = Object.keys(fileHierarchy);
         for (let dirName of dirNames)
         {
-            let displayName = dirName;
-            if (dirName === projectDir)
-            {
-                displayName = "Project Directory";
-            }
-            else if (dirName.startsWith(projectDir))
-            {
-                displayName = path.join(dirName.replace(projectDir, ""), "/");
-            }
-            else
-            {
-                displayName = path.join(dirName, "/");
-            }
+            let displayName = path.join(dirName, "/");
 
             arr.push({
                 "d": true,
