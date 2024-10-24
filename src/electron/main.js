@@ -36,6 +36,7 @@ class ElectronApp
 
         this.editorWindow = null;
 
+
         settings.set("uiLoadStart", this._log.loadStart);
         this._log.logStartup("started electron");
 
@@ -211,7 +212,7 @@ class ElectronApp
 
         this.editorWindow = new BrowserWindow({
             "width": 1920,
-            "height": 1080,
+            "height": 1000,
             "backgroundColor": "#222",
             "icon": this.appIcon,
             "autoHideMenuBar": true,
@@ -232,6 +233,8 @@ class ElectronApp
                 "autoplayPolicy": "no-user-gesture-required"
             }
         });
+
+        this.editorWindow.setBounds({ "x": 0, "y": 0, "width": 1920, "height": 1000 });
 
         this._initCaches(() =>
         {
