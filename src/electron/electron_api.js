@@ -404,7 +404,7 @@ class ElectronApi
 
             reasons.push("", "Try adding other directories via 'Manage Op Directories' after loading the patch.");
 
-            return this.error({ "title": title, "reasons": reasons }, {}, "error");
+            return this.error({ "title": title, "reasons": reasons }, { "title": title, "reasons": reasons }, "error");
         }
     }
 
