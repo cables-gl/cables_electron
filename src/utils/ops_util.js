@@ -1,7 +1,6 @@
 import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 import path from "path";
 import fs from "fs";
-import settings from "../electron/electron_settings.js";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
 
