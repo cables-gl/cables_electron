@@ -84,7 +84,7 @@ class ElectronSettings
             {
                 this.data.paths.assetPath = path.join(dir, "assets", id, "/");
             }
-            else
+            else if (id)
             {
                 this.data.paths.assetPath = path.join(".", "assets", id, "/");
             }
