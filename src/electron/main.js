@@ -34,6 +34,8 @@ class ElectronApp
         this.appName = "name" in app ? app.name : app.getName();
         this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
 
+        this._defaultWindowBounds = { "width": 1920, "height": 1080 };
+
         this.editorWindow = null;
 
 
@@ -210,9 +212,9 @@ class ElectronApp
             this._initialPatchFile = null;
         }
 
-        this.editorWindow = new BrowserWindow({
+        const defaultWindowOptions = {
             "width": 1920,
-            "height": 1000,
+            "height": 1080,
             "backgroundColor": "#222",
             "icon": this.appIcon,
             "autoHideMenuBar": true,
@@ -232,9 +234,18 @@ class ElectronApp
                 "backgroundThrottling": false,
                 "autoplayPolicy": "no-user-gesture-required"
             }
-        });
+        };
 
-        this.editorWindow.setBounds({ "x": 0, "y": 0, "width": 1920, "height": 1000 });
+        this.editorWindow = new BrowserWindow(defaultWindowOptions);
+
+        let windowBounds = this._defaultWindowBounds;
+        if (settings.getUserSetting("storeWindowBounds", true))
+        {
+            const userWindowBounds = settings.get(settings.WINDOW_BOUNDS);
+            if (userWindowBounds) windowBounds = userWindowBounds;
+        }
+
+        this.editorWindow.setBounds(windowBounds);
 
         this._initCaches(() =>
         {
@@ -458,6 +469,13 @@ class ElectronApp
                         "visible": isOsX
                     },
                     { "role": "togglefullscreen" },
+                    {
+                        "label": "Reset Size and Position",
+                        "click": () =>
+                        {
+                            this._resetSizeAndPostion();
+                        }
+                    },
                     { "type": "separator" },
                     {
                         "label": "Zoom In",
@@ -492,7 +510,7 @@ class ElectronApp
                         }
                     },
                     {
-                        "label": "Insepect elements",
+                        "label": "Insepect Elements",
                         "accelerator": inspectElementAcc,
                         "click": () =>
                         {
@@ -756,6 +774,11 @@ class ElectronApp
             win.setMenuBarVisibility(false);
         });
 
+        this.editorWindow.on("close", () =>
+        {
+            if (settings.getUserSetting("storeWindowBounds", true)) settings.set(settings.WINDOW_BOUNDS, this.editorWindow.getBounds());
+        });
+
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
             if (!this._unsavedContentLeave && this.isDocumentEdited())
@@ -825,6 +848,15 @@ class ElectronApp
     _resetZoom()
     {
         this.editorWindow.webContents.setZoomFactor(1.0);
+    }
+
+    _resetSizeAndPostion()
+    {
+        if (this.editorWindow)
+        {
+            this.editorWindow.setBounds(this._defaultWindowBounds);
+            this.editorWindow.center();
+        }
     }
 
     _initCaches(cb)

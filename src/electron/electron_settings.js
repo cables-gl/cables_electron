@@ -3,14 +3,11 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import { app } from "electron";
 import jsonfile from "jsonfile";
-import * as os from "os";
 import helper from "../utils/helper_util.js";
 import logger from "../utils/logger.js";
 import projectsUtil from "../utils/projects_util.js";
 import cables from "../cables.js";
 import electronApp from "./main.js";
-import opsUtil from "../utils/ops_util.js";
-import filesUtil from "../utils/files_util.js";
 
 class ElectronSettings
 {
@@ -32,6 +29,7 @@ class ElectronSettings
         this.RECENT_PROJECTS_FIELD = "recentProjects";
         this.OPEN_DEV_TOOLS_FIELD = "openDevTools";
         this.WINDOW_ZOOM_FACTOR = "windowZoomFactor";
+        this.WINDOW_BOUNDS = "windowBounds";
         this.DOWNLOAD_PATH = "downloadPath";
 
         this.opts = {};
