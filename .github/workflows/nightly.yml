@@ -6,6 +6,14 @@ on:
     - cron:  '0 3 * * *'
 
 jobs:
+  cleanup:
+    uses: sgpublic/delete-release-action@v1.1
+    with:
+      pre-release-drop: true
+      pre-release-keep-count: 5
+      pre-release-drop-tag: true
+    env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
   draft_release:
     runs-on: ubuntu-latest
     outputs:
@@ -61,3 +69,4 @@ jobs:
       sign: true
       notarize: true
     secrets: inherit
+
