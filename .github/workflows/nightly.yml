@@ -7,13 +7,16 @@ on:
 
 jobs:
   cleanup:
-    uses: sgpublic/delete-release-action@v1.1
-    with:
-      pre-release-drop: true
-      pre-release-keep-count: 5
-      pre-release-drop-tag: true
-    env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: cleanup pre-releases
+        uses: sgpublic/delete-release-action@v1.1
+        with:
+          pre-release-drop: true
+          pre-release-keep-count: 5
+          pre-release-drop-tag: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
   draft_release:
     runs-on: ubuntu-latest
     outputs:
