@@ -16,7 +16,7 @@ jobs:
           pre-release-keep-count: 5
           pre-release-drop-tag: true
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   draft_release:
     runs-on: ubuntu-latest
     outputs:
