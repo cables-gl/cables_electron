@@ -6,18 +6,6 @@ on:
     - cron:  '0 3 * * *'
 
 jobs:
-  cleanup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: cleanup pre-releases
-        uses: dev-drprasad/delete-older-releases@v0.3.4
-        with:
-          keep_latest: 6
-          delete_prerelease_only: true
-          delete_tags: true
-          delete_tag_pattern: nightly-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   draft_release:
     runs-on: ubuntu-latest
     outputs:
