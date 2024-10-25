@@ -15,6 +15,5 @@ jobs:
           keep_latest: 6
           delete_prerelease_only: true
           delete_tags: true
-          delete_tag_pattern: ^nightly-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
