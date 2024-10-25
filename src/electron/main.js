@@ -21,6 +21,7 @@ app.commandLine.appendSwitch("unsafely-disable-devtools-self-xss-warnings");
 app.commandLine.appendSwitch("lang", "EN");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
+app.commandLine.appendSwitch("disable-hid-blocklist");
 
 app.disableDomainBlockingFor3DAPIs();
 
