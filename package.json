@@ -90,12 +90,6 @@
       "signAndEditExecutable": false,
       "target": [
         {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
           "target": "portable",
           "arch": [
             "x64"
