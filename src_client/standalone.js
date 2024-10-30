@@ -125,6 +125,7 @@ export default class CablesStandalone
                 "platformClass": "PlatformStandalone",
                 "urlCables": "cables://",
                 "urlSandbox": "cables://",
+                "communityUrl": this._config.communityUrl,
                 "user": this._settings.currentUser,
                 "usersettings": { "settings": this._usersettings },
                 "isDevEnv": !this._config.isPackaged,
@@ -137,7 +138,7 @@ export default class CablesStandalone
                 "patchConfig": {
                     "allowEdit": true,
                     "prefixAssetPath": this._settings.currentPatchDir,
-                    "assetPath": this._settings.currentPatchDir,
+                    "assetPath": this._settings.paths.assetPath,
                     "paths": this._settings.paths
                 },
             }
@@ -213,15 +214,12 @@ export default class CablesStandalone
         try
         {
             const modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
-            const theModule = window.nodeRequire(modulePath);
-            this._log.info("trying to load ", modulePath);
-            return theModule;
+            return window.nodeRequire(modulePath);
         }
         catch (e)
         {
             try
             {
-                this._log.info("trying to load native module ", moduleName);
                 return window.nodeRequire(moduleName);
             }
             catch (e2)

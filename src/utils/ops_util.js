@@ -1,7 +1,6 @@
 import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 import path from "path";
 import fs from "fs";
-import settings from "../electron/electron_settings.js";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
 
@@ -14,6 +13,13 @@ class OpsUtil extends SharedOpsUtil
             "error": false,
             "message": null
         };
+    }
+
+    isCoreOp(opName)
+    {
+        const opsDir = this._cables.getCoreOpsPath();
+        const opDir = this.getOpSourceDir(opName);
+        return opDir.startsWith(opsDir);
     }
 
     addPermissionsToOps(opDocs, user, teams = [], project = null)
@@ -42,33 +48,65 @@ class OpsUtil extends SharedOpsUtil
 
     userHasWriteRightsOp(user, opName, teams = [], project = null)
     {
+        if (!user) return false;
+        if (!opName) return false;
+        if (!opName.startsWith(this.PREFIX_OPS)) return false;
+        if (opName.indexOf("..") > -1) return false;
+        if (opName.indexOf(" ") > -1) return false;
+        if (opName.startsWith(".")) return false;
+        if (opName.endsWith(".")) return false;
+
+        const validName = this.isOpNameValid(opName);
+        if (!validName) return false;
+
         const file = this.getOpAbsoluteFileName(opName);
-        if (file && fs.existsSync(file))
+        if (file)
         {
-            try
+            if (fs.existsSync(file))
             {
-                fs.accessSync(file, fs.constants.R_OK | fs.constants.W_OK);
-                return true;
+                try
+                {
+                    fs.accessSync(file, fs.constants.R_OK | fs.constants.W_OK);
+                    return true;
+                }
+                catch (e)
+                {
+                    // not allowed to read/write
+                    return false;
+                }
             }
-            catch (e)
+            else if (this._cables.isPackaged() && file.startsWith(this._cables.getOpsPath()))
             {
-                // not allowed to read/write
                 return false;
             }
+            else
+            {
+                return true;
+            }
         }
-
         return true;
     }
 
     getOpAbsolutePath(opName)
     {
-        return this._getAbsoluteOpDirFromHierarchy(opName, super.getOpAbsolutePath(opName));
+        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
     }
 
     getOpSourceDir(opName, relative = false)
     {
         if (relative) return super.getOpSourceDir(opName, relative);
-        return this._getAbsoluteOpDirFromHierarchy(opName, super.getOpSourceDir(opName));
+        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+    }
+
+    getOpTargetDir(opName, relative = false)
+    {
+        if (relative) return super.getOpTargetDir(opName, relative);
+        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+    }
+
+    getOpSourceNoHierarchy(opName, relative = false)
+    {
+        return super.getOpSourceDir(opName, relative);
     }
 
     getOpRenameConsequences(newName, oldName, targetDir = null)
@@ -131,22 +169,6 @@ class OpsUtil extends SharedOpsUtil
         return assetPorts;
     }
 
-    _getAbsoluteOpDirFromHierarchy(opName, defaultDir)
-    {
-        const relativePath = super.getOpSourceDir(opName, true);
-        if (relativePath)
-        {
-            const dirs = projectsUtil.getProjectOpDirs(settings.getCurrentProject());
-            for (let i = 0; i < dirs.length; i++)
-            {
-                const dir = dirs[i];
-                const opPath = path.join(dir, relativePath);
-                if (fs.existsSync(opPath)) return opPath;
-            }
-        }
-        return defaultDir;
-    }
-
     getOpNameByAbsoluteFileName(fileName)
     {
         if (!fileName) return "";
@@ -157,10 +179,13 @@ class OpsUtil extends SharedOpsUtil
 
     updateOpCode(opName, author, code)
     {
-        return filesUtil.runUnWatched(opName, () =>
+        filesUtil.unregisterOpChangeListeners([opName]);
+        const newCode = super.updateOpCode(opName, author, code);
+        setTimeout(() =>
         {
-            return super.updateOpCode(opName, author, code);
-        });
+            filesUtil.registerOpChangeListeners([opName]);
+        }, 1000);
+        return newCode;
     }
 
     getOpNpmPackages(opName)
@@ -194,6 +219,41 @@ class OpsUtil extends SharedOpsUtil
             });
         }
         return toInstall;
+    }
+
+    renameToCoreOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, true, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToExtensionOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, true, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToTeamOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, false, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToUserOp(oldName, newName, currentUser, removeOld, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, false, removeOld, false, oldOpDir, newOpDir, cb);
+    }
+
+    renameToPatchOp(oldName, newName, currentUser, removeOld, newId, cb = null)
+    {
+        let oldOpDir = this.getOpSourceDir(oldName);
+        let newOpDir = oldOpDir.replace(oldName, newName);
+        return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
     }
 }
 export default new OpsUtil(utilProvider);

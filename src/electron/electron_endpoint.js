@@ -1,4 +1,4 @@
-import { protocol, session, net } from "electron";
+import { protocol, session, net, shell } from "electron";
 import fs from "fs";
 import path from "path";
 
@@ -10,6 +10,7 @@ import subPatchOpUtil from "../utils/subpatchop_util.js";
 import settings from "./electron_settings.js";
 import helper from "../utils/helper_util.js";
 import electronApp from "./main.js";
+import projectsUtil from "../utils/projects_util.js";
 
 
 protocol.registerSchemesAsPrivileged([
@@ -45,25 +46,32 @@ class ElectronEndpoint
         ses.protocol.handle("file", async (request) =>
         {
             let urlFile = request.url;
-            let actualFile = helper.fileURLToPath(urlFile, true);
-            if (fs.existsSync(actualFile))
+            let absoluteFile = helper.fileURLToPath(urlFile, false);
+            let projectFile = helper.fileURLToPath(urlFile, true);
+            if (fs.existsSync(absoluteFile))
             {
-                const response = await net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
-                this._addDefaultHeaders(response, actualFile);
+                const response = await net.fetch(helper.pathToFileURL(absoluteFile), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(response, absoluteFile);
+                return response;
+            }
+            else if (fs.existsSync(projectFile))
+            {
+                const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(response, projectFile);
                 return response;
             }
             else
             {
                 try
                 {
-                    if (actualFile.includes("?"))
+                    if (projectFile.includes("?"))
                     {
-                        actualFile = actualFile.split("?")[0];
+                        projectFile = projectFile.split("?")[0];
                     }
-                    if (fs.existsSync(actualFile))
+                    if (fs.existsSync(projectFile))
                     {
-                        const response = await net.fetch(helper.pathToFileURL(actualFile), { "bypassCustomProtocolHandlers": true });
-                        this._addDefaultHeaders(response, actualFile);
+                        const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
+                        this._addDefaultHeaders(response, projectFile);
                         return response;
                     }
                     else
@@ -181,20 +189,40 @@ class ElectronEndpoint
                 {
                     opName = opsUtil.getOpNameById(opName);
                 }
-                const opCode = this.apiGetOpCode({ "opName": opName });
-                if (opCode)
+                if (opName)
                 {
-                    return new Response(opCode, {
-                        "headers": { "content-type": "application/javascript" }
-                    });
+                    const opCode = this.apiGetOpCode({ "opName": opName });
+                    if (opCode)
+                    {
+                        return new Response(opCode, {
+                            "headers": { "content-type": "application/javascript" }
+                        });
+                    }
+                    else
+                    {
+                        return new Response(opCode, {
+                            "headers": { "content-type": "application/javascript" },
+                            "status": 500
+                        });
+                    }
                 }
                 else
                 {
-                    return new Response(opCode, {
+                    return new Response("", {
                         "headers": { "content-type": "application/javascript" },
-                        "status": 500
+                        "status": 404
                     });
                 }
+            }
+            else if (urlPath.startsWith("/op/screenshot"))
+            {
+                let opName = urlPath.split("/", 4)[3];
+                if (opName) opName = opName.replace(/.png$/, "");
+                const absoluteFile = opsUtil.getOpAbsolutePath(opName);
+                const file = path.join(absoluteFile, "screenshot.png");
+                const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(response, file);
+                return response;
             }
             else if (urlPath.startsWith("/edit/"))
             {
@@ -213,6 +241,13 @@ class ElectronEndpoint
                     await electronApp.pickProjectFileDialog();
                 }
                 return new Response(null, { "status": 302 });
+            }
+            else if (urlPath.startsWith("/openDir/"))
+            {
+                let dir = urlPath.replace("/openDir/", "");
+                // dir = path.dirname(dir);
+                await shell.showItemInFolder(dir);
+                return new Response(null, { "status": 404 });
             }
             else
             {
@@ -236,21 +271,24 @@ class ElectronEndpoint
     apiGetProjectOpsCode()
     {
         const project = settings.getCurrentProject();
-        let opDocs = doc.getOpDocs(true, true);
+
         let code = "";
         let missingOps = [];
         if (project)
         {
-            if (project.ops) missingOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-
-            const opsInProjectDir = doc.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
+            let opDocs = doc.getOpDocs(false, false);
+            let allOps = [];
+            if (project.ops) allOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
+            const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project);
             const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
-            missingOps = missingOps.concat(opsInProjectDir);
-            missingOps = missingOps.concat(ops);
-            missingOps = missingOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
+            allOps = allOps.concat(opsInProjectDir);
+            allOps = allOps.concat(ops);
+            missingOps = allOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId || d.id === op.id; }); });
         }
+
         const opsWithCode = [];
         let codeNamespaces = [];
+
         missingOps.forEach((missingOp) =>
         {
             const opId = missingOp.opId || missingOp.id;
@@ -275,6 +313,7 @@ class ElectronEndpoint
                         opsWithCode.push(opName);
                     }
                 }
+                doc.addOpToLookup(opId, opName);
             }
         });
 
@@ -299,6 +338,7 @@ class ElectronEndpoint
         {
             const attachmentOps = opsUtil.getSubPatchOpAttachment(opName);
             const bpOps = subPatchOpUtil.getOpsUsedInSubPatches(attachmentOps);
+
             if (!bpOps)
             {
                 return code;
@@ -319,6 +359,7 @@ class ElectronEndpoint
                 {
                     const collectionName = opsUtil.getCollectionNamespace(opName);
                     opNames = opNames.concat(opsUtil.getCollectionOpNames(collectionName));
+                    opNames.push(opName);
                 }
                 else
                 {
@@ -333,6 +374,7 @@ class ElectronEndpoint
                         "opId": opsUtil.getOpIdByObjName(name)
                     });
                 });
+
                 code = opsUtil.buildFullCode(ops, "none");
                 return code;
             }

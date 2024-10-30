@@ -31,15 +31,19 @@
     "appId": "gl.cables.standalone",
     "nodeVersion": "20.13.1",
     "asar": true,
+    "includeSubNodeModules": true,
+    "electronLanguages": ["en-US"],
     "files": [
       "cables.json",
       "src/**/*",
       "src_client/**/*",
+      "views/**/*",
       "index.html",
       "dist/ui/**/*",
       "dist/ops/**/*",
       "dist/public/**/*",
       "LICENCE",
+      "cables.txt",
       {
         "from": "resources/assets/",
         "to": "resources/assets/",
@@ -52,13 +56,6 @@
       "buildResources": "resources/build"
     },
     "fileAssociations": [
-      {
-        "ext": "cables.json",
-        "name": "cables patch",
-        "description": "cables patch",
-        "role": "Editor",
-        "rank": "Owner"
-      },
       {
         "ext": "cables",
         "name": "cables patch",
@@ -93,7 +90,7 @@
       "signAndEditExecutable": false,
       "target": [
         {
-          "target": "zip",
+          "target": "portable",
           "arch": [
             "x64"
           ]
@@ -116,6 +113,7 @@
     ]
   },
   "dependencies": {
+    "archiver": "5.3.1",
     "cables-shared-api": "file:../shared/api",
     "cables-shared-client": "file:../shared/client",
     "chokidar": "3.6.0",
@@ -125,10 +123,12 @@
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-plugin-import": "2.27.5",
     "execa": "8.0.1",
+    "fluent-ffmpeg": "^2.1.3",
     "fs-extra": "11.2.0",
     "image-size": "1.0.2",
     "jsonfile": "6.1.0",
     "marked": "12.0.2",
+    "md5-file": "5.0.0",
     "mkdirp": "2.1.3",
     "moment-mini": "2.29.4",
     "npm": "10.5.2",
@@ -138,11 +138,11 @@
     "uuid-v4": "0.1.0"
   },
   "devDependencies": {
+    "@electron/notarize": "2.3.2",
     "copy-webpack-plugin": "12.0.2",
     "cross-env": "5.2.0",
     "electron": "31.2.1",
     "electron-builder": "24.13.3",
-    "@electron/notarize": "2.3.2",
     "git-last-commit": "1.0.1",
     "gulp": "5.0.0",
     "terser-webpack-plugin": "5.3.10",

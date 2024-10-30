@@ -22,7 +22,9 @@ class FilesUtil extends SharedFilesUtil
             "persistent": true,
             "followSymlinks": true,
             "disableGlobbing": true,
-            "awaitWriteFinish": false
+            "awaitWriteFinish": {
+                "stabilityThreshold": 1000
+            }
         };
 
         this._opChangeWatcher = chokidar.watch([], watcherOptions);
@@ -31,7 +33,8 @@ class FilesUtil extends SharedFilesUtil
             const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
             if (opName)
             {
-                electronApp.sendTalkerMessage("executeOp", { "name": opName });
+                const opId = opsUtil.getOpIdByObjName(opName);
+                electronApp.sendTalkerMessage("executeOp", { "name": opName, "forceReload": true, "id": opId });
             }
         });
 
@@ -56,26 +59,6 @@ class FilesUtil extends SharedFilesUtil
         });
     }
 
-    runUnWatched(opName, command)
-    {
-        const opFile = opsUtil.getOpAbsoluteFileName(opName);
-        this._opChangeWatcher.unwatch(opFile);
-        let returnValue;
-        try
-        {
-            returnValue = command();
-        }
-        catch (e)
-        {
-            this._log.error("failed to run unwatched command for", opName, command, e);
-        }
-        finally
-        {
-            this._opChangeWatcher.add(opFile);
-        }
-        return returnValue;
-    }
-
     registerAssetChangeListeners(project, removeOthers = false)
     {
         if (!project || !project.ops) return;
@@ -91,10 +74,34 @@ class FilesUtil extends SharedFilesUtil
         const fileNames = [];
         opNames.forEach((opName) =>
         {
-            const opFile = opsUtil.getOpAbsoluteFileName(opName);
-            if (opFile) fileNames.push(opFile);
+            if (opsUtil.isOpNameValid(opName))
+            {
+                const opFile = opsUtil.getOpAbsoluteFileName(opName);
+                if (opFile)
+                {
+                    fileNames.push(opFile);
+                }
+            }
         });
         this._opChangeWatcher.add(fileNames);
+    }
+
+    unregisterOpChangeListeners(opNames)
+    {
+        if (!opNames) return;
+        const fileNames = [];
+        opNames.forEach((opName) =>
+        {
+            if (opsUtil.isOpNameValid(opName))
+            {
+                const opFile = opsUtil.getOpAbsoluteFileName(opName);
+                if (opFile)
+                {
+                    fileNames.push(opFile);
+                }
+            }
+        });
+        this._opChangeWatcher.unwatch(fileNames);
     }
 
     async unregisterChangeListeners()
@@ -103,7 +110,7 @@ class FilesUtil extends SharedFilesUtil
         await this._opChangeWatcher.close();
     }
 
-    getFileDb(filePath, user, project)
+    getFileDb(filePath, user, project, cachebuster = "")
     {
         const stats = fs.statSync(filePath);
         const fileName = path.basename(filePath);
@@ -118,7 +125,7 @@ class FilesUtil extends SharedFilesUtil
             "userId": user._id,
             "updated": stats.mtime,
             "created": stats.ctime,
-            "cachebuster": "",
+            "cachebuster": cachebuster,
             "isLibraryFile": filePath.includes(cables.getAssetLibraryPath()),
             "__v": 0,
             "size": stats.size,
@@ -264,7 +271,8 @@ class FilesUtil extends SharedFilesUtil
                 "l": 0,
                 "p": fileUrl,
                 "type": type,
-                "updated": "bla"
+                "updated": "bla",
+                "isReference": true
             };
             fileData.icon = this.getFileIconName(fileData);
 
@@ -278,19 +286,7 @@ class FilesUtil extends SharedFilesUtil
         const dirNames = Object.keys(fileHierarchy);
         for (let dirName of dirNames)
         {
-            let displayName = dirName;
-            if (dirName === projectDir)
-            {
-                displayName = "Project Directory";
-            }
-            else if (dirName.startsWith(projectDir))
-            {
-                displayName = path.join(dirName.replace(projectDir, ""), "/");
-            }
-            else
-            {
-                displayName = path.join(dirName, "/");
-            }
+            let displayName = path.join(dirName, "/");
 
             arr.push({
                 "d": true,
@@ -302,6 +298,12 @@ class FilesUtil extends SharedFilesUtil
             });
         }
         return arr;
+    }
+
+    isAssetLibraryLocation(filePath)
+    {
+        if (!filePath) return false;
+        return filePath.toLowerCase().includes(cables.getAssetLibraryPath());
     }
 }
 

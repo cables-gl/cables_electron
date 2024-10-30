@@ -6,7 +6,7 @@ class Logger extends SharedLogger
     constructor(provider)
     {
         super(provider);
-        const logFormat = "[electron-{processType}] {d}:{m}:{y} {h}:{i}:{s} {text}";
+        const logFormat = "[electron-{processType}] {d}.{m}.{y} {h}:{i}:{s} {text}";
         log.transports.file.maxSize = 20 * 1024 * 1024;
         log.initialize();
         log.transports.console.format = logFormat;
@@ -24,7 +24,7 @@ class Logger extends SharedLogger
 
     endTime(...args)
     {
-        super.endTime("[" + this._initiator + "]", args.join(" "));
+        super.endTime(...args);
     }
 
     error(...args)
@@ -39,7 +39,7 @@ class Logger extends SharedLogger
 
     startTime(...args)
     {
-        super.startTime("[" + this._initiator + "]", "startTime", args.join(" "));
+        super.startTime(...args);
     }
 
     uncaught(...args)
@@ -55,6 +55,11 @@ class Logger extends SharedLogger
     warn(...args)
     {
         log.warn("[" + this._initiator + "]", "WARN", args.join(" "));
+    }
+
+    event(...args)
+    {
+        log.verbose("[" + this._initiator + "]", args.join(" "));
     }
 
     logStartup(title)

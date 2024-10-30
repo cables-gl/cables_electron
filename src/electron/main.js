@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme, native
 import path from "path";
 import localShortcut from "electron-localshortcut";
 import fs from "fs";
+import os from "os";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
@@ -12,6 +13,7 @@ import filesUtil from "../utils/files_util.js";
 import helper from "../utils/helper_util.js";
 // this needs to be imported like this to not have to asarUnpack the entire nodejs world - sm,25.07.2024
 import Npm from "../../node_modules/npm/lib/npm.js";
+import opsUtil from "../utils/ops_util.js";
 
 app.commandLine.appendSwitch("disable-http-cache");
 app.commandLine.appendSwitch("force_high_performance_gpu");
@@ -19,6 +21,7 @@ app.commandLine.appendSwitch("unsafely-disable-devtools-self-xss-warnings");
 app.commandLine.appendSwitch("lang", "EN");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
+app.commandLine.appendSwitch("disable-hid-blocklist");
 
 app.disableDomainBlockingFor3DAPIs();
 
@@ -32,7 +35,10 @@ class ElectronApp
         this.appName = "name" in app ? app.name : app.getName();
         this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
 
+        this._defaultWindowBounds = { "width": 1920, "height": 1080 };
+
         this.editorWindow = null;
+
 
         settings.set("uiLoadStart", this._log.loadStart);
         this._log.logStartup("started electron");
@@ -136,16 +142,78 @@ class ElectronApp
         return result;
     }
 
+    async addOpPackage(targetDir, opPackageLocation)
+    {
+        if (!targetDir || !opPackageLocation) return { "stdout": "nothing to install", "packages": [] };
+
+        const dirName = path.join(os.tmpdir(), "cables-oppackage-");
+        const tmpDir = fs.mkdtempSync(dirName);
+
+        let result = { "stdout": "", "stderr": "", "packages": [], "targetDir": targetDir };
+        this._npm.config.localPrefix = tmpDir;
+
+        const logToVariable = (level, ...args) =>
+        {
+            switch (level)
+            {
+            case "standard":
+                args.forEach((arg) =>
+                {
+                    result.stdout += arg;
+                });
+                break;
+            case "error":
+                args.forEach((arg) =>
+                {
+                    result.stderr += arg;
+                });
+                break;
+            case "buffer":
+            case "flush":
+            default:
+            }
+        };
+        process.on("output", logToVariable);
+        this._log.debug("installing op package", opPackageLocation, "to", targetDir);
+        try
+        {
+            await this._npm.exec("install", [opPackageLocation]);
+        }
+        catch (e)
+        {
+            result.stderr += e;
+        }
+        process.off("output", logToVariable);
+        const nodeModulesDir = path.join(tmpDir, "node_modules");
+        if (fs.existsSync(nodeModulesDir))
+        {
+            const importedDocs = doc.getOpDocsInDir(nodeModulesDir);
+            Object.keys(importedDocs).forEach((opDocFile) =>
+            {
+                const opDoc = importedDocs[opDocFile];
+                const opName = opDoc.name;
+                const sourceDir = path.join(nodeModulesDir, path.dirname(opDocFile));
+                let opTargetDir = path.join(targetDir, opsUtil.getOpTargetDir(opName, true));
+                fs.cpSync(sourceDir, opTargetDir, { "recursive": true });
+                result.packages.push(opName);
+            });
+            fs.rmSync(tmpDir, { "recursive": true });
+        }
+        return result;
+    }
+
     _createWindow()
     {
         let patchFile = null;
-        const openLast = settings.getUserSetting("openlastproject", false);
+        const openLast = settings.getUserSetting("openlastproject", false) || this._initialPatchFile;
         if (openLast)
         {
-            const projectFile = settings.getCurrentProjectFile();
+            const projectFile = this._initialPatchFile || settings.getCurrentProjectFile();
             if (fs.existsSync(projectFile)) patchFile = projectFile;
+            this._initialPatchFile = null;
         }
-        this.editorWindow = new BrowserWindow({
+
+        const defaultWindowOptions = {
             "width": 1920,
             "height": 1080,
             "backgroundColor": "#222",
@@ -167,13 +235,24 @@ class ElectronApp
                 "backgroundThrottling": false,
                 "autoplayPolicy": "no-user-gesture-required"
             }
-        });
+        };
+
+        this.editorWindow = new BrowserWindow(defaultWindowOptions);
+
+        let windowBounds = this._defaultWindowBounds;
+        if (settings.getUserSetting("storeWindowBounds", true))
+        {
+            const userWindowBounds = settings.get(settings.WINDOW_BOUNDS);
+            if (userWindowBounds) windowBounds = userWindowBounds;
+        }
+
+        this.editorWindow.setBounds(windowBounds);
 
         this._initCaches(() =>
         {
             this._registerListeners();
             this._registerShortcuts();
-            this.openPatch(patchFile).then(() =>
+            this.openPatch(patchFile, false).then(() =>
             {
                 this._log.logStartup("electron loaded");
             });
@@ -192,6 +271,63 @@ class ElectronApp
         let title = "select file";
         let properties = ["openFile"];
         return this._fileDialog(title, filePath, asUrl, filter, properties);
+    }
+
+    async saveFileDialog(defaultPath, title = null, properties = [], filters = [])
+    {
+        title = title || "select directory";
+        properties = properties || ["createDirectory"];
+        return dialog.showSaveDialog(this.editorWindow, {
+            "title": title,
+            "defaultPath": defaultPath,
+            "properties": properties,
+            "filters": filters
+        }).then((result) =>
+        {
+            if (!result.canceled)
+            {
+                return result.filePath;
+            }
+            else
+            {
+                return null;
+            }
+        });
+    }
+
+    async pickDirDialog(defaultPath = null)
+    {
+        let title = "select file";
+        let properties = ["openDirectory", "createDirectory"];
+        return this._dirDialog(title, properties, defaultPath);
+    }
+
+    async exportProjectFileDialog(exportName)
+    {
+        const extensions = [];
+        extensions.push("zip");
+
+        let title = "select directory";
+        let properties = ["createDirectory"];
+        return dialog.showSaveDialog(this.editorWindow, {
+            "title": title,
+            "defaultPath": exportName,
+            "properties": properties,
+            "filters": [{
+                "name": "cables project",
+                "extensions": extensions,
+            }]
+        }).then((result) =>
+        {
+            if (!result.canceled)
+            {
+                return result.filePath;
+            }
+            else
+            {
+                return null;
+            }
+        });
     }
 
     async saveProjectFileDialog()
@@ -334,6 +470,13 @@ class ElectronApp
                         "visible": isOsX
                     },
                     { "role": "togglefullscreen" },
+                    {
+                        "label": "Reset Size and Position",
+                        "click": () =>
+                        {
+                            this._resetSizeAndPostion();
+                        }
+                    },
                     { "type": "separator" },
                     {
                         "label": "Zoom In",
@@ -368,7 +511,7 @@ class ElectronApp
                         }
                     },
                     {
-                        "label": "Insepect elements",
+                        "label": "Insepect Elements",
                         "accelerator": inspectElementAcc,
                         "click": () =>
                         {
@@ -394,15 +537,27 @@ class ElectronApp
         Menu.setApplicationMenu(menu);
     }
 
+    openFile(patchFile)
+    {
+        if (this.editorWindow)
+        {
+            this.openPatch(patchFile, true);
+        }
+        else
+        {
+            // opened by double-clicking and starting the app
+            this._initialPatchFile = patchFile;
+        }
+    }
+
     async openPatch(patchFile, rebuildCache = true)
     {
         this._unsavedContentLeave = false;
         const open = async () =>
         {
-            electronApi.loadProject(patchFile);
+            electronApi.loadProject(patchFile, null, rebuildCache);
             this.updateTitle();
             await this.editorWindow.loadFile("index.html");
-            this._log.logStartup("loaded", patchFile);
             const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
             this._resetZoom();
             if (rebuildCache) doc.rebuildOpCaches(() => { this._log.logStartup("rebuild op caches"); }, ["core", "teams", "extensions"], true);
@@ -442,18 +597,20 @@ class ElectronApp
         if (project)
         {
             this.sendTalkerMessage("updatePatchName", { "name": project.name });
-            this.sendTalkerMessage("updatePatchSummary", { "summary": project.summary });
+            this.sendTalkerMessage("updatePatchSummary", project.summary);
         }
 
         this.editorWindow.setTitle(title);
     }
 
-    _dirDialog(title, properties)
+    _dirDialog(title, properties, defaultPath = null)
     {
-        return dialog.showOpenDialog(this.editorWindow, {
+        const options = {
             "title": title,
             "properties": properties
-        }).then((result) =>
+        };
+        if (defaultPath) options.defaultPath = defaultPath;
+        return dialog.showOpenDialog(this.editorWindow, options).then((result) =>
         {
             if (!result.canceled)
             {
@@ -486,7 +643,7 @@ class ElectronApp
             if (!result.canceled)
             {
                 if (!asUrl) return result.filePaths[0];
-                return helper.pathToFileURL(result.filePaths[0], true);
+                return helper.pathToFileURL(result.filePaths[0]);
             }
             else
             {
@@ -613,16 +770,14 @@ class ElectronApp
 
     _registerListeners()
     {
-        app.on("open-file", (e, p) =>
-        {
-            if (p.endsWith("." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION) && fs.existsSync(p))
-            {
-                this.openPatch(p, true);
-            }
-        });
         app.on("browser-window-created", (e, win) =>
         {
             win.setMenuBarVisibility(false);
+        });
+
+        this.editorWindow.on("close", () =>
+        {
+            if (settings.getUserSetting("storeWindowBounds", true)) settings.set(settings.WINDOW_BOUNDS, this.editorWindow.getBounds());
         });
 
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
@@ -656,6 +811,21 @@ class ElectronApp
         {
             settings.set(settings.OPEN_DEV_TOOLS_FIELD, false);
         });
+
+        this.editorWindow.webContents.session.on("will-download", (event, item, webContents) =>
+        {
+            if (item)
+            {
+                const filename = item.getFilename();
+                const savePath = path.join(settings.getDownloadPath(), filename);
+                // Set the save path, making Electron not to prompt a save dialog.
+                item.setSavePath(savePath);
+                const fileUrl = helper.pathToFileURL(savePath);
+                const cablesUrl = fileUrl.replace("file:", "cables:///openDir/");
+                const link = "<a href=\"" + cablesUrl + "\" download>" + savePath + "</a>";
+                this.sendTalkerMessage("notify", { "msg": "File saved to " + link });
+            }
+        });
     }
 
     _zoomIn()
@@ -679,6 +849,15 @@ class ElectronApp
     _resetZoom()
     {
         this.editorWindow.webContents.setZoomFactor(1.0);
+    }
+
+    _resetSizeAndPostion()
+    {
+        if (this.editorWindow)
+        {
+            this.editorWindow.setBounds(this._defaultWindowBounds);
+            this.editorWindow.center();
+        }
     }
 
     _initCaches(cb)
@@ -788,19 +967,15 @@ class ElectronApp
 }
 Menu.setApplicationMenu(null);
 
+const electronApp = new ElectronApp();
 
-app.whenReady().then(() =>
+app.on("open-file", (e, p) =>
 {
-    electronApp.init();
-    electronApi.init();
-    electronEndpoint.init();
-    app.on("activate", () =>
+    if (p.endsWith("." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION) && fs.existsSync(p))
     {
-        if (BrowserWindow.getAllWindows().length === 0) electronApp.init();
-    });
+        electronApp.openFile(p);
+    }
 });
-
-
 
 app.on("window-all-closed", () =>
 {
@@ -818,5 +993,19 @@ app.on("will-quit", (event) =>
         process.exit(1);
     });
 });
-const electronApp = new ElectronApp();
+
+Menu.setApplicationMenu(null);
+app.whenReady().then(() =>
+{
+    electronApp.init();
+    electronApi.init();
+    electronEndpoint.init();
+    app.on("activate", () =>
+    {
+        if (BrowserWindow.getAllWindows().length === 0) electronApp.init();
+    });
+});
+
 export default electronApp;
+
+

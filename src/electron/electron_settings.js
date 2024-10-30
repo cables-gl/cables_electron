@@ -3,14 +3,11 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import { app } from "electron";
 import jsonfile from "jsonfile";
-import * as os from "os";
 import helper from "../utils/helper_util.js";
 import logger from "../utils/logger.js";
 import projectsUtil from "../utils/projects_util.js";
 import cables from "../cables.js";
 import electronApp from "./main.js";
-import opsUtil from "../utils/ops_util.js";
-import filesUtil from "../utils/files_util.js";
 
 class ElectronSettings
 {
@@ -32,6 +29,8 @@ class ElectronSettings
         this.RECENT_PROJECTS_FIELD = "recentProjects";
         this.OPEN_DEV_TOOLS_FIELD = "openDevTools";
         this.WINDOW_ZOOM_FACTOR = "windowZoomFactor";
+        this.WINDOW_BOUNDS = "windowBounds";
+        this.DOWNLOAD_PATH = "downloadPath";
 
         this.opts = {};
         this.opts.defaults = {};
@@ -43,6 +42,7 @@ class ElectronSettings
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
         this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
         this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
+        this.opts.defaults[this.DOWNLOAD_PATH] = app.getPath("downloads");
 
         this.data = this.opts.defaults;
         mkdirp(this.data[this.STORAGEDIR_FIELD]);
@@ -76,8 +76,18 @@ class ElectronSettings
                 "pictures": app.getPath("pictures"),
                 "videos": app.getPath("videos"),
                 "logs": app.getPath("logs"),
-                "crashDumps": app.getPath("crashDumps")
+                "crashDumps": app.getPath("crashDumps"),
             };
+            const dir = this.get(this.CURRENTPROJECTDIR_FIELD);
+            const id = this.get(this.PATCHID_FIELD);
+            if (dir && id)
+            {
+                this.data.paths.assetPath = path.join(dir, "assets", id, "/");
+            }
+            else if (id)
+            {
+                this.data.paths.assetPath = path.join(".", "assets", id, "/");
+            }
             if (process.platform === "win32")
             {
                 this.data.paths.recent = app.getPath("recent");
@@ -108,7 +118,7 @@ class ElectronSettings
     getCurrentProjectDir()
     {
         let value = this.get(this.CURRENTPROJECTDIR_FIELD);
-        if (value && !value.endsWith("/")) value += "/";
+        if (value && !value.endsWith("/")) value = path.join(value, "/");
         return value;
     }
 
@@ -130,7 +140,7 @@ class ElectronSettings
 
     getCurrentUser()
     {
-        let username = "";
+        let username = this.getUserSetting("authorName", "") || "";
         return {
             "username": username,
             "_id": helper.generateRandomId(),
@@ -274,8 +284,8 @@ class ElectronSettings
         {
             const p1 = recents[f1];
             const p2 = recents[f2];
-            if (!p1.updated) return 1;
-            if (!p2.updated) return -1;
+            if (!p1 || !p1.updated) return 1;
+            if (!p2 || !p2.updated) return -1;
             return p2.updated - p1.updated;
         });
         files = helper.uniqueArray(files);
@@ -320,7 +330,7 @@ class ElectronSettings
 
     _setCurrentProjectDir(value)
     {
-        if (value && !value.endsWith("/")) value += "/";
+        if (value) value = path.join(value, "/");
         this.set(this.CURRENTPROJECTDIR_FIELD, value);
     }
 
@@ -368,6 +378,12 @@ class ElectronSettings
             this._log.error("failed to parse project from projectfile", projectFile, e);
         }
         return null;
+    }
+
+    getDownloadPath()
+    {
+        const customDownloadPath = this.get(this.DOWNLOAD_PATH);
+        return customDownloadPath || app.getPath("downloads");
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData")));

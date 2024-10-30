@@ -103,6 +103,7 @@ CABLES_CMD_STANDALONE.collectAssets = (options) =>
                             }
                         });
                     });
+                    standalone.gui.setStateUnsaved();
                 }
                 else
                 {
@@ -159,9 +160,85 @@ CABLES_CMD_STANDALONE.collectOps = (options) =>
     });
 };
 
+CABLES_CMD_STANDALONE.exportPatch = () =>
+{
+
+};
+
 CABLES_CMD_STANDALONE.orderOpDirs = () =>
 {
     standalone.CABLES.platform.openOpDirsTab();
+};
+
+CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
+{
+    let opTargetDir = null;
+    standalone.editor.api("getProjectOpDirs", {}, (err, res) =>
+    {
+        let html = "";
+        let opDirSelect = "Choose target directory:<br/><br/>";
+        opDirSelect += "<select id=\"opTargetDir\" name=\"opTargetDir\">";
+        for (let i = 0; i < res.data.length; i++)
+        {
+            const dirInfo = res.data[i];
+            if (i === 0) opTargetDir = dirInfo.dir;
+            opDirSelect += "<option value=\"" + dirInfo.dir + "\">" + dirInfo.dir + "</option>";
+        }
+        opDirSelect += "</select>";
+        opDirSelect += "<hr/>";
+        html += opDirSelect;
+        html += "Enter <a href=\"https://docs.npmjs.com/cli/v10/commands/npm-install\">package.json</a> location (git, npm, thz, url, ...):";
+
+        new CABLES.UI.ModalDialog({
+            "prompt": true,
+            "title": "Install ops from package",
+            "html": html,
+            "promptOk": (packageLocation) =>
+            {
+                const loadingModal = standalone.gui.startModalLoading("Installing ops...");
+                const packageOptions = { "targetDir": opTargetDir, "package": packageLocation };
+                standalone.editor.api("addOpPackage", packageOptions, (_err, result) =>
+                {
+                    const r = result.data;
+                    if (r)
+                    {
+                        if (r.targetDir)
+                        {
+                            loadingModal.setTask("installing to " + r.targetDir);
+                        }
+                        if (r.packages && r.packages.length > 0)
+                        {
+                            loadingModal.setTask("found ops");
+                            r.packages.forEach((p) =>
+                            {
+                                loadingModal.setTask(p);
+                            });
+                        }
+                        if (r.stdout)
+                        {
+                            loadingModal.setTask(r.stdout);
+                        }
+                        if (r.stderr)
+                        {
+                            loadingModal.setTask(r.stderr);
+                        }
+                        loadingModal.setTask("done");
+                        next(_err, r);
+                        setTimeout(() => { standalone.gui.endModalLoading(); }, 3000);
+                    }
+                });
+            }
+        });
+
+        const dirSelect = standalone.editorWindow.ele.byId("opTargetDir");
+        if (dirSelect)
+        {
+            dirSelect.addEventListener("change", () =>
+            {
+                opTargetDir = dirSelect.value;
+            });
+        }
+    });
 };
 
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};
@@ -171,7 +248,14 @@ CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = () =>
 };
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.uploadFileDialog = () =>
 {
-    standalone.editor.api("openAssetDir", (_err, r) => {});
+    standalone.editor.api("selectFile", {}, (_err, filepath) =>
+    {
+        if (!_err && filepath)
+        {
+            const gui = standalone.gui;
+            if (gui) gui.patchView.addAssetOpAuto(filepath);
+        }
+    });
 };
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.newPatch = () =>
 {
@@ -241,7 +325,13 @@ CMD_STANDALONE_COMMANDS.push(
         "category": "ops",
         "func": CABLES_CMD_STANDALONE.orderOpDirs,
         "icon": "folder"
-    }
+    },
+    {
+        "cmd": "install ops from package.json",
+        "category": "ops",
+        "func": CABLES_CMD_STANDALONE.addOpPackage,
+        "icon": "op"
+    },
 );
 
 export default {

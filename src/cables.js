@@ -4,6 +4,7 @@ import { app } from "electron";
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
+import { fileURLToPath } from "url";
 import settings from "./electron/electron_settings.js";
 import helper from "./utils/helper_util.js";
 
@@ -48,15 +49,15 @@ class CablesElectron extends Cables
 
     getAssetPath()
     {
-        const currentProject = settings.getCurrentProjectDir();
+        const currentProjectDir = settings.getCurrentProjectDir();
         let assetPath = "";
-        if (!currentProject)
+        if (!currentProjectDir)
         {
             assetPath = path.join(this._writeableDirName, "assets/");
         }
         else
         {
-            assetPath = path.join(currentProject);
+            assetPath = path.join(currentProjectDir);
         }
         if (!fs.existsSync(assetPath)) mkdirp.sync(assetPath);
         return assetPath;
@@ -66,6 +67,11 @@ class CablesElectron extends Cables
     {
         if (!this._config.path.assets) path.join(this.getPublicPath(), "assets/library/");
         return this._config.path.assets.startsWith("/") ? this._config.path.assets : path.join(this._dirname, this._config.path.assets, "library/");
+    }
+
+    getExportAssetTargetPath()
+    {
+        return "";
     }
 
     getGenPath()
@@ -126,7 +132,7 @@ class CablesElectron extends Cables
 }
 
 const metaUrl = new URL(".", import.meta.url);
-const __dirname = helper.fileURLToPath(metaUrl.href);
+const __dirname = fileURLToPath(metaUrl.href);
 const customConfig = process.env.npm_config_apiconfig;
 let configLocation = null;
 if (customConfig)

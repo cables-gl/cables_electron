@@ -33,10 +33,10 @@ export default class ElectronEditor
 {
     constructor(params)
     {
-        this._config = params.config;
+        this.config = params.config;
         const frame = document.getElementById("editorIframe");
         this._talker = new TalkerAPI(frame.contentWindow);
-        this._patchId = this._config.patchId;
+        this._patchId = this.config.patchId;
 
         window.addEventListener("unhandledrejection", (e) =>
         {
@@ -63,7 +63,7 @@ export default class ElectronEditor
          */
         this._talker.addEventListener("requestPatchData", (data, next) =>
         {
-            if (next) next(this._config);
+            if (next) next(this.config);
         });
 
         /**
@@ -107,11 +107,11 @@ export default class ElectronEditor
          */
         this._talker.addEventListener("fileUploadStr", (data, next) =>
         {
-            window.ipcRenderer.invoke("talkerMessage", "fileUpload", data, {}).then((r) =>
+            this.api("fileUpload", data, (err, r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
                 this._talker.send("refreshFileManager");
-                this._talker.send("fileUpdated", { "filename": data.filename });
+                this._talker.send("fileUpdated", { "filename": r.filename });
 
                 if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
                 next(error, r);
@@ -131,7 +131,7 @@ export default class ElectronEditor
          */
         this._talker.addEventListener("updateFile", (data, next) =>
         {
-            window.ipcRenderer.invoke("talkerMessage", "updateFile", data, {}).then((r) =>
+            this.api("updateFile", data, (err, r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
                 if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
@@ -140,16 +140,17 @@ export default class ElectronEditor
             });
         });
 
-        /**
-         * remove directory with ops from project
-         *
-         * @param string data directory name
-         */
-        this._talker.addEventListener("removeProjectOpDir", (data, next) =>
+        this._talker.addEventListener("createFile", (data, next) =>
         {
-            window.ipcRenderer.invoke("talkerMessage", "removeProjectOpDir", data, {}).then((r) =>
+            this.api("createFile", data, (error, r) =>
             {
-                if (next) next(r);
+                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+                if (window.standalone && window.standalone.gui)
+                {
+                    window.standalone.gui.patchView.addAssetOpAuto(r);
+                    window.standalone.gui.fileManagerEditor.editAssetTextFile("file:" + r, "text");
+                }
+                next(error, r);
             });
         });
 
@@ -183,19 +184,20 @@ export default class ElectronEditor
             "getLibraryFileInfo": {},
             "checkOpName": {},
             "getRecentPatches": {},
-            "opCreate": { },
-            "opUpdate": {},
-            "opSaveLayout": { },
-            "opClone": { },
+            "opCreate": { "needsProjectFile": true },
             "opRename": { },
+            "opUpdate": {},
+            "opDelete": {},
+            "opClone": { },
+            "opSaveLayout": { },
+            "opSetSummary": { },
             "checkNumAssetPatches": {},
             "saveProjectAs": {},
             "gotoPatch": {},
-            "setProjectUpdated": {},
             "getProjectOpDirs": {},
             "openDir": {},
-            "createFile": {},
             "selectFile": {},
+            "selectDir": {},
             "setProjectName": { "needsProjectFile": true },
             "collectAssets": { "needsProjectFile": true },
             "collectOps": { "needsProjectFile": true },
@@ -203,7 +205,10 @@ export default class ElectronEditor
             "patchCreateBackup": { "needsProjectFile": true },
             "addOpDependency": {},
             "removeOpDependency": {},
-            "saveProjectOpDirOrder": { "needsProjectFile": true }
+            "saveProjectOpDirOrder": { "needsProjectFile": true },
+            "removeProjectOpDir": { "needsProjectFile": true },
+            "exportPatch": { "needsProjectFile": true },
+            "exportPatchBundle": { "needsProjectFile": true }
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>

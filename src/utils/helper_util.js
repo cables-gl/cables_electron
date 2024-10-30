@@ -1,16 +1,14 @@
-import { utilProvider, SharedHelperUtil } from "cables-shared-api";
+import { SharedHelperUtil, utilProvider } from "cables-shared-api";
 import path from "path";
-import { pathToFileURL, fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import cables from "../cables.js";
 import settings from "../electron/electron_settings.js";
-import projectsUtil from "./projects_util.js";
 
 class HelperUtil extends SharedHelperUtil
 {
     constructor(provider)
     {
         super(provider);
-        this.LOCAL_ASSETS_PREFIX = "./";
     }
 
     fileURLToPath(url, convertRelativeToProject = false)
@@ -24,24 +22,14 @@ class HelperUtil extends SharedHelperUtil
         let fileUrl = decodeURI(url);
         let filePath = fileUrl;
 
-        const currentProject = settings.getCurrentProject();
-        const assetPathUrl = projectsUtil.getAssetPathUrl(currentProject);
-        if (convertRelativeToProject && this.isLocalAssetUrl(fileUrl, assetPathUrl))
+        const uiDistPath = cables.getUiDistPath();
+        filePath = filePath.replace("file://" + uiDistPath, "");
+        if (convertRelativeToProject && !filePath.startsWith("file:") && !path.isAbsolute(filePath))
         {
-            const filePatterns = this._localFilePrefixes(assetPathUrl);
-
-            filePatterns.forEach((filePattern) =>
-            {
-                if (filePath.startsWith(filePattern))
-                {
-                    filePath = filePath.replace(filePattern, "");
-                }
-            });
             filePath = path.join(cables.getAssetPath(), filePath);
-
             try
             {
-                fileUrl = pathToFileURL(filePath, { "windows": false });
+                fileUrl = pathToFileURL(filePath);
             }
             catch (e)
             {
@@ -51,7 +39,7 @@ class HelperUtil extends SharedHelperUtil
         }
         try
         {
-            return fileURLToPath(fileUrl, { "windows": false });
+            return fileURLToPath(fileUrl);
         }
         catch (e)
         {
@@ -60,51 +48,23 @@ class HelperUtil extends SharedHelperUtil
         }
     }
 
-    pathToFileURL(thePath, convertProjectToRelative = false)
+    pathToFileURL(thePath, convertRelativeToProject = false)
     {
-        let filePath = thePath;
-        if (convertProjectToRelative && this.isLocalAssetPath(filePath))
+        if (thePath && thePath.startsWith("file:")) return thePath;
+        if (convertRelativeToProject && !path.isAbsolute(thePath))
         {
-            const currentProjectDir = settings.getCurrentProjectDir();
-            return filePath.replace(currentProjectDir, this.LOCAL_ASSETS_PREFIX);
+            return pathToFileURL(path.join(cables.getAssetPath(), thePath)).href;
         }
         else
         {
-            return pathToFileURL(filePath).href;
+            return pathToFileURL(thePath).href;
         }
-    }
-
-    isLocalAssetUrl(url, assetPathUrl)
-    {
-        if (!url) return false;
-
-        const filePatterns = this._localFilePrefixes(assetPathUrl);
-        for (let i = 0; i < filePatterns.length; i++)
-        {
-            if (url.startsWith(filePatterns[i])) return true;
-        }
-        if (!url.includes("://")) return true;
-        return false;
     }
 
     isLocalAssetPath(thePath)
     {
         const currentProjectDir = settings.getCurrentProjectDir();
         return (currentProjectDir && thePath.startsWith(currentProjectDir));
-    }
-
-    _localFilePrefixes(assetPathUrl)
-    {
-        return [
-            "file://./",
-            "file:///assets/",
-            "./" + assetPathUrl,
-            assetPathUrl,
-            "assets/",
-            "/assets/",
-            this.LOCAL_ASSETS_PREFIX,
-            "/"
-        ];
     }
 }
 export default new HelperUtil(utilProvider);
