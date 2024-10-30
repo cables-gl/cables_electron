@@ -109,6 +109,9 @@ class ProjectsUtil extends SharedProjectsUtil
 
     isFixedPositionOpDir(dir)
     {
+        const projectDir = settings.getCurrentProjectDir();
+        if (projectDir) if (dir === path.join(projectDir, "ops/")) return true;
+        if (dir === "./ops") return true;
         if (dir === cables.getOsOpsDir()) return true;
         if (cables.isPackaged()) return false;
         if (dir === cables.getExtensionOpsPath()) return true;
