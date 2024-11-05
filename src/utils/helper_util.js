@@ -57,7 +57,7 @@ class HelperUtil extends SharedHelperUtil
         }
         else
         {
-            return pathToFileURL(thePath).href;
+            return thePath ? pathToFileURL(thePath).href : null;
         }
     }
 

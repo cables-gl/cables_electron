@@ -337,7 +337,11 @@ class ElectronSettings
     _setCurrentProject(projectFile, project)
     {
         this._currentProject = project;
-        if (project) this.set(this.PATCHID_FIELD, project._id);
+        projectsUtil.invalidateProjectCaches();
+        if (project)
+        {
+            this.set(this.PATCHID_FIELD, project._id);
+        }
         if (projectFile && project)
         {
             const projectName = path.basename(projectFile, "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
