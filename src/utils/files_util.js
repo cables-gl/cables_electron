@@ -23,7 +23,7 @@ class FilesUtil extends SharedFilesUtil
             "followSymlinks": true,
             "disableGlobbing": true,
             "awaitWriteFinish": {
-                "stabilityThreshold": 1000
+                "stabilityThreshold": 200
             }
         };
 
