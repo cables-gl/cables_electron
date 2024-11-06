@@ -1626,7 +1626,7 @@ class ElectronApi
         }
     }
 
-    error(msg, data = null, level = "error")
+    error(msg, data = null, level = "warn")
     {
         const error = { "error": true, "msg": msg, "level": level };
         if (data) error.data = data;
