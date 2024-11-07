@@ -15,13 +15,12 @@ import helper from "../utils/helper_util.js";
 import Npm from "../../node_modules/npm/lib/npm.js";
 import opsUtil from "../utils/ops_util.js";
 
-app.commandLine.appendSwitch("disable-http-cache");
-app.commandLine.appendSwitch("force_high_performance_gpu");
-app.commandLine.appendSwitch("unsafely-disable-devtools-self-xss-warnings");
+app.commandLine.appendSwitch("disable-http-cache", "true");
+app.commandLine.appendSwitch("force_high_performance_gpu", "true");
 app.commandLine.appendSwitch("lang", "EN");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
-app.commandLine.appendSwitch("disable-hid-blocklist");
+app.commandLine.appendSwitch("disable-hid-blocklist", "true");
 
 app.disableDomainBlockingFor3DAPIs();
 
@@ -389,32 +388,34 @@ class ElectronApp
             inspectElementAcc = "CmdOrCtrl+Option+C";
             consoleAcc = "CmdOrCtrl+Option+J";
         }
+        const aboutMenu = [];
+        aboutMenu.push({
+            "label": "About Cables",
+            "click": () => { this._showAbout(); }
+        });
+        aboutMenu.push({ "type": "separator" });
+        if (isOsX)
+        {
+            aboutMenu.push({ "role": "services" });
+            aboutMenu.push({ "type": "separator" });
+            aboutMenu.push({ "role": "hide", "label": "Hide Cables" });
+            aboutMenu.push({ "role": "hideOthers" });
+            aboutMenu.push({ "role": "unhide" });
+            aboutMenu.push({ "type": "separator" });
+        }
+
+        aboutMenu.push({
+            "role": "quit",
+            "label": "Quit",
+            "accelerator": "CmdOrCtrl+Q",
+            "click": () => { app.quit(); }
+        });
 
         const menuTemplate = [
             {
                 "role": "appMenu",
-                "label": "cables",
-                "submenu": [
-                    {
-                        "label": "About Cables",
-                        "click": () =>
-                        {
-                            this._showAbout();
-                        }
-                    },
-                    {
-                        "type": "separator"
-                    },
-                    {
-                        "role": "quit",
-                        "label": "Quit",
-                        "accelerator": "CmdOrCtrl+Q",
-                        "click": () =>
-                        {
-                            app.quit();
-                        }
-                    }
-                ]
+                "label": "Cables",
+                "submenu": aboutMenu
             },
             {
                 "label": "File",

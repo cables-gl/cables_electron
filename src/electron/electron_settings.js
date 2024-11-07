@@ -14,7 +14,7 @@ class ElectronSettings
     constructor(storageDir)
     {
         this._log = logger;
-        this.SESSION_PARTITION = "persist:cables:" + helper.generateUUID();
+        this.SESSION_PARTITION = "persist:cables:standalone";
 
         if (storageDir && !fs.existsSync(storageDir))
         {
