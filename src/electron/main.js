@@ -957,10 +957,21 @@ class ElectronApp
             }
             if (buildInfo.api.platform)
             {
-                versionText += "\n";
+                versionText += "\nbuilt with:\n";
                 if (buildInfo.api.platform.node) versionText += "node: " + buildInfo.api.platform.node + "\n";
                 if (buildInfo.api.platform.npm) versionText += "npm: " + buildInfo.api.platform.npm;
             }
+            if (process.versions)
+            {
+                versionText += "\n\nrunning in:\n";
+                if (process.versions.electron) versionText += "electron: " + process.versions.electron + "\n";
+                if (process.versions.chrome) versionText += "chrome: " + process.versions.chrome + "\n";
+                if (process.versions.v8) versionText += "v8: " + process.versions.v8 + "\n";
+
+                if (process.versions.node) versionText += "node: " + process.versions.node + "\n";
+                if (buildInfo.api.platform.npm) versionText += "npm: " + buildInfo.api.platform.npm;
+            }
+
             options.detail = versionText;
         }
         dialog.showMessageBox(options);
