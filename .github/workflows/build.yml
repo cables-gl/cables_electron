@@ -127,3 +127,5 @@ jobs:
         assets: |
           *.yml
           *.blockmap
+          v${{ inputs.tag_name }}.zip
+          v${{ inputs.tag_name }}.tar.gz
