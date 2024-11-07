@@ -141,7 +141,7 @@
     "@electron/notarize": "2.5.0",
     "copy-webpack-plugin": "12.0.2",
     "cross-env": "5.2.0",
-    "electron": "32.2.2",
+    "electron": "31.7.3",
     "electron-builder": "25.1.8",
     "git-last-commit": "1.0.1",
     "gulp": "5.0.0",
