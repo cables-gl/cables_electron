@@ -66,9 +66,6 @@
     ],
     "mac": {
       "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
-      "notarize": {
-        "teamId": "3HHYN68G6F"
-      },
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "resources/build/entitlements.mac.plist",
