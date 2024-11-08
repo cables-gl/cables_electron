@@ -1,6 +1,7 @@
 import { protocol, session, net, shell } from "electron";
 import fs from "fs";
 import path from "path";
+import mime from "mime";
 
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
@@ -443,6 +444,12 @@ class ElectronEndpoint
                 response.headers.append("Content-Length", stats.size);
                 response.headers.append("Content-Range", "bytes 0-" + stats.size + "/" + (stats.size + 1));
                 response.headers.append("Last-Modified", stats.mtime.toUTCString());
+            }
+            let mimeType = mime.getType(existingFile);
+            if (mimeType)
+            {
+                if (mimeType === "application/node") mimeType = "text/javascript";
+                response.headers.set("Content-Type", mimeType);
             }
         }
         catch (e) {}

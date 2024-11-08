@@ -8,6 +8,7 @@ import { promisify } from "util";
 import jsonfile from "jsonfile";
 import sanitizeFileName from "sanitize-filename";
 import { utilProvider } from "cables-shared-api";
+import { createRequire } from "module";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
@@ -72,6 +73,31 @@ class ElectronApi
             if (!opName) opName = data.opName;
             const opDir = opsUtil.getOpAbsolutePath(opName);
             event.returnValue = path.join(opDir, "node_modules", data.moduleName);
+        });
+
+        ipcMain.on("getOpModuleFile", (event, data) =>
+        {
+            let opName = opsUtil.getOpNameById(data.opId);
+            if (!opName) opName = data.opName;
+            const opDir = opsUtil.getOpAbsolutePath(opName);
+            const moduleDir = path.join(opDir, "node_modules");
+            const moduleRequire = createRequire(moduleDir);
+            if (moduleRequire)
+            {
+                try
+                {
+                    event.returnValue = helper.pathToFileURL(moduleRequire.resolve(data.moduleName));
+                }
+                catch (e)
+                {
+                    this._log.error(e.message);
+                    event.returnValue = null;
+                }
+            }
+            else
+            {
+                event.returnValue = null;
+            }
         });
     }
 

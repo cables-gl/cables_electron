@@ -224,9 +224,15 @@ export default class CablesStandalone
             }
             catch (e2)
             {
-                const errorMessage = "failed to load node module: " + moduleName;
+                const errorMessage = "require by name:\n" + e2 + "\n\nrequire by path:\n" + e;
+                const options = {
+                    "title": "failed to load node module: " + moduleName,
+                    "codeText": errorMessage.replace(/(.{80})/g, "$1\n")
+                };
+
+                new this.CABLES.UI.ModalError(options);
                 if (op) op.setUiError("oprequire", errorMessage);
-                this._log.error(errorMessage, e2, e);
+                this._log.warn(errorMessage, e2, e);
                 return "";
             }
         }
