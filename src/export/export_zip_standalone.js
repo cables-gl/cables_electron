@@ -99,7 +99,6 @@ export default class StandaloneZipExport extends SharedExportService
             else
             {
                 const outputErr = "no export directory chosen";
-                this._log.error("export error", outputErr);
                 const result = { "error": outputErr };
                 callbackFinished(result);
             }

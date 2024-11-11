@@ -126,7 +126,7 @@ class ElectronApi
                     }
                     else
                     {
-                        return this.error("no project dir chosen", null, "info");
+                        return this.error("no directory chosen", null, "info");
                     }
                 }
             }
@@ -1267,7 +1267,6 @@ class ElectronApi
         const projectFile = await electronApp.saveProjectFileDialog();
         if (!projectFile)
         {
-            logger.info("no project dir chosen");
             return this.error("no project dir chosen", null, "info");
         }
 
@@ -1362,7 +1361,7 @@ class ElectronApi
         }
         else
         {
-            return this.error("no project dir chosen", [], "info");
+            return this.error("no directory chosen", [], "info");
         }
     }
 
@@ -1601,8 +1600,15 @@ class ElectronApi
     {
         let file = data.name;
         let pickedFileUrl = await electronApp.saveFileDialog(file);
-        if (pickedFileUrl) fs.writeFileSync(pickedFileUrl, "");
-        return this.success("OK", pickedFileUrl, true);
+        if (pickedFileUrl)
+        {
+            fs.writeFileSync(pickedFileUrl, "");
+            return this.success("OK", pickedFileUrl, true);
+        }
+        else
+        {
+            return this.success("NO_DIR_CHOSEN", null, true);
+        }
     }
 
     async exportPatch()
