@@ -1345,6 +1345,35 @@ class ElectronApi
     {
         const currentProject = settings.getCurrentProject();
         const dirInfos = projectsUtil.getOpDirs(currentProject, false);
+
+        const opDirs = {};
+        if (currentProject && currentProject.ops)
+        {
+            currentProject.ops.forEach((op) =>
+            {
+                const opName = opsUtil.getOpNameById(op.opId);
+                const opPath = opsUtil.getOpAbsolutePath(opName);
+                if (opPath)
+                {
+                    if (!opDirs.hasOwnProperty(opPath)) opDirs[opPath] = 0;
+                    opDirs[opPath]++;
+                }
+            });
+        }
+
+        dirInfos.forEach((dirInfo) =>
+        {
+            if (!dirInfo.hasOwnProperty("numUsedOps")) dirInfo.numUsedOps = 0;
+            for (const opDir in opDirs)
+            {
+                const count = opDirs[opDir];
+                if (opDir.startsWith(dirInfo.dir))
+                {
+                    dirInfo.numUsedOps += count;
+                }
+            }
+        });
+
         return this.success("OK", dirInfos);
     }
 

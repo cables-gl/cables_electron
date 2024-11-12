@@ -242,14 +242,12 @@ class ProjectsUtil extends SharedProjectsUtil
                     opLocations[jsonName] = path.dirname(path.join(dir, jsonLocation));
                 }
             });
-            let numUsedOps = 0;
             const opNames = Object.keys(opLocations);
 
             dirInfos.push({
                 "dir": dir,
                 "opLocations": opLocations,
                 "numOps": opNames.length,
-                "numUsedOps": numUsedOps,
                 "fixedPlace": this.isFixedPositionOpDir(dir)
             });
         });
