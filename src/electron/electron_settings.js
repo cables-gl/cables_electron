@@ -35,7 +35,9 @@ class ElectronSettings
         this.opts = {};
         this.opts.defaults = {};
         this.opts.configName = this.MAIN_CONFIG_NAME;
-        this.opts.defaults[this.USER_SETTINGS_FIELD] = {};
+        this.opts.defaults[this.USER_SETTINGS_FIELD] = {
+            "noidlemode": true
+        };
         this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.PROJECTFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPROJECTDIR_FIELD] = null;
