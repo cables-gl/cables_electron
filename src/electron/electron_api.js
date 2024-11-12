@@ -110,9 +110,9 @@ class ElectronApi
             if (topicConfig.needsProjectFile)
             {
                 const projectFile = settings.getCurrentProjectFile();
-                if (!projectFile || !projectFile.endsWith(projectsUtil.CABLES_PROJECT_FILE_EXTENSION))
+                if (!projectFile)
                 {
-                    const newProjectFile = await electronApp.saveProjectFileDialog();
+                    const newProjectFile = await electronApp.saveProjectFileDialog(data.name);
                     if (newProjectFile)
                     {
                         let patchData = null;
@@ -126,7 +126,7 @@ class ElectronApi
                     }
                     else
                     {
-                        return this.error("no directory chosen", null, "info");
+                        return this.error("CANCELLED", null, "info");
                     }
                 }
             }
@@ -1262,9 +1262,9 @@ class ElectronApi
         return this.success("OK", { "assets": [], "countPatches": 0, "countOps": 0 }, true);
     }
 
-    async saveProjectAs()
+    async saveProjectAs(data)
     {
-        const projectFile = await electronApp.saveProjectFileDialog();
+        const projectFile = await electronApp.saveProjectFileDialog(data.name);
         if (!projectFile)
         {
             return this.error("no project dir chosen", null, "info");
@@ -1386,12 +1386,8 @@ class ElectronApi
         {
             currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
             projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
-            return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         }
-        else
-        {
-            return this.error("no directory chosen", [], "info");
-        }
+        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 
     async removeProjectOpDir(dirName)

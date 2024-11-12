@@ -242,9 +242,10 @@ CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
 };
 
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = () =>
+CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = (data) =>
 {
-    standalone.editor.api("saveProjectAs", { }, (_err, r) => {});
+    let patchName = standalone.gui.project() ? standalone.gui.project().name : null;
+    standalone.editor.api("saveProjectAs", { "name": patchName }, (_err, r) => {});
 };
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.uploadFileDialog = () =>
 {

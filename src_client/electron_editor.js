@@ -198,7 +198,7 @@ export default class ElectronEditor
             "opSaveLayout": { },
             "opSetSummary": { },
             "checkNumAssetPatches": {},
-            "saveProjectAs": {},
+            "saveProjectAs": { },
             "gotoPatch": {},
             "getProjectOpDirs": {},
             "openDir": {},

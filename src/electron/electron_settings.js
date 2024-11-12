@@ -170,7 +170,9 @@ class ElectronSettings
 
     getCurrentProjectFile()
     {
-        return this.get(this.PROJECTFILE_FIELD);
+        const projectFile = this.get(this.PROJECTFILE_FIELD);
+        if (projectFile && projectFile.endsWith(projectsUtil.CABLES_PROJECT_FILE_EXTENSION)) return projectFile;
+        return null;
     }
 
     getBuildInfo()

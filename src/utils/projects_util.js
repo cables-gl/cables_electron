@@ -73,6 +73,11 @@ class ProjectsUtil extends SharedProjectsUtil
         };
     }
 
+    getNewProjectName(randomize = false)
+    {
+        return "untitled";
+    }
+
     getProjectOpDirs(project, includeOsDir = true, reverse = false, addLocalCoreIfPackaged = true)
     {
         let opsDirs = [];

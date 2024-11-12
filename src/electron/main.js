@@ -329,7 +329,7 @@ class ElectronApp
         });
     }
 
-    async saveProjectFileDialog()
+    async saveProjectFileDialog(defaultPath)
     {
         const extensions = [];
         extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
@@ -339,6 +339,7 @@ class ElectronApp
         return dialog.showSaveDialog(this.editorWindow, {
             "title": title,
             "properties": properties,
+            "defaultPath": defaultPath,
             "filters": [{
                 "name": "cables project",
                 "extensions": extensions,

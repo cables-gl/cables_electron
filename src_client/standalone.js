@@ -87,6 +87,13 @@ export default class CablesStandalone
                             });
                         }
                         waitForAce();
+                        if (this.gui)
+                        {
+                            this.gui.on("uiloaded", () =>
+                            {
+                                if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
+                            });
+                        }
                     });
                 };
                 if (this._settings.uiLoadStart) this.editorWindow.CABLESUILOADER.uiLoadStart -= this._settings.uiLoadStart;
