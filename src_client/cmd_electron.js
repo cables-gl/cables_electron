@@ -290,17 +290,21 @@ CABLES_CMD_STANDALONE_OVERRIDES.PATCH.newPatch = () =>
     standalone.editor.api("newPatch", { }, (_err, r) => {});
 };
 
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp = () =>
+CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp = (opName) =>
 {
     const gui = standalone.gui;
     if (gui)
     {
-        const ops = gui.patchView.getSelectedOps();
-        if (!ops.length) return;
+        if (!opName)
+        {
+            const ops = gui.patchView.getSelectedOps();
+            if (!ops.length) return;
 
-        const op = ops[0];
+            const op = ops[0];
+            opName = op.objName;
+        }
 
-        gui.serverOps.renameDialog(op.objName);
+        gui.serverOps.renameDialog(opName);
     }
 };
 
