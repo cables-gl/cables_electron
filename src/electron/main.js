@@ -21,7 +21,7 @@ app.commandLine.appendSwitch("lang", "EN");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
 app.commandLine.appendSwitch("disable-hid-blocklist", "true");
-
+app.commandLine.appendSwitch("enable-web-bluetooth");
 app.disableDomainBlockingFor3DAPIs();
 
 logger.info("--- starting");
