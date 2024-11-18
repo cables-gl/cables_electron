@@ -6,6 +6,12 @@ import filesUtil from "./files_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
+    constructor(provider)
+    {
+        super(provider);
+        this.PREFIX_LOCAL_OPS = "Ops.Local.";
+    }
+
     validateAndFormatOpCode(code)
     {
         return {
@@ -100,8 +106,17 @@ class OpsUtil extends SharedOpsUtil
 
     getOpTargetDir(opName, relative = false)
     {
-        if (relative) return super.getOpTargetDir(opName, relative);
-        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+        let targetDir = "";
+        if (relative)
+        {
+            if (opName.endsWith(".")) opName = opName.substring(0, opName.length - 1);
+            return path.join(opName, "/");
+        }
+        else
+        {
+            targetDir = projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+        }
+        return targetDir;
     }
 
     getOpSourceNoHierarchy(opName, relative = false)
@@ -254,6 +269,16 @@ class OpsUtil extends SharedOpsUtil
         let oldOpDir = this.getOpSourceDir(oldName);
         let newOpDir = oldOpDir.replace(oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
+    }
+
+    getPatchOpNamespace(opName)
+    {
+        return this.getNamespace(opName);
+    }
+
+    getPatchOpsNamespaceForProject(proj)
+    {
+        return this.PREFIX_LOCAL_OPS;
     }
 }
 export default new OpsUtil(utilProvider);

@@ -1709,7 +1709,9 @@ class ElectronApi
         {
             availableNamespaces.unshift(opsUtil.getPatchOpsNamespaceForProject(project));
         }
+
         if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
+
         availableNamespaces = availableNamespaces.filter((availableNamespace) => { return availableNamespace.startsWith(opsUtil.PREFIX_OPS); });
 
         let removeOld = newName && !(opsUtil.isExtensionOp(newName) && opsUtil.isCoreOp(newName));
