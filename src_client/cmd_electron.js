@@ -241,6 +241,33 @@ CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
     });
 };
 
+CABLES_CMD_STANDALONE.copyOpDirToClipboard = () =>
+{
+    const gui = standalone.gui;
+    if (gui)
+    {
+        const ops = gui.patchView.getSelectedOps();
+        if (!ops.length) return;
+
+        const op = ops[0];
+        const modulePath = window.ipcRenderer.sendSync("getOpDir", { "opId": op.opId, "opName": op.name });
+        if (modulePath) navigator.clipboard.writeText(modulePath);
+    }
+};
+
+CABLES_CMD_STANDALONE.openOpDirectory = () =>
+{
+    const gui = standalone.gui;
+    if (gui)
+    {
+        const ops = gui.patchView.getSelectedOps();
+        if (!ops.length) return;
+
+        const op = ops[0];
+        CABLES_CMD_STANDALONE.openOpDir(op.opId, op.name);
+    }
+};
+
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = (data) =>
 {
@@ -310,13 +337,13 @@ CMD_STANDALONE_COMMANDS.push(
         "icon": "electron"
     },
     {
-        "cmd": "copy assets into patch dir",
+        "cmd": "collect assets into patch dir",
         "category": "patch",
         "func": CABLES_CMD_STANDALONE.collectAssets,
         "icon": "file"
     },
     {
-        "cmd": "copy ops into patch dir",
+        "cmd": "collect ops into patch dir",
         "category": "ops",
         "func": CABLES_CMD_STANDALONE.collectOps,
         "icon": "op"
@@ -333,6 +360,19 @@ CMD_STANDALONE_COMMANDS.push(
         "func": CABLES_CMD_STANDALONE.addOpPackage,
         "icon": "op"
     },
+    {
+        "cmd": "copy op dir to clipboard",
+        "category": "ops",
+        "func": CABLES_CMD_STANDALONE.copyOpDirToClipboard,
+        "icon": "op"
+    },
+    {
+        "cmd": "open op directory",
+        "category": "ops",
+        "func": CABLES_CMD_STANDALONE.openOpDirectory,
+        "icon": "op"
+
+    }
 );
 
 export default {
