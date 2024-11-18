@@ -1701,12 +1701,9 @@ class ElectronApi
             availableNamespaces = projectOpDocs.map((opDoc) => { return opsUtil.getNamespace(opDoc.name, true); });
         }
 
-        availableNamespaces.unshift("Ops.Standalone.");
         availableNamespaces = availableNamespaces.map((availableNamespace) => { return availableNamespace.endsWith(".") ? availableNamespace : availableNamespace + "."; });
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         availableNamespaces = availableNamespaces.sort((a, b) => { return a.localeCompare(b); });
-
-        availableNamespaces.unshift("Ops.");
 
         if (project)
         {
