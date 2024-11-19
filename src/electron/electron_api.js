@@ -1568,22 +1568,7 @@ class ElectronApi
                 opDoc = doc.cleanOpDocData(opDoc);
                 jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
                 doc.updateOpDocs();
-                const npmResult = await this._installOpDependencies(opName);
-                if (npmResult.error)
-                {
-                    // remove deps again on install error
-                    const newDeps = [];
-                    opDoc.dependencies.forEach((opDep) =>
-                    {
-                        if (!(options.name === opDep.name && options.type === opDep.type)) newDeps.push(opDep);
-                    });
-                    opDoc.dependencies = newDeps;
-                    opDoc = doc.cleanOpDocData(opDoc);
-                    jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
-                    doc.updateOpDocs();
-                    await this._installOpDependencies(opName);
-                }
-                return npmResult;
+                return await this._installOpDependencies(opName);
             }
             else
             {

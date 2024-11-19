@@ -102,7 +102,7 @@ class ElectronApp
     {
         if (!targetDir || !packageNames || packageNames.length === 0) return { "stdout": "nothing to install", "packages": [] };
 
-        const result = await this._installNpmPackages(packageNames, targetDir);
+        const result = await this._installNpmPackages(packageNames, targetDir, opName);
         if (opName) result.opName = opName;
 
         if (fs.existsSync(path.join(targetDir, "package.json"))) fs.rmSync(path.join(targetDir, "package.json"));
@@ -137,12 +137,13 @@ class ElectronApp
         return result;
     }
 
-    async _installNpmPackages(packageNames, targetDir)
+    async _installNpmPackages(packageNames, targetDir, opName = null)
     {
         this._npm.config.localPrefix = targetDir;
 
         let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
 
+        const oldConsole = console.log;
         const logToVariable = (level, ...args) =>
         {
             switch (level)
@@ -166,6 +167,7 @@ class ElectronApp
             }
         };
         process.on("output", logToVariable);
+        console.log = (l) => { result.stdout += l; };
         this._log.debug("installing", packageNames, "to", targetDir);
         try
         {
@@ -179,6 +181,7 @@ class ElectronApp
             if (e.script && e.script.includes("gyp")) result.nativeCompile = true;
         }
         process.off("output", logToVariable);
+        console.log = oldConsole;
         if (result.exception && result.exception === "Error: command failed")
         {
             if (result.nativeCompile)
@@ -186,6 +189,15 @@ class ElectronApp
                 if (targetDir.includes(" "))
                 {
                     result.stderr = "tried to compile native module <a href=\"https://github.com/nodejs/node-gyp/issues/65\" target=\"_blank\">with a space in the pathname</a>, try moving your op...";
+                }
+                else
+                {
+                    result.stderr = "failed to natively compile using node-gyp";
+                    if (opName)
+                    {
+                        const onClick = "CABLES.CMD.STANDALONE.openOpDir('', '" + opName + "');";
+                        result.stderr += ", try running 'npm --prefix ./ install " + packageNames.join(" ") + "' manually <a onclick=\"" + onClick + "\">in the op dir</a>";
+                    }
                 }
             }
         }
