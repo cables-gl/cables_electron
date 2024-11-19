@@ -173,10 +173,22 @@ class ElectronApp
         }
         catch (e)
         {
+            result.exception = String(e);
             result.error = true;
-            result.stderr += e;
+            result.stderr += e + e.stderr;
+            if (e.script && e.script.includes("gyp")) result.nativeCompile = true;
         }
         process.off("output", logToVariable);
+        if (result.exception && result.exception === "Error: command failed")
+        {
+            if (result.nativeCompile)
+            {
+                if (targetDir.includes(" "))
+                {
+                    result.stderr = "tried to compile native module <a href=\"https://github.com/nodejs/node-gyp/issues/65\" target=\"_blank\">with a space in the pathname</a>, try moving your op...";
+                }
+            }
+        }
         return result;
     }
 
