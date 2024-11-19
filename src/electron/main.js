@@ -101,41 +101,10 @@ class ElectronApp
     async installPackages(targetDir, packageNames, opName = null)
     {
         if (!targetDir || !packageNames || packageNames.length === 0) return { "stdout": "nothing to install", "packages": [] };
-        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
+
+        const result = await this._installNpmPackages(packageNames, targetDir);
         if (opName) result.opName = opName;
-        this._npm.config.localPrefix = targetDir;
-        const logToVariable = (level, ...args) =>
-        {
-            switch (level)
-            {
-            case "standard":
-                args.forEach((arg) =>
-                {
-                    result.stdout += arg;
-                });
-                break;
-            case "error":
-                args.forEach((arg) =>
-                {
-                    result.stderr += arg;
-                });
-                break;
-            case "buffer":
-            case "flush":
-            default:
-            }
-        };
-        process.on("output", logToVariable);
-        this._log.debug("installing", packageNames, "to", opName, targetDir);
-        try
-        {
-            await this._npm.exec("install", packageNames);
-        }
-        catch (e)
-        {
-            result.stderr += e;
-        }
-        process.off("output", logToVariable);
+
         if (fs.existsSync(path.join(targetDir, "package.json"))) fs.rmSync(path.join(targetDir, "package.json"));
         if (fs.existsSync(path.join(targetDir, "package-lock.json"))) fs.rmSync(path.join(targetDir, "package-lock.json"));
         return result;
@@ -148,41 +117,8 @@ class ElectronApp
         const dirName = path.join(os.tmpdir(), "cables-oppackage-");
         const tmpDir = fs.mkdtempSync(dirName);
 
-        let result = { "stdout": "", "stderr": "", "packages": [], "targetDir": targetDir };
-        this._npm.config.localPrefix = tmpDir;
+        const result = await this._installNpmPackages([opPackageLocation], tmpDir);
 
-        const logToVariable = (level, ...args) =>
-        {
-            switch (level)
-            {
-            case "standard":
-                args.forEach((arg) =>
-                {
-                    result.stdout += arg;
-                });
-                break;
-            case "error":
-                args.forEach((arg) =>
-                {
-                    result.stderr += arg;
-                });
-                break;
-            case "buffer":
-            case "flush":
-            default:
-            }
-        };
-        process.on("output", logToVariable);
-        this._log.debug("installing op package", opPackageLocation, "to", targetDir);
-        try
-        {
-            await this._npm.exec("install", [opPackageLocation]);
-        }
-        catch (e)
-        {
-            result.stderr += e;
-        }
-        process.off("output", logToVariable);
         const nodeModulesDir = path.join(tmpDir, "node_modules");
         if (fs.existsSync(nodeModulesDir))
         {
@@ -198,6 +134,49 @@ class ElectronApp
             });
             fs.rmSync(tmpDir, { "recursive": true });
         }
+        return result;
+    }
+
+    async _installNpmPackages(packageNames, targetDir)
+    {
+        this._npm.config.localPrefix = targetDir;
+
+        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
+
+        const logToVariable = (level, ...args) =>
+        {
+            switch (level)
+            {
+            case "standard":
+                args.forEach((arg) =>
+                {
+                    result.stdout += arg;
+                });
+                break;
+            case "error":
+                args.forEach((arg) =>
+                {
+                    result.error = true;
+                    result.stderr += arg;
+                });
+                break;
+            case "buffer":
+            case "flush":
+            default:
+            }
+        };
+        process.on("output", logToVariable);
+        this._log.debug("installing", packageNames, "to", targetDir);
+        try
+        {
+            await this._npm.exec("install", packageNames);
+        }
+        catch (e)
+        {
+            result.error = true;
+            result.stderr += e;
+        }
+        process.off("output", logToVariable);
         return result;
     }
 
