@@ -75,7 +75,7 @@ class ElectronApi
             event.returnValue = path.join(opDir, "node_modules", data.moduleName);
         });
 
-        ipcMain.on("getOpModuleFile", (event, data) =>
+        ipcMain.on("getOpModuleLocation", (event, data) =>
         {
             let opName = opsUtil.getOpNameById(data.opId);
             if (!opName) opName = data.opName;
@@ -86,7 +86,9 @@ class ElectronApi
             {
                 try
                 {
-                    event.returnValue = helper.pathToFileURL(moduleRequire.resolve(data.moduleName));
+                    let location = moduleRequire.resolve(data.moduleName);
+                    if (data.asUrl) location = helper.pathToFileURL(location);
+                    event.returnValue = location;
                 }
                 catch (e)
                 {
@@ -98,6 +100,23 @@ class ElectronApi
             {
                 event.returnValue = null;
             }
+        });
+
+        ipcMain.on("getOpModules", (event, data) =>
+        {
+            let deps = [];
+            if (!data.opName) return [];
+            const opName = data.opName;
+            const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
+            if (fs.existsSync(opDocFile))
+            {
+                let opDoc = jsonfile.readFileSync(opDocFile);
+                if (opDoc)
+                {
+                    deps = opDoc.dependencies || [];
+                }
+            }
+            event.returnValue = deps.filter((dep) => { return dep.type === "npm"; }).map((dep) => { return dep.src[0]; });
         });
     }
 

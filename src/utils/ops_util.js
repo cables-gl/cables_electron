@@ -132,6 +132,21 @@ class OpsUtil extends SharedOpsUtil
     getOpRenameProblems(newName, oldName, userObj, teams = [], newOpProject = null, oldOpProject = null, opUsages = [], checkUsages = true, targetDir = null)
     {
         const problems = super.getOpRenameProblems(newName, oldName, userObj, teams, newOpProject, oldOpProject, opUsages, checkUsages);
+        if (problems.no_rights_target && targetDir)
+        {
+            if (fs.existsSync(targetDir))
+            {
+                try
+                {
+                    fs.accessSync(targetDir, fs.constants.R_OK | fs.constants.W_OK);
+                    delete problems.no_rights_target;
+                }
+                catch (e)
+                {
+                    // not allowed to read/write
+                }
+            }
+        }
         if (problems.target_exists && targetDir)
         {
             const newOpDir = path.join(targetDir, this.getOpTargetDir(newName, true), this.getOpFileName(newName));

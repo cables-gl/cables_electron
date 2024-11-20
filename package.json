@@ -126,6 +126,7 @@
     "fs-extra": "11.2.0",
     "image-size": "1.0.2",
     "jsonfile": "6.1.0",
+    "import-sync": "2.2.2",
     "marked": "12.0.2",
     "md5-file": "5.0.0",
     "mime": "^4.0.4",

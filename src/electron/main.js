@@ -196,7 +196,7 @@ class ElectronApp
                     if (opName)
                     {
                         const onClick = "CABLES.CMD.STANDALONE.openOpDir('', '" + opName + "');";
-                        result.stderr += ", try running 'npm --prefix ./ install " + packageNames.join(" ") + "' manually <a onclick=\"" + onClick + "\">in the op dir</a>";
+                        result.stderr += ", try running `npm --prefix ./ install " + packageNames.join(" ") + "` manually <a onclick=\"" + onClick + "\">in the op dir</a>";
                     }
                 }
             }
