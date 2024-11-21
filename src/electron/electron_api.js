@@ -1739,6 +1739,7 @@ class ElectronApi
             return result;
         }
 
+        if (fromRename) targetDir = opsUtil.getOpSourceDir(oldName);
         const problems = opsUtil.getOpRenameProblems(newName, oldName, currentUser, [], null, null, [], true, targetDir);
         const hints = {};
         const consequences = opsUtil.getOpRenameConsequences(newName, oldName, targetDir);

@@ -100,6 +100,7 @@ class OpsUtil extends SharedOpsUtil
 
     getOpSourceDir(opName, relative = false)
     {
+        if (!opName) return null;
         if (relative) return super.getOpSourceDir(opName, relative);
         return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
     }
