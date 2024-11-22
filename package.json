@@ -22,18 +22,14 @@
     "pack:mac":"run-s clean build _pack:mac",
     "pack:win":"run-s clean build _pack:win",
     "pack:linux":"run-s clean build _pack:linux",
-    "dist": "run-s build _dist",
-    "dist:mac":"run-s build _dist:mac",
-    "dist:win":"run-s build _dist:win",
-    "dist:linux":"run-s build _dist:linux",
     "_pack": "electron-builder -mwl --dir",
     "_pack:mac": "electron-builder -m --dir -c.mac.identity=null",
     "_pack:win": "electron-builder -w --dir",
     "_pack:linux": "electron-builder -l --dir",
-    "_dist": "electron-builder -mwl",
-    "_dist:mac": "electron-builder -m",
-    "_dist:win": "electron-builder -w",
-    "_dist:linux": "electron-builder -l"
+    "dist": "electron-builder -mwl",
+    "dist:mac": "electron-builder -m",
+    "dist:win": "electron-builder -w",
+    "dist:linux": "electron-builder -l"
   },
   "build": {
     "productName": "cables",
