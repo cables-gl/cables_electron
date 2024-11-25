@@ -1582,7 +1582,10 @@ class ElectronApi
             if (opDoc)
             {
                 const deps = opDoc.dependencies || [];
-                deps.push(dep);
+                if (!deps.some((d) => { return d.name === dep.name && d.name === dep.name; }))
+                {
+                    deps.push(dep);
+                }
                 opDoc.dependencies = deps;
                 opDoc = doc.cleanOpDocData(opDoc);
                 jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
@@ -1619,7 +1622,8 @@ class ElectronApi
                 opDoc.dependencies = newDeps;
                 if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
                 doc.updateOpDocs();
-                return this._installOpDependencies(opName);
+                this._installOpDependencies(opName);
+                return this.success("OK");
             }
             else
             {
