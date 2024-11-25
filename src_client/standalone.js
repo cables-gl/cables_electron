@@ -100,7 +100,7 @@ export default class CablesStandalone
                         };
                         waitForAce();
 
-                        if (npmResult.error && npmResult.data)
+                        if (npmResult.error && npmResult.data && npmResult.msg !== "UNSAVED_PROJECT")
                         {
                             npmResult.data.forEach((msg) =>
                             {
@@ -108,17 +108,15 @@ export default class CablesStandalone
                                 this._log.error("failed dependency" + opName + ": " + msg.stderr);
                             });
                         }
-                        else
+                        else if (npmResult.msg !== "EMPTY" && npmResult.msg !== "UNSAVED_PROJECT")
                         {
-                            if (npmResult.msg !== "EMPTY" && npmResult.msg !== "UNSAVED_PROJECT")
+                            npmResult.data.forEach((result) =>
                             {
-                                npmResult.data.forEach((result) =>
-                                {
-                                    const npmText = result.stderr || result.stdout;
-                                    this._logStartup(result.opName + ": " + npmText);
-                                });
-                            }
+                                const npmText = result.stderr || result.stdout;
+                                this._logStartup(result.opName + ": " + npmText);
+                            });
                         }
+
 
                         if (this.gui)
                         {
