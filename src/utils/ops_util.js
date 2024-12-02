@@ -231,29 +231,21 @@ class OpsUtil extends SharedOpsUtil
                 const version = npmDep.version || "";
                 if (npmDep.src)
                 {
-                    if (Array.isArray(npmDep.src))
+                    npmDep.src.forEach((src) =>
                     {
-                        npmDep.src.forEach((src) =>
-                        {
-                            if (version)
-                            {
-                                src = src + "@" + version;
-                            }
-                            if (!toInstall.includes(src))
-                            {
-                                toInstall.push(src);
-                            }
-                        });
-                    }
-                    else
-                    {
-                        let src = npmDep.src;
                         if (version)
                         {
                             src = src + "@" + version;
                         }
-                        toInstall.push(src);
-                    }
+                        else
+                        {
+                            if (npmDep.name.includes("@")) src = npmDep.name;
+                        }
+                        if (!toInstall.includes(src))
+                        {
+                            toInstall.push(src);
+                        }
+                    });
                 }
             });
         }
