@@ -1195,15 +1195,15 @@ class ElectronApi
         return this.success("OK", npmResults);
     }
 
-    async openDir(options = {})
+    async openDir(data = {})
     {
-        await shell.openPath(options.dir || app.getPath("home"));
+        await shell.openPath(data.dir || app.getPath("home"));
         return this.success("OK", {}, true);
     }
 
-    async openOpDir(options)
+    async openOpDir(data)
     {
-        const opName = opsUtil.getOpNameById(options.opId) || options.opName;
+        const opName = opsUtil.getOpNameById(data.opId) || data.opName;
         if (!opName) return;
         const opDir = opsUtil.getOpAbsoluteFileName(opName);
         if (opDir)
@@ -1435,11 +1435,11 @@ class ElectronApi
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 
-    setProjectName(options)
+    setProjectName(data)
     {
         const oldFile = settings.getCurrentProjectFile();
         let project = settings.getCurrentProject();
-        project.name = options.name;
+        project.name = data.name;
         const newFile = path.join(settings.getCurrentProjectDir(), projectsUtil.getProjectFileName(project));
         project.name = path.basename(newFile);
         project.summary = project.summary || {};
@@ -1551,51 +1551,34 @@ class ElectronApi
         electronApp.updateTitle();
     }
 
-    async addOpDependency(options)
+    async addOpDependency(data)
     {
-        if (!options.opName || !options.name || !options.type) return this.error("INVALID_DATA");
+        if (!data.opName || !data.src || !data.type) return this.error("INVALID_DATA");
         let version = "";
-        if (options.type === "npm")
+        if (data.type === "npm")
         {
-            const parts = options.name.split("@");
-            if (options.name.startsWith("@"))
+            const parts = data.src.split("@");
+            if (data.src.startsWith("@"))
             {
                 version = parts[2] || "";
-                options.name = "@" + parts[1];
+                data.src = "@" + parts[1];
             }
             else
             {
                 version = parts[1] || "";
             }
         }
-        const opName = options.opName;
+        const opName = data.opName;
         const dep = {
-            "name": options.name,
-            "type": options.type,
-            "src": [options.name],
-            "version": version
+            "type": data.type,
+            "src": data.src,
         };
-        const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
-        if (fs.existsSync(opDocFile))
+        if (version) dep.version = version;
+        if (data.export) dep.export = data.export;
+        const added = opsUtil.addOpDependency(opName, dep);
+        if (added)
         {
-            let opDoc = jsonfile.readFileSync(opDocFile);
-            if (opDoc)
-            {
-                const deps = opDoc.dependencies || [];
-                if (!deps.some((d) => { return d.name === dep.name && d.name === dep.name; }))
-                {
-                    deps.push(dep);
-                }
-                opDoc.dependencies = deps;
-                opDoc = doc.cleanOpDocData(opDoc);
-                jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
-                doc.updateOpDocs();
-                return await this._installOpDependencies(opName);
-            }
-            else
-            {
-                return this.error("OP_NOT_FOUND");
-            }
+            return await this._installOpDependencies(opName);
         }
         else
         {
@@ -1603,32 +1586,19 @@ class ElectronApi
         }
     }
 
-    async removeOpDependency(options)
+    async removeOpDependency(data)
     {
-        if (!options.opName || !options.name || !options.type) return this.error("INVALID_DATA");
-        const opName = options.opName;
-        const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
-        if (fs.existsSync(opDocFile))
+        if (!data.opName || !data.src || !data.type) return this.error("INVALID_DATA");
+        const opName = data.opName;
+        const dep = {
+            "src": data.src,
+            "type": data.type,
+        };
+        const removed = opsUtil.removeOpDependency(opName, dep);
+        if (removed)
         {
-            let opDoc = jsonfile.readFileSync(opDocFile);
-            if (opDoc)
-            {
-                const newDeps = [];
-                const deps = opDoc.dependencies || [];
-                deps.forEach((dep) =>
-                {
-                    if (!(dep.name === options.name && dep.type === options.type)) newDeps.push(dep);
-                });
-                opDoc.dependencies = newDeps;
-                if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
-                doc.updateOpDocs();
-                this._installOpDependencies(opName);
-                return this.success("OK");
-            }
-            else
-            {
-                return this.error("OP_NOT_FOUND");
-            }
+            this._installOpDependencies(opName);
+            return this.success("OK");
         }
         else
         {
@@ -1774,7 +1744,7 @@ class ElectronApi
             }
         }
 
-        if (problems.illegal_ops || problems.illegal_references)
+        if (problems.illegal_ops)
         {
             suggestVersion = false;
         }
