@@ -241,17 +241,23 @@ CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
     });
 };
 
-CABLES_CMD_STANDALONE.copyOpDirToClipboard = () =>
+CABLES_CMD_STANDALONE.copyOpDirToClipboard = (opId) =>
 {
     const gui = standalone.gui;
     if (gui)
     {
-        const ops = gui.patchView.getSelectedOps();
-        if (!ops.length) return;
-
-        const op = ops[0];
-        const modulePath = window.ipcRenderer.sendSync("getOpDir", { "opId": op.opId, "opName": op.name });
-        if (modulePath) navigator.clipboard.writeText(modulePath);
+        if (!opId)
+        {
+            const ops = gui.patchView.getSelectedOps();
+            if (!ops.length) return;
+            opId = ops[0].opId;
+        }
+        const modulePath = window.ipcRenderer.sendSync("getOpDir", { "opId": opId });
+        if (modulePath)
+        {
+            navigator.clipboard.writeText(modulePath);
+            CABLES.UI.notify("Op path copied to clipboard");
+        }
     }
 };
 
