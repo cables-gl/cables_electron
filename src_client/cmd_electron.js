@@ -275,7 +275,7 @@ CABLES_CMD_STANDALONE.openOpDirectory = () =>
 };
 
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = (data) =>
+CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = () =>
 {
     let patchName = standalone.gui.project() ? standalone.gui.project().name : null;
     standalone.editor.api("saveProjectAs", { "name": patchName }, (_err, r) => {});

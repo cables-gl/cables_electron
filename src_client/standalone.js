@@ -77,6 +77,8 @@ export default class CablesStandalone
                 const waitForAce = this.editorWindow.waitForAce;
                 this.editorWindow.waitForAce = () =>
                 {
+                    this._log.info("loading", this._settings.patchFile);
+
                     this._incrementStartup();
                     this._logStartup("checking/installing op dependencies...");
                     this._electron.ipcRenderer.invoke("talkerMessage", "installProjectDependencies").then((npmResult) =>

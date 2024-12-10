@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import jsonfile from "jsonfile";
 import opsUtil from "./ops_util.js";
-import projectsUtil from "./projects_util.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
 
