@@ -306,7 +306,7 @@ class ElectronApi
             return;
         }
         let saveAs = data.filename;
-        if (!path.isAbsolute(data.filename)) saveAs = path.join(target, data.filename);
+        if (!path.isAbsolute(data.filename)) saveAs = path.join(target, path.join("/", data.filename));
         const buffer = Buffer.from(data.fileStr.split(",")[1], "base64");
         fs.writeFileSync(saveAs, buffer);
         return this.success("OK", { "filename": path.basename(saveAs) }, true);
