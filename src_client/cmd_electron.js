@@ -1,13 +1,13 @@
 import standalone from "./renderer.js";
 
-const CABLES_CMD_STANDALONE = {};
-const CABLES_CMD_STANDALONE_OVERRIDES = {};
+const CABLES_CMD_STANDALONE = Object.create(null);
+const CABLES_CMD_STANDALONE_OVERRIDES = Object.create(null);
 const CMD_STANDALONE_COMMANDS = [];
 
 CABLES_CMD_STANDALONE.runNpm = () =>
 {
     const loadingModal = standalone.gui.startModalLoading("Installing packages...");
-    const options = {};
+    const options = Object.create(null);
     standalone.editor.api("installProjectDependencies", options, (_err, result) =>
     {
         if (result.data)
@@ -274,7 +274,7 @@ CABLES_CMD_STANDALONE.openOpDirectory = () =>
     }
 };
 
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};
+CABLES_CMD_STANDALONE_OVERRIDES.PATCH = Object.create(null);
 CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = () =>
 {
     let patchName = standalone.gui.project() ? standalone.gui.project().name : null;
@@ -314,7 +314,7 @@ CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp = (opName) =>
     }
 };
 
-CABLES_CMD_STANDALONE_OVERRIDES.RENDERER = {};
+CABLES_CMD_STANDALONE_OVERRIDES.RENDERER = Object.create(null);
 CABLES_CMD_STANDALONE_OVERRIDES.RENDERER.fullscreen = () =>
 {
     standalone.editor.api("cycleFullscreen", { }, (_err, r) => {});

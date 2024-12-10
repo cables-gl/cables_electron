@@ -67,7 +67,7 @@ export default class StandaloneZipExport extends SharedExportService
                 {
                     this._log.info("exported file " + finalZipFileName + " / " + this.archive.pointer() / 1000000.0 + " mb");
 
-                    const result = {};
+                    const result = Object.create(null);
                     result.size = this.archive.pointer() / 1000000.0;
                     result.path = finalZipFileName;
                     result.log = this.exportLog;

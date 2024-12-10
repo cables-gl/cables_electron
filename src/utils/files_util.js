@@ -243,7 +243,7 @@ class FilesUtil extends SharedFilesUtil
     getPatchFiles()
     {
         const arr = [];
-        const fileHierarchy = {};
+        const fileHierarchy = Object.create(null);
 
         const project = settings.getCurrentProject();
         if (!project) return arr;

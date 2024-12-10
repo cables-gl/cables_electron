@@ -188,7 +188,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     addOpDir(project, opDir, atTop = false)
     {
-        if (!project.dirs) project.dirs = {};
+        if (!project.dirs) project.dirs = Object.create(null);
         if (!project.dirs.ops) project.dirs.ops = [];
         if (atTop)
         {
@@ -205,7 +205,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
     removeOpDir(project, opDir)
     {
-        if (!project.dirs) project.dirs = {};
+        if (!project.dirs) project.dirs = Object.create(null);
         if (!project.dirs.ops) project.dirs.ops = [];
         project.dirs.ops = project.dirs.ops.filter((dirName) =>
         {
@@ -238,7 +238,7 @@ class ProjectsUtil extends SharedProjectsUtil
         dirs.forEach((dir) =>
         {
             const opJsons = helper.getFileNamesRecursive(dir, ".json");
-            const opLocations = {};
+            const opLocations = Object.create(null);
             opJsons.forEach((jsonLocation) =>
             {
                 const jsonName = path.basename(jsonLocation, ".json");
@@ -267,7 +267,7 @@ class ProjectsUtil extends SharedProjectsUtil
         {
             if (fs.existsSync(opDir)) newOrder.push(opDir);
         });
-        if (!currentProject.dirs) currentProject.dirs = {};
+        if (!currentProject.dirs) currentProject.dirs = Object.create(null);
         if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
         currentProject.dirs.ops = newOrder.filter((dir) => { return !this.isFixedPositionOpDir(dir); });
         currentProject.dirs.ops = helper.uniqueArray(currentProject.dirs.ops);
@@ -308,7 +308,7 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         if (this._projectOpDocs && !rebuildCache) return this._projectOpDocs;
 
-        const opDocs = {};
+        const opDocs = Object.create(null);
         const opDirs = this.getProjectOpDirs(project, true, false, false);
 
         opDirs.forEach((opDir) =>
