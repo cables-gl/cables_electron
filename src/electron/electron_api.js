@@ -409,7 +409,7 @@ class ElectronApi
         {
             return {};
         }
-        const result = Object.create(null);
+        const result = {};
         result.opDocs = [];
 
         const opDoc = doc.getDocForOp(opName);
@@ -813,7 +813,7 @@ class ElectronApi
 
     getChangelog(data)
     {
-        const obj = Object.create(null);
+        const obj = {};
         obj.items = [];
         obj.ts = Date.now();
         return this.success("OK", obj, true);
@@ -1143,7 +1143,7 @@ class ElectronApi
         }
 
         const results = [];
-        let projectPackages = Object.create(null);
+        let projectPackages = {};
         currentProject.ops.forEach((op) =>
         {
             const opName = opsUtil.getOpNameById(op.opId);
@@ -1372,7 +1372,7 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         const dirInfos = projectsUtil.getOpDirs(currentProject, false);
 
-        const opDirs = Object.create(null);
+        const opDirs = {};
         if (currentProject && currentProject.ops)
         {
             currentProject.ops.forEach((op) =>
@@ -1463,7 +1463,7 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         const assetPorts = projectsUtil.getProjectAssetPorts(currentProject, true);
 
-        const oldNew = Object.create(null);
+        const oldNew = {};
         let projectAssetPath = cables.getAssetPath();
         projectAssetPath = path.join(projectAssetPath, "assets");
         if (!fs.existsSync(projectAssetPath)) mkdirp.sync(projectAssetPath);
@@ -1487,7 +1487,7 @@ class ElectronApi
     collectOps()
     {
         const currentProject = settings.getCurrentProject();
-        const movedOps = Object.create(null);
+        const movedOps = {};
         const allOpNames = [];
         if (currentProject && currentProject.ops)
         {
@@ -1745,7 +1745,7 @@ class ElectronApi
 
         if (fromRename) targetDir = opsUtil.getOpSourceDir(oldName);
         const problems = opsUtil.getOpRenameProblems(newName, oldName, currentUser, [], null, null, [], true, targetDir);
-        const hints = Object.create(null);
+        const hints = {};
         const consequences = opsUtil.getOpRenameConsequences(newName, oldName, targetDir);
 
         let newOpDocs = opDocs;

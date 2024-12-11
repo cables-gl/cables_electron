@@ -32,15 +32,15 @@ class ElectronSettings
         this.WINDOW_BOUNDS = "windowBounds";
         this.DOWNLOAD_PATH = "downloadPath";
 
-        this.opts = Object.create(null);
-        this.opts.defaults = Object.create(null);
+        this.opts = {};
+        this.opts.defaults = {};
         this.opts.configName = this.MAIN_CONFIG_NAME;
-        this.opts.defaults[this.USER_SETTINGS_FIELD] = Object.create(null);
+        this.opts.defaults[this.USER_SETTINGS_FIELD] = {};
         this.opts.defaults[this.PATCHID_FIELD] = null;
         this.opts.defaults[this.PROJECTFILE_FIELD] = null;
         this.opts.defaults[this.CURRENTPROJECTDIR_FIELD] = null;
         this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
-        this.opts.defaults[this.RECENT_PROJECTS_FIELD] = Object.create(null);
+        this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
         this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
         this.opts.defaults[this.DOWNLOAD_PATH] = app.getPath("downloads");
 
@@ -178,7 +178,7 @@ class ElectronSettings
         const coreFile = path.join(cables.getUiDistPath(), "js", "buildinfo.json");
         const uiFile = path.join(cables.getUiDistPath(), "buildinfo.json");
         const standaloneFile = path.join(cables.getStandaloneDistPath(), "public", "js", "buildinfo.json");
-        let core = Object.create(null);
+        let core = {};
         if (fs.existsSync(coreFile))
         {
             try
@@ -191,7 +191,7 @@ class ElectronSettings
             }
         }
 
-        let ui = Object.create(null);
+        let ui = {};
         if (fs.existsSync(uiFile))
         {
             try
@@ -204,7 +204,7 @@ class ElectronSettings
             }
         }
 
-        let api = Object.create(null);
+        let api = {};
         if (fs.existsSync(standaloneFile))
         {
             try
@@ -262,7 +262,7 @@ class ElectronSettings
 
     setRecentProjects(recents)
     {
-        if (!recents) recents = Object.create(null);
+        if (!recents) recents = {};
         return this.set(this.RECENT_PROJECTS_FIELD, recents);
     }
 
@@ -291,7 +291,7 @@ class ElectronSettings
             return p2.updated - p1.updated;
         });
         files = helper.uniqueArray(files);
-        const newRecents = Object.create(null);
+        const newRecents = {};
         for (let i = 0; i < 10; i++)
         {
             if (i > files.length) break;

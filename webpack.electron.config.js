@@ -25,7 +25,7 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false) =>
                     {
                         if (!buildInfo.platform)
                         {
-                            buildInfo.platform = Object.create(null);
+                            buildInfo.platform = {};
                         }
                         if (process.env.BUILD_VERSION)
                         {

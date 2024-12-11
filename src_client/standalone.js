@@ -24,7 +24,7 @@ export default class CablesStandalone
 
         if (!this._config.isPackaged) window.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
 
-        this._loadedModules = Object.create(null);
+        this._loadedModules = {};
     }
 
     /**
