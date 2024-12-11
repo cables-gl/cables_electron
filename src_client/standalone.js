@@ -91,7 +91,7 @@ export default class CablesStandalone
                                 const dirParts = args[2].message.split("/");
                                 const opNameIndex = dirParts.findIndex((part) => { return part.startsWith("Ops."); });
                                 const opName = dirParts[opNameIndex];
-                                const packageName = dirParts[opNameIndex + 2]; // opdir + "node_modules" + packagename
+                                const packageName = dirParts[opNameIndex + 2];
                                 const onClick = "CABLES.CMD.STANDALONE.openOpDir('', '" + opName + "');";
 
                                 const msg = "try running this <a onclick=\"" + onClick + "\" > in the op dir</a>:";
