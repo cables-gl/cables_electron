@@ -73,6 +73,11 @@ class ProjectsUtil extends SharedProjectsUtil
         };
     }
 
+    getNewProjectName(randomize = false)
+    {
+        return "untitled";
+    }
+
     getProjectOpDirs(project, includeOsDir = true, reverse = false, addLocalCoreIfPackaged = true)
     {
         let opsDirs = [];
@@ -81,7 +86,7 @@ class ProjectsUtil extends SharedProjectsUtil
         if (projectDir)
         {
             const currentDir = path.join(projectDir, "ops/");
-            if (fs.existsSync(currentDir)) opsDirs.push(currentDir);
+            opsDirs.push(currentDir);
         }
 
         if (project && project.dirs && project.dirs.ops)
@@ -173,16 +178,9 @@ class ProjectsUtil extends SharedProjectsUtil
         urls.forEach((url) =>
         {
             let fullPath = helper.fileURLToPath(url, true);
-            if (fullPath)
+            if (fullPath && fs.existsSync(fullPath))
             {
-                if (fs.existsSync(fullPath))
-                {
-                    fileNames.push(fullPath);
-                }
-                else
-                {
-                    this._log.warn("missing file", url, fullPath);
-                }
+                fileNames.push(fullPath);
             }
         });
         return helper.uniqueArray(fileNames);
@@ -249,14 +247,12 @@ class ProjectsUtil extends SharedProjectsUtil
                     opLocations[jsonName] = path.dirname(path.join(dir, jsonLocation));
                 }
             });
-            let numUsedOps = 0;
             const opNames = Object.keys(opLocations);
 
             dirInfos.push({
                 "dir": dir,
                 "opLocations": opLocations,
                 "numOps": opNames.length,
-                "numUsedOps": numUsedOps,
                 "fixedPlace": this.isFixedPositionOpDir(dir)
             });
         });

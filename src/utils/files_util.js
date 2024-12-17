@@ -23,7 +23,7 @@ class FilesUtil extends SharedFilesUtil
             "followSymlinks": true,
             "disableGlobbing": true,
             "awaitWriteFinish": {
-                "stabilityThreshold": 1000
+                "stabilityThreshold": 200
             }
         };
 
@@ -34,7 +34,8 @@ class FilesUtil extends SharedFilesUtil
             if (opName)
             {
                 const opId = opsUtil.getOpIdByObjName(opName);
-                electronApp.sendTalkerMessage("executeOp", { "name": opName, "forceReload": true, "id": opId });
+                const code = opsUtil.getOpCode(opName);
+                electronApp.sendTalkerMessage("executeOp", { "name": opName, "forceReload": true, "id": opId, "code": code });
             }
         });
 

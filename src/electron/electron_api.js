@@ -8,6 +8,7 @@ import { promisify } from "util";
 import jsonfile from "jsonfile";
 import sanitizeFileName from "sanitize-filename";
 import { utilProvider } from "cables-shared-api";
+import { createRequire } from "module";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
@@ -73,6 +74,50 @@ class ElectronApi
             const opDir = opsUtil.getOpAbsolutePath(opName);
             event.returnValue = path.join(opDir, "node_modules", data.moduleName);
         });
+
+        ipcMain.on("getOpModuleLocation", (event, data) =>
+        {
+            let opName = opsUtil.getOpNameById(data.opId);
+            if (!opName) opName = data.opName;
+            const opDir = opsUtil.getOpAbsolutePath(opName);
+            const moduleDir = path.join(opDir, "node_modules");
+            const moduleRequire = createRequire(moduleDir);
+            if (moduleRequire)
+            {
+                try
+                {
+                    let location = moduleRequire.resolve(data.moduleName);
+                    if (data.asUrl) location = helper.pathToFileURL(location);
+                    event.returnValue = location;
+                }
+                catch (e)
+                {
+                    this._log.error(e.message);
+                    event.returnValue = null;
+                }
+            }
+            else
+            {
+                event.returnValue = null;
+            }
+        });
+
+        ipcMain.on("getOpModules", (event, data) =>
+        {
+            let deps = [];
+            if (!data.opName) return [];
+            const opName = data.opName;
+            const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
+            if (fs.existsSync(opDocFile))
+            {
+                let opDoc = jsonfile.readFileSync(opDocFile);
+                if (opDoc)
+                {
+                    deps = opDoc.dependencies || [];
+                }
+            }
+            event.returnValue = deps.filter((dep) => { return dep.type === "npm"; }).map((dep) => { return dep.src[0]; });
+        });
     }
 
     async talkerMessage(cmd, data, topicConfig = {})
@@ -84,9 +129,9 @@ class ElectronApi
             if (topicConfig.needsProjectFile)
             {
                 const projectFile = settings.getCurrentProjectFile();
-                if (!projectFile || !projectFile.endsWith(projectsUtil.CABLES_PROJECT_FILE_EXTENSION))
+                if (!projectFile)
                 {
-                    const newProjectFile = await electronApp.saveProjectFileDialog();
+                    const newProjectFile = await electronApp.saveProjectFileDialog(data.name);
                     if (newProjectFile)
                     {
                         let patchData = null;
@@ -100,7 +145,7 @@ class ElectronApi
                     }
                     else
                     {
-                        return this.error("no project dir chosen", null, "info");
+                        return this.error("CANCELLED", null, "info");
                     }
                 }
             }
@@ -261,7 +306,7 @@ class ElectronApi
             return;
         }
         let saveAs = data.filename;
-        if (!path.isAbsolute(data.filename)) saveAs = path.join(target, data.filename);
+        if (!path.isAbsolute(data.filename)) saveAs = path.join(target, path.join("/", data.filename));
         const buffer = Buffer.from(data.fileStr.split(",")[1], "base64");
         fs.writeFileSync(saveAs, buffer);
         return this.success("OK", { "filename": path.basename(saveAs) }, true);
@@ -1055,7 +1100,7 @@ class ElectronApi
         return this.success("OP_DELETED", { "opNames": [opName] });
     }
 
-    async installOpDependencies(opName)
+    async _installOpDependencies(opName)
     {
         const results = [];
         if (opName)
@@ -1074,7 +1119,7 @@ class ElectronApi
                 const npmResults = await electronApp.installPackages(targetDir, opPackages, opName);
                 if (npmResults.stderr)
                 {
-                    return this.error(npmResults.stderr);
+                    return this.error("NPM_ERROR", npmResults, "error");
                 }
                 else
                 {
@@ -1131,7 +1176,14 @@ class ElectronApi
             }
 
             const npmResults = await Promise.all(allNpmInstalls);
-            return this.success("OK", npmResults);
+            if (npmResults.some((result) => { return result.error; }))
+            {
+                return this.error("NPM_ERROR", npmResults, "error");
+            }
+            else
+            {
+                return this.success("OK", npmResults);
+            }
         }
     }
 
@@ -1236,12 +1288,11 @@ class ElectronApi
         return this.success("OK", { "assets": [], "countPatches": 0, "countOps": 0 }, true);
     }
 
-    async saveProjectAs()
+    async saveProjectAs(data)
     {
-        const projectFile = await electronApp.saveProjectFileDialog();
+        const projectFile = await electronApp.saveProjectFileDialog(data.name);
         if (!projectFile)
         {
-            logger.info("no project dir chosen");
             return this.error("no project dir chosen", null, "info");
         }
 
@@ -1320,6 +1371,35 @@ class ElectronApi
     {
         const currentProject = settings.getCurrentProject();
         const dirInfos = projectsUtil.getOpDirs(currentProject, false);
+
+        const opDirs = {};
+        if (currentProject && currentProject.ops)
+        {
+            currentProject.ops.forEach((op) =>
+            {
+                const opName = opsUtil.getOpNameById(op.opId);
+                const opPath = opsUtil.getOpAbsolutePath(opName);
+                if (opPath)
+                {
+                    if (!opDirs.hasOwnProperty(opPath)) opDirs[opPath] = 0;
+                    opDirs[opPath]++;
+                }
+            });
+        }
+
+        dirInfos.forEach((dirInfo) =>
+        {
+            if (!dirInfo.hasOwnProperty("numUsedOps")) dirInfo.numUsedOps = 0;
+            for (const opDir in opDirs)
+            {
+                const count = opDirs[opDir];
+                if (opDir.startsWith(dirInfo.dir))
+                {
+                    dirInfo.numUsedOps += count;
+                }
+            }
+        });
+
         return this.success("OK", dirInfos);
     }
 
@@ -1332,12 +1412,8 @@ class ElectronApi
         {
             currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
             projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
-            return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
         }
-        else
-        {
-            return this.error("no project dir chosen", [], "info");
-        }
+        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 
     async removeProjectOpDir(dirName)
@@ -1506,27 +1582,15 @@ class ElectronApi
             if (opDoc)
             {
                 const deps = opDoc.dependencies || [];
-                deps.push(dep);
+                if (!deps.some((d) => { return d.name === dep.name && d.name === dep.name; }))
+                {
+                    deps.push(dep);
+                }
                 opDoc.dependencies = deps;
                 opDoc = doc.cleanOpDocData(opDoc);
                 jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
                 doc.updateOpDocs();
-                const npmResult = await this.installOpDependencies(opName);
-                if (npmResult.error)
-                {
-                    // remove deps again on install error
-                    const newDeps = [];
-                    opDoc.dependencies.forEach((opDep) =>
-                    {
-                        if (!(options.name === opDep.name && options.type === opDep.type)) newDeps.push(opDep);
-                    });
-                    opDoc.dependencies = newDeps;
-                    opDoc = doc.cleanOpDocData(opDoc);
-                    jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
-                    doc.updateOpDocs();
-                    await this.installOpDependencies(opName);
-                }
-                return npmResult;
+                return await this._installOpDependencies(opName);
             }
             else
             {
@@ -1558,7 +1622,8 @@ class ElectronApi
                 opDoc.dependencies = newDeps;
                 if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
                 doc.updateOpDocs();
-                return this.installOpDependencies(opName);
+                this._installOpDependencies(opName);
+                return this.success("OK");
             }
             else
             {
@@ -1575,8 +1640,15 @@ class ElectronApi
     {
         let file = data.name;
         let pickedFileUrl = await electronApp.saveFileDialog(file);
-        if (pickedFileUrl) fs.writeFileSync(pickedFileUrl, "");
-        return this.success("OK", pickedFileUrl, true);
+        if (pickedFileUrl)
+        {
+            fs.writeFileSync(pickedFileUrl, "");
+            return this.success("OK", pickedFileUrl, true);
+        }
+        else
+        {
+            return this.success("NO_DIR_CHOSEN", null, true);
+        }
     }
 
     async exportPatch()
@@ -1626,7 +1698,7 @@ class ElectronApi
         }
     }
 
-    error(msg, data = null, level = "error")
+    error(msg, data = null, level = "warn")
     {
         const error = { "error": true, "msg": msg, "level": level };
         if (data) error.data = data;
@@ -1644,18 +1716,17 @@ class ElectronApi
             availableNamespaces = projectOpDocs.map((opDoc) => { return opsUtil.getNamespace(opDoc.name, true); });
         }
 
-        availableNamespaces.unshift("Ops.Standalone.");
         availableNamespaces = availableNamespaces.map((availableNamespace) => { return availableNamespace.endsWith(".") ? availableNamespace : availableNamespace + "."; });
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         availableNamespaces = availableNamespaces.sort((a, b) => { return a.localeCompare(b); });
-
-        availableNamespaces.unshift("Ops.");
 
         if (project)
         {
             availableNamespaces.unshift(opsUtil.getPatchOpsNamespaceForProject(project));
         }
+
         if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
+
         availableNamespaces = availableNamespaces.filter((availableNamespace) => { return availableNamespace.startsWith(opsUtil.PREFIX_OPS); });
 
         let removeOld = newName && !(opsUtil.isExtensionOp(newName) && opsUtil.isCoreOp(newName));
@@ -1672,16 +1743,10 @@ class ElectronApi
             return result;
         }
 
+        if (fromRename) targetDir = opsUtil.getOpSourceDir(oldName);
         const problems = opsUtil.getOpRenameProblems(newName, oldName, currentUser, [], null, null, [], true, targetDir);
         const hints = {};
         const consequences = opsUtil.getOpRenameConsequences(newName, oldName, targetDir);
-
-        const newNamespace = opsUtil.getNamespace(newName);
-        const existingNamespace = opsUtil.namespaceExists(newNamespace, opDocs);
-        if (!existingNamespace)
-        {
-            hints.new_namespace = "New op will create a new namespace " + newNamespace;
-        }
 
         let newOpDocs = opDocs;
         if (!opsUtil.isCoreOp(newName)) newOpDocs = doc.getCollectionOpDocs(newName, currentUser);

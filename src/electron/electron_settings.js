@@ -14,7 +14,7 @@ class ElectronSettings
     constructor(storageDir)
     {
         this._log = logger;
-        this.SESSION_PARTITION = "persist:cables:" + helper.generateUUID();
+        this.SESSION_PARTITION = "persist:cables:standalone";
 
         if (storageDir && !fs.existsSync(storageDir))
         {
@@ -168,7 +168,9 @@ class ElectronSettings
 
     getCurrentProjectFile()
     {
-        return this.get(this.PROJECTFILE_FIELD);
+        const projectFile = this.get(this.PROJECTFILE_FIELD);
+        if (projectFile && projectFile.endsWith(projectsUtil.CABLES_PROJECT_FILE_EXTENSION)) return projectFile;
+        return null;
     }
 
     getBuildInfo()
@@ -337,7 +339,11 @@ class ElectronSettings
     _setCurrentProject(projectFile, project)
     {
         this._currentProject = project;
-        if (project) this.set(this.PATCHID_FIELD, project._id);
+        projectsUtil.invalidateProjectCaches();
+        if (project)
+        {
+            this.set(this.PATCHID_FIELD, project._id);
+        }
         if (projectFile && project)
         {
             const projectName = path.basename(projectFile, "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION);

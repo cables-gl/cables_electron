@@ -6,6 +6,12 @@ import filesUtil from "./files_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
+    constructor(provider)
+    {
+        super(provider);
+        this.PREFIX_LOCAL_OPS = "Ops.Local.";
+    }
+
     validateAndFormatOpCode(code)
     {
         return {
@@ -94,14 +100,24 @@ class OpsUtil extends SharedOpsUtil
 
     getOpSourceDir(opName, relative = false)
     {
+        if (!opName) return null;
         if (relative) return super.getOpSourceDir(opName, relative);
         return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
     }
 
     getOpTargetDir(opName, relative = false)
     {
-        if (relative) return super.getOpTargetDir(opName, relative);
-        return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+        let targetDir = "";
+        if (relative)
+        {
+            if (opName.endsWith(".")) opName = opName.substring(0, opName.length - 1);
+            return path.join(opName, "/");
+        }
+        else
+        {
+            targetDir = projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
+        }
+        return targetDir;
     }
 
     getOpSourceNoHierarchy(opName, relative = false)
@@ -117,6 +133,21 @@ class OpsUtil extends SharedOpsUtil
     getOpRenameProblems(newName, oldName, userObj, teams = [], newOpProject = null, oldOpProject = null, opUsages = [], checkUsages = true, targetDir = null)
     {
         const problems = super.getOpRenameProblems(newName, oldName, userObj, teams, newOpProject, oldOpProject, opUsages, checkUsages);
+        if (problems.no_rights_target && targetDir)
+        {
+            if (fs.existsSync(targetDir))
+            {
+                try
+                {
+                    fs.accessSync(targetDir, fs.constants.R_OK | fs.constants.W_OK);
+                    delete problems.no_rights_target;
+                }
+                catch (e)
+                {
+                    // not allowed to read/write
+                }
+            }
+        }
         if (problems.target_exists && targetDir)
         {
             const newOpDir = path.join(targetDir, this.getOpTargetDir(newName, true), this.getOpFileName(newName));
@@ -254,6 +285,16 @@ class OpsUtil extends SharedOpsUtil
         let oldOpDir = this.getOpSourceDir(oldName);
         let newOpDir = oldOpDir.replace(oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
+    }
+
+    getPatchOpNamespace(opName)
+    {
+        return this.getNamespace(opName);
+    }
+
+    getPatchOpsNamespaceForProject(proj)
+    {
+        return this.PREFIX_LOCAL_OPS;
     }
 }
 export default new OpsUtil(utilProvider);

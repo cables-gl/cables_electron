@@ -25,7 +25,7 @@ export default class StandaloneExport extends StandaloneZipExport
 
     static getName()
     {
-        return "standalone";
+        return "patch";
     }
 
     _replaceInString(replacements, theString)

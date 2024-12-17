@@ -15,14 +15,13 @@ import helper from "../utils/helper_util.js";
 import Npm from "../../node_modules/npm/lib/npm.js";
 import opsUtil from "../utils/ops_util.js";
 
-app.commandLine.appendSwitch("disable-http-cache");
-app.commandLine.appendSwitch("force_high_performance_gpu");
-app.commandLine.appendSwitch("unsafely-disable-devtools-self-xss-warnings");
+app.commandLine.appendSwitch("disable-http-cache", "true");
+app.commandLine.appendSwitch("force_high_performance_gpu", "true");
 app.commandLine.appendSwitch("lang", "EN");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
-app.commandLine.appendSwitch("disable-hid-blocklist");
-
+app.commandLine.appendSwitch("disable-hid-blocklist", "true");
+app.commandLine.appendSwitch("enable-web-bluetooth");
 app.disableDomainBlockingFor3DAPIs();
 
 logger.info("--- starting");
@@ -102,41 +101,10 @@ class ElectronApp
     async installPackages(targetDir, packageNames, opName = null)
     {
         if (!targetDir || !packageNames || packageNames.length === 0) return { "stdout": "nothing to install", "packages": [] };
-        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
+
+        const result = await this._installNpmPackages(packageNames, targetDir, opName);
         if (opName) result.opName = opName;
-        this._npm.config.localPrefix = targetDir;
-        const logToVariable = (level, ...args) =>
-        {
-            switch (level)
-            {
-            case "standard":
-                args.forEach((arg) =>
-                {
-                    result.stdout += arg;
-                });
-                break;
-            case "error":
-                args.forEach((arg) =>
-                {
-                    result.stderr += arg;
-                });
-                break;
-            case "buffer":
-            case "flush":
-            default:
-            }
-        };
-        process.on("output", logToVariable);
-        this._log.debug("installing", packageNames, "to", opName, targetDir);
-        try
-        {
-            await this._npm.exec("install", packageNames);
-        }
-        catch (e)
-        {
-            result.stderr += e;
-        }
-        process.off("output", logToVariable);
+
         if (fs.existsSync(path.join(targetDir, "package.json"))) fs.rmSync(path.join(targetDir, "package.json"));
         if (fs.existsSync(path.join(targetDir, "package-lock.json"))) fs.rmSync(path.join(targetDir, "package-lock.json"));
         return result;
@@ -149,41 +117,8 @@ class ElectronApp
         const dirName = path.join(os.tmpdir(), "cables-oppackage-");
         const tmpDir = fs.mkdtempSync(dirName);
 
-        let result = { "stdout": "", "stderr": "", "packages": [], "targetDir": targetDir };
-        this._npm.config.localPrefix = tmpDir;
+        const result = await this._installNpmPackages([opPackageLocation], tmpDir);
 
-        const logToVariable = (level, ...args) =>
-        {
-            switch (level)
-            {
-            case "standard":
-                args.forEach((arg) =>
-                {
-                    result.stdout += arg;
-                });
-                break;
-            case "error":
-                args.forEach((arg) =>
-                {
-                    result.stderr += arg;
-                });
-                break;
-            case "buffer":
-            case "flush":
-            default:
-            }
-        };
-        process.on("output", logToVariable);
-        this._log.debug("installing op package", opPackageLocation, "to", targetDir);
-        try
-        {
-            await this._npm.exec("install", [opPackageLocation]);
-        }
-        catch (e)
-        {
-            result.stderr += e;
-        }
-        process.off("output", logToVariable);
         const nodeModulesDir = path.join(tmpDir, "node_modules");
         if (fs.existsSync(nodeModulesDir))
         {
@@ -198,6 +133,74 @@ class ElectronApp
                 result.packages.push(opName);
             });
             fs.rmSync(tmpDir, { "recursive": true });
+        }
+        return result;
+    }
+
+    async _installNpmPackages(packageNames, targetDir, opName = null)
+    {
+        this._npm.config.localPrefix = targetDir;
+
+        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
+
+        const oldConsole = console.log;
+        const logToVariable = (level, ...args) =>
+        {
+            switch (level)
+            {
+            case "standard":
+                args.forEach((arg) =>
+                {
+                    result.stdout += arg;
+                });
+                break;
+            case "error":
+                args.forEach((arg) =>
+                {
+                    result.error = true;
+                    result.stderr += arg;
+                });
+                break;
+            case "buffer":
+            case "flush":
+            default:
+            }
+        };
+        process.on("output", logToVariable);
+        console.log = (l) => { result.stdout += l; };
+        this._log.debug("installing", packageNames, "to", targetDir);
+        try
+        {
+            await this._npm.exec("install", packageNames);
+        }
+        catch (e)
+        {
+            result.exception = String(e);
+            result.error = true;
+            result.stderr += e + e.stderr;
+            if (e.script && e.script.includes("gyp")) result.nativeCompile = true;
+        }
+        process.off("output", logToVariable);
+        console.log = oldConsole;
+        if (result.exception && result.exception === "Error: command failed")
+        {
+            if (result.nativeCompile)
+            {
+                if (targetDir.includes(" "))
+                {
+                    result.stderr = "tried to compile native module <a href=\"https://github.com/nodejs/node-gyp/issues/65\" target=\"_blank\">with a space in the pathname</a>, try moving your op...";
+                }
+                else
+                {
+                    result.stderr = "failed to natively compile using node-gyp";
+                    if (opName)
+                    {
+                        const onClick = "CABLES.CMD.STANDALONE.openOpDir('', '" + opName + "');";
+                        const opDir = opsUtil.getOpSourceDir(opName);
+                        result.stderr += ", try running `npm --prefix ./ install " + packageNames.join(" ") + "` manually <a onclick=\"" + onClick + "\">in the op dir</a>: `" + opDir + "`";
+                    }
+                }
+            }
         }
         return result;
     }
@@ -330,7 +333,7 @@ class ElectronApp
         });
     }
 
-    async saveProjectFileDialog()
+    async saveProjectFileDialog(defaultPath)
     {
         const extensions = [];
         extensions.push(projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
@@ -340,6 +343,7 @@ class ElectronApp
         return dialog.showSaveDialog(this.editorWindow, {
             "title": title,
             "properties": properties,
+            "defaultPath": defaultPath,
             "filters": [{
                 "name": "cables project",
                 "extensions": extensions,
@@ -389,32 +393,34 @@ class ElectronApp
             inspectElementAcc = "CmdOrCtrl+Option+C";
             consoleAcc = "CmdOrCtrl+Option+J";
         }
+        const aboutMenu = [];
+        aboutMenu.push({
+            "label": "About Cables",
+            "click": () => { this._showAbout(); }
+        });
+        aboutMenu.push({ "type": "separator" });
+        if (isOsX)
+        {
+            aboutMenu.push({ "role": "services" });
+            aboutMenu.push({ "type": "separator" });
+            aboutMenu.push({ "role": "hide", "label": "Hide Cables" });
+            aboutMenu.push({ "role": "hideOthers" });
+            aboutMenu.push({ "role": "unhide" });
+            aboutMenu.push({ "type": "separator" });
+        }
+
+        aboutMenu.push({
+            "role": "quit",
+            "label": "Quit",
+            "accelerator": "CmdOrCtrl+Q",
+            "click": () => { app.quit(); }
+        });
 
         const menuTemplate = [
             {
                 "role": "appMenu",
-                "label": "cables",
-                "submenu": [
-                    {
-                        "label": "About Cables",
-                        "click": () =>
-                        {
-                            this._showAbout();
-                        }
-                    },
-                    {
-                        "type": "separator"
-                    },
-                    {
-                        "role": "quit",
-                        "label": "Quit",
-                        "accelerator": "CmdOrCtrl+Q",
-                        "click": () =>
-                        {
-                            app.quit();
-                        }
-                    }
-                ]
+                "label": "Cables",
+                "submenu": aboutMenu
             },
             {
                 "label": "File",
@@ -956,10 +962,21 @@ class ElectronApp
             }
             if (buildInfo.api.platform)
             {
-                versionText += "\n";
+                versionText += "\nbuilt with:\n";
                 if (buildInfo.api.platform.node) versionText += "node: " + buildInfo.api.platform.node + "\n";
                 if (buildInfo.api.platform.npm) versionText += "npm: " + buildInfo.api.platform.npm;
             }
+            if (process.versions)
+            {
+                versionText += "\n\nrunning in:\n";
+                if (process.versions.electron) versionText += "electron: " + process.versions.electron + "\n";
+                if (process.versions.chrome) versionText += "chrome: " + process.versions.chrome + "\n";
+                if (process.versions.v8) versionText += "v8: " + process.versions.v8 + "\n";
+
+                if (process.versions.node) versionText += "node: " + process.versions.node + "\n";
+                if (buildInfo.api.platform.npm) versionText += "npm: " + buildInfo.api.platform.npm;
+            }
+
             options.detail = versionText;
         }
         dialog.showMessageBox(options);

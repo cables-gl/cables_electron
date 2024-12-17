@@ -11,6 +11,7 @@ export default class CablesStandalone
     constructor()
     {
         this._electron = window.nodeRequire("electron");
+        this._importSync = window.nodeRequire("import-sync");
 
         window.ipcRenderer = this._electron.ipcRenderer; // needed to have ipcRenderer in electron_editor.js
         this._settings = this._electron.ipcRenderer.sendSync("platformSettings") || {};
@@ -22,6 +23,8 @@ export default class CablesStandalone
         this._startUpLogItems = this._electron.ipcRenderer.sendSync("getStartupLog") || [];
 
         if (!this._config.isPackaged) window.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
+
+        this._loadedModules = {};
     }
 
     /**
@@ -74,11 +77,40 @@ export default class CablesStandalone
                 const waitForAce = this.editorWindow.waitForAce;
                 this.editorWindow.waitForAce = () =>
                 {
+                    this._log.info("loading", this._settings.patchFile);
+
                     this._incrementStartup();
                     this._logStartup("checking/installing op dependencies...");
                     this._electron.ipcRenderer.invoke("talkerMessage", "installProjectDependencies").then((npmResult) =>
                     {
-                        if (npmResult.msg !== "EMPTY" && npmResult.msg !== "UNSAVED_PROJECT")
+                        this.editorWindow.CABLESUILOADER.cfg.patchConfig.onError = (...args) =>
+                        {
+                            // npm runtime error...
+                            if (args && args[0] === "core_patch" && args[2] && args[2].message && args[2].message.includes("was compiled against a different Node.js version"))
+                            {
+                                const dirParts = args[2].message.split("/");
+                                const opNameIndex = dirParts.findIndex((part) => { return part.startsWith("Ops."); });
+                                const opName = dirParts[opNameIndex];
+                                const packageName = dirParts[opNameIndex + 2];
+                                const onClick = "CABLES.CMD.STANDALONE.openOpDir('', '" + opName + "');";
+
+                                const msg = "try running this <a onclick=\"" + onClick + "\" > in the op dir</a>:";
+                                this._log.error(msg);
+                                this._log.error("`npm --prefix ./ install " + packageName + "`");
+                                this._log.error("`npx \"@electron/rebuild\" -v " + process.versions.electron);
+                            }
+                        };
+                        waitForAce();
+
+                        if (npmResult.error && npmResult.data && npmResult.msg !== "UNSAVED_PROJECT")
+                        {
+                            npmResult.data.forEach((msg) =>
+                            {
+                                const opName = msg.opName ? " for " + msg.opName : "";
+                                this._log.error("failed dependency" + opName + ": " + msg.stderr);
+                            });
+                        }
+                        else if (npmResult.msg !== "EMPTY" && npmResult.msg !== "UNSAVED_PROJECT")
                         {
                             npmResult.data.forEach((result) =>
                             {
@@ -86,7 +118,15 @@ export default class CablesStandalone
                                 this._logStartup(result.opName + ": " + npmText);
                             });
                         }
-                        waitForAce();
+
+
+                        if (this.gui)
+                        {
+                            this.gui.on("uiloaded", () =>
+                            {
+                                if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
+                            });
+                        }
                     });
                 };
                 if (this._settings.uiLoadStart) this.editorWindow.CABLESUILOADER.uiLoadStart -= this._settings.uiLoadStart;
@@ -210,24 +250,52 @@ export default class CablesStandalone
     {
         if (op) op.setUiError("oprequire", null);
         if (moduleName === "electron") return thisClass._electron;
+        if (this._loadedModules[moduleName]) return this._loadedModules[moduleName];
 
         try
         {
+            // load module by directory name
             const modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
-            return window.nodeRequire(modulePath);
+            this._loadedModules[moduleName] = window.nodeRequire(modulePath);
+            return this._loadedModules[moduleName];
         }
-        catch (e)
+        catch (ePath)
         {
             try
             {
-                return window.nodeRequire(moduleName);
+                // load module by resolved filename from package.json
+                const moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
+                this._loadedModules[moduleName] = window.nodeRequire(moduleFile);
+                return this._loadedModules[moduleName];
             }
-            catch (e2)
+            catch (eFile)
             {
-                const errorMessage = "failed to load node module: " + moduleName;
-                if (op) op.setUiError("oprequire", errorMessage);
-                this._log.error(errorMessage, e2, e);
-                return "";
+                try
+                {
+                    // load module by module name
+                    this._loadedModules[moduleName] = window.nodeRequire(moduleName);
+                    return this._loadedModules[moduleName];
+                }
+                catch (eName)
+                {
+                    try
+                    {
+                        const moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName, });
+                        this._loadedModules[moduleName] = this._importSync(moduleFile);
+                        return this._loadedModules[moduleName];
+                    }
+                    catch (eImport)
+                    {
+                        let errorMessage = "failed to load node module: " + moduleName + "\n\n";
+                        errorMessage += "require by import:\n" + eImport + "\n\n";
+                        errorMessage += "require by name:\n" + eName + "\n\n";
+                        errorMessage += "require by file:\n" + eFile + "\n\n";
+                        errorMessage += "require by path:\n" + ePath;
+                        if (op) op.setUiError("oprequire", errorMessage);
+                        this._log.error(errorMessage, eName, eFile, ePath);
+                        return { };
+                    }
+                }
             }
         }
     }

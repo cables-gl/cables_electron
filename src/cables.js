@@ -6,7 +6,6 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import { fileURLToPath } from "url";
 import settings from "./electron/electron_settings.js";
-import helper from "./utils/helper_util.js";
 
 class CablesElectron extends Cables
 {
