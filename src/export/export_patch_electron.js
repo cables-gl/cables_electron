@@ -3,9 +3,9 @@ import fs from "fs";
 import path from "path";
 import cables from "../cables.js";
 import libsUtil from "../utils/libs_util.js";
-import StandaloneZipExport from "./export_zip_standalone.js";
+import CablesElectronZipExport from "./export_zip_electron.js";
 
-export default class StandaloneExport extends StandaloneZipExport
+export default class CablesElectronExport extends CablesElectronZipExport
 {
     constructor(provider)
     {

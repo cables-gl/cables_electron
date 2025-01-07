@@ -6,7 +6,7 @@ import path from "path";
 import settings from "../electron/electron_settings.js";
 import electronApp from "../electron/main.js";
 
-export default class StandaloneZipExport extends SharedExportService
+export default class ElectronZipExport extends SharedExportService
 {
     constructor(provider)
     {

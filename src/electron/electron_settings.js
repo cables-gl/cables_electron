@@ -1,7 +1,9 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { app } from "electron";
+
 import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
-import { app } from "electron";
 import jsonfile from "jsonfile";
 import helper from "../utils/helper_util.js";
 import logger from "../utils/logger.js";
@@ -177,7 +179,7 @@ class ElectronSettings
     {
         const coreFile = path.join(cables.getUiDistPath(), "js", "buildinfo.json");
         const uiFile = path.join(cables.getUiDistPath(), "buildinfo.json");
-        const standaloneFile = path.join(cables.getStandaloneDistPath(), "public", "js", "buildinfo.json");
+        const electronFile = path.join(cables.getStandaloneDistPath(), "public", "js", "buildinfo.json");
         let core = {};
         if (fs.existsSync(coreFile))
         {
@@ -205,15 +207,15 @@ class ElectronSettings
         }
 
         let api = {};
-        if (fs.existsSync(standaloneFile))
+        if (fs.existsSync(electronFile))
         {
             try
             {
-                api = jsonfile.readFileSync(standaloneFile);
+                api = jsonfile.readFileSync(electronFile);
             }
             catch (e)
             {
-                this._log.info("failed to parse buildinfo from", standaloneFile);
+                this._log.info("failed to parse buildinfo from", electronFile);
             }
         }
 

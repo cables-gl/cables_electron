@@ -3,10 +3,10 @@ import ElectronEditor from "./electron_editor.js";
 import electronCommands from "./cmd_electron.js";
 
 /**
- * frontend class for cables standalone
+ * frontend class for cablesElectron
  * initializes the ui, starts the editor and adds functions custom to this platform
  */
-export default class CablesStandalone
+export default class CablesElectron
 {
     constructor()
     {
@@ -74,10 +74,10 @@ export default class CablesStandalone
         {
             if (this.editorWindow)
             {
-                const waitForAce = this.editorWindow.waitForAce;
-                this.editorWindow.waitForAce = () =>
+                const waitForUI = this.editorWindow.waitForUI;
+                this.editorWindow.waitForUI = () =>
                 {
-                    this._log.info("loading", this._settings.patchFile);
+                    this._logStartup("loading", this._settings.patchFile);
 
                     this._incrementStartup();
                     this._logStartup("checking/installing op dependencies...");
@@ -92,7 +92,7 @@ export default class CablesStandalone
                                 const opNameIndex = dirParts.findIndex((part) => { return part.startsWith("Ops."); });
                                 const opName = dirParts[opNameIndex];
                                 const packageName = dirParts[opNameIndex + 2];
-                                const onClick = "CABLES.CMD.STANDALONE.openOpDir('', '" + opName + "');";
+                                const onClick = "CABLES.CMD.ELECTRON.openOpDir('', '" + opName + "');";
 
                                 const msg = "try running this <a onclick=\"" + onClick + "\" > in the op dir</a>:";
                                 this._log.error(msg);
@@ -100,7 +100,7 @@ export default class CablesStandalone
                                 this._log.error("`npx \"@electron/rebuild\" -v " + process.versions.electron);
                             }
                         };
-                        waitForAce();
+                        waitForUI();
 
                         if (npmResult.error && npmResult.data && npmResult.msg !== "UNSAVED_PROJECT")
                         {
@@ -185,6 +185,11 @@ export default class CablesStandalone
         });
     }
 
+    openOpDirsTab()
+    {
+        if (this.CABLES) this.CABLES.platform.openOpDirsTab();
+    }
+
     _coreReady()
     {
         if (this.CABLES)
@@ -197,40 +202,20 @@ export default class CablesStandalone
                     return standAlone._opRequire(moduleName, this, standAlone);
                 };
             }
-            if (this.CABLES.Patch)
-            {
-                Object.defineProperty(this.CABLES.Patch.prototype, "patchDir", { "get": this._patchDir.bind(this) });
-            }
         }
     }
 
     _uiReady()
     {
-        this.CABLES.UI.standaloneLogger = () =>
+        this._log = () =>
         {
             CABLES.UI = this.CABLES.UI;
-            return new Logger("standalone");
+            return new Logger("electron");
         };
-        this._log = this.CABLES.UI.standaloneLogger();
         if (this.CABLES)
         {
-            const getOpsForFilename = this.CABLES.UI.getOpsForFilename;
-            this.CABLES.UI.getOpsForFilename = (filename) =>
-            {
-                let defaultOps = getOpsForFilename(filename);
-                if (defaultOps.length === 0)
-                {
-                    defaultOps.push(this.CABLES.UI.DEFAULTOPNAMES.HttpRequest);
-                    const addOpCb = this.gui.corePatch().on("onOpAdd", (newOp) =>
-                    {
-                        const contentPort = newOp.getPortByName("Content", false);
-                        if (contentPort) contentPort.set("String");
-                        this.gui.corePatch().off(addOpCb);
-                    });
-                }
-                return defaultOps;
-            };
-            this.CABLES.CMD.STANDALONE = electronCommands.functions;
+            this.CABLES.UI.DEFAULTOPNAMES.defaultOpFallback = this.CABLES.UI.DEFAULTOPNAMES.HttpRequest;
+            this.CABLES.CMD.ELECTRON = electronCommands.functions;
             this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(electronCommands.commands);
             Object.assign(this.CABLES.CMD.PATCH, electronCommands.functionOverrides.PATCH);
             Object.assign(this.CABLES.CMD.RENDERER, electronCommands.functionOverrides.RENDERER);
@@ -298,11 +283,6 @@ export default class CablesStandalone
                 }
             }
         }
-    }
-
-    _patchDir(...args)
-    {
-        return this._settings.currentPatchDir;
     }
 
     _logStartup(title)

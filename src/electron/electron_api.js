@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { app, ipcMain, net, shell } from "electron";
 import fs from "fs";
 import path from "path";
@@ -20,8 +21,8 @@ import projectsUtil from "../utils/projects_util.js";
 import electronApp from "./main.js";
 import filesUtil from "../utils/files_util.js";
 import libsUtil from "../utils/libs_util.js";
-import StandaloneZipExport from "../export/export_zip_standalone.js";
-import StandaloneExport from "../export/export_patch_standalone.js";
+import StandaloneZipExport from "../export/export_zip_electron.js";
+import StandaloneExport from "../export/export_patch_electron.js";
 
 class ElectronApi
 {
@@ -1223,7 +1224,7 @@ class ElectronApi
         }
     }
 
-    async openAssetDir(data)
+    async openFileManager(data)
     {
         let assetPath = helper.fileURLToPath(data.url, true);
         if (fs.existsSync(assetPath))

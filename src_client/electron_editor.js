@@ -4,8 +4,8 @@ import { TalkerAPI } from "cables-shared-client";
  * @name EditorParams
  * @type {object}
  * @property {{}} config config options for the ui
- * @property {boolean} config.isTrustedPatch does the user have write permission in the patch, always true in standalone
- * @property {string} config.platformClass the platform class to use in the ui, allows for hooks and overrides in community vs standalone
+ * @property {boolean} config.isTrustedPatch does the user have write permission in the patch, always true in cablesElectron
+ * @property {string} config.platformClass the platform class to use in the ui, allows for hooks and overrides in community vs cablesElectron
  * @property {string} config.urlCables url used for links to outside the sandbox on community platform
  * @property {string} config.urlSandbox url used for links to inside the sandbox on community platform
  * @property {{}} config.user current user object
@@ -19,12 +19,12 @@ import { TalkerAPI } from "cables-shared-client";
  * @property {boolean} config.remoteClient are we a remote client?
  * @property {{}} config.buildInfo buildinfo for the currently running version
  * @property {{}} config.patchConfig configuration handed over to the loaded patch
- * @property {boolean} config.patchConfig.allowEdit is the user allowed to edit the pacht, always true in standalone
+ * @property {boolean} config.patchConfig.allowEdit is the user allowed to edit the pacht, always true in cablesElectron
  * @property {string} config.patchConfig.prefixAssetPath where to look for assets that are set to relative paths in the project
  */
 
 /**
- * cables editor instance for electron standalone version
+ * cables editor instance for electron cablesElectron version
  * handles ipc messages from and to the ui
  *
  * @param {EditorParams} params
@@ -150,10 +150,10 @@ export default class ElectronEditor
                 }
                 else
                 {
-                    if (window.standalone && window.standalone.gui && r)
+                    if (window.cablesElectron && window.cablesElectron.gui && r)
                     {
-                        window.standalone.gui.patchView.addAssetOpAuto(r);
-                        window.standalone.gui.fileManagerEditor.editAssetTextFile("file:" + r, "text");
+                        window.cablesElectron.gui.patchView.addAssetOpAuto(r);
+                        window.cablesElectron.gui.fileManagerEditor.editAssetTextFile("file:" + r, "text");
                     }
                 }
                 next(error, r);
@@ -253,5 +253,11 @@ export default class ElectronEditor
     editor(cmd, data, next)
     {
         this._talker.send(cmd, data, next);
+    }
+
+    notify(msg)
+    {
+        if (!msg) return;
+        this._talker.send("notify", { "msg": msg });
     }
 }

@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { protocol, session, net, shell } from "electron";
 import fs from "fs";
 import path from "path";
@@ -493,7 +494,7 @@ class ElectronEndpoint
                                 }
                             });
                         }
-                        report.username = "standalone";
+                        report.username = "electron";
                         errorReportSend.setHeader("Content-Type", "application/json");
                         errorReportSend.write(JSON.stringify(report), "utf-8");
                         errorReportSend.end();

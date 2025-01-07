@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme, nativeImage } from "electron";
 import path from "path";
 import localShortcut from "electron-localshortcut";
@@ -195,7 +196,7 @@ class ElectronApp
                     result.stderr = "failed to natively compile using node-gyp";
                     if (opName)
                     {
-                        const onClick = "CABLES.CMD.STANDALONE.openOpDir('', '" + opName + "');";
+                        const onClick = "CABLES.CMD.ELECTRON.openOpDir('', '" + opName + "');";
                         const opDir = opsUtil.getOpSourceDir(opName);
                         result.stderr += ", try running `npm --prefix ./ install " + packageNames.join(" ") + "` manually <a onclick=\"" + onClick + "\">in the op dir</a>: `" + opDir + "`";
                     }

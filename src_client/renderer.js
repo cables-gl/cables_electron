@@ -1,13 +1,13 @@
 import { ele } from "cables-shared-client";
-import CablesStandalone from "./standalone.js";
+import CablesElectron from "./cables_electron.js";
 
-const standalone = new CablesStandalone();
+const cablesElectron = new CablesElectron();
 window.ele = ele;
 document.addEventListener("DOMContentLoaded", () =>
 {
-    standalone.init();
-    window.standalone = standalone;
+    cablesElectron.init();
+    window.electron = cablesElectron;
     document.dispatchEvent(new Event("cablesStandaloneReady"));
 });
-export default standalone;
+export default cablesElectron;
 

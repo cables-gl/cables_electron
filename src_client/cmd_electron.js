@@ -1,14 +1,13 @@
-import standalone from "./renderer.js";
+import cablesElectron from "./renderer.js";
 
-const CABLES_CMD_STANDALONE = {};
-const CABLES_CMD_STANDALONE_OVERRIDES = {};
-const CMD_STANDALONE_COMMANDS = [];
+const CABLES_CMD_ELECTRON = {};
+const CABLES_CMD_ELECTRON_OVERRIDES = {};
+const CMD_ELECTRON_COMMANDS = [];
 
-CABLES_CMD_STANDALONE.runNpm = () =>
+CABLES_CMD_ELECTRON.runNpm = () =>
 {
-    const loadingModal = standalone.gui.startModalLoading("Installing packages...");
-    const options = {};
-    standalone.editor.api("installProjectDependencies", options, (_err, result) =>
+    const loadingModal = cablesElectron.gui.startModalLoading("Installing packages...");
+    cablesElectron.editor.api("installProjectDependencies", {}, (_err, result) =>
     {
         if (result.data)
         {
@@ -35,43 +34,57 @@ CABLES_CMD_STANDALONE.runNpm = () =>
                     loadingModal.setTask(r.stderr);
                 }
             });
-            setTimeout(() => { standalone.gui.endModalLoading(); }, 3000);
+            setTimeout(() => { cablesElectron.gui.endModalLoading(); }, 3000);
         }
     });
 };
 
-CABLES_CMD_STANDALONE.openOpDir = (opId, opName) =>
+CABLES_CMD_ELECTRON.openOpDir = (opId = null, opName = null) =>
 {
-    standalone.editor.api("openOpDir", { "opId": opId, "opName": opName }, (_err, r) => {});
+    const gui = cablesElectron.gui;
+    if (gui)
+    {
+        let options = { "opId": opId, "opName": opName };
+        if (!opId && !opName)
+        {
+            const ops = gui.patchView.getSelectedOps();
+            if (!ops.length) return;
+            options = {
+                "opId": ops[0].opId,
+                "opName": ops[0].name
+            };
+        }
+        cablesElectron.editor.api("openOpDir", options, (_err, r) => {});
+    }
 };
 
-CABLES_CMD_STANDALONE.openProjectDir = (options) =>
+CABLES_CMD_ELECTRON.openProjectDir = () =>
 {
-    standalone.editor.api("openProjectDir", options, (_err, r) => {});
+    cablesElectron.editor.api("openProjectDir", { }, (_err, r) => {});
 };
 
-CABLES_CMD_STANDALONE.openAssetDir = (options) =>
+CABLES_CMD_ELECTRON.openFileManager = (url) =>
 {
-    standalone.editor.api("openAssetDir", options, (_err, r) => {});
+    cablesElectron.editor.api("openFileManager", { "url": url }, (_err, r) => {});
 };
 
-CABLES_CMD_STANDALONE.addProjectOpDir = (options = {}, cb = null) =>
+CABLES_CMD_ELECTRON.addProjectOpDir = (cb = null) =>
 {
-    standalone.editor.api("addProjectOpDir", options, (err, r) =>
+    cablesElectron.editor.api("addProjectOpDir", {}, (err, r) =>
     {
         if (cb) cb(err, r.data);
     });
 };
 
-CABLES_CMD_STANDALONE.collectAssets = (options) =>
+CABLES_CMD_ELECTRON.collectAssets = () =>
 {
-    const loadingModal = standalone.gui.startModalLoading("Copying assets...");
+    const loadingModal = cablesElectron.gui.startModalLoading("Copying assets...");
     let closeTimeout = 2000;
-    standalone.editor.api("collectAssets", options, (_err, r) =>
+    cablesElectron.editor.api("collectAssets", {}, (_err, r) =>
     {
         if (!_err)
         {
-            const ops = standalone.gui.corePatch().ops;
+            const ops = cablesElectron.gui.corePatch().ops;
             const oldNew = r.data;
             if (oldNew)
             {
@@ -103,7 +116,7 @@ CABLES_CMD_STANDALONE.collectAssets = (options) =>
                             }
                         });
                     });
-                    standalone.gui.setStateUnsaved();
+                    cablesElectron.gui.setStateUnsaved();
                 }
                 else
                 {
@@ -122,15 +135,15 @@ CABLES_CMD_STANDALONE.collectAssets = (options) =>
             loadingModal.setTask(_err);
             closeTimeout = 5000;
         }
-        setTimeout(() => { standalone.gui.endModalLoading(); }, closeTimeout);
+        setTimeout(() => { cablesElectron.gui.endModalLoading(); }, closeTimeout);
     });
 };
 
-CABLES_CMD_STANDALONE.collectOps = (options) =>
+CABLES_CMD_ELECTRON.collectOps = () =>
 {
-    const loadingModal = standalone.gui.startModalLoading("Copying ops...");
+    const loadingModal = cablesElectron.gui.startModalLoading("Copying ops...");
     let closeTimeout = 2000;
-    standalone.editor.api("collectOps", options, (_err, r) =>
+    cablesElectron.editor.api("collectOps", { }, (_err, r) =>
     {
         if (!_err && r && r.data)
         {
@@ -147,7 +160,7 @@ CABLES_CMD_STANDALONE.collectOps = (options) =>
             {
                 loadingModal.setTask("nothing to copy");
             }
-            setTimeout(() => { standalone.gui.endModalLoading(); }, closeTimeout);
+            setTimeout(() => { cablesElectron.gui.endModalLoading(); }, closeTimeout);
         }
         else
         {
@@ -155,25 +168,20 @@ CABLES_CMD_STANDALONE.collectOps = (options) =>
             loadingModal.setTask("---");
             loadingModal.setTask(_err);
             closeTimeout = 5000;
-            setTimeout(() => { standalone.gui.endModalLoading(); }, closeTimeout);
+            setTimeout(() => { cablesElectron.gui.endModalLoading(); }, closeTimeout);
         }
     });
 };
 
-CABLES_CMD_STANDALONE.exportPatch = () =>
+CABLES_CMD_ELECTRON.orderOpDirs = () =>
 {
-
+    cablesElectron.openOpDirsTab();
 };
 
-CABLES_CMD_STANDALONE.orderOpDirs = () =>
-{
-    standalone.CABLES.platform.openOpDirsTab();
-};
-
-CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
+CABLES_CMD_ELECTRON.addOpPackage = (cb = null) =>
 {
     let opTargetDir = null;
-    standalone.editor.api("getProjectOpDirs", {}, (err, res) =>
+    cablesElectron.editor.api("getProjectOpDirs", {}, (err, res) =>
     {
         let html = "";
         let opDirSelect = "Choose target directory:<br/><br/>";
@@ -195,9 +203,9 @@ CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
             "html": html,
             "promptOk": (packageLocation) =>
             {
-                const loadingModal = standalone.gui.startModalLoading("Installing ops...");
+                const loadingModal = cablesElectron.gui.startModalLoading("Installing ops...");
                 const packageOptions = { "targetDir": opTargetDir, "package": packageLocation };
-                standalone.editor.api("addOpPackage", packageOptions, (_err, result) =>
+                cablesElectron.editor.api("addOpPackage", packageOptions, (_err, result) =>
                 {
                     const r = result.data;
                     if (r)
@@ -223,14 +231,14 @@ CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
                             loadingModal.setTask(r.stderr);
                         }
                         loadingModal.setTask("done");
-                        next(_err, r);
-                        setTimeout(() => { standalone.gui.endModalLoading(); }, 3000);
+                        if (cb) cb(_err, r);
+                        setTimeout(() => { cablesElectron.gui.endModalLoading(); }, 3000);
                     }
                 });
             }
         });
 
-        const dirSelect = standalone.editorWindow.ele.byId("opTargetDir");
+        const dirSelect = cablesElectron.editorWindow.ele.byId("opTargetDir");
         if (dirSelect)
         {
             dirSelect.addEventListener("change", () =>
@@ -241,9 +249,9 @@ CABLES_CMD_STANDALONE.addOpPackage = (options, next) =>
     });
 };
 
-CABLES_CMD_STANDALONE.copyOpDirToClipboard = (opId) =>
+CABLES_CMD_ELECTRON.copyOpDirToClipboard = (opId = null) =>
 {
-    const gui = standalone.gui;
+    const gui = cablesElectron.gui;
     if (gui)
     {
         if (!opId)
@@ -256,49 +264,36 @@ CABLES_CMD_STANDALONE.copyOpDirToClipboard = (opId) =>
         if (modulePath)
         {
             navigator.clipboard.writeText(modulePath);
-            CABLES.UI.notify("Op path copied to clipboard");
+            cablesElectron.editor.notify("Op path copied to clipboard");
         }
     }
 };
 
-CABLES_CMD_STANDALONE.openOpDirectory = () =>
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH = {};
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH.saveAs = () =>
 {
-    const gui = standalone.gui;
-    if (gui)
-    {
-        const ops = gui.patchView.getSelectedOps();
-        if (!ops.length) return;
-
-        const op = ops[0];
-        CABLES_CMD_STANDALONE.openOpDir(op.opId, op.name);
-    }
+    let patchName = cablesElectron.gui.project() ? cablesElectron.gui.project().name : null;
+    cablesElectron.editor.api("saveProjectAs", { "name": patchName }, (_err, r) => {});
 };
-
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH = {};
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs = () =>
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH.uploadFileDialog = () =>
 {
-    let patchName = standalone.gui.project() ? standalone.gui.project().name : null;
-    standalone.editor.api("saveProjectAs", { "name": patchName }, (_err, r) => {});
-};
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH.uploadFileDialog = () =>
-{
-    standalone.editor.api("selectFile", {}, (_err, filepath) =>
+    cablesElectron.editor.api("selectFile", {}, (_err, filepath) =>
     {
         if (!_err && filepath)
         {
-            const gui = standalone.gui;
+            const gui = cablesElectron.gui;
             if (gui) gui.patchView.addAssetOpAuto(filepath);
         }
     });
 };
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH.newPatch = () =>
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH.newPatch = () =>
 {
-    standalone.editor.api("newPatch", { }, (_err, r) => {});
+    cablesElectron.editor.api("newPatch", { }, (_err, r) => {});
 };
 
-CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp = (opName) =>
+CABLES_CMD_ELECTRON_OVERRIDES.PATCH.renameOp = (opName = null) =>
 {
-    const gui = standalone.gui;
+    const gui = cablesElectron.gui;
     if (gui)
     {
         if (!opName)
@@ -314,80 +309,80 @@ CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp = (opName) =>
     }
 };
 
-CABLES_CMD_STANDALONE_OVERRIDES.RENDERER = {};
-CABLES_CMD_STANDALONE_OVERRIDES.RENDERER.fullscreen = () =>
+CABLES_CMD_ELECTRON_OVERRIDES.RENDERER = {};
+CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
 {
-    standalone.editor.api("cycleFullscreen", { }, (_err, r) => {});
+    cablesElectron.editor.api("cycleFullscreen", { }, (_err, r) => {});
 };
 
 const CABLES_CMD_COMMAND_OVERRIDES = [
     {
         "cmd": "save patch as...",
-        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.saveAs
+        "func": CABLES_CMD_ELECTRON_OVERRIDES.PATCH.saveAs
     },
     {
         "cmd": "upload file dialog",
-        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.uploadFileDialog
+        "func": CABLES_CMD_ELECTRON_OVERRIDES.PATCH.uploadFileDialog
     },
     {
         "cmd": "create new patch",
-        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.newPatch
+        "func": CABLES_CMD_ELECTRON_OVERRIDES.PATCH.newPatch
     },
     {
         "cmd": "rename op",
-        "func": CABLES_CMD_STANDALONE_OVERRIDES.PATCH.renameOp
+        "func": CABLES_CMD_ELECTRON_OVERRIDES.PATCH.renameOp
     },
 ];
 
-CMD_STANDALONE_COMMANDS.push(
+CMD_ELECTRON_COMMANDS.push(
     {
         "cmd": "install project npm packages",
         "category": "electron",
-        "func": CABLES_CMD_STANDALONE.runNpm,
+        "func": CABLES_CMD_ELECTRON.runNpm,
         "icon": "electron"
     },
     {
         "cmd": "collect assets into patch dir",
         "category": "patch",
-        "func": CABLES_CMD_STANDALONE.collectAssets,
+        "func": CABLES_CMD_ELECTRON.collectAssets,
         "icon": "file"
     },
     {
         "cmd": "collect ops into patch dir",
         "category": "ops",
-        "func": CABLES_CMD_STANDALONE.collectOps,
+        "func": CABLES_CMD_ELECTRON.collectOps,
         "icon": "op"
     },
     {
         "cmd": "set search order of op directories",
         "category": "ops",
-        "func": CABLES_CMD_STANDALONE.orderOpDirs,
+        "func": CABLES_CMD_ELECTRON.orderOpDirs,
         "icon": "folder"
     },
     {
         "cmd": "install ops from package.json",
         "category": "ops",
-        "func": CABLES_CMD_STANDALONE.addOpPackage,
+        "func": CABLES_CMD_ELECTRON.addOpPackage,
         "icon": "op"
     },
     {
         "cmd": "copy op dir to clipboard",
         "category": "ops",
-        "func": CABLES_CMD_STANDALONE.copyOpDirToClipboard,
+        "func": CABLES_CMD_ELECTRON.copyOpDirToClipboard,
         "icon": "op"
     },
     {
         "cmd": "open op directory",
         "category": "ops",
-        "func": CABLES_CMD_STANDALONE.openOpDirectory,
+        "func": CABLES_CMD_ELECTRON.openOpDir,
         "icon": "op"
 
     }
 );
 
 export default {
-    "commands": CMD_STANDALONE_COMMANDS,
-    "functions": CABLES_CMD_STANDALONE,
-    "functionOverrides": CABLES_CMD_STANDALONE_OVERRIDES,
+    "commands": CMD_ELECTRON_COMMANDS,
+    "functions": CABLES_CMD_ELECTRON,
+    "functionOverrides": CABLES_CMD_ELECTRON_OVERRIDES,
     "commandOverrides": CABLES_CMD_COMMAND_OVERRIDES,
 };
