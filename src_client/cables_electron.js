@@ -74,8 +74,8 @@ export default class CablesElectron
         {
             if (this.editorWindow)
             {
-                const waitForUI = this.editorWindow.waitForUI;
-                this.editorWindow.waitForUI = () =>
+                const waitForAce = this.editorWindow.waitForAce;
+                this.editorWindow.waitForAce = () =>
                 {
                     this._logStartup("loading", this._settings.patchFile);
 
@@ -100,7 +100,7 @@ export default class CablesElectron
                                 this._log.error("`npx \"@electron/rebuild\" -v " + process.versions.electron);
                             }
                         };
-                        waitForUI();
+                        waitForAce();
 
                         if (npmResult.error && npmResult.data && npmResult.msg !== "UNSAVED_PROJECT")
                         {
