@@ -296,5 +296,10 @@ class OpsUtil extends SharedOpsUtil
     {
         return this.PREFIX_LOCAL_OPS;
     }
+
+    userHasReadRightsOp(user, opName, teams = null, project = null, opOwner = null)
+    {
+        return true;
+    }
 }
 export default new OpsUtil(utilProvider);

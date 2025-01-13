@@ -262,10 +262,11 @@ class ElectronEndpoint
     }
 
 
-    apiGetCoreOpsCode()
+    apiGetCoreOpsCode(params)
     {
+        const preview = params.preview;
         const opDocs = doc.getOpDocs();
-        const code = opsUtil.buildCode(cables.getCoreOpsPath(), null, true, true, opDocs);
+        const code = opsUtil.buildCode(cables.getCoreOpsPath(), null, true, true, opDocs, preview);
         if (!code) this._log.warn("FAILED TO GET CODE FOR COREOPS FROM", cables.getCoreOpsPath());
         return code;
     }
@@ -333,6 +334,7 @@ class ElectronEndpoint
 
     apiGetOpCode(params)
     {
+        const preview = !!params.preview;
         const opName = params.opName;
         let code = "";
         const currentProject = settings.getCurrentProject();
@@ -377,7 +379,7 @@ class ElectronEndpoint
                     });
                 });
 
-                code = opsUtil.buildFullCode(ops, "none");
+                code = preview ? opsUtil.buildPreviewCode(ops) : opsUtil.buildFullCode(ops, "none");
                 return code;
             }
         }
