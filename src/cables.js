@@ -17,7 +17,7 @@ class CablesElectron extends Cables
         if (writableDirName && !fs.existsSync(path.join(writableDirName, "/ops"))) mkdirp.sync(path.join(writableDirName, "/ops"));
     }
 
-    isStandalone()
+    isElectron()
     {
         return true;
     }
@@ -37,7 +37,7 @@ class CablesElectron extends Cables
         return this._config.isPackaged || this._config.forceSendErrorReports;
     }
 
-    getStandaloneDistPath()
+    getDistPath()
     {
         if (this._config.path.standaloneDist)
         {

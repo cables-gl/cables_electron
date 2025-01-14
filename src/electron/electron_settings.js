@@ -179,7 +179,7 @@ class ElectronSettings
     {
         const coreFile = path.join(cables.getUiDistPath(), "js", "buildinfo.json");
         const uiFile = path.join(cables.getUiDistPath(), "buildinfo.json");
-        const electronFile = path.join(cables.getStandaloneDistPath(), "public", "js", "buildinfo.json");
+        const electronFile = path.join(cables.getDistPath(), "public", "js", "buildinfo.json");
         let core = {};
         if (fs.existsSync(coreFile))
         {

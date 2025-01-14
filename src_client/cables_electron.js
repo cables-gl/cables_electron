@@ -196,10 +196,10 @@ export default class CablesElectron
         {
             if (this.CABLES.Op)
             {
-                const standAlone = this;
+                const cablesElectron = this;
                 this.CABLES.Op.prototype.require = function (moduleName)
                 {
-                    return standAlone._opRequire(moduleName, this, standAlone);
+                    return cablesElectron._opRequire(moduleName, this, cablesElectron);
                 };
             }
         }

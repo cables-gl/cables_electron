@@ -21,8 +21,8 @@ import projectsUtil from "../utils/projects_util.js";
 import electronApp from "./main.js";
 import filesUtil from "../utils/files_util.js";
 import libsUtil from "../utils/libs_util.js";
-import StandaloneZipExport from "../export/export_zip_electron.js";
-import StandaloneExport from "../export/export_patch_electron.js";
+import ElectronZipExport from "../export/export_zip_electron.js";
+import ElectronExport from "../export/export_patch_electron.js";
 
 class ElectronApi
 {
@@ -1654,7 +1654,7 @@ class ElectronApi
 
     async exportPatch()
     {
-        const service = new StandaloneZipExport(utilProvider);
+        const service = new ElectronZipExport(utilProvider);
 
         const exportPromise = promisify(service.doExport.bind(service));
 
@@ -1671,7 +1671,7 @@ class ElectronApi
 
     async exportPatchBundle()
     {
-        const service = new StandaloneExport(utilProvider);
+        const service = new ElectronExport(utilProvider);
 
         const exportPromise = promisify(service.doExport.bind(service));
 
