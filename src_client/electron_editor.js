@@ -1,4 +1,5 @@
 import { TalkerAPI } from "cables-shared-client";
+import cablesElectron from "./renderer.js";
 
 /**
  * @name EditorParams
@@ -160,6 +161,77 @@ export default class ElectronEditor
             });
         });
 
+        this._talker.addEventListener("addOpPackage", (data, next) =>
+        {
+            let opTargetDir = null;
+            this.api("getProjectOpDirs", {}, (err, res) =>
+            {
+                let html = "";
+                let opDirSelect = "Choose target directory:<br/><br/>";
+                opDirSelect += "<select id=\"opTargetDir\" name=\"opTargetDir\">";
+                for (let i = 0; i < res.data.length; i++)
+                {
+                    const dirInfo = res.data[i];
+                    if (i === 0) opTargetDir = dirInfo.dir;
+                    opDirSelect += "<option value=\"" + dirInfo.dir + "\">" + dirInfo.dir + "</option>";
+                }
+                opDirSelect += "</select>";
+                opDirSelect += "<hr/>";
+                html += opDirSelect;
+                html += "Enter <a href=\"https://docs.npmjs.com/cli/v10/commands/npm-install\">package.json</a> location (git, npm, thz, url, ...):";
+
+                new cablesElectron.CABLES.UI.ModalDialog({
+                    "prompt": true,
+                    "title": "Install ops from package",
+                    "html": html,
+                    "promptOk": (packageLocation) =>
+                    {
+                        const loadingModal = cablesElectron.gui.startModalLoading("Installing ops...");
+                        const packageOptions = { "targetDir": opTargetDir, "package": packageLocation };
+                        this.api("addOpPackage", packageOptions, (_err, result) =>
+                        {
+                            const r = result.data;
+                            if (r)
+                            {
+                                if (r.targetDir)
+                                {
+                                    loadingModal.setTask("installing to " + r.targetDir);
+                                }
+                                if (r.packages && r.packages.length > 0)
+                                {
+                                    loadingModal.setTask("found ops");
+                                    r.packages.forEach((p) =>
+                                    {
+                                        loadingModal.setTask(p);
+                                    });
+                                }
+                                if (r.stdout)
+                                {
+                                    loadingModal.setTask(r.stdout);
+                                }
+                                if (r.stderr)
+                                {
+                                    loadingModal.setTask(r.stderr);
+                                }
+                                loadingModal.setTask("done");
+                                if (next) next(_err, r);
+                                setTimeout(() => { cablesElectron.gui.endModalLoading(); }, 3000);
+                            }
+                        });
+                    }
+                });
+
+                const dirSelect = cablesElectron.editorWindow.ele.byId("opTargetDir");
+                if (dirSelect)
+                {
+                    dirSelect.addEventListener("change", () =>
+                    {
+                        opTargetDir = dirSelect.value;
+                    });
+                }
+            });
+        });
+
         this._talkerTopics = {
             "getOpInfo": {},
             "savePatch": { "needsProjectFile": true },
@@ -214,7 +286,8 @@ export default class ElectronEditor
             "saveProjectOpDirOrder": { "needsProjectFile": true },
             "removeProjectOpDir": { "needsProjectFile": true },
             "exportPatch": { "needsProjectFile": true },
-            "exportPatchBundle": { "needsProjectFile": true }
+            "exportPatchBundle": { "needsProjectFile": true },
+            "addProjectOpDir": { "needsProjectFile": true }
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>

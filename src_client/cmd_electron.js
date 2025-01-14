@@ -4,41 +4,6 @@ const CABLES_CMD_ELECTRON = {};
 const CABLES_CMD_ELECTRON_OVERRIDES = {};
 const CMD_ELECTRON_COMMANDS = [];
 
-CABLES_CMD_ELECTRON.runNpm = () =>
-{
-    const loadingModal = cablesElectron.gui.startModalLoading("Installing packages...");
-    cablesElectron.editor.api("installProjectDependencies", {}, (_err, result) =>
-    {
-        if (result.data)
-        {
-            result.data.forEach((r) =>
-            {
-                if (r.targetDir)
-                {
-                    loadingModal.setTask("installing to " + r.targetDir);
-                }
-                if (r.packages && r.packages.length > 0)
-                {
-                    loadingModal.setTask("found packages");
-                    r.packages.forEach((p) =>
-                    {
-                        loadingModal.setTask(p);
-                    });
-                }
-                if (r.stdout)
-                {
-                    loadingModal.setTask(r.stdout);
-                }
-                if (r.stderr)
-                {
-                    loadingModal.setTask(r.stderr);
-                }
-            });
-            setTimeout(() => { cablesElectron.gui.endModalLoading(); }, 3000);
-        }
-    });
-};
-
 CABLES_CMD_ELECTRON.openOpDir = (opId = null, opName = null) =>
 {
     const gui = cablesElectron.gui;
@@ -60,20 +25,14 @@ CABLES_CMD_ELECTRON.openOpDir = (opId = null, opName = null) =>
 
 CABLES_CMD_ELECTRON.openProjectDir = () =>
 {
-    cablesElectron.editor.api("openProjectDir", { }, (_err, r) => {});
+    cablesElectron.editor.api("openProjectDir", {}, (_err, r) => {});
 };
 
-CABLES_CMD_ELECTRON.openFileManager = (url) =>
+CABLES_CMD_ELECTRON.openFileManager = (url = null) =>
 {
-    cablesElectron.editor.api("openFileManager", { "url": url }, (_err, r) => {});
-};
-
-CABLES_CMD_ELECTRON.addProjectOpDir = (cb = null) =>
-{
-    cablesElectron.editor.api("addProjectOpDir", {}, (err, r) =>
-    {
-        if (cb) cb(err, r.data);
-    });
+    const data = {};
+    if (url) data.url = url;
+    cablesElectron.editor.api("openFileManager", data, (_err, r) => {});
 };
 
 CABLES_CMD_ELECTRON.collectAssets = () =>
@@ -173,80 +132,9 @@ CABLES_CMD_ELECTRON.collectOps = () =>
     });
 };
 
-CABLES_CMD_ELECTRON.orderOpDirs = () =>
+CABLES_CMD_ELECTRON.manageOpDirs = () =>
 {
     cablesElectron.openOpDirsTab();
-};
-
-CABLES_CMD_ELECTRON.addOpPackage = (cb = null) =>
-{
-    let opTargetDir = null;
-    cablesElectron.editor.api("getProjectOpDirs", {}, (err, res) =>
-    {
-        let html = "";
-        let opDirSelect = "Choose target directory:<br/><br/>";
-        opDirSelect += "<select id=\"opTargetDir\" name=\"opTargetDir\">";
-        for (let i = 0; i < res.data.length; i++)
-        {
-            const dirInfo = res.data[i];
-            if (i === 0) opTargetDir = dirInfo.dir;
-            opDirSelect += "<option value=\"" + dirInfo.dir + "\">" + dirInfo.dir + "</option>";
-        }
-        opDirSelect += "</select>";
-        opDirSelect += "<hr/>";
-        html += opDirSelect;
-        html += "Enter <a href=\"https://docs.npmjs.com/cli/v10/commands/npm-install\">package.json</a> location (git, npm, thz, url, ...):";
-
-        new CABLES.UI.ModalDialog({
-            "prompt": true,
-            "title": "Install ops from package",
-            "html": html,
-            "promptOk": (packageLocation) =>
-            {
-                const loadingModal = cablesElectron.gui.startModalLoading("Installing ops...");
-                const packageOptions = { "targetDir": opTargetDir, "package": packageLocation };
-                cablesElectron.editor.api("addOpPackage", packageOptions, (_err, result) =>
-                {
-                    const r = result.data;
-                    if (r)
-                    {
-                        if (r.targetDir)
-                        {
-                            loadingModal.setTask("installing to " + r.targetDir);
-                        }
-                        if (r.packages && r.packages.length > 0)
-                        {
-                            loadingModal.setTask("found ops");
-                            r.packages.forEach((p) =>
-                            {
-                                loadingModal.setTask(p);
-                            });
-                        }
-                        if (r.stdout)
-                        {
-                            loadingModal.setTask(r.stdout);
-                        }
-                        if (r.stderr)
-                        {
-                            loadingModal.setTask(r.stderr);
-                        }
-                        loadingModal.setTask("done");
-                        if (cb) cb(_err, r);
-                        setTimeout(() => { cablesElectron.gui.endModalLoading(); }, 3000);
-                    }
-                });
-            }
-        });
-
-        const dirSelect = cablesElectron.editorWindow.ele.byId("opTargetDir");
-        if (dirSelect)
-        {
-            dirSelect.addEventListener("change", () =>
-            {
-                opTargetDir = dirSelect.value;
-            });
-        }
-    });
 };
 
 CABLES_CMD_ELECTRON.copyOpDirToClipboard = (opId = null) =>
@@ -336,12 +224,6 @@ const CABLES_CMD_COMMAND_OVERRIDES = [
 
 CMD_ELECTRON_COMMANDS.push(
     {
-        "cmd": "install project npm packages",
-        "category": "electron",
-        "func": CABLES_CMD_ELECTRON.runNpm,
-        "icon": "electron"
-    },
-    {
         "cmd": "collect assets into patch dir",
         "category": "patch",
         "func": CABLES_CMD_ELECTRON.collectAssets,
@@ -354,9 +236,9 @@ CMD_ELECTRON_COMMANDS.push(
         "icon": "op"
     },
     {
-        "cmd": "set search order of op directories",
+        "cmd": "manage op directories",
         "category": "ops",
-        "func": CABLES_CMD_ELECTRON.orderOpDirs,
+        "func": CABLES_CMD_ELECTRON.manageOpDirs,
         "icon": "folder"
     },
     {
@@ -375,8 +257,25 @@ CMD_ELECTRON_COMMANDS.push(
         "cmd": "open op directory",
         "category": "ops",
         "func": CABLES_CMD_ELECTRON.openOpDir,
-        "icon": "op"
-
+        "icon": "folder"
+    },
+    {
+        "cmd": "open project directory",
+        "category": "patch",
+        "func": CABLES_CMD_ELECTRON.openProjectDir,
+        "icon": "folder"
+    },
+    {
+        "cmd": "open project directory",
+        "category": "patch",
+        "func": CABLES_CMD_ELECTRON.openProjectDir,
+        "icon": "folder"
+    },
+    {
+        "cmd": "open file manager",
+        "category": "cables",
+        "func": CABLES_CMD_ELECTRON.openFileManager,
+        "icon": "folder"
     }
 );
 
