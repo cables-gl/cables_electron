@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { protocol, session, net, shell } from "electron";
+import { net, protocol, session, shell } from "electron";
 import fs from "fs";
 import path from "path";
 import mime from "mime";
@@ -92,10 +92,19 @@ class ElectronEndpoint
         {
             const url = new URL(request.url);
             const urlPath = url.pathname;
+            const queryParams = new URLSearchParams(url.search);
+            const params = {};
+            const req = request;
+            req.params = params;
+            req.query = {};
+            for (let key in queryParams)
+            {
+                req.query[key] = queryParams.get(key);
+            }
             if (urlPath.startsWith("/api/corelib/"))
             {
-                const libName = urlPath.split("/", 4)[3];
-                const libCode = this.apiGetCoreLibs(libName);
+                req.params.name = urlPath.split("/", 4)[3];
+                const libCode = this.apiGetCoreLibs(req);
                 if (libCode)
                 {
                     return new Response(libCode, {
@@ -112,8 +121,8 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/lib/"))
             {
-                const libName = urlPath.split("/", 4)[3];
-                const libCode = this.apiGetLibs(libName);
+                req.params.name = urlPath.split("/", 4)[3];
+                const libCode = this.apiGetLibs(req);
                 if (libCode)
                 {
                     return new Response(libCode, {
@@ -130,24 +139,24 @@ class ElectronEndpoint
             }
             else if (urlPath === "/api/errorReport")
             {
-                return new Response(JSON.stringify(this.apiErrorReport(request)));
+                return new Response(JSON.stringify(this.apiErrorReport(req)));
             }
             else if (urlPath === "/api/changelog")
             {
-                return new Response(JSON.stringify(this.apiGetChangelog()), {
+                return new Response(JSON.stringify(this.apiGetChangelog(req)), {
                     "headers": { "content-type": "application/json" }
                 });
             }
             else if (urlPath.startsWith("/api/ops/code/project"))
             {
-                const code = this.apiGetProjectOpsCode();
+                const code = this.apiGetProjectOpsCode(req);
                 return new Response(code, {
                     "headers": { "content-type": "application/json" }
                 });
             }
             else if (urlPath.startsWith("/api/ops/code"))
             {
-                const code = this.apiGetCoreOpsCode();
+                const code = this.apiGetCoreOpsCode(req);
                 if (code)
                 {
                     return new Response(code, {
@@ -169,7 +178,8 @@ class ElectronEndpoint
                 {
                     opName = opsUtil.getOpNameById(opName);
                 }
-                const layoutSvg = this.apiOpLayout(opName);
+                req.params.opName = opName;
+                const layoutSvg = this.apiOpLayout(req);
                 if (layoutSvg)
                 {
                     return new Response(layoutSvg, {
@@ -193,7 +203,8 @@ class ElectronEndpoint
                 }
                 if (opName)
                 {
-                    const opCode = this.apiGetOpCode({ "opName": opName });
+                    req.params.opName = opName;
+                    const opCode = this.apiGetOpCode(req);
                     if (opCode)
                     {
                         return new Response(opCode, {
@@ -247,7 +258,6 @@ class ElectronEndpoint
             else if (urlPath.startsWith("/openDir/"))
             {
                 let dir = urlPath.replace("/openDir/", "");
-                // dir = path.dirname(dir);
                 await shell.showItemInFolder(dir);
                 return new Response(null, { "status": 404 });
             }
@@ -262,17 +272,18 @@ class ElectronEndpoint
     }
 
 
-    apiGetCoreOpsCode(params)
+    apiGetCoreOpsCode(req)
     {
-        const preview = params.preview;
+        const preview = req.query.preview;
         const opDocs = doc.getOpDocs();
         const code = opsUtil.buildCode(cables.getCoreOpsPath(), null, true, true, opDocs, preview);
         if (!code) this._log.warn("FAILED TO GET CODE FOR COREOPS FROM", cables.getCoreOpsPath());
         return code;
     }
 
-    apiGetProjectOpsCode()
+    apiGetProjectOpsCode(req)
     {
+        const preview = req.query.preview;
         const project = settings.getCurrentProject();
 
         let code = "";
@@ -332,10 +343,10 @@ class ElectronEndpoint
         return fullCode;
     }
 
-    apiGetOpCode(params)
+    apiGetOpCode(req)
     {
-        const preview = !!params.preview;
-        const opName = params.opName;
+        const preview = !!req.query.preview;
+        const opName = req.params.opName;
         let code = "";
         const currentProject = settings.getCurrentProject();
         try
@@ -390,8 +401,9 @@ class ElectronEndpoint
         }
     }
 
-    apiGetCoreLibs(name)
+    apiGetCoreLibs(req)
     {
+        const name = req.params.name;
         const fn = path.join(cables.getCoreLibsPath(), name + ".js");
 
         if (fs.existsSync(fn))
@@ -407,8 +419,9 @@ class ElectronEndpoint
         }
     }
 
-    apiGetLibs(name)
+    apiGetLibs(req)
     {
+        const name = req.params.name;
         const fn = path.join(cables.getLibsPath(), name);
         if (fs.existsSync(fn))
         {
@@ -431,8 +444,9 @@ class ElectronEndpoint
         };
     }
 
-    apiOpLayout(opName)
+    apiOpLayout(req)
     {
+        const opName = req.params.opName;
         return opsUtil.getOpSVG(opName);
     }
 
@@ -459,11 +473,11 @@ class ElectronEndpoint
         return response;
     }
 
-    apiErrorReport(request)
+    apiErrorReport(req)
     {
         try
         {
-            request.json().then((report) =>
+            req.json().then((report) =>
             {
                 const communityUrl = cables.getCommunityUrl();
                 if (cables.sendErrorReports() && communityUrl)
