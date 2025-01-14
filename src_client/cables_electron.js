@@ -162,7 +162,7 @@ export default class CablesElectron
             "config": {
                 ...this._settings,
                 "isTrustedPatch": true,
-                "platformClass": "PlatformStandalone",
+                "platformClass": "PlatformElectron",
                 "urlCables": "cables://",
                 "urlSandbox": "cables://",
                 "communityUrl": this._config.communityUrl,
