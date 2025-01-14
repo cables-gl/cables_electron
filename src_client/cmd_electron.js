@@ -266,12 +266,6 @@ CMD_ELECTRON_COMMANDS.push(
         "icon": "folder"
     },
     {
-        "cmd": "open project directory",
-        "category": "patch",
-        "func": CABLES_CMD_ELECTRON.openProjectDir,
-        "icon": "folder"
-    },
-    {
         "cmd": "open file manager",
         "category": "cables",
         "func": CABLES_CMD_ELECTRON.openFileManager,
