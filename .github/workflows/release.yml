@@ -30,7 +30,7 @@ jobs:
   linux:
    uses: ./.github/workflows/build.yml
    with:
-     runner: macos-14
+     runner: ubuntu-latest
      target: linux
      branch: ${{ github.ref_name }}
      build_version: ${{ inputs.version }}
@@ -40,7 +40,7 @@ jobs:
   win:
    uses: ./.github/workflows/build.yml
    with:
-     runner: macos-14
+     runner: windows-latest
      target: win
      branch: ${{ github.ref_name }}
      build_version: ${{ inputs.version }}
@@ -50,7 +50,7 @@ jobs:
   mac:
    uses: ./.github/workflows/build.yml
    with:
-     runner: macos-14
+     runner: macos-latest
      target: mac
      branch: ${{ github.ref_name }}
      build_version: ${{ inputs.version }}

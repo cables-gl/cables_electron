@@ -40,7 +40,7 @@ jobs:
     if: ${{ inputs.linux == true || inputs.linux == 'true' }}
     uses: ./.github/workflows/build.yml
     with:
-      runner: macos-14
+      runner: ubuntu-latest
       target: linux
       branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}
@@ -51,7 +51,7 @@ jobs:
     if: ${{ inputs.win == true || inputs.win == 'true' }}
     uses: ./.github/workflows/build.yml
     with:
-      runner: macos-14
+      runner: windows-latest
       target: win
       branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}
@@ -62,7 +62,7 @@ jobs:
     if: ${{ inputs.mac == true || inputs.mac == 'true' }}
     uses: ./.github/workflows/build.yml
     with:
-      runner: macos-14
+      runner: macos-latest
       target: mac
       branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}
