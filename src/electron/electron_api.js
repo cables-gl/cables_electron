@@ -1554,28 +1554,13 @@ class ElectronApi
 
     async addOpDependency(options)
     {
-        if (!options.opName || !options.name || !options.type) return this.error("INVALID_DATA");
-        let version = "";
-        if (options.type === "npm")
-        {
-            const parts = options.name.split("@");
-            if (options.name.startsWith("@"))
-            {
-                version = parts[2] || "";
-                options.name = "@" + parts[1];
-            }
-            else
-            {
-                version = parts[1] || "";
-            }
-        }
+        if (!options.opName || !options.type) return this.error("INVALID_DATA");
         const opName = options.opName;
         const dep = {
-            "name": options.name,
             "type": options.type,
-            "src": [options.name],
-            "version": version
+            "src": options.src
         };
+        if (dep.type === "module") dep.export = options.export;
         const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
         if (fs.existsSync(opDocFile))
         {
@@ -1583,7 +1568,7 @@ class ElectronApi
             if (opDoc)
             {
                 const deps = opDoc.dependencies || [];
-                if (!deps.some((d) => { return d.name === dep.name && d.name === dep.name; }))
+                if (!deps.some((d) => { return d.src === dep.src; }))
                 {
                     deps.push(dep);
                 }
@@ -1606,7 +1591,7 @@ class ElectronApi
 
     async removeOpDependency(options)
     {
-        if (!options.opName || !options.name || !options.type) return this.error("INVALID_DATA");
+        if (!options.opName || !options.type) return this.error("INVALID_DATA");
         const opName = options.opName;
         const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
         if (fs.existsSync(opDocFile))
@@ -1618,9 +1603,11 @@ class ElectronApi
                 const deps = opDoc.dependencies || [];
                 deps.forEach((dep) =>
                 {
-                    if (!(dep.name === options.name && dep.type === options.type)) newDeps.push(dep);
+                    if (dep.src !== options.src) newDeps.push(dep);
                 });
                 opDoc.dependencies = newDeps;
+                const libPath = path.join(opsUtil.getOpAbsolutePath(opName), options.src);
+                if (fs.existsSync(libPath)) fs.unlinkSync(libPath);
                 if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
                 doc.updateOpDocs();
                 this._installOpDependencies(opName);
@@ -1686,7 +1673,40 @@ class ElectronApi
         }
     }
 
-    success(msg, data, raw = false)
+    async uploadFileToOp(params)
+    {
+        const fileName = params.filename;
+        const opId = params.opId;
+        const dataUrl = params.fileStr;
+
+        const opName = opsUtil.getOpNameById(opId);
+
+        if (fileName && opId && dataUrl && opName)
+        {
+            let data = atob(dataUrl.split(",")[1]);
+            let buffer = Buffer.from(data);
+
+            const newFileName = opsUtil.addOpDependencyFile(opName, fileName, buffer);
+            if (newFileName)
+            {
+                this._log.info("added op file!", opName, newFileName);
+                doc.updateOpDocs(opName);
+                this.success("OK", { "filename": newFileName }, true);
+            }
+            else
+            {
+                this.error("FAILED_TO_ADD_DEPENDENCY");
+            }
+        }
+        else
+        {
+            return this.error("ERROR", { "fileName": fileName, "opId": opId, "opName": opName });
+        }
+
+        return this.success("OK", {});
+    }
+
+    success(msg, data = null, raw = false)
     {
         if (raw)
         {
@@ -1695,7 +1715,7 @@ class ElectronApi
         }
         else
         {
-            return { "success": true, "msg": msg, "data": data };
+            return { "success": true, "msg": msg, "data": data || {} };
         }
     }
 

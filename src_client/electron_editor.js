@@ -287,7 +287,8 @@ export default class ElectronEditor
             "removeProjectOpDir": { "needsProjectFile": true },
             "exportPatch": { "needsProjectFile": true },
             "exportPatchBundle": { "needsProjectFile": true },
-            "addProjectOpDir": { "needsProjectFile": true }
+            "addProjectOpDir": { "needsProjectFile": true },
+            "uploadFileToOp": {}
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>

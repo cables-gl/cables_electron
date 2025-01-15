@@ -47,7 +47,6 @@ class ElectronSettings
         this.opts.defaults[this.DOWNLOAD_PATH] = app.getPath("downloads");
 
         this.data = this.opts.defaults;
-        mkdirp(this.data[this.STORAGEDIR_FIELD]);
         this.refresh();
         this.set("currentUser", this.getCurrentUser(), true);
     }

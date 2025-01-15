@@ -137,6 +137,31 @@ class ElectronEndpoint
                     });
                 }
             }
+            else if (urlPath.startsWith("/api/oplib/"))
+            {
+                const parts = urlPath.split("/", 5);
+                let opName = parts[3];
+                let libName = parts[4];
+                if (opsUtil.isOpId(opName))
+                {
+                    opName = opsUtil.getOpNameById(opName);
+                }
+                if (opName)
+                {
+                    const opPath = opsUtil.getOpAbsolutePath(opName);
+                    const libPath = path.join(opPath, libName);
+                    const response = await net.fetch(helper.pathToFileURL(libPath), { "bypassCustomProtocolHandlers": true });
+                    this._addDefaultHeaders(response, libPath);
+                    return response;
+                }
+                else
+                {
+                    return new Response("", {
+                        "headers": { "content-type": "application/javascript" },
+                        "status": 404
+                    });
+                }
+            }
             else if (urlPath === "/api/errorReport")
             {
                 return new Response(JSON.stringify(this.apiErrorReport(req)));
@@ -408,9 +433,7 @@ class ElectronEndpoint
 
         if (fs.existsSync(fn))
         {
-            let info = fs.readFileSync(fn);
-            info += "\n\nCABLES.loadedCoreLib(\"" + name + "\")";
-            return info;
+            return fs.readFileSync(fn);
         }
         else
         {
@@ -425,9 +448,7 @@ class ElectronEndpoint
         const fn = path.join(cables.getLibsPath(), name);
         if (fs.existsSync(fn))
         {
-            let info = fs.readFileSync(fn);
-            info = info + "\n\nCABLES.loadedLib(\"" + name + "\")";
-            return info;
+            return fs.readFileSync(fn);
         }
         else
         {
