@@ -266,7 +266,7 @@ CMD_ELECTRON_COMMANDS.push(
         "icon": "folder"
     },
     {
-        "cmd": "open file manager",
+        "cmd": "open os file manager",
         "category": "cables",
         "func": CABLES_CMD_ELECTRON.openFileManager,
         "icon": "folder"
