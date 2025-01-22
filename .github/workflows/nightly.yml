@@ -39,7 +39,7 @@ jobs:
     needs: draft_release
     uses: ./.github/workflows/build.yml
     with:
-      runner: ubuntu-latest
+      runner: windows-latest
       target: win
       branch: develop
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
@@ -51,7 +51,7 @@ jobs:
     needs: draft_release
     uses: ./.github/workflows/build.yml
     with:
-      runner: ubuntu-latest
+      runner: macos-latest
       target: mac
       branch: develop
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
