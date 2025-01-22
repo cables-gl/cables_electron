@@ -157,5 +157,8 @@
     "terser-webpack-plugin": "5.3.10",
     "webpack": "5.91.0",
     "webpack-bundle-analyzer": "4.10.2"
+  },
+  "optionalDependencies": {
+    "dmg-license": "1.0.11"
   }
 }
