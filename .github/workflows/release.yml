@@ -50,7 +50,7 @@ jobs:
   mac:
    uses: ./.github/workflows/build.yml
    with:
-     runner: macos-latest
+     runner: macos-14
      target: mac
      branch: ${{ github.ref_name }}
      build_version: ${{ inputs.version }}
