@@ -10,6 +10,7 @@ export default class CablesElectron
 {
     constructor()
     {
+        this._logger = new Logger("electron");
         this._electron = window.nodeRequire("electron");
         this._importSync = window.nodeRequire("import-sync");
 
@@ -64,7 +65,7 @@ export default class CablesElectron
     get _log()
     {
         CABLES.UI = this.CABLES.UI;
-        return new Logger("electron");
+        return this._logger;
     }
 
     /**
@@ -128,7 +129,6 @@ export default class CablesElectron
                                 this._logStartup(result.opName + ": " + npmText);
                             });
                         }
-
 
                         if (this.gui)
                         {
