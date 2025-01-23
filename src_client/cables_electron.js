@@ -58,6 +58,16 @@ export default class CablesElectron
     }
 
     /**
+     *
+     * @type {Logger}
+     */
+    get _log()
+    {
+        CABLES.UI = this.CABLES.UI;
+        return new Logger("electron");
+    }
+
+    /**
      * initialize the editor, wait for core and ui to be ready, add
      * custom functionality
      */
@@ -207,11 +217,6 @@ export default class CablesElectron
 
     _uiReady()
     {
-        this._log = () =>
-        {
-            CABLES.UI = this.CABLES.UI;
-            return new Logger("electron");
-        };
         if (this.CABLES)
         {
             this.CABLES.UI.DEFAULTOPNAMES.defaultOpFallback = this.CABLES.UI.DEFAULTOPNAMES.HttpRequest;
