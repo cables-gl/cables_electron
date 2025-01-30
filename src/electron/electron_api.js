@@ -132,7 +132,8 @@ class ElectronApi
                 const projectFile = settings.getCurrentProjectFile();
                 if (!projectFile)
                 {
-                    const newProjectFile = await electronApp.saveProjectFileDialog(data.name);
+                    const newName = data ? data.name : projectsUtil.getNewProjectName();
+                    const newProjectFile = await electronApp.saveProjectFileDialog(newName);
                     if (newProjectFile)
                     {
                         let patchData = null;
