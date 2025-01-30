@@ -81,7 +81,7 @@ class OpsUtil extends SharedOpsUtil
                     return false;
                 }
             }
-            else if (this._cables.isPackaged() && file.startsWith(this._cables.getOpsPath()))
+            else if (this._cables.inPackage(file))
             {
                 return false;
             }

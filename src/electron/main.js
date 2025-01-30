@@ -15,6 +15,7 @@ import helper from "../utils/helper_util.js";
 // this needs to be imported like this to not have to asarUnpack the entire nodejs world - sm,25.07.2024
 import Npm from "../../node_modules/npm/lib/npm.js";
 import opsUtil from "../utils/ops_util.js";
+import cables from "../cables.js";
 
 app.commandLine.appendSwitch("disable-http-cache", "true");
 app.commandLine.appendSwitch("force_high_performance_gpu", "true");
@@ -140,8 +141,10 @@ class ElectronApp
     async _installNpmPackages(packageNames, targetDir, opName = null)
     {
         this._npm.config.localPrefix = targetDir;
-
         let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
+
+        // packaged ops have node_modules installed already
+        if (cables.inPackage(targetDir)) return result;
 
         const oldConsole = console.log;
         const logToVariable = (level, ...args) =>
