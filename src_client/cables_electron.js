@@ -242,10 +242,13 @@ export default class CablesElectron
         if (moduleName === "electron") return thisClass._electron;
         if (this._loadedModules[moduleName]) return this._loadedModules[moduleName];
 
+        let modulePath = null;
+        let moduleFile = null;
+
         try
         {
             // load module by directory name
-            const modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
+            modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
             this._loadedModules[moduleName] = window.nodeRequire(modulePath);
             return this._loadedModules[moduleName];
         }
@@ -254,7 +257,7 @@ export default class CablesElectron
             try
             {
                 // load module by resolved filename from package.json
-                const moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
+                moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
                 this._loadedModules[moduleName] = window.nodeRequire(moduleFile);
                 return this._loadedModules[moduleName];
             }
@@ -270,19 +273,15 @@ export default class CablesElectron
                 {
                     try
                     {
-                        const moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName, });
+                        moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName, });
                         this._loadedModules[moduleName] = this._importSync(moduleFile);
                         return this._loadedModules[moduleName];
                     }
                     catch (eImport)
                     {
                         let errorMessage = "failed to load node module: " + moduleName + "\n\n";
-                        errorMessage += "require by import:\n" + eImport + "\n\n";
-                        errorMessage += "require by name:\n" + eName + "\n\n";
-                        errorMessage += "require by file:\n" + eFile + "\n\n";
-                        errorMessage += "require by path:\n" + ePath;
                         if (op) op.setUiError("oprequire", errorMessage);
-                        this._log.error(errorMessage, eName, eFile, ePath);
+                        this._log.error(errorMessage, modulePath, moduleFile);
                         return { };
                     }
                 }

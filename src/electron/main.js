@@ -39,7 +39,6 @@ class ElectronApp
 
         this.editorWindow = null;
 
-
         settings.set("uiLoadStart", this._log.loadStart);
         this._log.logStartup("started electron");
 
@@ -697,7 +696,6 @@ class ElectronApp
         this._contentChanged = edited;
     }
 
-
     isDocumentEdited()
     {
         return this._contentChanged || this.editorWindow.isDocumentEdited();
@@ -1025,5 +1023,3 @@ app.whenReady().then(() =>
 });
 
 export default electronApp;
-
-

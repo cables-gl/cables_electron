@@ -93,7 +93,7 @@ class ElectronApi
                 }
                 catch (e)
                 {
-                    this._log.error(e.message);
+                    this._log.error(data.moduleName + " " + moduleDir);
                     event.returnValue = null;
                 }
             }
