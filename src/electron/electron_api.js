@@ -379,7 +379,6 @@ class ElectronApi
         return this.success("OK", opDocs, true);
     }
 
-
     async getOpDocsAll()
     {
         const currentUser = settings.getCurrentUser();
@@ -733,7 +732,6 @@ class ElectronApi
         }
         return this.success("OK", { "opDocs": doc.makeReadable(opDocs) }, true);
     }
-
 
     getBuildInfo()
     {
@@ -1283,7 +1281,6 @@ class ElectronApi
         return this.success("OK", pickedFileUrl, true);
     }
 
-
     checkNumAssetPatches()
     {
         return this.success("OK", { "assets": [], "countPatches": 0, "countOps": 0 }, true);
@@ -1555,37 +1552,19 @@ class ElectronApi
     async addOpDependency(options)
     {
         if (!options.opName || !options.type) return this.error("INVALID_DATA");
+
         const opName = options.opName;
-        const dep = {
-            "type": options.type,
-            "src": options.src
-        };
-        if (dep.type === "module") dep.export = options.export;
-        const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
-        if (fs.existsSync(opDocFile))
+        const dep = this._getOpDepFromRequest({ "body": options });
+        const added = opsUtil.addOpDependency(opName, dep);
+        if (added)
         {
-            let opDoc = jsonfile.readFileSync(opDocFile);
-            if (opDoc)
-            {
-                const deps = opDoc.dependencies || [];
-                if (!deps.some((d) => { return d.src === dep.src; }))
-                {
-                    deps.push(dep);
-                }
-                opDoc.dependencies = deps;
-                opDoc = doc.cleanOpDocData(opDoc);
-                jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
-                doc.updateOpDocs();
-                return await this._installOpDependencies(opName);
-            }
-            else
-            {
-                return this.error("OP_NOT_FOUND");
-            }
+            this._log.info("added dependency!", opName, dep.src);
+            doc.updateOpDocs(opName);
+            return await this._installOpDependencies(opName);
         }
         else
         {
-            return this.error("OP_NOT_FOUND");
+            return this.error("FAILED_TO_ADD_DEPENDENCY");
         }
     }
 
@@ -1691,19 +1670,17 @@ class ElectronApi
             {
                 this._log.info("added op file!", opName, newFileName);
                 doc.updateOpDocs(opName);
-                this.success("OK", { "filename": newFileName }, true);
+                return this.success("OK", { "filename": newFileName }, true);
             }
             else
             {
-                this.error("FAILED_TO_ADD_DEPENDENCY");
+                return this.error("FAILED_TO_ADD_DEPENDENCY");
             }
         }
         else
         {
             return this.error("ERROR", { "fileName": fileName, "opId": opId, "opName": opName });
         }
-
-        return this.success("OK", {});
     }
 
     success(msg, data = null, raw = false)
@@ -1846,6 +1823,17 @@ class ElectronApi
             counter++;
         }
         return newName;
+    }
+
+    _getOpDepFromRequest(req)
+    {
+        const validTypes = ["commonjs", "module", "npm", "op", "lib", "corelib"];
+        const data = req.body;
+        const dep = {};
+        if (data.src) dep.src = data.src.trim();
+        if (data.type && validTypes.includes(data.type.trim())) dep.type = data.type.trim();
+        if (data.export && dep.type === "module") dep.export = data.export.trim();
+        return dep;
     }
 }
 

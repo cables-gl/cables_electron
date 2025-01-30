@@ -14,7 +14,6 @@ import helper from "../utils/helper_util.js";
 import electronApp from "./main.js";
 import projectsUtil from "../utils/projects_util.js";
 
-
 protocol.registerSchemesAsPrivileged([
     {
         "scheme": "cables",
@@ -150,7 +149,8 @@ class ElectronEndpoint
                 {
                     const opPath = opsUtil.getOpAbsolutePath(opName);
                     const libPath = path.join(opPath, libName);
-                    const response = await net.fetch(helper.pathToFileURL(libPath), { "bypassCustomProtocolHandlers": true });
+                    const libUrl = helper.pathToFileURL(libPath);
+                    const response = await net.fetch(libUrl, { "bypassCustomProtocolHandlers": true });
                     this._addDefaultHeaders(response, libPath);
                     return response;
                 }
@@ -295,7 +295,6 @@ class ElectronEndpoint
             }
         });
     }
-
 
     apiGetCoreOpsCode(req)
     {
