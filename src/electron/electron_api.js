@@ -1477,7 +1477,7 @@ class ElectronApi
                 const newLocation = path.join(projectAssetPath, newName);
                 fs.copyFileSync(oldFile, newLocation);
                 // cant use path.join here since we need to keep the ./
-                oldNew[assetPort.value] = projectsUtil.getAssetPathUrl(currentProject) + newName;
+                oldNew[assetPort.value] = projectsUtil.getAssetPathUrl(currentProject._id) + newName;
             }
         });
         return this.success("OK", oldNew);
