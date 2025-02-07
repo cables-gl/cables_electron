@@ -53,13 +53,15 @@ class ElectronApp
             this._handleError(this.appName + " encountered an error", error);
         });
 
-        app.on("browser-window-created", (event, win) =>
+        const initialDevToolsOpen = (event, win) =>
         {
             if (settings.get(settings.OPEN_DEV_TOOLS_FIELD))
             {
                 win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
             }
-        });
+            app.off("browser-window-created", initialDevToolsOpen);
+        };
+        app.on("browser-window-created", initialDevToolsOpen);
 
         nativeTheme.themeSource = "dark";
     }
@@ -743,13 +745,16 @@ class ElectronApp
 
     _toggleDevTools()
     {
-        if (this.editorWindow.webContents.isDevToolsOpened())
+        let currentWindow = BrowserWindow.getFocusedWindow();
+        if (!currentWindow) currentWindow = this.editorWindow;
+
+        if (currentWindow.webContents.isDevToolsOpened())
         {
-            this.editorWindow.webContents.closeDevTools();
+            currentWindow.webContents.closeDevTools();
         }
         else
         {
-            this.editorWindow.webContents.openDevTools({ "mode": "previous" });
+            currentWindow.webContents.openDevTools({ "mode": "previous" });
         }
     }
 

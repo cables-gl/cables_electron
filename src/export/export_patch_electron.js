@@ -1,8 +1,5 @@
 import sanitizeFileName from "sanitize-filename";
-import fs from "fs";
 import path from "path";
-import cables from "../cables.js";
-import libsUtil from "../utils/libs_util.js";
 import CablesElectronZipExport from "./export_zip_electron.js";
 
 export default class CablesElectronExport extends CablesElectronZipExport
@@ -31,28 +28,6 @@ export default class CablesElectronExport extends CablesElectronZipExport
     _replaceInString(replacements, theString)
     {
         return theString;
-    }
-
-    _addProjectJsCode(proj, opsCode, libs, coreLibs, replacedOpIds, jsCode, options)
-    {
-        const libScripts = [];
-        for (let l = 0; l < libs.length; l++)
-        {
-            const lib = libs[l];
-
-            if (libsUtil.isAssetLib(lib))
-            {
-                let libPath = path.join(cables.getLibsPath(), "/", lib);
-                let libSrc = path.join(this.finalJsPath, lib);
-                libPath = path.join(cables.getPublicPath(), lib);
-                libScripts.push({ "name": lib, "file": libPath, "src": libSrc });
-            }
-        }
-
-        for (let f = 0; f < libScripts.length; f++)
-        {
-            this.append(fs.readFileSync(libScripts[f].file, "utf8"), { "name": libScripts[f].src });
-        }
     }
 
     _addProjectHtmlCode(proj, options, libs, coreLibs, template = "/patchview/patchview_export.html")
