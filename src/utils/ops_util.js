@@ -1,5 +1,6 @@
 import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 import path from "path";
+import mkdirp from "mkdirp";
 import fs from "fs";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
@@ -52,7 +53,7 @@ class OpsUtil extends SharedOpsUtil
         return opDocs;
     }
 
-    userHasWriteRightsOp(user, opName, teams = [], project = null)
+    userHasWriteRightsOp(user, opName, teams = [], project = null, ignoreAdmin = false)
     {
         if (!user) return false;
         if (!opName) return false;
@@ -145,6 +146,18 @@ class OpsUtil extends SharedOpsUtil
                 catch (e)
                 {
                     // not allowed to read/write
+                }
+            }
+            else
+            {
+                try
+                {
+                    mkdirp.sync(targetDir);
+                    delete problems.no_rights_target;
+                }
+                catch (e)
+                {
+                    // not allowed to create targetDir
                 }
             }
         }

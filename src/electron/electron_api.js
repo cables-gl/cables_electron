@@ -953,7 +953,13 @@ class ElectronApi
             "libs": data.libs,
             "coreLibs": data.coreLibs
         };
-        const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, data.opTargetDir);
+        let targetDir = data.opTargetDir;
+        const projectOpDirs = projectsUtil.getOpDirs(settings.getCurrentProject());
+        if (projectOpDirs && projectOpDirs.length > 0)
+        {
+            targetDir = projectOpDirs[0].dir;
+        }
+        const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir);
         filesUtil.registerOpChangeListeners([opName]);
         projectsUtil.invalidateProjectCaches();
 
@@ -1369,7 +1375,7 @@ class ElectronApi
     getProjectOpDirs()
     {
         const currentProject = settings.getCurrentProject();
-        const dirInfos = projectsUtil.getOpDirs(currentProject, false);
+        const dirInfos = projectsUtil.getOpDirs(currentProject);
 
         const opDirs = {};
         if (currentProject && currentProject.ops)
