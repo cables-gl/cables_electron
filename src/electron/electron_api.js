@@ -2,7 +2,6 @@
 import { app, ipcMain, net, shell } from "electron";
 import fs from "fs";
 import path from "path";
-import { marked } from "marked";
 import mkdirp from "mkdirp";
 import { promisify } from "util";
 
@@ -428,8 +427,6 @@ class ElectronApi
             }
             result.opDocs = doc.makeReadable(opDocs);
             result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
-            const c = doc.getOpDocMd(opName);
-            if (c) result.content = marked(c || "");
             return this.success("OK", result, true);
         }
         else
