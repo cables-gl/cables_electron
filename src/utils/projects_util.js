@@ -85,7 +85,7 @@ class ProjectsUtil extends SharedProjectsUtil
         const projectDir = settings.getCurrentProjectDir();
         if (projectDir)
         {
-            const currentDir = path.join(projectDir, "ops/");
+            const currentDir = path.join(projectDir, "ops");
             opsDirs.push(currentDir);
         }
 
@@ -115,7 +115,7 @@ class ProjectsUtil extends SharedProjectsUtil
     isFixedPositionOpDir(dir)
     {
         const projectDir = settings.getCurrentProjectDir();
-        if (projectDir) if (dir === path.join(projectDir, "ops/")) return true;
+        if (projectDir) if (dir === path.join(projectDir, "ops/")) return false;
         if (dir === "./ops") return true;
         if (dir === cables.getOsOpsDir()) return true;
         if (cables.isPackaged()) return false;
@@ -242,7 +242,7 @@ class ProjectsUtil extends SharedProjectsUtil
             opJsons.forEach((jsonLocation) =>
             {
                 const jsonName = path.basename(jsonLocation, ".json");
-                if (opsUtil.isOpNameValid(jsonName))
+                if (opsUtil.isOpNameValid(jsonName) && !opLocations.hasOwnProperty(jsonName))
                 {
                     opLocations[jsonName] = path.dirname(path.join(dir, jsonLocation));
                 }

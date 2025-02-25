@@ -314,13 +314,13 @@ class ElectronEndpoint
         let missingOps = [];
         if (project)
         {
-            let opDocs = doc.getOpDocs(false, false);
+            let opDocs = doc.getOpDocs(true, true);
             let allOps = [];
             if (project.ops) allOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project);
-            const ops = subPatchOpUtil.getOpsUsedInSubPatches(project);
+            const opsInSubPatches = subPatchOpUtil.getOpsUsedInSubPatches(project);
             allOps = allOps.concat(opsInProjectDir);
-            allOps = allOps.concat(ops);
+            allOps = allOps.concat(opsInSubPatches);
             missingOps = allOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId || d.id === op.id; }); });
         }
 

@@ -8,9 +8,9 @@ import electronApp from "../electron/main.js";
 
 export default class ElectronZipExport extends SharedExportService
 {
-    constructor(provider)
+    constructor(provider, _exportOptions, user)
     {
-        super(provider, {});
+        super(provider, {}, user);
         this.archive = archiver.create("zip", {});
 
         this.options.hideMadeWithCables = true;

@@ -4,9 +4,9 @@ import CablesElectronZipExport from "./export_zip_electron.js";
 
 export default class CablesElectronExport extends CablesElectronZipExport
 {
-    constructor(provider)
+    constructor(provider, _exportOptions, user)
     {
-        super(provider, {});
+        super(provider, {}, user);
 
         this.options.combineJS = false;
         this.options.addOpCode = true;
