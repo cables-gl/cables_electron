@@ -248,7 +248,7 @@ export default class CablesElectron
         try
         {
             // load module by directory name
-            modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
+            modulePath = window.ipcRenderer.sendSync("getOpModuleDir", { "opName": op.objName || op.name, "opId": op.opId, "moduleName": moduleName });
             this._loadedModules[moduleName] = window.nodeRequire(modulePath);
             return this._loadedModules[moduleName];
         }
@@ -257,7 +257,7 @@ export default class CablesElectron
             try
             {
                 // load module by resolved filename from package.json
-                moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName });
+                moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op.name, "opId": op.opId, "moduleName": moduleName });
                 this._loadedModules[moduleName] = window.nodeRequire(moduleFile);
                 return this._loadedModules[moduleName];
             }
@@ -273,7 +273,7 @@ export default class CablesElectron
                 {
                     try
                     {
-                        moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op._name, "opId": op.opId, "moduleName": moduleName, });
+                        moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op.name, "opId": op.opId, "moduleName": moduleName, });
                         this._loadedModules[moduleName] = this._importSync(moduleFile);
                         return this._loadedModules[moduleName];
                     }
