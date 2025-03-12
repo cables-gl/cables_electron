@@ -1,8 +1,8 @@
 import sanitizeFileName from "sanitize-filename";
 import path from "path";
-import CablesElectronZipExport from "./export_zip_electron.js";
+import HtmlExportElectron from "./export_html_electron.js";
 
-export default class CablesElectronExport extends CablesElectronZipExport
+export default class PatchExportElectron extends HtmlExportElectron
 {
     constructor(provider, _exportOptions, user)
     {

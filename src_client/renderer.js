@@ -10,4 +10,3 @@ document.addEventListener("DOMContentLoaded", () =>
     document.dispatchEvent(new Event("cablesStandaloneReady"));
 });
 export default cablesElectron;
-
