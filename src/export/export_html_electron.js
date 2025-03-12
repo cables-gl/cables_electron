@@ -21,7 +21,7 @@ export default class HtmlExportElectron extends SharedExportService
         this.options.rewriteAssetPorts = true;
         this.options.flattenAssetNames = true;
 
-        this.finalAssetPath = "/assets/";
+        this.finalAssetPath = "assets/";
     }
 
     static getName()
