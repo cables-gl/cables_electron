@@ -1,5 +1,6 @@
 import sanitizeFileName from "sanitize-filename";
 import path from "path";
+import { fileURLToPath } from "url";
 import HtmlExportElectron from "./export_html_electron.js";
 
 export default class PatchExportElectron extends HtmlExportElectron
@@ -40,6 +41,16 @@ export default class PatchExportElectron extends HtmlExportElectron
     _getOpExportSubdir(opName)
     {
         return path.join("ops", this._opsUtil.getOpTargetDir(opName, true));
+    }
+
+    _resolveFileName(filePathAndName, pathStr, project)
+    {
+        let result = filePathAndName || "";
+        if (result.startsWith("file:/")) result = fileURLToPath(filePathAndName);
+        let finalPath = this.finalAssetPath;
+        if (this.options.assetsInSubdirs && project && project._id) finalPath = path.join(this.finalAssetPath, project._id, "/");
+        if (this.options.rewriteAssetPorts) result = result.replace(pathStr, finalPath);
+        return result;
     }
 
     static getExportOptions(user, teams, project, exportQuota)
