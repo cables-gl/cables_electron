@@ -168,7 +168,7 @@ export default class HtmlExportElectron extends SharedExportService
 
     _getPortValueReplacement(filePathAndName, fn, lzipFileName)
     {
-        return lzipFileName;
+        return lzipFileName.replace(path.win32.sep, path.posix.sep);
     }
 
     _doAfterCombine(jsCode, options)
