@@ -165,7 +165,7 @@ class ProjectsUtil extends SharedProjectsUtil
             .update(JSON.stringify(project.ops))
             .digest("hex");
         project.buildInfo = settings.getBuildInfo();
-        jsonfile.writeFileSync(projectFile, project, { "encoding": "utf-8", "spaces": 4 });
+        jsonfile.writeFileSync(projectFile, project, opsUtil.OPJSON_FORMAT);
         settings.addToRecentProjects(projectFile, project);
     }
 

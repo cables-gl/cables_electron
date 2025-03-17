@@ -74,7 +74,7 @@ this.editorWindow = new BrowserWindow({
 
 ### Issue Workflow
 
-- create an issue, pick "Bug report" or "Feature Request" from the templates
+- create an [issue](https://github.com/cables-gl/cables_docs/issues), pick "Bug report" or "Feature Request" from the templates
 - the issue will be assigned a "new" label
 - we will check on these issues regularly, add them to a milestone and remove the "new" label
 - once we added the feature or fixed the bug in any release (also dev/nightly) we will close the issue

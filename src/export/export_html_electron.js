@@ -145,7 +145,7 @@ export default class HtmlExportElectron extends SharedExportService
         cb(theFiles);
     }
 
-    _doAfterExport(originalProject)
+    _doAfterExport(originalProject, credentials, exportNumber, result)
     {
         return originalProject;
     }

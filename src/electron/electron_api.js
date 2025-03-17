@@ -1591,7 +1591,7 @@ class ElectronApi
                 opDoc.dependencies = newDeps;
                 const libPath = path.join(opsUtil.getOpAbsolutePath(opName), options.src);
                 if (fs.existsSync(libPath)) fs.unlinkSync(libPath);
-                if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, { "encoding": "utf-8", "spaces": 4 });
+                if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, opsUtil.OPJSON_FORMAT);
                 doc.updateOpDocs();
                 this._installOpDependencies(opName);
                 return this.success("OK");
