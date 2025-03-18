@@ -1476,7 +1476,7 @@ class ElectronApi
             if (!helper.isLocalAssetPath(oldFile) && !oldNew.hasOwnProperty(portValue) && fs.existsSync(oldFile))
             {
                 const baseName = path.basename(oldFile);
-                const newName = this._findNewAssetFilename(projectAssetPath, baseName);
+                const newName = projectsUtil.findNewAssetFilename(projectAssetPath, baseName);
                 const newLocation = path.join(projectAssetPath, newName);
                 fs.copyFileSync(oldFile, newLocation);
                 // cant use path.join here since we need to keep the ./
@@ -1814,19 +1814,6 @@ class ElectronApi
         result.consequences = Object.values(consequences);
         if (nextVersion) result.nextVersion = nextVersion;
         return result;
-    }
-
-    _findNewAssetFilename(targetDir, fileName)
-    {
-        let fileInfo = path.parse(fileName);
-        let newName = fileName;
-        let counter = 1;
-        while (fs.existsSync(path.join(targetDir, newName)))
-        {
-            newName = path.format({ "name": fileInfo.name + "_" + counter, "ext": fileInfo.ext });
-            counter++;
-        }
-        return newName;
     }
 
     _getOpDepFromRequest(req)
