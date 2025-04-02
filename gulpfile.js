@@ -84,7 +84,6 @@ function _create_ops_dirs(done)
 {
     const opsPath = path.join("./src", defaultConfig.path.ops);
     fs.rmSync("ops", { "recursive": true, "force": true });
-    console.info("creating opdirs in", opsPath);
     mkdirp.sync(path.join(opsPath, "/base/"));
     mkdirp.sync(path.join(opsPath, "/extensions/"));
     mkdirp.sync(path.join(opsPath, "/patches/"));

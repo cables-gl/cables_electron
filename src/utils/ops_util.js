@@ -131,6 +131,38 @@ class OpsUtil extends SharedOpsUtil
         return [];
     }
 
+    /**
+     * @typedef {Object} OpRenameProblems
+     * @property {String} [source_does_not_exist]
+     * @property {String} [overruled_by_other_op]
+     * @property {String} [namespace_empty]
+     * @property {String} [patch_op_illegal_namespace]
+     * @property {String} [name_ends_with_dot]
+     * @property {String} [name_ends_with_underscore]
+     * @property {String} [name_not_op_namespace]
+     * @property {String} [target_exists]
+     * @property {String} [name_taken]
+     * @property {String} [name_too_short]
+     * @property {String} [name_contains_doubledot]
+     * @property {String} [name_contains_illegal_characters]
+     * @property {String} [patch_op_rename_illegal]
+     * @property {String} [namespace_starts_with_numbers]
+     * @property {String} [namespace_starts_with_whitespace]
+     * @property {String} [namespace_starts_with_dash]
+     * @property {String} [namespace_not_uppercase]
+     * @property {String} [op_used_elsewhere]
+     * @property {String} [no_rights_target]
+     * @property {String} [no_rights_source]
+     * @property {String} [not_found_source]
+     * @property {String} [bad_op_hierarchy]
+     * @property {String} [overruled_by_other_op]
+     * @property {String} [illegal_ops]
+     * @property {String} [version_suggestion]
+     */
+
+    /**
+     * @returns {OpRenameProblems}
+     */
     getOpRenameProblems(newName, oldName, userObj, teams = [], newOpProject = null, oldOpProject = null, opUsages = [], checkUsages = true, targetDir = null)
     {
         const problems = super.getOpRenameProblems(newName, oldName, userObj, teams, newOpProject, oldOpProject, opUsages, checkUsages);

@@ -913,11 +913,12 @@ class ElectronApi
     checkOpName(data)
     {
         const opDocs = doc.getOpDocs(false, false);
-        const newName = data.v;
+        const newName = encodeURIComponent(data.v);
         const sourceName = data.sourceName || null;
         const currentUser = settings.getCurrentUser();
-        const currentProject = settings.getCurrentProject();
-        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, currentProject, true, data.rename, data.opTargetDir);
+        const project = settings.getCurrentProject();
+        const fromRename = data.rename;
+        const result = this._getFullRenameResponse(opDocs, newName, sourceName, currentUser, project, true, fromRename, data.opTargetDir);
         result.checkedName = newName;
         return this.success("OK", result, true);
     }
@@ -1710,6 +1711,8 @@ class ElectronApi
     _getFullRenameResponse(opDocs, newName, oldName, currentUser, project = null, ignoreVersionGap = false, fromRename = false, targetDir = false)
     {
         let opNamespace = opsUtil.getNamespace(newName, true);
+        let oldOpNamespace = opsUtil.getNamespace(oldName, true);
+
         let availableNamespaces = [];
 
         if (project)
@@ -1721,19 +1724,23 @@ class ElectronApi
         availableNamespaces = availableNamespaces.map((availableNamespace) => { return availableNamespace.endsWith(".") ? availableNamespace : availableNamespace + "."; });
         availableNamespaces = helper.uniqueArray(availableNamespaces);
         availableNamespaces = availableNamespaces.sort((a, b) => { return a.localeCompare(b); });
-
-        if (project)
-        {
-            availableNamespaces.unshift(opsUtil.getPatchOpsNamespaceForProject(project));
-        }
-
         if (opNamespace && !availableNamespaces.includes(opNamespace)) availableNamespaces.unshift(opNamespace);
+        if (oldOpNamespace && !availableNamespaces.includes(oldOpNamespace)) availableNamespaces.unshift(oldOpNamespace);
 
         availableNamespaces = availableNamespaces.filter((availableNamespace) => { return availableNamespace.startsWith(opsUtil.PREFIX_OPS); });
 
+        let suggestedNamespaces = [...availableNamespaces];
+        if (project)
+        {
+            suggestedNamespaces.unshift(opsUtil.getPatchOpsNamespaceForProject(project));
+        }
+        suggestedNamespaces.unshift("Your namespaces..");
+        suggestedNamespaces = suggestedNamespaces.map((suggestedNamespace) => { return opsUtil.getNamespace(suggestedNamespace, true); });
+        suggestedNamespaces = helper.uniqueArray(suggestedNamespaces);
+
         let removeOld = newName && !(opsUtil.isExtensionOp(newName) && opsUtil.isCoreOp(newName));
         const result = {
-            "namespaces": availableNamespaces,
+            "namespaces": suggestedNamespaces,
             "problems": [],
             "consequences": [],
             "action": removeOld ? "Rename" : "Copy"
@@ -1776,7 +1783,7 @@ class ElectronApi
             }
         }
 
-        if (problems.illegal_ops || problems.illegal_references)
+        if (problems.illegal_ops)
         {
             suggestVersion = false;
         }
