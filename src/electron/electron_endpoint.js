@@ -162,10 +162,6 @@ class ElectronEndpoint
                     });
                 }
             }
-            else if (urlPath === "/api/errorReport")
-            {
-                return new Response(JSON.stringify(this.apiErrorReport(req)));
-            }
             else if (urlPath === "/api/changelog")
             {
                 return new Response(JSON.stringify(this.apiGetChangelog(req)), {
@@ -491,62 +487,6 @@ class ElectronEndpoint
         }
         catch (e) {}
         return response;
-    }
-
-    apiErrorReport(req)
-    {
-        try
-        {
-            req.json().then((report) =>
-            {
-                const communityUrl = cables.getCommunityUrl();
-                if (cables.sendErrorReports() && communityUrl)
-                {
-                    try
-                    {
-                        const errorReportSend = net.request({
-                            "url": path.join(communityUrl, "/api/errorReport"),
-                            "method": "POST",
-                        });
-                        delete report.url;
-                        delete report.file;
-                        if (report.log)
-                        {
-                            report.log.forEach((log) =>
-                            {
-                                if (log.errorStack)
-                                {
-                                    log.errorStack.forEach((stack) =>
-                                    {
-                                        if (stack.fileName)
-                                        {
-                                            stack.fileName = path.basename(stack.fileName);
-                                        }
-                                        if (stack.source)
-                                        {
-                                            delete stack.source;
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                        report.username = "electron";
-                        errorReportSend.setHeader("Content-Type", "application/json");
-                        errorReportSend.write(JSON.stringify(report), "utf-8");
-                        errorReportSend.end();
-                    }
-                    catch (e)
-                    {
-                        this._log.debug("failed to send error report", e);
-                    }
-                }
-            });
-        }
-        catch (e)
-        {
-            this._log.info("failed to parse error report", e);
-        }
-        return { "success": true };
     }
 }
 

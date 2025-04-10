@@ -51,7 +51,7 @@ const watchers = [];
 function _watch(done)
 {
     const watchOptions = { "usePolling": true, "ignored": (fileName) => { return fileName.includes("node_modules"); } };
-    watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/client/**/*.js"], watchOptions, gulp.series(defaultSeries)));
+    watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(defaultSeries)));
     watchers.push(gulp.watch(["src/*.js", "src/**/*.js", "../shared/api/**/*.js"], watchOptions, gulp.series(electronChanges)));
     done();
 }

@@ -304,48 +304,66 @@ class ProjectsUtil extends SharedProjectsUtil
         this._projectOpDocs = null;
     }
 
-    getOpDocsInProjectDirs(project, rebuildCache = false)
+    getOpDocsInProjectDirs(project, filterOldVersions = false, filterDeprecated = false, rebuildCache = false)
     {
-        if (this._projectOpDocs && !rebuildCache) return this._projectOpDocs;
-
-        const opDocs = {};
-        const opDirs = this.getProjectOpDirs(project, true, false, false);
-
-        opDirs.forEach((opDir) =>
+        if (!this._projectOpDocs || rebuildCache)
         {
-            if (fs.existsSync(opDir))
+            const ops = {};
+            const opDirs = this.getProjectOpDirs(project, true, false, false);
+
+            opDirs.forEach((opDir) =>
             {
-                const opJsons = helper.getFilesRecursive(opDir, ".json");
-                for (let jsonPath in opJsons)
+                if (fs.existsSync(opDir))
                 {
-                    const opName = path.basename(jsonPath, ".json");
-                    if (opsUtil.isOpNameValid(opName))
+                    const opJsons = helper.getFilesRecursive(opDir, ".json");
+                    for (let jsonPath in opJsons)
                     {
-                        if (opDocs.hasOwnProperty(opName))
+                        const opName = path.basename(jsonPath, ".json");
+                        if (opsUtil.isOpNameValid(opName))
                         {
-                            if (!opDocs[opName].hasOwnProperty("overrides")) opDocs[opName].overrides = [];
-                            opDocs[opName].overrides.push(path.join(opDir, path.dirname(jsonPath)));
-                        }
-                        else
-                        {
-                            try
+                            if (ops.hasOwnProperty(opName))
                             {
-                                const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
-                                opDoc.name = opName;
-                                opDocs[opName] = opDoc;
+                                if (!ops[opName].hasOwnProperty("overrides")) ops[opName].overrides = [];
+                                ops[opName].overrides.push(path.join(opDir, path.dirname(jsonPath)));
                             }
-                            catch (e)
+                            else
                             {
-                                this._log.warn("failed to parse opDoc for", opName, "from", jsonPath);
+                                try
+                                {
+                                    const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
+                                    opDoc.name = opName;
+                                    ops[opName] = this._docsUtil.buildOpDocs(opName);
+                                }
+                                catch (e)
+                                {
+                                    this._log.warn("failed to parse opDoc for", opName, "from", jsonPath);
+                                }
                             }
                         }
                     }
                 }
+            });
+            let opDocs = Object.values(ops);
+            opDocs = this._opsUtil.addVersionInfoToOps(opDocs, true);
+            this._projectOpDocs = opDocs;
+        }
+        let filteredOpDocs = [];
+        if (filterDeprecated || filterOldVersions)
+        {
+            for (let i = 0; i < this._projectOpDocs.length; i++)
+            {
+                const opDoc = this._projectOpDocs[i];
+                if (filterOldVersions && this._opsUtil.isOpOldVersion(opDoc.name, this._projectOpDocs)) continue;
+                if (filterDeprecated && this._opsUtil.isDeprecated(opDoc.name)) continue;
+                filteredOpDocs.push(opDoc);
             }
-        });
-        this._projectOpDocs = Object.values(opDocs);
+        }
+        else
+        {
+            filteredOpDocs = this._projectOpDocs;
+        }
         this._docsUtil.addOpsToLookup(this._projectOpDocs);
-        return this._projectOpDocs;
+        return filteredOpDocs;
     }
 }
 export default new ProjectsUtil(utilProvider);

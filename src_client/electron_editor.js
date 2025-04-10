@@ -62,7 +62,7 @@ export default class ElectronEditor
          * @param {function} next callback
          * @listens TalkerAPI#requestPatchData
          */
-        this._talker.addEventListener("requestPatchData", (data, next) =>
+        this._talker.on("requestPatchData", (data, next) =>
         {
             if (next) next(this.config);
         });
@@ -76,7 +76,7 @@ export default class ElectronEditor
          * @param {function} next callback
          * @listens TalkerAPI#updatePatchName
          */
-        this._talker.addEventListener("updatePatchName", (data, next) =>
+        this._talker.on("updatePatchName", (data, next) =>
         {
             if (next) next(null, data);
         });
@@ -89,7 +89,7 @@ export default class ElectronEditor
          * @param {function} next unused
          * @listens TalkerAPI#reload
          */
-        this._talker.addEventListener("reload", (data, next) =>
+        this._talker.on("reload", (data, next) =>
         {
             document.location.reload();
         });
@@ -106,7 +106,7 @@ export default class ElectronEditor
          * @fires TalkerAPI#refreshFileManager
          * @fires TalkerAPI#fileUpdated
          */
-        this._talker.addEventListener("fileUploadStr", (data, next) =>
+        this._talker.on("fileUploadStr", (data, next) =>
         {
             this.api("fileUpload", data, (err, r) =>
             {
@@ -130,7 +130,7 @@ export default class ElectronEditor
          * @listens TalkerAPI#updateFile
          * @fires TalkerAPI#fileUpdated
          */
-        this._talker.addEventListener("updateFile", (data, next) =>
+        this._talker.on("updateFile", (data, next) =>
         {
             this.api("updateFile", data, (err, r) =>
             {
@@ -141,7 +141,7 @@ export default class ElectronEditor
             });
         });
 
-        this._talker.addEventListener("createFile", (data, next) =>
+        this._talker.on("createFile", (data, next) =>
         {
             this.api("createFile", data, (error, r) =>
             {
@@ -161,7 +161,7 @@ export default class ElectronEditor
             });
         });
 
-        this._talker.addEventListener("addOpPackage", (data, next) =>
+        this._talker.on("addOpPackage", (data, next) =>
         {
             let opTargetDir = null;
             this.api("getProjectOpDirs", {}, (err, res) =>
@@ -288,7 +288,8 @@ export default class ElectronEditor
             "exportPatch": { "needsProjectFile": true },
             "exportPatchBundle": { "needsProjectFile": true },
             "addProjectOpDir": { "needsProjectFile": true },
-            "uploadFileToOp": {}
+            "uploadFileToOp": {},
+            "errorReport": {}
         };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>

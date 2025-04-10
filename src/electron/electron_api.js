@@ -336,7 +336,7 @@ class ElectronApi
         });
 
         // add all ops in any of the project op directory
-        const otherDirsOps = projectsUtil.getOpDocsInProjectDirs(project).map((opDoc) => { return opDoc.name; });
+        const otherDirsOps = projectsUtil.getOpDocsInProjectDirs(project, true, true).map((opDoc) => { return opDoc.name; });
         projectOps = projectOps.concat(otherDirsOps);
 
         // now we should have all the ops that are used in the project, walk subPatchOps
@@ -385,7 +385,7 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         let opDocs = doc.getOpDocs(true, true);
         opDocs = opDocs.concat(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser));
-        opDocs = opDocs.concat(projectsUtil.getOpDocsInProjectDirs(currentProject));
+        opDocs = opDocs.concat(projectsUtil.getOpDocsInProjectDirs(currentProject, true, true));
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
 
@@ -418,7 +418,17 @@ class ElectronApi
         const opDocs = [];
         if (opDoc)
         {
-            opDocs.push(opDoc);
+            const currentProject = settings.getCurrentProject();
+            const projectOps = projectsUtil.getOpDocsInProjectDirs(currentProject);
+            const projectOp = projectOps.find((op) => { return op.name === opName; });
+            if (projectOp)
+            {
+                opDocs.push(projectOp);
+            }
+            else
+            {
+                opDocs.push(opDoc);
+            }
             if (opDoc.dependencies)
             {
                 const opPackages = opsUtil.getOpNpmPackages(opName);
@@ -426,6 +436,7 @@ class ElectronApi
                 result.dependenciesOutput = await electronApp.installPackages(packageDir, opPackages, opName);
             }
             result.opDocs = doc.makeReadable(opDocs);
+            result.opDocs = opsUtil.addVersionInfoToOps(opDocs);
             result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
             return this.success("OK", result, true);
         }
@@ -1529,7 +1540,7 @@ class ElectronApi
                 settings.setProject(projectFile, project);
                 if (rebuildCache) projectsUtil.invalidateProjectCaches();
                 // add ops in project dirs to lookup
-                projectsUtil.getOpDocsInProjectDirs(project, true);
+                projectsUtil.getOpDocsInProjectDirs(project, false, false, true);
                 filesUtil.registerAssetChangeListeners(project, true);
                 if (project.ops)
                 {
@@ -1686,6 +1697,59 @@ class ElectronApi
         {
             return this.error("ERROR", { "fileName": fileName, "opId": opId, "opName": opName });
         }
+    }
+
+    errorReport(report)
+    {
+        try
+        {
+            const communityUrl = cables.getCommunityUrl();
+            if (cables.sendErrorReports() && communityUrl)
+            {
+                try
+                {
+                    const errorReportSend = net.request({
+                        "url": path.join(communityUrl, "/api/errorReport"),
+                        "method": "POST",
+                    });
+                    delete report.url;
+                    delete report.file;
+                    if (report.log)
+                    {
+                        report.log.forEach((log) =>
+                        {
+                            if (log.errorStack)
+                            {
+                                log.errorStack.forEach((stack) =>
+                                {
+                                    if (stack.fileName)
+                                    {
+                                        stack.fileName = path.basename(stack.fileName);
+                                    }
+                                    if (stack.source)
+                                    {
+                                        delete stack.source;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    report.username = "electron";
+                    errorReportSend.setHeader("Content-Type", "application/json");
+                    errorReportSend.write(JSON.stringify(report), "utf-8");
+                    errorReportSend.end();
+                }
+                catch (e)
+                {
+                    this._log.debug("failed to send error report", e);
+                }
+            }
+        }
+        catch (e)
+        {
+            this._log.info("failed to parse error report", e);
+        }
+        this.success("OK");
     }
 
     success(msg, data = null, raw = false)
