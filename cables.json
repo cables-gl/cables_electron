@@ -1,21 +1,21 @@
 {
-  "env": "dev",
-  "minifyJs": true,
-  "communityUrl": "https://cables.gl",
-  "url": "cables://",
-  "sourcePath": {
-    "libs": "../../shared/libs/",
-    "corelibs": "../../cables/build/libs/",
-    "ops": "../../cables/src/ops/",
-    "uiDist": "../../cables_ui/dist/"
-  },
-  "path": {
-    "standaloneDist": "../dist/",
-    "uiDist": "../dist/ui/",
-    "ops": "../dist/ops/",
-    "assets": "../resources/assets/",
-    "libs": "../dist/public/libs/",
-    "corelibs": "../dist/public/libs_core/",
-    "js": "../dist/public/js/"
-  }
+    "env": "electron",
+    "minifyJs": true,
+    "communityUrl": "https://cables.gl",
+    "url": "cables://",
+    "sourcePath": {
+        "libs": "../../shared/libs/",
+        "corelibs": "../../cables/build/libs/",
+        "ops": "../../cables/src/ops/",
+        "uiDist": "../../cables_ui/dist/"
+    },
+    "path": {
+        "standaloneDist": "../dist/",
+        "uiDist": "../dist/ui/",
+        "ops": "../dist/ops/",
+        "assets": "../resources/assets/",
+        "libs": "../dist/public/libs/",
+        "corelibs": "../dist/public/js/libs_core/",
+        "js": "../dist/public/js/"
+    }
 }

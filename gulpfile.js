@@ -8,6 +8,9 @@ import git from "git-last-commit";
 import { execa } from "execa";
 import webpackElectronConfig from "./webpack.electron.config.js";
 
+const corePath = "../../cables/";
+const uiPath = "../../cables_ui/";
+const sharedPath = "../../shared/";
 let analyze = false;
 const defaultConfigLocation = "./cables.json";
 let configLocation = defaultConfigLocation;
@@ -20,10 +23,10 @@ if (!fs.existsSync(configLocation))
         console.warn("config file not found at", configLocation, "copying from cables.json");
         let defaultConfig = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
         defaultConfig.path.assets = "../resources/assets/";
-        defaultConfig.path.uiDist = "../../cables_ui/dist/";
-        defaultConfig.path.ops = "../../cables/src/ops/";
-        defaultConfig.path.libs = "../../shared/libs/";
-        defaultConfig.path.corelibs = "../../cables/build/libs/";
+        defaultConfig.path.uiDist = path.join(uiPath, "dist/");
+        defaultConfig.path.ops = path.join(corePath, "src/ops/");
+        defaultConfig.path.libs = path.join(sharedPath, "libs/");
+        defaultConfig.path.corelibs = path.join(corePath, "build/libs/");
         jsonfile.writeFileSync(configLocation, defaultConfig, { "encoding": "utf-8", "spaces": 4 });
     }
     else
