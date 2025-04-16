@@ -2,6 +2,7 @@ import fs from "fs";
 import archiver from "archiver";
 import { SharedExportService } from "cables-shared-api";
 import path from "path";
+import { fileURLToPath } from "url";
 import settings from "../electron/electron_settings.js";
 import electronApp from "../electron/main.js";
 import helper from "../utils/helper_util.js";
@@ -174,5 +175,16 @@ export default class HtmlExportElectron extends SharedExportService
     _doAfterCombine(jsCode, options)
     {
         return jsCode;
+    }
+
+    _resolveFileName(filePathAndName, pathStr, project)
+    {
+        let result = filePathAndName || "";
+        if (result.startsWith("/")) result = result.replace("/", "");
+        if (result.startsWith("file:/")) result = fileURLToPath(filePathAndName);
+        let finalPath = this.finalAssetPath;
+        if (this.options.assetsInSubdirs && project && project._id) finalPath = path.join(this.finalAssetPath, project._id, "/");
+        if (this.options.rewriteAssetPorts) result = result.replace(pathStr, finalPath);
+        return result;
     }
 }
