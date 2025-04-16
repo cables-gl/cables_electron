@@ -47,6 +47,8 @@ class ElectronSettings
         this.opts.defaults[this.DOWNLOAD_PATH] = app.getPath("downloads");
 
         this.data = this.opts.defaults;
+        this.settingsFile = path.join(this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
+
         this.refresh();
         this.set("currentUser", this.getCurrentUser(), true);
     }
@@ -55,8 +57,7 @@ class ElectronSettings
     {
         if (this.data && this.data.hasOwnProperty(this.STORAGEDIR_FIELD) && this.data[this.STORAGEDIR_FIELD])
         {
-            const userDataPath = path.join(this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
-            const storedData = this._parseDataFile(userDataPath, this.opts.defaults);
+            const storedData = this._parseDataFile(this.settingsFile, this.opts.defaults);
             Object.keys(this.opts.defaults).forEach((key) =>
             {
                 if (!storedData.hasOwnProperty(key)) storedData[key] = this.opts.defaults[key];
@@ -108,10 +109,9 @@ class ElectronSettings
     set(key, val, silent)
     {
         this.data[key] = val;
-        let configFileName = path.join(this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
         if (!silent)
         {
-            fs.writeFileSync(configFileName, JSON.stringify(this.data));
+            fs.writeFileSync(this.settingsFile, JSON.stringify(this.data));
             this.refresh();
         }
     }
@@ -127,7 +127,6 @@ class ElectronSettings
     {
         return this._currentProject;
     }
-
 
     setProject(projectFile, newProject)
     {
@@ -218,7 +217,6 @@ class ElectronSettings
             }
         }
 
-
         return {
             "updateWarning": false,
             "core": core,
@@ -279,7 +277,6 @@ class ElectronSettings
     _updateRecentProjects()
     {
         const recents = this.get(this.RECENT_PROJECTS_FIELD) || {};
-
 
         let files = Object.keys(recents);
         files = files.filter((f) => { return fs.existsSync(f); });
@@ -394,4 +391,3 @@ class ElectronSettings
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData")));
-

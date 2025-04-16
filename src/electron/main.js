@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme, nativeImage } from "electron";
+import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme, nativeImage, screen } from "electron";
 import path from "path";
 import localShortcut from "electron-localshortcut";
 import fs from "fs";
@@ -68,6 +68,33 @@ class ElectronApp
 
     init()
     {
+        const displays = screen.getAllDisplays();
+        this._displaySetupId = "";
+        if (displays)
+        {
+            displays.forEach((display, index) =>
+            {
+                if (index > 0) this._displaySetupId += ":";
+                this._displaySetupId += display.id + "@";
+                if (display.size && display.size.width)
+                {
+                    this._displaySetupId += display.size.width;
+                }
+                else
+                {
+                    this._displaySetupId += "unknown";
+                }
+                this._displaySetupId += "/";
+                if (display.size && display.size.height)
+                {
+                    this._displaySetupId += display.size.height;
+                }
+                else
+                {
+                    this._displaySetupId += "unknown";
+                }
+            });
+        }
         this._createWindow();
         this._createMenu();
         this._loadNpm();
@@ -251,7 +278,28 @@ class ElectronApp
         if (settings.getUserSetting("storeWindowBounds", true))
         {
             const userWindowBounds = settings.get(settings.WINDOW_BOUNDS);
-            if (userWindowBounds) windowBounds = userWindowBounds;
+            if (userWindowBounds)
+            {
+                if (userWindowBounds.x && userWindowBounds.y && userWindowBounds.width && userWindowBounds.height)
+                {
+                    // migrate old stored bounds
+                    userWindowBounds[this._displaySetupId] = {
+                        "x": userWindowBounds.x,
+                        "y": userWindowBounds.y,
+                        "width": userWindowBounds.width,
+                        "height": userWindowBounds.height
+                    };
+                    delete userWindowBounds.x;
+                    delete userWindowBounds.y;
+                    delete userWindowBounds.width;
+                    delete userWindowBounds.height;
+                }
+                if (userWindowBounds[this._displaySetupId])
+                {
+                    windowBounds = userWindowBounds[this._displaySetupId];
+                }
+            }
+
         }
 
         this.editorWindow.setBounds(windowBounds);
@@ -790,7 +838,12 @@ class ElectronApp
 
         this.editorWindow.on("close", () =>
         {
-            if (settings.getUserSetting("storeWindowBounds", true)) settings.set(settings.WINDOW_BOUNDS, this.editorWindow.getBounds());
+            if (settings.getUserSetting("storeWindowBounds", true))
+            {
+                const windowBounds = settings.get(settings.WINDOW_BOUNDS) || {};
+                windowBounds[this._displaySetupId] = this.editorWindow.getBounds();
+                settings.set(settings.WINDOW_BOUNDS, windowBounds);
+            }
         });
 
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
