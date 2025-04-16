@@ -31,7 +31,7 @@ export default class PatchExportElectron extends HtmlExportElectron
         return theString;
     }
 
-    _addProjectHtmlCode(proj, options, libs, coreLibs, template = "/patchview/patchview_export.html")
+    _addProjectHtmlCode(proj, options, libs, coreLibs, template = "/patchview/patchview_export.html", _dependencies = [])
     {
         const projectName = sanitizeFileName(proj.name).replace(/ /g, "_");
         const projectNameVer = projectName + proj.exports;
@@ -41,16 +41,6 @@ export default class PatchExportElectron extends HtmlExportElectron
     _getOpExportSubdir(opName)
     {
         return path.join("ops", this._opsUtil.getOpTargetDir(opName, true));
-    }
-
-    _resolveFileName(filePathAndName, pathStr, project)
-    {
-        let result = filePathAndName || "";
-        if (result.startsWith("file:/")) result = fileURLToPath(filePathAndName);
-        let finalPath = this.finalAssetPath;
-        if (this.options.assetsInSubdirs && project && project._id) finalPath = path.join(this.finalAssetPath, project._id, "/");
-        if (this.options.rewriteAssetPorts) result = result.replace(pathStr, finalPath);
-        return result;
     }
 
     static getExportOptions(user, teams, project, exportQuota)
