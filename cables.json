@@ -17,5 +17,6 @@
         "libs": "../dist/public/libs/",
         "corelibs": "../dist/public/js/libs_core/",
         "js": "../dist/public/js/"
-    }
+    },
+    "sourceMap": false
 }

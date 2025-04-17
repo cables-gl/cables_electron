@@ -185,6 +185,13 @@ export default class HtmlExportElectron extends SharedExportService
         let finalPath = this.finalAssetPath;
         if (this.options.assetsInSubdirs && project && project._id) finalPath = path.join(this.finalAssetPath, project._id, "/");
         if (this.options.rewriteAssetPorts) result = result.replace(pathStr, finalPath);
-        return result;
+        if (result.startsWith("assets/"))
+        {
+            return result.replace("assets/", "");
+        }
+        else
+        {
+            return result;
+        }
     }
 }

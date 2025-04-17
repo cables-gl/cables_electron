@@ -6,7 +6,7 @@ import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import { fileURLToPath } from "url";
 import ModuleScopePlugin from "@k88/module-scope-plugin";
 
-export default (isLiveBuild, buildInfo, minify = false, analyze = false) =>
+export default (isLiveBuild, buildInfo, minify = false, analyze = false, sourceMap = false) =>
 {
     const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -64,7 +64,7 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false) =>
 
     return {
         "mode": isLiveBuild ? "production" : "development",
-        "devtool": minify ? "source-map" : false,
+        "devtool": minify ? "source-map" : sourceMap,
         "entry": {
             "scripts.electron.js": [path.resolve("./src_client", "renderer.js")],
         },

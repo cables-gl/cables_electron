@@ -51,7 +51,7 @@ const watchers = [];
 function _watch(done)
 {
     const watchOptions = { "usePolling": true, "ignored": (fileName) => { return fileName.includes("node_modules"); } };
-    watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(defaultSeries)));
+    watchers.push(gulp.watch(["src_client/*.js", "src_client/**/*.js", "../shared/shared_constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(defaultSeries)));
     watchers.push(gulp.watch(["src/*.js", "src/**/*.js", "../shared/api/**/*.js"], watchOptions, gulp.series(electronChanges)));
     done();
 }
@@ -184,7 +184,7 @@ function _editor_scripts_webpack(done)
 {
     getBuildInfo((buildInfo) =>
     {
-        webpack(webpackElectronConfig(isLiveBuild, buildInfo, minify, analyze), (err, stats) =>
+        webpack(webpackElectronConfig(isLiveBuild, buildInfo, minify, analyze, config.sourceMap), (err, stats) =>
         {
             if (err) done(err);
             if (stats.hasErrors())
