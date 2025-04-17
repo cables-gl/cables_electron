@@ -36,6 +36,7 @@ class ElectronApp
         this.appName = "name" in app ? app.name : app.getName();
         this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
 
+        this._openFullscreenRenderer = false;
         this._defaultWindowBounds = { "width": 1920, "height": 1080 };
 
         this.editorWindow = null;
@@ -254,6 +255,7 @@ class ElectronApp
             "backgroundColor": "#222",
             "icon": this.appIcon,
             "autoHideMenuBar": true,
+            "fullscreen": this._openFullscreenRenderer,
             "webPreferences": {
                 "defaultEncoding": "utf-8",
                 "partition": settings.SESSION_PARTITION,
@@ -773,6 +775,11 @@ class ElectronApp
         this.editorWindow.webContents.send("talkerMessage", { "cmd": cmd, "data": data });
     }
 
+    openFullscreenRenderer()
+    {
+        return this._openFullscreenRenderer;
+    }
+
     _registerShortcuts()
     {
         let devToolsAcc = "CmdOrCtrl+Shift+I";
@@ -838,6 +845,7 @@ class ElectronApp
 
         this.editorWindow.on("close", () =>
         {
+            if (this._openFullscreenRenderer) return;
             if (settings.getUserSetting("storeWindowBounds", true))
             {
                 const windowBounds = settings.get(settings.WINDOW_BOUNDS) || {};
@@ -1041,6 +1049,7 @@ class ElectronApp
         }
         dialog.showMessageBox(options);
     }
+
 }
 Menu.setApplicationMenu(null);
 

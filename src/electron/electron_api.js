@@ -47,6 +47,7 @@ class ElectronApi
         ipcMain.on("platformSettings", (event, _cmd, _data) =>
         {
             settings.data.buildInfo = settings.getBuildInfo();
+            settings.data.openFullscreenRenderer = electronApp.openFullscreenRenderer();
             event.returnValue = settings.data;
         });
 
