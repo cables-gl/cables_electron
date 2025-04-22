@@ -51,14 +51,16 @@ class ElectronEndpoint
             let projectFile = helper.fileURLToPath(urlFile, true);
             if (fs.existsSync(absoluteFile))
             {
-                const response = await net.fetch(helper.pathToFileURL(absoluteFile), { "bypassCustomProtocolHandlers": true });
-                this._addDefaultHeaders(response, absoluteFile);
+                Object.defineProperty(request, "url", { "value": helper.pathToFileURL(absoluteFile) });
+                const response = await net.fetch(request, { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(request, response, absoluteFile);
                 return response;
             }
             else if (fs.existsSync(projectFile))
             {
-                const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
-                this._addDefaultHeaders(response, projectFile);
+                Object.defineProperty(request, "url", { "value": helper.pathToFileURL(projectFile) });
+                const response = await net.fetch(request, { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(request, response, projectFile);
                 return response;
             }
             else
@@ -72,7 +74,7 @@ class ElectronEndpoint
                     if (fs.existsSync(projectFile))
                     {
                         const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
-                        this._addDefaultHeaders(response, projectFile);
+                        this._addDefaultHeaders(request, response, projectFile);
                         return response;
                     }
                     else
@@ -151,7 +153,7 @@ class ElectronEndpoint
                     const libPath = path.join(opPath, libName);
                     const libUrl = helper.pathToFileURL(libPath);
                     const response = await net.fetch(libUrl, { "bypassCustomProtocolHandlers": true });
-                    this._addDefaultHeaders(response, libPath);
+                    this._addDefaultHeaders(request, response, libPath);
                     return response;
                 }
                 else
@@ -255,7 +257,7 @@ class ElectronEndpoint
                 const absoluteFile = opsUtil.getOpAbsolutePath(opName);
                 const file = path.join(absoluteFile, "screenshot.png");
                 const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
-                this._addDefaultHeaders(response, file);
+                this._addDefaultHeaders(request, response, file);
                 return response;
             }
             else if (urlPath.startsWith("/edit/"))
@@ -466,7 +468,7 @@ class ElectronEndpoint
         return opsUtil.getOpSVG(opName);
     }
 
-    _addDefaultHeaders(response, existingFile)
+    _addDefaultHeaders(request, response, existingFile)
     {
         try
         {
@@ -474,9 +476,15 @@ class ElectronEndpoint
             if (stats)
             {
                 response.headers.append("Accept-Ranges", "bytes");
-                response.headers.append("Content-Length", stats.size);
-                response.headers.append("Content-Range", "bytes 0-" + stats.size + "/" + (stats.size + 1));
                 response.headers.append("Last-Modified", stats.mtime.toUTCString());
+
+                // large mp4 and range headers cause problems somehow...
+                // https://github.com/laurent22/joplin/blob/e607a7376f8403082e87087a3e07f37cb2e1ce76/packages/app-desktop/utils/customProtocols/handleCustomProtocols.ts#L106
+                const rangeHeader = request.headers.get("Range");
+                const startByte = Number(rangeHeader.match(/(\d+)-/)?.[1] || "0");
+                const endByte = Number(rangeHeader.match(/-(\d+)/)?.[1] || stats.size - 1);
+                response.headers.append("Content-Range", "bytes 0-" + stats.size + "/" + (stats.size + 1));
+                response.headers.append("Content-Length", (endByte + 1) - startByte);
             }
             let mimeType = mime.getType(existingFile);
             if (mimeType)
