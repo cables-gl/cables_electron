@@ -70,9 +70,10 @@ function _analyze(done)
 
 function _serve(done)
 {
+    let args = process.argv.slice(3);
     execa(
         "electron",
-        ["."],
+        [".", ...args],
         { "preferLocal": true, "stdout": "inherit", "stderr": "inherit" }).then((o, te, thr) =>
     {
         watchers.forEach((watcher) =>

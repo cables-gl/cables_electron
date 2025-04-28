@@ -15,6 +15,7 @@
     },
     "scripts": {
         "start": "cross-env npm_config_apiconfig=local gulp watch",
+        "start:fullscreen": "cross-env npm_config_apiconfig=local gulp watch --render-fullscreen",
         "build": "cross-env npm_config_apiconfig=local gulp build",
         "clean": "rimraf dist/",
         "analyze": "cross-env npm_config_apiconfig=local gulp analyze",

@@ -36,7 +36,9 @@ class ElectronApp
         this.appName = "name" in app ? app.name : app.getName();
         this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
 
-        this._openFullscreenRenderer = settings.getUserSetting("openrendererfullscreen", false);
+        let renderFullScreen = settings.getUserSetting("openrendererfullscreen", false);
+        if (!renderFullScreen && app.commandLine.hasSwitch("render-fullscreen")) renderFullScreen = true;
+        this._openFullscreenRenderer = renderFullScreen;
         this._defaultWindowBounds = { "width": 1920, "height": 1080 };
 
         this.editorWindow = null;
