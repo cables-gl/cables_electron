@@ -203,6 +203,12 @@ CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
     cablesElectron.editor.api("cycleFullscreen", { }, (_err, r) => {});
 };
 
+CABLES_CMD_ELECTRON_OVERRIDES.UI = {};
+CABLES_CMD_ELECTRON_OVERRIDES.UI.windowFullscreen = () =>
+{
+    cablesElectron.editor.api("cycleFullscreen", { }, (_err, r) => {});
+};
+
 const CABLES_CMD_COMMAND_OVERRIDES = [
     {
         "cmd": "save patch as...",
@@ -220,6 +226,10 @@ const CABLES_CMD_COMMAND_OVERRIDES = [
         "cmd": "rename op",
         "func": CABLES_CMD_ELECTRON_OVERRIDES.PATCH.renameOp
     },
+    {
+        "cmd": "Toggle window fullscreen",
+        "func": CABLES_CMD_ELECTRON_OVERRIDES.UI.windowFullscreen
+    }
 ];
 
 CMD_ELECTRON_COMMANDS.push(

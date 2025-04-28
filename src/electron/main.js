@@ -36,9 +36,14 @@ class ElectronApp
         this.appName = "name" in app ? app.name : app.getName();
         this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
 
-        let renderFullScreen = settings.getUserSetting("openrendererfullscreen", false);
-        if (!renderFullScreen && app.commandLine.hasSwitch("render-fullscreen")) renderFullScreen = true;
-        this._openFullscreenRenderer = renderFullScreen;
+        let openFullscreen = settings.getUserSetting("openfullscreen", false);
+        if (!openFullscreen && app.commandLine.hasSwitch("fullscreen")) openFullscreen = true;
+        this._openFullscreen = openFullscreen;
+
+        let maximizeRenderer = settings.getUserSetting("maximizerenderer", false);
+        if (!maximizeRenderer && app.commandLine.hasSwitch("maximize-renderer")) maximizeRenderer = true;
+        this._maximizeRenderer = maximizeRenderer;
+
         this._defaultWindowBounds = { "width": 1920, "height": 1080 };
 
         this.editorWindow = null;
@@ -257,7 +262,7 @@ class ElectronApp
             "backgroundColor": "#222",
             "icon": this.appIcon,
             "autoHideMenuBar": true,
-            "fullscreen": this._openFullscreenRenderer,
+            "fullscreen": this._openFullscreen,
             "webPreferences": {
                 "defaultEncoding": "utf-8",
                 "partition": settings.SESSION_PARTITION,
@@ -277,6 +282,7 @@ class ElectronApp
         };
 
         this.editorWindow = new BrowserWindow(defaultWindowOptions);
+        this.editorWindow.setFullScreenable(true);
 
         let windowBounds = this._defaultWindowBounds;
         if (settings.getUserSetting("storeWindowBounds", true))
@@ -777,9 +783,14 @@ class ElectronApp
         this.editorWindow.webContents.send("talkerMessage", { "cmd": cmd, "data": data });
     }
 
-    openFullscreenRenderer()
+    openFullscreen()
     {
-        return this._openFullscreenRenderer;
+        return this._openFullscreen;
+    }
+
+    maximizeRenderer()
+    {
+        return this._maximizeRenderer;
     }
 
     _registerShortcuts()
@@ -847,7 +858,7 @@ class ElectronApp
 
         this.editorWindow.on("close", () =>
         {
-            if (this._openFullscreenRenderer) return;
+            if (this._openFullscreen) return;
             if (settings.getUserSetting("storeWindowBounds", true))
             {
                 const windowBounds = settings.get(settings.WINDOW_BOUNDS) || {};

@@ -134,8 +134,7 @@ export default class CablesElectron
                         {
                             this.gui.on("uiloaded", () =>
                             {
-                                if (this._settings.openFullscreenRenderer) this.gui.cycleFullscreen();
-                                // if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
+                                if (this._settings.maximizeRenderer) this.gui.cycleFullscreen();
                             });
                         }
                     });
@@ -223,6 +222,7 @@ export default class CablesElectron
             this.CABLES.UI.DEFAULTOPNAMES.defaultOpFallback = this.CABLES.UI.DEFAULTOPNAMES.HttpRequest;
             this.CABLES.CMD.ELECTRON = electronCommands.functions;
             this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(electronCommands.commands);
+            Object.assign(this.CABLES.CMD.UI, electronCommands.functionOverrides.UI);
             Object.assign(this.CABLES.CMD.PATCH, electronCommands.functionOverrides.PATCH);
             Object.assign(this.CABLES.CMD.RENDERER, electronCommands.functionOverrides.RENDERER);
             const commandOverrides = electronCommands.commandOverrides;
