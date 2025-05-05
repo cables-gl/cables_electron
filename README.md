@@ -30,6 +30,11 @@ the shown dialog. Once that is done, start patching!
 Once you downloaded the package, set its permissions to executable via your file-manager or using the terminal (`chmod +x ...AppImage`).
 Open the AppImage and start patching!
 
+## Command-Line Arguments
+
+- `--fullscreen` open editor in fullscreen window on start
+- `--maximize-renderer` maximize the renderer to window size on start
+
 ## Builds
 
 release version: [![release build](https://github.com/cables-gl/cables_electron/actions/workflows/release.yml/badge.svg)](https://github.com/cables-gl/cables_electron/tags)
