@@ -55,6 +55,13 @@
             "LICENCE",
             "cables.txt",
             {
+                "from": "resources/build/",
+                "to": "./node_modules/",
+                "filter": [
+                    "buildwatcher.js"
+                ]
+            },
+            {
                 "from": "../shared/",
                 "to": "./node_modules/",
                 "filter": [
