@@ -120,7 +120,7 @@ jobs:
       if: inputs.target == 'linux'
       run: |
           sudo apt install desktop-file-utils
-          cd build
+          cd dist/
           appimage="${{ inputs.exe_name }}-linux-x64.AppImage"
           wget "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -O ./appimagetool.AppImage
           chmod +x ./"$appimage" ./appimagetool.AppImage
@@ -128,7 +128,6 @@ jobs:
           ./appimagetool.AppImage --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 20 \
             -n ./squashfs-root ./"$appimage"
           rm -rf ./squashfs-root ./appimagetool.AppImage
-
     - name: delete update files
       uses: mknejp/delete-release-assets@v1
       continue-on-error: true
