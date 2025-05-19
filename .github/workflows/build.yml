@@ -120,7 +120,7 @@ jobs:
       if: inputs.target == 'linux'
       run: |
           sudo apt install desktop-file-utils
-          cd dist/
+          cd cables_electron/dist/
           appimage="${{ inputs.exe_name }}-linux-x64.AppImage"
           wget "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -O ./appimagetool.AppImage
           chmod +x ./"$appimage" ./appimagetool.AppImage
