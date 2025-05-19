@@ -115,8 +115,19 @@ jobs:
         NOTARIZE: "${{ inputs.notarize }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
-        RELEASE_TYPE: ${{ inputs.release_type }}
-    - name: Convert X64 AppImage to static runtime
+        RELEASE_TYPE: ${{ inputs.release_type
+    -   name: delete non-static runtime linux AppImage
+        if: inputs.target == 'linux'
+        uses: mknejp/delete-release-assets@v1
+        continue-on-error: true
+        with:
+            token: ${{ github.token }}
+            tag: v${{ inputs.tag_name }}
+            fail-if-no-assets: false
+            fail-if-no-release: false
+            assets: |
+                ${{ inputs.exe_name }}-linux-x64.AppImage
+    - name: convert x64 AppImage to static runtime
       if: inputs.target == 'linux'
       run: |
           sudo apt install desktop-file-utils
@@ -128,12 +139,12 @@ jobs:
           ./appimagetool.AppImage --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 20 \
             -n ./squashfs-root ./"$appimage"
           rm -rf ./squashfs-root ./appimagetool.AppImage
-    - name: Upload static runtime AppImage
+    - name: upload static runtime AppImage
       uses: actions/upload-artifact@v4
       if: inputs.target == 'linux'
       with:
-          name: ${{ inputs.exe_name }}-linux-x64.AppImage
-          path: ${{ inputs.exe_name }}-linux-x64.AppImage
+          name: ${{ inputs.exe_name }}-linux-x64-static.AppImage
+          path: cables_electron/dist/${{ inputs.exe_name }}-linux-x64.AppImage
     - name: delete update files
       uses: mknejp/delete-release-assets@v1
       continue-on-error: true
