@@ -115,7 +115,7 @@ jobs:
         NOTARIZE: "${{ inputs.notarize }}"
         NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
         NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
-        RELEASE_TYPE: ${{ inputs.release_type
+        RELEASE_TYPE: ${{ inputs.release_type }}
     -   name: delete non-static runtime linux AppImage
         if: inputs.target == 'linux'
         uses: mknejp/delete-release-assets@v1
