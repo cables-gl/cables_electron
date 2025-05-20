@@ -69,7 +69,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     needs: draft_release
     with:
-      runner: macos-latest
+      runner: macos-14
       target: mac
       branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}

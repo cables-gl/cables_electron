@@ -7,6 +7,7 @@ jobs:
   draft_release:
     runs-on: ubuntu-latest
     outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
       date: ${{ steps.date.outputs.date }}
     steps:
       - name: Get current date
@@ -21,11 +22,9 @@ jobs:
           tag_name: v${{ steps.date.outputs.date }}-nightly
           draft: false
           prerelease: true
-      -   name: set upload url variable
-          run: echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
   linux:
-    needs: draft_release
     uses: ./.github/workflows/build.yml
+    needs: draft_release
     with:
       runner: ubuntu-latest
       target: linux
@@ -33,12 +32,12 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-      upload_url: ${{ env.UPLOAD_URL }}
+      upload_url: ${{ needs.draft_release.outputs.upload_url }}
       release_type: "prerelease"
     secrets: inherit
   win:
-    needs: draft_release
     uses: ./.github/workflows/build.yml
+    needs: draft_release
     with:
       runner: windows-latest
       target: win
@@ -46,20 +45,20 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-      upload_url: ${{ env.UPLOAD_URL }}
+      upload_url: ${{ needs.draft_release.outputs.upload_url }}
       release_type: "prerelease"
     secrets: inherit
   mac:
-    needs: draft_release
     uses: ./.github/workflows/build.yml
+    needs: draft_release
     with:
-      runner: macos-latest
+      runner: macos-14
       target: mac
       branch: develop
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-      upload_url: ${{ env.UPLOAD_URL }}
+      upload_url: ${{ needs.draft_release.outputs.upload_url }}
       release_type: "prerelease"
       sign: true
       notarize: true
