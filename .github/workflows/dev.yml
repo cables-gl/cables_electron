@@ -36,6 +36,8 @@ jobs:
           tag_name: v${{ inputs.version }}
           draft: true
           prerelease: true
+      -   name: set upload url variable
+          run: echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
   linux:
     if: ${{ inputs.linux == true || inputs.linux == 'true' }}
     uses: ./.github/workflows/build.yml
@@ -46,6 +48,7 @@ jobs:
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: v${{ inputs.version }}
+      upload_url: ${{ env.UPLOAD_URL }}
     secrets: inherit
   win:
     if: ${{ inputs.win == true || inputs.win == 'true' }}
@@ -57,6 +60,7 @@ jobs:
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: v${{ inputs.version }}
+      upload_url: ${{ env.UPLOAD_URL }}
     secrets: inherit
   mac:
     if: ${{ inputs.mac == true || inputs.mac == 'true' }}
@@ -68,6 +72,7 @@ jobs:
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: ${{ inputs.version }}
+      upload_url: ${{ env.UPLOAD_URL }}
       sign: true
       notarize: true
     secrets: inherit

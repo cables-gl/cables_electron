@@ -21,6 +21,8 @@ jobs:
           tag_name: v${{ steps.date.outputs.date }}-nightly
           draft: false
           prerelease: true
+      -   name: set upload url variable
+          run: echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
   linux:
     needs: draft_release
     uses: ./.github/workflows/build.yml
@@ -31,6 +33,7 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      upload_url: ${{ env.UPLOAD_URL }}
       release_type: "prerelease"
     secrets: inherit
   win:
@@ -43,6 +46,7 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      upload_url: ${{ env.UPLOAD_URL }}
       release_type: "prerelease"
     secrets: inherit
   mac:
@@ -55,6 +59,7 @@ jobs:
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
       tag_name: ${{ needs.draft_release.outputs.date }}-nightly
+      upload_url: ${{ env.UPLOAD_URL }}
       release_type: "prerelease"
       sign: true
       notarize: true
