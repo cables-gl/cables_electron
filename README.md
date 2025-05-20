@@ -30,6 +30,13 @@ the shown dialog. Once that is done, start patching!
 Once you downloaded the package, set its permissions to executable via your file-manager or using the terminal (`chmod +x ...AppImage`).
 Open the AppImage and start patching!
 
+#### Ubuntu > 24.04
+
+Make sure you download and run at least version >= 0.5.15 of cables to workaround any issued with `libfuse2`.
+
+If you run  into permission errors like `FATAL:setuid_sandbox_host.cc`, run cables from the terminal with the `--no-sandbox` option.
+You can read up on why and other workarounds [here](https://github.com/ivan-hc/AM/blob/main/docs/troubleshooting.md#ubuntu-mess).
+
 ## Command-Line Arguments
 
 - `--fullscreen` open editor in fullscreen window on start
