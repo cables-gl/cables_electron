@@ -11,6 +11,8 @@ on:
 jobs:
   draft_release:
    runs-on: ubuntu-latest
+   outputs:
+       upload_url: ${{ steps.create_release.outputs.upload_url }}
    steps:
      - name: fetch latest changelog
        id: fetch_changelog
@@ -29,6 +31,7 @@ jobs:
          body: ${{ steps.fetch_changelog.outputs.body }}
   linux:
    uses: ./.github/workflows/build.yml
+   needs: draft_release
    with:
      runner: ubuntu-latest
      target: linux
@@ -36,10 +39,11 @@ jobs:
      build_version: ${{ inputs.version }}
      exe_name: cables-${{ inputs.version }}
      tag_name: v${{ inputs.version }}
-     upload_url: ${{ steps.create_release.outputs.upload_url }}
+     upload_url: ${{ needs.draft_release.outputs.upload_url }}
    secrets: inherit
   win:
    uses: ./.github/workflows/build.yml
+   needs: draft_release
    with:
      runner: windows-latest
      target: win
@@ -47,10 +51,11 @@ jobs:
      build_version: ${{ inputs.version }}
      exe_name: cables-${{ inputs.version }}
      tag_name: v${{ inputs.version }}
-     upload_url: ${{ steps.create_release.outputs.upload_url }}
+     upload_url: ${{ needs.draft_release.outputs.upload_url }}
    secrets: inherit
   mac:
    uses: ./.github/workflows/build.yml
+   needs: draft_release
    with:
      runner: macos-14
      target: mac
@@ -58,7 +63,7 @@ jobs:
      build_version: ${{ inputs.version }}
      exe_name: cables-${{ inputs.version }}
      tag_name: ${{ inputs.version }}
-     upload_url: ${{ steps.create_release.outputs.upload_url }}
+     upload_url: ${{ needs.draft_release.outputs.upload_url }}
      sign: true
      notarize: true
    secrets: inherit
