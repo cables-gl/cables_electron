@@ -19,6 +19,10 @@ on:
         description: "basename of the final executable"
         required: true
         type: string
+      upload_url:
+        description: "upload url for release assets"
+        required: false
+        type: string
       tag_name:
         description: "the tag of the current release"
         required: true
@@ -141,12 +145,15 @@ jobs:
           rm -rf ./squashfs-root ./appimagetool.AppImage
     - name: upload static runtime AppImage
       id: upload-release-asset
-      uses: alexellis/upload-assets@0.4.0
+      uses: actions/upload-release-asset@v1
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          asset_paths: '["${{ runner.temp }}/${{ inputs.exe_name }}-linux-x64.AppImage"]'
-    - name: delete update files
+          upload_url: ${{ inputs.upload_url }}
+          asset_path: ${{ runner.temp }}/${{ inputs.exe_name }}-linux-x64.AppImage
+          asset_name: ${{ inputs.exe_name }}-linux-x64.AppImage
+          asset_content_type: application/octet-stream
+    - name: delete auto-update files
       uses: mknejp/delete-release-assets@v1
       continue-on-error: true
       with:
