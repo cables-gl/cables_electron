@@ -145,7 +145,7 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          asset_paths: '["./cables_electron/dist/${{ inputs.exe_name }}-linux-x64.AppImage"]'
+          asset_paths: '["./${{ inputs.exe_name }}-linux-x64.AppImage"]'
     - name: delete update files
       uses: mknejp/delete-release-assets@v1
       continue-on-error: true
