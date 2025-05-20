@@ -122,7 +122,7 @@ jobs:
         continue-on-error: true
         with:
             token: ${{ github.token }}
-            tag: v${{ inputs.tag_name }}
+            tag: ${{ inputs.tag_name }}
             fail-if-no-assets: false
             fail-if-no-release: false
             assets: |
@@ -140,11 +140,12 @@ jobs:
             -n ./squashfs-root ./"$appimage"
           rm -rf ./squashfs-root ./appimagetool.AppImage
     - name: upload static runtime AppImage
-      uses: actions/upload-artifact@v4
-      if: inputs.target == 'linux'
+      id: upload-release-asset
+      uses: alexellis/upload-assets@0.4.0
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          name: ${{ inputs.exe_name }}-linux-x64.AppImage
-          path: cables_electron/dist/${{ inputs.exe_name }}-linux-x64.AppImage
+          asset_paths: ["./cables_electron/dist/${{ inputs.exe_name }}-linux-x64.AppImage"]
     - name: delete update files
       uses: mknejp/delete-release-assets@v1
       continue-on-error: true
