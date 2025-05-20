@@ -137,7 +137,7 @@ jobs:
           chmod +x ./"$appimage" ./appimagetool.AppImage
           ./"$appimage" --appimage-extract && rm -f ./"$appimage"
           ./appimagetool.AppImage --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 20 \
-            -n ./squashfs-root ${{ runner.temp }}/"$appimage"
+            -n ./squashfs-root "${{ runner.temp }}"/"$appimage"
           rm -rf ./squashfs-root ./appimagetool.AppImage
     - name: upload static runtime AppImage
       id: upload-release-asset
