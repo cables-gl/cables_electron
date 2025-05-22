@@ -50,7 +50,7 @@ const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 const watchers = [];
 function _watch(done)
 {
-    const watchOptions = { "ignored": "./**/node_modules/" };
+    const watchOptions = { "ignored": (file) => { return file.includes("/node_modules/"); } };
     watchers.push(gulp.watch(["src_client/**/*.js", "../shared/shared_constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(defaultSeries)));
     watchers.push(gulp.watch(["src/**/*.js", "../shared/api/**/*.js"], watchOptions, gulp.series(electronChanges)));
     done();
