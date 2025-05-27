@@ -85,7 +85,7 @@ export default class CablesElectron
         {
             if (this.editorWindow)
             {
-                const waitForAce = this.editorWindow.waitForAce;
+                const waitForUi = this.editorWindow.waitForAce;
                 this.editorWindow.waitForAce = () =>
                 {
                     this._logStartup("loading", this._settings.patchFile);
@@ -111,7 +111,7 @@ export default class CablesElectron
                                 this._log.error("`npx \"@electron/rebuild\" -v " + process.versions.electron);
                             }
                         };
-                        waitForAce();
+                        waitForUi();
 
                         if (npmResult.error && npmResult.data && npmResult.msg !== "UNSAVED_PROJECT")
                         {
@@ -146,7 +146,6 @@ export default class CablesElectron
                 });
                 if (this.editorWindow.loadjs)
                 {
-                    this.editorWindow.loadjs.ready("cables_core", this._coreReady.bind(this));
                     this.editorWindow.loadjs.ready("cablesuinew", this._uiReady.bind(this));
                 }
             }
@@ -200,7 +199,7 @@ export default class CablesElectron
         if (this.CABLES) this.CABLES.platform.openOpDirsTab();
     }
 
-    _coreReady()
+    _uiReady()
     {
         if (this.CABLES)
         {
@@ -212,13 +211,7 @@ export default class CablesElectron
                     return cablesElectron._opRequire(moduleName, this, cablesElectron);
                 };
             }
-        }
-    }
 
-    _uiReady()
-    {
-        if (this.CABLES)
-        {
             this.CABLES.UI.DEFAULTOPNAMES.defaultOpFallback = this.CABLES.UI.DEFAULTOPNAMES.HttpRequest;
             this.CABLES.CMD.ELECTRON = electronCommands.functions;
             this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(electronCommands.commands);
