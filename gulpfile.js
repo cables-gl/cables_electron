@@ -26,7 +26,7 @@ if (!fs.existsSync(configLocation))
         defaultConfig.path.uiDist = path.join(uiPath, "dist/");
         defaultConfig.path.ops = path.join(corePath, "src/ops/");
         defaultConfig.path.libs = path.join(sharedPath, "libs/");
-        defaultConfig.path.corelibs = path.join(corePath, "build/libs/");
+        defaultConfig.path.corelibs = path.join(corePath, "build/corelibs/");
         jsonfile.writeFileSync(configLocation, defaultConfig, { "encoding": "utf-8", "spaces": 4 });
     }
     else

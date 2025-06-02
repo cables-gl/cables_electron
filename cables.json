@@ -5,7 +5,7 @@
     "url": "cables://",
     "sourcePath": {
         "libs": "../../shared/libs/",
-        "corelibs": "../../cables/build/libs/",
+        "corelibs": "../../cables/build/corelibs/",
         "ops": "../../cables/src/ops/",
         "uiDist": "../../cables_ui/dist/"
     },
