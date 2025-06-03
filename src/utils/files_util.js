@@ -209,13 +209,7 @@ class FilesUtil extends SharedFilesUtil
                 else if (files[i].toLowerCase().endsWith(".fileinfo.json")) continue;
                 else
                 {
-                    let type = "unknown";
-                    if (files[i].endsWith("jpg") || files[i].endsWith("png") || files[i].endsWith("jpeg")) type = "image";
-                    else if (files[i].endsWith("mp3") || files[i].endsWith("ogg") || files[i].endsWith("wav")) type = "audio";
-                    else if (files[i].endsWith("3d.json")) type = "3d json";
-                    else if (files[i].endsWith("json")) type = "json";
-                    else if (files[i].endsWith("mp4")) type = "video";
-
+                    let type = this.getFileType(files[i]);
                     const fileData = {
                         "d": false,
                         "n": files[i],
@@ -248,17 +242,10 @@ class FilesUtil extends SharedFilesUtil
         const project = settings.getCurrentProject();
         if (!project) return arr;
 
-        const projectDir = settings.getCurrentProjectDir();
         const fileNames = projectsUtil.getUsedAssetFilenames(project);
         fileNames.forEach((fileName) =>
         {
-            let type = "unknown";
-            if (fileName.endsWith("jpg") || fileName.endsWith("png") || fileName.endsWith("jpeg")) type = "image";
-            else if (fileName.endsWith("mp3") || fileName.endsWith("ogg") || fileName.endsWith("wav")) type = "audio";
-            else if (fileName.endsWith("3d.json")) type = "3d json";
-            else if (fileName.endsWith("json")) type = "json";
-            else if (fileName.endsWith("mp4")) type = "video";
-
+            let type = this.getFileType(fileName);
             let dirName = path.join(path.dirname(fileName), "/");
             dirName = dirName.replaceAll("\\", "/");
 
