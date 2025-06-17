@@ -40,10 +40,10 @@ export default class HtmlExportElectron extends SharedExportService
         };
     }
 
-    doExport(projectId, cb)
+    doExport(project, cb)
     {
         this.collectFiles(
-            projectId,
+            project,
             this.createZip.bind(this),
             (collectErr, callbackError) =>
             {
@@ -95,9 +95,8 @@ export default class HtmlExportElectron extends SharedExportService
         }
     }
 
-    collectFiles(_projectId, callbackFilesCollected, callbackError, options, next)
+    collectFiles(project, callbackFilesCollected, callbackError, options, next)
     {
-        const project = settings.getCurrentProject();
         this._log.info("...export");
         if (project)
         {

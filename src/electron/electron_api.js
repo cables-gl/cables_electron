@@ -374,8 +374,8 @@ class ElectronApi
             if (usedOpIds.includes(opDoc.id)) opDoc.usedInProject = true;
         });
 
-        opsUtil.addPermissionsToOps(opDocs, currentUser, [], project);
-        opsUtil.addVersionInfoToOps(opDocs);
+        opDocs = opsUtil.addPermissionsToOps(opDocs, currentUser, [], project);
+        opDocs = opsUtil.addVersionInfoToOps(opDocs);
 
         opDocs = doc.makeReadable(opDocs);
         return this.success("OK", opDocs, true);
@@ -1644,7 +1644,7 @@ class ElectronApi
 
         try
         {
-            const result = await exportPromise(null);
+            const result = await exportPromise(settings.getCurrentProject());
             return this.success("OK", result);
         }
         catch (e)
@@ -1661,7 +1661,7 @@ class ElectronApi
 
         try
         {
-            const result = await exportPromise(null);
+            const result = await exportPromise(settings.getCurrentProject());
             return this.success("OK", result);
         }
         catch (e)
