@@ -285,39 +285,39 @@ class OpsUtil extends SharedOpsUtil
         return toInstall;
     }
 
-    renameToCoreOp(oldName, newName, currentUser, removeOld, cb = null)
+    renameToCoreOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
         let newOpDir = oldOpDir.replace(oldName, newName);
-        return this._renameOp(oldName, newName, currentUser, true, removeOld, false, oldOpDir, newOpDir, cb);
+        return this._renameOp(oldName, newName, currentUser, true, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToExtensionOp(oldName, newName, currentUser, removeOld, cb = null)
+    renameToExtensionOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
         let newOpDir = oldOpDir.replace(oldName, newName);
-        return this._renameOp(oldName, newName, currentUser, true, removeOld, false, oldOpDir, newOpDir, cb);
+        return this._renameOp(oldName, newName, currentUser, true, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToTeamOp(oldName, newName, currentUser, removeOld, cb = null)
+    renameToTeamOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
         let newOpDir = oldOpDir.replace(oldName, newName);
-        return this._renameOp(oldName, newName, currentUser, false, removeOld, false, oldOpDir, newOpDir, cb);
+        return this._renameOp(oldName, newName, currentUser, false, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToUserOp(oldName, newName, currentUser, removeOld, cb = null)
+    renameToUserOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
         let newOpDir = oldOpDir.replace(oldName, newName);
-        return this._renameOp(oldName, newName, currentUser, false, removeOld, false, oldOpDir, newOpDir, cb);
+        return this._renameOp(oldName, newName, currentUser, false, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToPatchOp(oldName, newName, currentUser, removeOld, newId, cb = null)
+    renameToPatchOp(oldName, newName, currentUser, newId, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
         let newOpDir = oldOpDir.replace(oldName, newName);
-        return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
+        return this._renameOp(oldName, newName, currentUser, false, newId, oldOpDir, newOpDir, cb);
     }
 
     getPatchOpNamespace(opName)

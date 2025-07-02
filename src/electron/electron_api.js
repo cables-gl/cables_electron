@@ -1074,27 +1074,26 @@ class ElectronApi
         result.user = currentUser;
         result.showresult = true;
 
-        let removeOld = true;
         let renameSuccess = false;
         if (opsUtil.isUserOp(newName))
         {
-            renameSuccess = opsUtil.renameToUserOp(oldName, newName, currentUser, removeOld);
+            renameSuccess = opsUtil.renameToUserOp(oldName, newName, currentUser);
         }
         else if (opsUtil.isTeamOp(newName))
         {
-            renameSuccess = opsUtil.renameToTeamOp(oldName, newName, currentUser, removeOld);
+            renameSuccess = opsUtil.renameToTeamOp(oldName, newName, currentUser);
         }
         else if (opsUtil.isExtensionOp(newName))
         {
-            renameSuccess = opsUtil.renameToExtensionOp(oldName, newName, currentUser, removeOld);
+            renameSuccess = opsUtil.renameToExtensionOp(oldName, newName, currentUser);
         }
         else if (opsUtil.isPatchOp(newName))
         {
-            renameSuccess = opsUtil.renameToPatchOp(oldName, newName, currentUser, removeOld, false);
+            renameSuccess = opsUtil.renameToPatchOp(oldName, newName, currentUser, false);
         }
         else
         {
-            renameSuccess = opsUtil.renameToCoreOp(oldName, newName, currentUser, removeOld);
+            renameSuccess = opsUtil.renameToCoreOp(oldName, newName, currentUser);
         }
 
         projectsUtil.invalidateProjectCaches();
@@ -1316,7 +1315,7 @@ class ElectronApi
         let usersReadOnly = [];
 
         const currentUser = settings.getCurrentUser();
-        const origProject = settings.getCurrentProject();
+        const origProject = settings.getCurrentProject() || projectsUtil.generateNewProject(currentUser);
         origProject._id = helper.generateRandomId();
         origProject.name = path.basename(projectFile);
         origProject.summary = origProject.summary || {};
@@ -1330,7 +1329,9 @@ class ElectronApi
         origProject.usersReadOnly = usersReadOnly;
         origProject.visibility = "private";
         origProject.shortId = helper.generateShortId(origProject._id, Date.now());
-        projectsUtil.writeProjectToFile(projectFile, origProject);
+        let patch = {};
+        if (data.dataB64) patch.dataB64 = data.dataB64;
+        projectsUtil.writeProjectToFile(projectFile, origProject, patch);
         this.loadProject(projectFile);
         electronApp.reload();
         return this.success("OK", origProject, true);
@@ -1804,12 +1805,11 @@ class ElectronApi
         suggestedNamespaces = suggestedNamespaces.map((suggestedNamespace) => { return opsUtil.getNamespace(suggestedNamespace, true); });
         suggestedNamespaces = helper.uniqueArray(suggestedNamespaces);
 
-        let removeOld = newName && !(opsUtil.isExtensionOp(newName) && opsUtil.isCoreOp(newName));
         const result = {
             "namespaces": suggestedNamespaces,
             "problems": [],
             "consequences": [],
-            "action": removeOld ? "Rename" : "Copy"
+            "action": "Rename"
         };
 
         if (!newName)
