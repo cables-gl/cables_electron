@@ -1089,7 +1089,7 @@ class ElectronApi
         }
         else if (opsUtil.isPatchOp(newName))
         {
-            renameSuccess = opsUtil.renameToPatchOp(oldName, newName, currentUser, false);
+            renameSuccess = opsUtil.renameToPatchOp(oldName, newName, currentUser, true, false);
         }
         else
         {
