@@ -1854,6 +1854,11 @@ class ElectronApi
             suggestVersion = false;
         }
 
+        if (problems.namespace_missing_parts && opsUtil.isLocalOp(newName))
+        {
+            delete problems.namespace_missing_parts;
+        }
+
         if (!fromRename && oldName)
         {
             const hierarchyProblem = opsUtil.getNamespaceHierarchyProblem(oldName, newName);

@@ -22,8 +22,15 @@ class OpsUtil extends SharedOpsUtil
         };
     }
 
+    isLocalOp(opName)
+    {
+        if (!opName) return false;
+        return opName.startsWith(this.PREFIX_LOCAL_OPS);
+    }
+
     isCoreOp(opName)
     {
+        if (!opName || this.isLocalOp(opName)) return false;
         const opsDir = this._cables.getCoreOpsPath();
         const opDir = this.getOpSourceDir(opName);
         return opDir.startsWith(opsDir);
