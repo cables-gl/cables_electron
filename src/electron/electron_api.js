@@ -452,7 +452,7 @@ class ElectronApi
                 "text": text,
                 "footer": footer,
                 "reasons": reasons,
-                "hideEnvButton": true,
+                "hideEnvButton": true
             };
 
             const currentProject = settings.getCurrentProject();
@@ -909,7 +909,7 @@ class ElectronApi
             const infoFileName = finalPath + ".fileinfo.json";
             let filename = "";
 
-            if (fs.existsSync(infoFileName))filename = infoFileName;
+            if (fs.existsSync(infoFileName)) filename = infoFileName;
 
             if (filename === "")
             {
@@ -965,10 +965,13 @@ class ElectronApi
             "coreLibs": data.coreLibs
         };
         let targetDir = data.opTargetDir;
-        const projectOpDirs = projectsUtil.getOpDirs(settings.getCurrentProject());
-        if (projectOpDirs && projectOpDirs.length > 0)
+        if (!targetDir)
         {
-            targetDir = projectOpDirs[0].dir;
+            const projectOpDirs = projectsUtil.getOpDirs(settings.getCurrentProject());
+            if (projectOpDirs && projectOpDirs.length > 0)
+            {
+                targetDir = projectOpDirs[0].dir;
+            }
         }
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir);
         filesUtil.registerOpChangeListeners([opName]);
@@ -1127,7 +1130,10 @@ class ElectronApi
             {
                 const nodeModulesDir = path.join(targetDir, "node_modules");
                 if (fs.existsSync(nodeModulesDir)) fs.rmSync(nodeModulesDir, { "recursive": true });
-                results.push({ "stdout": "nothing to install", "packages": [] });
+                results.push({
+                    "stdout": "nothing to install",
+                    "packages": []
+                });
                 return this.success("EMPTY", results, false);
             }
             else
@@ -1145,7 +1151,10 @@ class ElectronApi
         }
         else
         {
-            results.push({ "stdout": "nothing to install", "packages": [] });
+            results.push({
+                "stdout": "nothing to install",
+                "packages": []
+            });
             return this.success("EMPTY", results, false);
         }
     }
@@ -1155,7 +1164,10 @@ class ElectronApi
         const currentProject = settings.getCurrentProject();
         if (!currentProject)
         {
-            return this.error("UNSAVED_PROJECT", [{ "stdout": "please save your project first", "packages": [] }]);
+            return this.error("UNSAVED_PROJECT", [{
+                "stdout": "please save your project first",
+                "packages": []
+            }]);
         }
 
         const results = [];
@@ -1179,7 +1191,10 @@ class ElectronApi
         });
         if (Object.keys(projectPackages).length === 0)
         {
-            results.push({ "stdout": "nothing to install", "packages": [] });
+            results.push({
+                "stdout": "nothing to install",
+                "packages": []
+            });
             return this.success("EMPTY", results, false);
         }
         else
@@ -1300,7 +1315,11 @@ class ElectronApi
 
     checkNumAssetPatches()
     {
-        return this.success("OK", { "assets": [], "countPatches": 0, "countOps": 0 }, true);
+        return this.success("OK", {
+            "assets": [],
+            "countPatches": 0,
+            "countOps": 0
+        }, true);
     }
 
     async saveProjectAs(data)
@@ -1376,7 +1395,8 @@ class ElectronApi
                 fs.unlinkSync(newPath);
             }
         }
-        catch (e) {}
+        catch (e)
+        {}
 
         this._log.info("edit file", newPath);
 
@@ -1467,7 +1487,10 @@ class ElectronApi
         this.loadProject(newFile);
         const summary = projectsUtil.getSummary(settings.getCurrentProject());
         electronApp.updateTitle();
-        return this.success("OK", { "name": project.name, "summary": summary });
+        return this.success("OK", {
+            "name": project.name,
+            "summary": summary
+        });
     }
 
     cycleFullscreen()
@@ -1698,7 +1721,11 @@ class ElectronApi
         }
         else
         {
-            return this.error("ERROR", { "fileName": fileName, "opId": opId, "opName": opName });
+            return this.error("ERROR", {
+                "fileName": fileName,
+                "opId": opId,
+                "opName": opName
+            });
         }
     }
 
@@ -1713,7 +1740,7 @@ class ElectronApi
                 {
                     const errorReportSend = net.request({
                         "url": path.join(communityUrl, "/api/errorReport"),
-                        "method": "POST",
+                        "method": "POST"
                     });
                     delete report.url;
                     delete report.file;
@@ -1764,13 +1791,21 @@ class ElectronApi
         }
         else
         {
-            return { "success": true, "msg": msg, "data": data || {} };
+            return {
+                "success": true,
+                "msg": msg,
+                "data": data || {}
+            };
         }
     }
 
     error(msg, data = null, level = "warn")
     {
-        const error = { "error": true, "msg": msg, "level": level };
+        const error = {
+            "error": true,
+            "msg": msg,
+            "level": level
+        };
         if (data) error.data = data;
         return error;
     }
