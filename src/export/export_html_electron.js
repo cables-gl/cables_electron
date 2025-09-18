@@ -1,6 +1,7 @@
 import fs from "fs";
 import { SharedExportService } from "cables-shared-api";
 import path from "path";
+import AdmZip from "adm-zip";
 import { fileURLToPath } from "url";
 import settings from "../electron/electron_settings.js";
 import electronApp from "../electron/main.js";
