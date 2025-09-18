@@ -1,5 +1,4 @@
 import fs from "fs";
-import archiver from "archiver";
 import { SharedExportService } from "cables-shared-api";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -12,7 +11,7 @@ export default class HtmlExportElectron extends SharedExportService
     constructor(provider, _exportOptions, user)
     {
         super(provider, {}, user);
-        this.archive = archiver.create("zip", {});
+        this.archive = AdmZip;
 
         this.options.logLevel = "info";
         this.options.hideMadeWithCables = true;
