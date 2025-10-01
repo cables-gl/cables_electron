@@ -1,7 +1,7 @@
 import fs from "fs";
 import { SharedExportService } from "cables-shared-api";
 import path from "path";
-import AdmZip from "adm-zip";
+import archiver from "archiver";
 import { fileURLToPath } from "url";
 import settings from "../electron/electron_settings.js";
 import electronApp from "../electron/main.js";
@@ -12,7 +12,7 @@ export default class HtmlExportElectron extends SharedExportService
     constructor(provider, _exportOptions, user)
     {
         super(provider, {}, user);
-        this.archive = AdmZip;
+        this.archive = archiver;
 
         this.options.logLevel = "info";
         this.options.hideMadeWithCables = true;
@@ -57,8 +57,8 @@ export default class HtmlExportElectron extends SharedExportService
     /* private */
     createZip(project, files, callbackFinished)
     {
-        const zipFileName = this.getExportFileName(project);
-        const zipPath = this.getExportTargetPath(project);
+        const zipFileName = this._projectsUtil.getExportFileName(project, this.getName());
+        const zipPath = this._projectsUtil.getExportTargetPath(project);
         const finalZipFileName = path.join(zipPath, zipFileName);
 
         if (fs.existsSync(zipPath))
@@ -117,11 +117,6 @@ export default class HtmlExportElectron extends SharedExportService
                 next(serviceResult.msg, serviceResult);
             });
         }
-    }
-
-    getExportTargetPath(project)
-    {
-        return settings.getDownloadPath();
     }
 
     _getFilesForProjects(theProjects, options, cb)

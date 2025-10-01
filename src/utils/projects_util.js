@@ -365,5 +365,10 @@ class ProjectsUtil extends SharedProjectsUtil
         this._docsUtil.addOpsToLookup(this._projectOpDocs);
         return filteredOpDocs;
     }
+
+    getExportTargetPath(project)
+    {
+        return settings.getDownloadPath();
+    }
 }
 export default new ProjectsUtil(utilProvider);
