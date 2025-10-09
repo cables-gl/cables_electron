@@ -304,6 +304,12 @@ class ProjectsUtil extends SharedProjectsUtil
         this._projectOpDocs = null;
     }
 
+    isOpInProjectDir(opName)
+    {
+        if (!this._projectOpDocs) return false;
+        return this._projectOpDocs.some((opDoc) => { return opDoc.name === opName; });
+    }
+
     getOpDocsInProjectDirs(project, filterOldVersions = false, filterDeprecated = false, rebuildCache = false)
     {
         if (!this._projectOpDocs || rebuildCache)

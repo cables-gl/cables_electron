@@ -44,6 +44,11 @@ class ElectronApi
             }
         });
 
+        ipcMain.handle("documentChanged", async (event, _cmd, data) =>
+        {
+            return electronApp.editorWindow.setDocumentEdited(true);
+        });
+
         ipcMain.on("platformSettings", (event, _cmd, _data) =>
         {
             settings.data.buildInfo = settings.getBuildInfo();
@@ -292,6 +297,11 @@ class ElectronApi
         currentProject.summary.title = currentProject.name;
         currentProject.summary.allowEdit = true;
         return this.success("OK", currentProject, true);
+    }
+
+    getPatchSummary()
+    {
+        return projectsUtil.getSummary(settings.getCurrentProject());
     }
 
     async newPatch()
@@ -850,7 +860,7 @@ class ElectronApi
     setIconUnsaved()
     {
         const title = electronApp.editorWindow.getTitle();
-        electronApp.setDocumentEdited(true);
+        if (settings.getCurrentProject()) electronApp.setDocumentEdited(true);
         electronApp.editorWindow.setTitle(title + " *");
     }
 
@@ -1593,9 +1603,10 @@ class ElectronApi
 
     async addOpDependency(options)
     {
+        let opName = options.opName;
+        if (opsUtil.isOpId(opName)) opName = opsUtil.getOpNameById(opName);
         if (!options.opName || !options.type) return this.error("INVALID_DATA");
 
-        const opName = options.opName;
         const dep = this._getOpDepFromRequest({ "body": options });
         const added = opsUtil.addOpDependency(opName, dep);
         if (added)
@@ -1613,7 +1624,8 @@ class ElectronApi
     async removeOpDependency(options)
     {
         if (!options.opName || !options.type) return this.error("INVALID_DATA");
-        const opName = options.opName;
+        let opName = options.opName;
+        if (opsUtil.isOpId(opName)) opName = opsUtil.getOpNameById(opName);
         const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
         if (fs.existsSync(opDocFile))
         {
@@ -1631,7 +1643,7 @@ class ElectronApi
                 if (fs.existsSync(libPath)) fs.unlinkSync(libPath);
                 if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, opsUtil.OPJSON_FORMAT);
                 doc.updateOpDocs();
-                this._installOpDependencies(opName);
+                await this._installOpDependencies(opName);
                 return this.success("OK");
             }
             else

@@ -341,5 +341,12 @@ class OpsUtil extends SharedOpsUtil
     {
         return true;
     }
+
+    getCollectionName(opName)
+    {
+        if (!opName) return null;
+        if (opName.startsWith(this.PREFIX_LOCAL_OPS)) return this.PREFIX_LOCAL_OPS;
+        return super.getCollectionName(opName);
+    }
 }
 export default new OpsUtil(utilProvider);

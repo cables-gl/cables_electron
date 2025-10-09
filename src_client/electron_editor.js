@@ -289,6 +289,7 @@ export default class ElectronEditor
             "exportPatchBundle": { "needsProjectFile": true },
             "addProjectOpDir": { "needsProjectFile": true },
             "uploadFileToOp": {},
+            "getPatchSummary": {},
             "errorReport": {}
         };
 

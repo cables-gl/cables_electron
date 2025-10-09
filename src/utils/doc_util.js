@@ -5,6 +5,7 @@ import jsonfile from "jsonfile";
 import opsUtil from "./ops_util.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
+import projectsUtil from "./projects_util.js";
 
 class DocUtil extends SharedDocUtil
 {
@@ -57,6 +58,12 @@ class DocUtil extends SharedDocUtil
             opDoc.opDirFull = absolute;
         });
         return readables;
+    }
+
+    updateOpDocs(opName)
+    {
+        if (this._projectsUtil.isOpInProjectDir(opName)) this._projectsUtil.invalidateProjectCaches();
+        return super.updateOpDocs(opName);
     }
 }
 export default new DocUtil(utilProvider);
