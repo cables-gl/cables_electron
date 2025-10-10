@@ -281,7 +281,7 @@ class ProjectsUtil extends SharedProjectsUtil
         const currentProject = settings.getCurrentProject();
         if (!this._dirInfos)
         {
-            this._log.debug("rebuilding opdir-cache, changed by:", opName);
+            this._log.debug("rebuilding opdir-cache");
             this._dirInfos = this.getOpDirs(currentProject);
         }
         if (!this._dirInfos) return this._opsUtil.getOpSourceNoHierarchy(opName);
