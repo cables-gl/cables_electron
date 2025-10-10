@@ -4,6 +4,7 @@ import path from "path";
 import localShortcut from "electron-localshortcut";
 import fs from "fs";
 import os from "os";
+import jsonfile from "jsonfile";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
@@ -44,7 +45,10 @@ class ElectronApp
         if (!maximizeRenderer && app.commandLine.hasSwitch("maximize-renderer")) maximizeRenderer = true;
         this._maximizeRenderer = maximizeRenderer;
 
-        this._defaultWindowBounds = { "width": 1920, "height": 1080 };
+        this._defaultWindowBounds = {
+            "width": 1920,
+            "height": 1080
+        };
 
         this.editorWindow = null;
 
@@ -123,7 +127,7 @@ class ElectronApp
                     "--no-fund",
                     "--no-audit"
                 ],
-                "excludeNpmCwd": true,
+                "excludeNpmCwd": true
             });
             this._npm.load().then(() =>
             {
@@ -138,7 +142,10 @@ class ElectronApp
 
     async installPackages(targetDir, packageNames, opName = null)
     {
-        if (!targetDir || !packageNames || packageNames.length === 0) return { "stdout": "nothing to install", "packages": [] };
+        if (!targetDir || !packageNames || packageNames.length === 0) return {
+            "stdout": "nothing to install",
+            "packages": []
+        };
 
         const result = await this._installNpmPackages(packageNames, targetDir, opName);
         if (opName) result.opName = opName;
@@ -150,7 +157,10 @@ class ElectronApp
 
     async addOpPackage(targetDir, opPackageLocation)
     {
-        if (!targetDir || !opPackageLocation) return { "stdout": "nothing to install", "packages": [] };
+        if (!targetDir || !opPackageLocation) return {
+            "stdout": "nothing to install",
+            "packages": []
+        };
 
         const dirName = path.join(os.tmpdir(), "cables-oppackage-");
         const tmpDir = fs.mkdtempSync(dirName);
@@ -178,7 +188,12 @@ class ElectronApp
     async _installNpmPackages(packageNames, targetDir, opName = null)
     {
         this._npm.config.localPrefix = targetDir;
-        let result = { "stdout": "", "stderr": "", "packages": packageNames, "targetDir": targetDir };
+        let result = {
+            "stdout": "",
+            "stderr": "",
+            "packages": packageNames,
+            "targetDir": targetDir
+        };
 
         // packaged ops have node_modules installed already
         if (cables.inPackage(targetDir)) return result;
@@ -381,7 +396,7 @@ class ElectronApp
             "properties": properties,
             "filters": [{
                 "name": "cables project",
-                "extensions": extensions,
+                "extensions": extensions
             }]
         }).then((result) =>
         {
@@ -409,7 +424,7 @@ class ElectronApp
             "defaultPath": defaultPath,
             "filters": [{
                 "name": "cables project",
-                "extensions": extensions,
+                "extensions": extensions
             }]
         }).then((result) =>
         {
@@ -466,7 +481,10 @@ class ElectronApp
         {
             aboutMenu.push({ "role": "services" });
             aboutMenu.push({ "type": "separator" });
-            aboutMenu.push({ "role": "hide", "label": "Hide Cables" });
+            aboutMenu.push({
+                "role": "hide",
+                "label": "Hide Cables"
+            });
             aboutMenu.push({ "role": "hideOthers" });
             aboutMenu.push({ "role": "unhide" });
             aboutMenu.push({ "type": "separator" });
@@ -524,7 +542,7 @@ class ElectronApp
                     { "role": "cut" },
                     { "role": "copy" },
                     { "role": "paste" },
-                    { "role": "selectAll" },
+                    { "role": "selectAll" }
 
                 ]
             },
@@ -532,7 +550,7 @@ class ElectronApp
                 "label": "Window",
                 "submenu": [
                     {
-                        "role": "minimize",
+                        "role": "minimize"
                     },
                     {
                         "role": "zoom",
@@ -595,12 +613,16 @@ class ElectronApp
                             this._toggleDevTools();
                         }
                     },
-                    { "role": "close", "visible": false }
+                    {
+                        "role": "close",
+                        "visible": false
+                    }
                 ]
             }
         ];
         // prevent osx from showin currently running process as name (e.g. `npm`)
-        if (process.platform == "darwin") { menuTemplate.unshift({ "label": "" }); }
+        if (process.platform == "darwin")
+        { menuTemplate.unshift({ "label": "" }); }
         let menu = Menu.buildFromTemplate(menuTemplate);
 
         Menu.setApplicationMenu(menu);
@@ -703,7 +725,10 @@ class ElectronApp
         const options = {
             "title": title,
             "properties": properties,
-            "filters": [{ "name": "Assets", "extensions": extensions }]
+            "filters": [{
+                "name": "Assets",
+                "extensions": extensions
+            }]
         };
         if (filePath) options.defaultPath = filePath;
         return dialog.showOpenDialog(this.editorWindow, options).then((result) =>
@@ -730,7 +755,7 @@ class ElectronApp
             "properties": properties,
             "filters": [{
                 "name": "cables project",
-                "extensions": extensions,
+                "extensions": extensions
             }]
         }).then((result) =>
         {
@@ -779,7 +804,10 @@ class ElectronApp
 
     sendTalkerMessage(cmd, data)
     {
-        this.editorWindow.webContents.send("talkerMessage", { "cmd": cmd, "data": data });
+        this.editorWindow.webContents.send("talkerMessage", {
+            "cmd": cmd,
+            "data": data
+        });
     }
 
     openFullscreen()
@@ -950,7 +978,38 @@ class ElectronApp
     _initCaches(cb)
     {
         doc.addOpsToLookup([], true);
-        cb();
+        const opDocsFile = cables.getOpDocsFile();
+        if (fs.existsSync(cables.getOpDocsFile()))
+        {
+            jsonfile.readFile(opDocsFile).then((cachedOpDocs) =>
+            {
+                if (!cachedOpDocs || !cachedOpDocs.opDocs || cachedOpDocs.opDocs.length === 0)
+                {
+                    this._rebuildOpDocCache(cb);
+                    return;
+                }
+                cb();
+            }).catch((e) =>
+            {
+                this._log.logStartup("failed to parse opdocs cache file!", e);
+                this._rebuildOpDocCache(cb);
+            });
+        }
+        else
+        {
+            this._rebuildOpDocCache(cb);
+        }
+
+    }
+
+    _rebuildOpDocCache(cb)
+    {
+        this._log.logStartup("rebuilding op caches");
+        doc.rebuildOpCaches(() =>
+        {
+            this._log.logStartup("rebuild op caches");
+            cb();
+        }, ["core", "teams", "extensions"], true);
     }
 
     _handleError(title, error)
@@ -962,7 +1021,7 @@ class ElectronApp
                 "&Reload",
                 "&New Patch",
                 "&Quit",
-                process.platform === "darwin" ? "Copy Error" : "Copy error",
+                process.platform === "darwin" ? "Copy Error" : "Copy error"
             ];
             const buttonIndex = dialog.showMessageBoxSync({
                 "type": "error",
@@ -1017,7 +1076,7 @@ class ElectronApp
             "icon": this.appIcon,
             "type": "info",
             "buttons": [],
-            "message": "cables standalone",
+            "message": "cables standalone"
         };
 
         const buildInfo = settings.getBuildInfo();
@@ -1064,6 +1123,7 @@ class ElectronApp
     }
 
 }
+
 Menu.setApplicationMenu(null);
 
 const electronApp = new ElectronApp();
