@@ -15,6 +15,7 @@
     },
     "scripts": {
         "start": "cross-env npm_config_apiconfig=local gulp watch",
+        "start:help": "cross-env npm_config_apiconfig=local gulp watch --usage",
         "start:fullscreen": "cross-env npm_config_apiconfig=local gulp watch --fullscreen",
         "start:maximize": "cross-env npm_config_apiconfig=local gulp watch --maximize-renderer",
         "start:presentation": "cross-env npm_config_apiconfig=local gulp watch --fullscreen --maximize-renderer",

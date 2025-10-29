@@ -37,6 +37,19 @@ class ElectronApp
         this.appName = "name" in app ? app.name : app.getName();
         this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
 
+        let _cliHelpText = "\n";
+        _cliHelpText += "Options:\n";
+        _cliHelpText += "  --help                Show this help.\n";
+        _cliHelpText += "  --fullscreen          Open in fullscreen mode.\n";
+        _cliHelpText += "  --maximize-renderer   Switch renderer to fullscreen on start (ESC to exit).\n";
+        _cliHelpText += "\n";
+
+        if (app.commandLine.hasSwitch("help") || app.commandLine.hasSwitch("usage"))
+        {
+            console.log(_cliHelpText);
+            process.exit(0);
+        }
+
         let openFullscreen = settings.getUserSetting("openfullscreen", false);
         if (!openFullscreen && app.commandLine.hasSwitch("fullscreen")) openFullscreen = true;
         this._openFullscreen = openFullscreen;
