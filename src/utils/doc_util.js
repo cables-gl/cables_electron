@@ -9,6 +9,11 @@ import projectsUtil from "./projects_util.js";
 
 class DocUtil extends SharedDocUtil
 {
+    constructor(provider)
+    {
+        super(provider, true);
+    }
+
     getDocForOp(opName, docs = null)
     {
         if (!opName) return null;

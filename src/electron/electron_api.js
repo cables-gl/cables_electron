@@ -301,7 +301,7 @@ class ElectronApi
 
     getPatchSummary()
     {
-        return projectsUtil.getSummary(settings.getCurrentProject());
+        return this.success("OK", projectsUtil.getSummary(settings.getCurrentProject()));
     }
 
     async newPatch()
