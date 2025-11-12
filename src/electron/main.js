@@ -5,6 +5,7 @@ import localShortcut from "electron-localshortcut";
 import fs from "fs";
 import os from "os";
 import jsonfile from "jsonfile";
+import { TalkerAPI } from "cables-shared-client";
 import electronEndpoint from "./electron_endpoint.js";
 import electronApi from "./electron_api.js";
 import logger from "../utils/logger.js";
@@ -699,7 +700,7 @@ class ElectronApp
         const project = settings.getCurrentProject();
         if (project)
         {
-            this.sendTalkerMessage("updatePatchName", { "name": project.name });
+            this.sendTalkerMessage(TalkerAPI.CMD_UPDATE_PATCH_NAME, { "name": project.name });
         }
 
         this.editorWindow.setTitle(title);
@@ -950,7 +951,7 @@ class ElectronApp
                 const fileUrl = helper.pathToFileURL(savePath);
                 const cablesUrl = fileUrl.replace("file:", "cables:///openDir/");
                 const link = "<a href=\"" + cablesUrl + "\" download>" + savePath + "</a>";
-                this.sendTalkerMessage("notify", { "msg": "File saved to " + link });
+                this.sendTalkerMessage(TalkerAPI.CMD_UI_NOTIFY, { "msg": "File saved to " + link });
             }
         });
     }

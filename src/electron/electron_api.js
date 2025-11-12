@@ -9,6 +9,7 @@ import jsonfile from "jsonfile";
 import sanitizeFileName from "sanitize-filename";
 import { utilProvider } from "cables-shared-api";
 import { createRequire } from "module";
+import { TalkerAPI } from "cables-shared-client";
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
 import doc from "../utils/doc_util.js";
@@ -144,7 +145,7 @@ class ElectronApi
                     {
                         let patchData = null;
                         let currentProject = settings.getCurrentProject();
-                        if (cmd === "savePatch" && data)
+                        if (cmd === TalkerAPI.CMD_SAVE_PATCH && data)
                         {
                             patchData = data;
                         }

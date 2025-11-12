@@ -41,12 +41,12 @@ export default class ElectronEditor
 
         window.addEventListener("unhandledrejection", (e) =>
         {
-            this._talker.send("logError", { "level": "error", "message": e.reason });
+            this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": "error", "message": e.reason });
         });
 
         window.addEventListener("error", (e) =>
         {
-            this._talker.send("logError", { "level": "error", "message": e.error });
+            this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": "error", "message": e.error });
         });
 
         window.ipcRenderer.on("talkerMessage", (_event, data) =>
@@ -62,7 +62,7 @@ export default class ElectronEditor
          * @param {function} next callback
          * @listens TalkerAPI#requestPatchData
          */
-        this._talker.on("requestPatchData", (data, next) =>
+        this._talker.on(TalkerAPI.CMD_REQUEST_PATCH_DATA, (data, next) =>
         {
             if (next) next(this.config);
         });
@@ -76,7 +76,7 @@ export default class ElectronEditor
          * @param {function} next callback
          * @listens TalkerAPI#updatePatchName
          */
-        this._talker.on("updatePatchName", (data, next) =>
+        this._talker.on(TalkerAPI.CMD_UPDATE_PATCH_NAME, (data, next) =>
         {
             if (next) next(null, data);
         });
@@ -89,7 +89,7 @@ export default class ElectronEditor
          * @param {function} next unused
          * @listens TalkerAPI#reload
          */
-        this._talker.on("reload", (data, next) =>
+        this._talker.on(TalkerAPI.CMD_RELOAD_PATCH, (data, next) =>
         {
             document.location.reload();
         });
@@ -106,15 +106,15 @@ export default class ElectronEditor
          * @fires TalkerAPI#refreshFileManager
          * @fires TalkerAPI#fileUpdated
          */
-        this._talker.on("fileUploadStr", (data, next) =>
+        this._talker.on(TalkerAPI.CMD_UPLOAD_FILE, (data, next) =>
         {
             this.api("fileUpload", data, (err, r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
-                this._talker.send("refreshFileManager");
-                this._talker.send("fileUpdated", { "filename": r.filename });
+                this._talker.send(TalkerAPI.CMD_UI_REFRESH_FILEMANAGER, {});
+                this._talker.send(TalkerAPI.CMD_UI_FILE_UPDATED, { "filename": r.filename });
 
-                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+                if (error) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
                 next(error, r);
             });
         });
@@ -130,24 +130,24 @@ export default class ElectronEditor
          * @listens TalkerAPI#updateFile
          * @fires TalkerAPI#fileUpdated
          */
-        this._talker.on("updateFile", (data, next) =>
+        this._talker.on(TalkerAPI.CMD_UPDATE_FILE, (data, next) =>
         {
             this.api("updateFile", data, (err, r) =>
             {
                 const error = r && r.hasOwnProperty("error") ? r.error : null;
-                if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+                if (error) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
                 next(error, r);
-                this._talker.send("fileUpdated", { "filename": data.fileName });
+                this._talker.send(TalkerAPI.CMD_UI_FILE_UPDATED, { "filename": data.fileName });
             });
         });
 
-        this._talker.on("createFile", (data, next) =>
+        this._talker.on(TalkerAPI.CMD_CREATE_NEW_FILE, (data, next) =>
         {
             this.api("createFile", data, (error, r) =>
             {
                 if (error)
                 {
-                    this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+                    this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
                 }
                 else
                 {
@@ -161,7 +161,7 @@ export default class ElectronEditor
             });
         });
 
-        this._talker.on("addOpPackage", (data, next) =>
+        this._talker.on(TalkerAPI.CMD_ADD_OP_PACKAGE, (data, next) =>
         {
             let opTargetDir = null;
             this.api("getProjectOpDirs", {}, (err, res) =>
@@ -232,66 +232,67 @@ export default class ElectronEditor
             });
         });
 
-        this._talkerTopics = {
-            "getOpInfo": {},
-            "savePatch": { "needsProjectFile": true },
-            "getPatch": {},
-            "newPatch": { },
-            "getAllProjectOps": {},
-            "getOpDocsAll": {},
-            "getOpDocs": {},
-            "saveOpCode": {},
-            "getOpCode": {},
-            "opAttachmentGet": {},
-            "formatOpCode": {},
-            "saveUserSettings": {},
-            "checkProjectUpdated": {},
-            "opAddLib": {},
-            "opAddCoreLib": {},
-            "opAttachmentAdd": {},
-            "opAttachmentDelete": {},
-            "opRemoveLib": {},
-            "opRemoveCoreLib": {},
-            "getChangelog": {},
-            "opAttachmentSave": {},
-            "setIconSaved": {},
-            "setIconUnsaved": {},
-            "saveScreenshot": { },
-            "getFilelist": {},
-            "getFileDetails": {},
-            "getLibraryFileInfo": {},
-            "checkOpName": {},
-            "getRecentPatches": {},
-            "opCreate": { "needsProjectFile": true },
-            "opRename": { },
-            "opUpdate": {},
-            "opDelete": {},
-            "opClone": { },
-            "opSaveLayout": { },
-            "opSetSummary": { },
-            "checkNumAssetPatches": {},
-            "saveProjectAs": { },
-            "gotoPatch": {},
-            "getProjectOpDirs": {},
-            "openDir": {},
-            "selectFile": {},
-            "selectDir": {},
-            "setProjectName": { "needsProjectFile": true },
-            "collectAssets": { "needsProjectFile": true },
-            "collectOps": { "needsProjectFile": true },
-            "getCollectionOpDocs": {},
-            "patchCreateBackup": { "needsProjectFile": true },
-            "addOpDependency": {},
-            "removeOpDependency": {},
-            "saveProjectOpDirOrder": { "needsProjectFile": true },
-            "removeProjectOpDir": { "needsProjectFile": true },
-            "exportPatch": { "needsProjectFile": true },
-            "exportPatchBundle": { "needsProjectFile": true },
-            "addProjectOpDir": { "needsProjectFile": true },
-            "uploadFileToOp": {},
-            "getPatchSummary": {},
-            "errorReport": {}
-        };
+        this._talkerTopics = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_OP_INFO] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_GET_PATCH] = {};
+        this._talkerTopics[TalkerAPI.CMD_CREATE_NEW_PATCH] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_PROJECT_OPS] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_ALL_OPDOCS] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_OP_CODE] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_OP_CODE] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_OP_ATTACHMENT] = {};
+        this._talkerTopics[TalkerAPI.CMD_FORMAT_OP_CODE] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_USER_SETTINGS] = {};
+        this._talkerTopics[TalkerAPI.CMD_CHECK_PATCH_UPDATED] = {};
+        this._talkerTopics[TalkerAPI.CMD_ADD_OP_LIBRARY] = {};
+        this._talkerTopics[TalkerAPI.CMD_ADD_OP_CORELIB] = {};
+        this._talkerTopics[TalkerAPI.CMD_ADD_OP_ATTACHMENT] = {};
+        this._talkerTopics[TalkerAPI.CMD_REMOVE_OP_ATTACHMENT] = {};
+        this._talkerTopics[TalkerAPI.CMD_REMOVE_OP_LIBRARY] = {};
+        this._talkerTopics[TalkerAPI.CMD_REMOVE_OP_CORELIB] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_CABLES_CHANGELOG] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_OP_ATTACHMENT] = {};
+        this._talkerTopics[TalkerAPI.CMD_SET_ICON_SAVED] = {};
+        this._talkerTopics[TalkerAPI.CMD_SET_ICON_UNSAVED] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH_SCREENSHOT] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_FILE_LIST] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_FILE_DETAILS] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_LIBRARYFILE_DETAILS] = {};
+        this._talkerTopics[TalkerAPI.CMD_CHECK_OP_NAME] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_RECENT_PATCHES] = {};
+        this._talkerTopics[TalkerAPI.CMD_CREATE_OP] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_UPDATE_OP] = {};
+        this._talkerTopics[TalkerAPI.CMD_CLONE_OP] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_OP_LAYOUT] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_ASSET_USAGE_COUNT] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH_AS] = {};
+        this._talkerTopics[TalkerAPI.CMD_GOTO_PATCH] = {};
+        this._talkerTopics[TalkerAPI.CMD_SET_PATCH_NAME] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_GET_COLLECTION_OPDOCS] = {};
+        this._talkerTopics[TalkerAPI.CMD_CREATE_PATCH_BACKUP] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ADD_OP_DEPENDENCY] = {};
+        this._talkerTopics[TalkerAPI.CMD_REMOVE_OP_DEPENDENCY] = {};
+        this._talkerTopics[TalkerAPI.CMD_UPLOAD_OP_DEPENDENCY] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_PATCH_SUMMARY] = {};
+        this._talkerTopics[TalkerAPI.CMD_SEND_ERROR_REPORT] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_OP_DOCS] = {};
+
+        // electron specific
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_RENAME_OP] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_DELETE_OP] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SET_OP_SUMMARY] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_GET_PROJECT_OPDIRS] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_PROJECT_OPDIR] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SAVE_PROJECT_OPDIRS_ORDER] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_REMOVE_PROJECT_OPDIR] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_OPEN_DIR] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SELECT_FILE] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SELECT_DIR] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_COLLECT_ASSETS] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_COLLECT_OPS] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH_BUNDLE] = { "needsProjectFile": true };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
         {
@@ -301,7 +302,7 @@ export default class ElectronEditor
                 window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig).then((r) =>
                 {
                     const error = r && r.hasOwnProperty("error") ? r : null;
-                    if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+                    if (error) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
                     next(error, r);
                 });
             });
@@ -321,7 +322,7 @@ export default class ElectronEditor
         window.ipcRenderer.invoke("talkerMessage", cmd, data, topicConfig).then((r) =>
         {
             const error = r && r.hasOwnProperty("error") ? r : null;
-            if (error) this._talker.send("logError", { "level": error.level, "message": error.msg || error });
+            if (error) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
             next(error, r);
         });
     }
@@ -334,6 +335,6 @@ export default class ElectronEditor
     notify(msg)
     {
         if (!msg) return;
-        this._talker.send("notify", { "msg": msg });
+        this._talker.send(TalkerAPI.CMD_UI_NOTIFY, { "msg": msg });
     }
 }
