@@ -2,6 +2,7 @@ import { SharedFilesUtil, utilProvider } from "cables-shared-api";
 import fs from "fs";
 import path from "path";
 import chokidar from "chokidar";
+import { TalkerAPI } from "cables-shared-client";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
 import opsUtil from "./ops_util.js";
@@ -35,7 +36,7 @@ class FilesUtil extends SharedFilesUtil
             {
                 const opId = opsUtil.getOpIdByObjName(opName);
                 const code = opsUtil.getOpCode(opName);
-                electronApp.sendTalkerMessage("executeOp", { "name": opName, "forceReload": true, "id": opId, "code": code });
+                electronApp.sendTalkerMessage(TalkerAPI.CMD_EXECUTE_OP, { "name": opName, "forceReload": true, "id": opId, "code": code });
             }
         });
 
@@ -44,19 +45,19 @@ class FilesUtil extends SharedFilesUtil
             const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
             if (opName)
             {
-                electronApp.sendTalkerMessage("deleteOp", { "name": opName });
+                electronApp.sendTalkerMessage(TalkerAPI.CMD_ELECTRON_DELETE_OP, { "name": opName });
             }
         });
 
         this._assetChangeWatcher = chokidar.watch([], watcherOptions);
         this._assetChangeWatcher.on("change", (fileName) =>
         {
-            electronApp.sendTalkerMessage("fileUpdated", { "filename": helper.pathToFileURL(fileName) });
+            electronApp.sendTalkerMessage(TalkerAPI.CMD_UI_FILE_UPDATED, { "filename": helper.pathToFileURL(fileName) });
         });
 
         this._assetChangeWatcher.on("unlink", (fileName) =>
         {
-            electronApp.sendTalkerMessage("fileDeleted", { "fileName": helper.pathToFileURL(fileName) });
+            electronApp.sendTalkerMessage(TalkerAPI.CMD_UI_FILE_DELETED, { "fileName": helper.pathToFileURL(fileName) });
         });
     }
 
