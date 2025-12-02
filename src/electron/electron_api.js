@@ -1293,20 +1293,26 @@ class ElectronApi
         if (data)
         {
             let pickedFileUrl = null;
+            let filters = [{
+                "name": "All Files",
+                "extensions": ["*"]
+            }];
+            if (data.filter)
+            {
+                filters.unshift({
+                    "name": data.filter.charAt(0).toUpperCase() + data.filter.slice(1),
+                    "extensions": filesUtil.FILETYPES[data.filter] || ["*"]
+                });
+            }
             if (data.url)
             {
                 let assetUrl = helper.fileURLToPath(data.url, true);
-                let filter = ["*"];
-                if (data.filter)
-                {
-                    filter = filesUtil.FILETYPES[data.filter] || ["*"];
-                }
-                pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filter);
+                pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filters);
             }
             else
             {
                 let file = data.dir;
-                pickedFileUrl = await electronApp.pickFileDialog(file);
+                pickedFileUrl = await electronApp.pickFileDialog(file, false, filters);
             }
             pickedFileUrl = helper.pathToFileURL(pickedFileUrl);
             return this.success("OK", pickedFileUrl, true);

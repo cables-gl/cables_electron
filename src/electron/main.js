@@ -726,22 +726,22 @@ class ElectronApp
         });
     }
 
-    _fileDialog(title, filePath = null, asUrl = false, extensions = ["*"], properties = null)
+    _fileDialog(title, filePath = null, asUrl = false, filters = [], properties = null)
     {
-        if (extensions)
+        if (filters)
         {
-            extensions.forEach((ext, i) =>
+            filters.forEach((filter, i) =>
             {
-                if (ext.startsWith(".")) extensions[i] = ext.replace(".", "");
+                filter.extensions.forEach((ext, j) =>
+                {
+                    if (ext.startsWith(".")) filters[i].extensions[j] = ext.replace(".", "");
+                });
             });
         }
         const options = {
             "title": title,
             "properties": properties,
-            "filters": [{
-                "name": "Assets",
-                "extensions": extensions
-            }]
+            "filters": filters || []
         };
         if (filePath) options.defaultPath = filePath;
         return dialog.showOpenDialog(this.editorWindow, options).then((result) =>

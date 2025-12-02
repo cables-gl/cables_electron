@@ -28,6 +28,13 @@ class FilesUtil extends SharedFilesUtil
             }
         };
 
+        this.FILETYPES.video = this.FILETYPES.video || [];
+        this.FILETYPES.video.push(".mov");
+        this.FILETYPES.video.push(".avi");
+        this.FILETYPES.video.push(".mkv");
+        this.FILETYPES.video.push(".ogg");
+        this.FILETYPES.video.push(".ogv");
+
         this._opChangeWatcher = chokidar.watch([], watcherOptions);
         this._opChangeWatcher.on("change", (fileName) =>
         {
