@@ -19,6 +19,8 @@
         "start:fullscreen": "cross-env npm_config_apiconfig=local gulp watch --fullscreen",
         "start:maximize": "cross-env npm_config_apiconfig=local gulp watch --maximize-renderer",
         "start:presentation": "cross-env npm_config_apiconfig=local gulp watch --fullscreen --maximize-renderer",
+        "start:nodgpu": "cross-env npm_config_apiconfig=local gulp watch --dont-force-dgpu",
+        "start:igpu": "cross-env npm_config_apiconfig=local gulp watch --force-igpu",
         "build": "cross-env npm_config_apiconfig=local gulp build",
         "clean": "rimraf dist/",
         "analyze": "cross-env npm_config_apiconfig=local gulp analyze",

@@ -20,7 +20,12 @@ import opsUtil from "../utils/ops_util.js";
 import cables from "../cables.js";
 
 app.commandLine.appendSwitch("disable-http-cache", "true");
-app.commandLine.appendSwitch("force_high_performance_gpu", "true");
+if (!app.commandLine.hasSwitch("dont-force-dgpu")) app.commandLine.appendSwitch("force_high_performance_gpu", "true");
+if (app.commandLine.hasSwitch("force-igpu"))
+{
+    logger.warn("forcing use of internal GPU, this might be slow!");
+    app.commandLine.appendSwitch("force_low_power_gpu", "true");
+}
 app.commandLine.appendSwitch("lang", "EN");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
@@ -43,6 +48,8 @@ class ElectronApp
         _cliHelpText += "  --help                Show this help.\n";
         _cliHelpText += "  --fullscreen          Open in fullscreen mode.\n";
         _cliHelpText += "  --maximize-renderer   Switch renderer to fullscreen on start (ESC to exit).\n";
+        _cliHelpText += "  --force-igpu          Force using integrated GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "  --dont-force-dgpu     DO NOT force using discrete GPU when there are multiple GPUs available.\n";
         _cliHelpText += "\n";
 
         if (app.commandLine.hasSwitch("help") || app.commandLine.hasSwitch("usage"))
@@ -700,7 +707,7 @@ class ElectronApp
         const project = settings.getCurrentProject();
         if (project)
         {
-            this.sendTalkerMessage(TalkerAPI.CMD_UPDATE_PATCH_NAME, { "name": project.name });
+            this.sendTalkerMessage(TalkerAPI.CMD_UI_UPDATE_PATCH_NAME, { "name": project.name });
         }
 
         this.editorWindow.setTitle(title);

@@ -68,7 +68,7 @@ export default class ElectronEditor
         });
 
         /**
-         * notify ui of patch name change
+         * notififed by ui of patch name change
          *
          * @name ElectronEditor#updatePatchName
          * @param {{}} data

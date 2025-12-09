@@ -62,13 +62,6 @@ jobs:
         ref: ${{ inputs.branch }}
         token: ${{ secrets.standalone_token }}
         path: "cables/"
-    - name: checkout extensions
-      uses: actions/checkout@v4
-      with:
-        repository: "cables-gl/cables_extensionops"
-        ref: "main"
-        token: ${{ secrets.standalone_token }}
-        path: "cables/src/ops/extensions"
     - name: checkout cables ui
       uses: actions/checkout@v4
       with:
