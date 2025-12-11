@@ -1079,14 +1079,19 @@ class ElectronApp
     _unsavedContentDialog()
     {
         if (this._unsavedContentLeave) return true;
-        const choice = dialog.showMessageBoxSync(this.editorWindow, {
+
+        const isOsX = process.platform === "darwin";
+        const dialogOptions = {
             "type": "question",
-            "buttons": ["Leave", "Stay"],
-            "title": "unsaved content!",
-            "message": "unsaved content!",
+            "buttons": ["Leave", "Cancel"],
+            "title": "Leave patch?",
+            "message": "Changes you made may not be saved.",
             "defaultId": 0,
             "cancelId": 1
-        });
+        };
+        if (isOsX) dialogOptions.message = dialogOptions.title + "\n\n" + dialogOptions.message;
+
+        const choice = dialog.showMessageBoxSync(this.editorWindow, dialogOptions);
         this._unsavedContentLeave = (choice === 0);
         return this._unsavedContentLeave;
     }
