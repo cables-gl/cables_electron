@@ -1299,10 +1299,21 @@ class ElectronApi
             }];
             if (data.filter)
             {
-                filters.unshift({
-                    "name": data.filter.charAt(0).toUpperCase() + data.filter.slice(1),
-                    "extensions": filesUtil.FILETYPES[data.filter] || ["*"]
-                });
+                if (Array.isArray(data.filter))
+                {
+                    filters.unshift({
+                        "name": "Filtered",
+                        "extensions": data.filter
+                    });
+                }
+                else
+                {
+                    filters.unshift({
+                        "name": data.filter.charAt(0).toUpperCase() + data.filter.slice(1),
+                        "extensions": filesUtil.FILETYPES[data.filter] || ["*"]
+                    });
+                }
+
             }
             if (data.url)
             {
