@@ -671,7 +671,7 @@ class ElectronApp
             await this.editorWindow.loadFile("index.html");
             const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
             this._resetZoom();
-            if (rebuildCache) doc.rebuildOpCaches(() => { this._log.logStartup("rebuild op caches"); }, ["core", "teams", "extensions"], true);
+            if (rebuildCache) this._rebuildOpDocCache();
         };
 
         if (this.isDocumentEdited())
@@ -1028,9 +1028,9 @@ class ElectronApp
         this._log.logStartup("rebuilding op caches");
         doc.rebuildOpCaches(() =>
         {
-            this._log.logStartup("rebuild op caches");
-            cb();
-        }, ["core", "teams", "extensions"], true);
+            this._log.logStartup("rebuilt op caches");
+            if (cb) cb();
+        }, ["core", "extensions"], true);
     }
 
     _handleError(title, error)

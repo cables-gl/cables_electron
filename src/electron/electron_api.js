@@ -306,7 +306,7 @@ class ElectronApi
 
     async newPatch()
     {
-        electronApp.openPatch();
+        await electronApp.openPatch(null, false);
         return this.success("OK", true, true);
     }
 
