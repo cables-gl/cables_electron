@@ -800,6 +800,7 @@ class ElectronApp
 
     setDocumentEdited(edited)
     {
+        this.editorWindow.setDocumentEdited(edited);
         this._contentChanged = edited;
     }
 
