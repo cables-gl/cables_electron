@@ -1292,7 +1292,7 @@ class ElectronApi
     {
         if (data)
         {
-            let pickedFileUrl = null;
+            let pickedFile = null;
             let filters = [{
                 "name": "All Files",
                 "extensions": ["*"]
@@ -1318,14 +1318,17 @@ class ElectronApi
             if (data.url)
             {
                 let assetUrl = helper.fileURLToPath(data.url, true);
-                pickedFileUrl = await electronApp.pickFileDialog(assetUrl, true, filters);
+                pickedFile = await electronApp.pickFileDialog(assetUrl, false, filters);
             }
             else
             {
                 let file = data.dir;
-                pickedFileUrl = await electronApp.pickFileDialog(file, false, filters);
+                pickedFile = await electronApp.pickFileDialog(file, false, filters);
             }
-            pickedFileUrl = helper.pathToFileURL(pickedFileUrl);
+            const assetPath = cables.getAssetPath();
+            pickedFile = pickedFile.replace(assetPath, "./");
+            let pickedFileUrl = pickedFile;
+            if (!pickedFile.startsWith("./")) pickedFileUrl = helper.pathToFileURL(pickedFile);
             return this.success("OK", pickedFileUrl, true);
         }
         else
