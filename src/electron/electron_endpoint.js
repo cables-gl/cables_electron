@@ -254,9 +254,18 @@ class ElectronEndpoint
             {
                 let opName = urlPath.split("/", 4)[3];
                 if (opName) opName = opName.replace(/.png$/, "");
-                const absoluteFile = opsUtil.getOpAbsolutePath(opName);
-                const file = path.join(absoluteFile, "screenshot.png");
-                const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+                const absolutePath = opsUtil.getOpAbsolutePath(opName);
+                let file = path.join(absolutePath, "screenshot.png");
+                let response = null;
+                try
+                {
+                    response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+                }
+                catch (e)
+                {
+                    file = path.resolve(cables.getAssetLibraryPath(), "../op_screenshot_placeholder.png");
+                    response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+                }
                 this._addDefaultHeaders(request, response, file);
                 return response;
             }
