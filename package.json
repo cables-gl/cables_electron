@@ -14,16 +14,16 @@
         "node": "20.13.1"
     },
     "scripts": {
-        "start": "cross-env npm_config_apiconfig=local gulp watch",
-        "start:help": "cross-env npm_config_apiconfig=local gulp watch --usage",
-        "start:fullscreen": "cross-env npm_config_apiconfig=local gulp watch --fullscreen",
-        "start:maximize": "cross-env npm_config_apiconfig=local gulp watch --maximize-renderer",
-        "start:presentation": "cross-env npm_config_apiconfig=local gulp watch --fullscreen --maximize-renderer",
-        "start:nodgpu": "cross-env npm_config_apiconfig=local gulp watch --dont-force-dgpu",
-        "start:igpu": "cross-env npm_config_apiconfig=local gulp watch --force-igpu",
-        "build": "cross-env npm_config_apiconfig=local gulp build",
+        "start": "gulp watch",
+        "start:help": "gulp watch --usage",
+        "start:fullscreen": "gulp watch --fullscreen",
+        "start:maximize": "gulp watch --maximize-renderer",
+        "start:presentation": "gulp watch --fullscreen --maximize-renderer",
+        "start:nodgpu": "gulp watch --dont-force-dgpu",
+        "start:igpu": "gulp watch --force-igpu",
+        "build": "gulp build",
         "clean": "rimraf dist/",
-        "analyze": "cross-env npm_config_apiconfig=local gulp analyze",
+        "analyze": "gulp analyze",
         "pack": "run-s clean build _pack",
         "pack:mac": "run-s clean build _pack:mac",
         "pack:win": "run-s clean build _pack:win",
@@ -47,7 +47,6 @@
             "en-US"
         ],
         "files": [
-            "cables.json",
             "src/**/*",
             "src_client/**/*",
             "views/**/*",
@@ -57,6 +56,13 @@
             "dist/public/**/*",
             "LICENCE",
             "cables.txt",
+            {
+                "from": "./dist/",
+                "to": "./",
+                "filter": [
+                    "cables.json"
+                ]
+            },
             {
                 "from": "resources/build/",
                 "to": "./node_modules/",
@@ -167,7 +173,6 @@
         "@electron/notarize": "2.5.0",
         "@k88/module-scope-plugin": "1.1.0",
         "copy-webpack-plugin": "12.0.2",
-        "cross-env": "5.2.0",
         "electron": "31.7.3",
         "electron-builder": "25.1.8",
         "git-last-commit": "1.0.1",

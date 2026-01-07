@@ -11,11 +11,11 @@
     },
     "path": {
         "standaloneDist": "../dist/",
-        "uiDist": "../dist/ui/",
-        "ops": "../dist/ops/",
+        "uiDist": "../../cables_ui/dist/",
+        "ops": "../../cables/src/ops/",
         "assets": "../resources/assets/",
-        "libs": "../dist/public/libs/",
-        "corelibs": "../dist/public/js/libs_core/",
+        "libs": "../../shared/libs/",
+        "corelibs": "../../cables/build/corelibs/",
         "js": "../dist/public/js/"
     },
     "sourceMap": false

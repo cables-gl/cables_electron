@@ -145,7 +145,15 @@ class CablesElectron extends Cables
 const metaUrl = new URL(".", import.meta.url);
 const __dirname = fileURLToPath(metaUrl.href);
 const customConfig = process.env.npm_config_apiconfig;
-let configLocation = path.resolve(__dirname, "..", "cables.json");
+let configLocation = null;
+if (app.isPackaged)
+{
+    configLocation = path.resolve(__dirname, "..", "cables.json");
+}
+else
+{
+    path.resolve(__dirname, "..", "..", "gen", "electron", "cables.json");
+}
 if (customConfig)
 {
     configLocation = "../cables_env_" + process.env.npm_config_apiconfig + ".json";

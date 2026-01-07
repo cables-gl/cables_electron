@@ -3,47 +3,17 @@ import fs from "fs";
 import path from "path/posix";
 import mkdirp from "mkdirp";
 import webpack from "webpack";
-import jsonfile from "jsonfile";
 import git from "git-last-commit";
 import { execa } from "execa";
+import { fileURLToPath } from "url";
 import webpackElectronConfig from "./webpack.electron.config.js";
+import helper from "./src/utils/buildhelper_util.js";
 
-const corePath = "../../cables/";
-const uiPath = "../../cables_ui/";
-const sharedPath = "../../shared/";
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+let config = helper.rebuildCablesJson(__dirname, process.env.npm_config_apiconfig, "../gen/electron/");
+let distConfig = helper.rebuildCablesJson(__dirname, "dist", "./dist/", "cables.json");
+
 let analyze = false;
-const defaultConfigLocation = "./cables.json";
-let configLocation = defaultConfigLocation;
-if (process.env.npm_config_apiconfig) configLocation = "./cables_env_" + process.env.npm_config_apiconfig + ".json";
-
-if (!fs.existsSync(configLocation))
-{
-    if (fs.existsSync(defaultConfigLocation))
-    {
-        console.warn("config file not found at", configLocation, "copying from cables.json");
-        let defaultConfig = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
-        defaultConfig.path.assets = "../resources/assets/";
-        defaultConfig.path.uiDist = path.join(uiPath, "dist/");
-        defaultConfig.path.ops = path.join(corePath, "src/ops/");
-        defaultConfig.path.libs = path.join(sharedPath, "libs/");
-        defaultConfig.path.corelibs = path.join(corePath, "build/corelibs/");
-        jsonfile.writeFileSync(configLocation, defaultConfig, { "encoding": "utf-8", "spaces": 4 });
-    }
-    else
-    {
-        console.error("config file found at neither", configLocation, "nor", defaultConfigLocation);
-        process.exit(1);
-    }
-}
-
-let defaultConfig = JSON.parse(fs.readFileSync(defaultConfigLocation, "utf-8"));
-let config = defaultConfig;
-if (configLocation !== defaultConfigLocation)
-{
-    const localConfig = JSON.parse(fs.readFileSync(configLocation, "utf-8"));
-    config = { ...config, ...localConfig };
-    jsonfile.writeFileSync(configLocation, config, { "encoding": "utf-8", "spaces": 4 });
-}
 const isLiveBuild = config.env === "electron";
 const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 
@@ -90,7 +60,7 @@ function _serve(done)
 
 function _create_ops_dirs(done)
 {
-    const opsPath = path.join("./src", defaultConfig.path.ops);
+    const opsPath = path.join("./src", config.path.ops);
     fs.rmSync("ops", { "recursive": true, "force": true });
     mkdirp.sync(path.join(opsPath, "/base/"));
     mkdirp.sync(path.join(opsPath, "/extensions/"));
@@ -102,8 +72,8 @@ function _create_ops_dirs(done)
 
 function _libs_copy(done)
 {
-    const source = path.join("./src", config.sourcePath.libs);
-    const target = path.join("./src", defaultConfig.path.libs);
+    const source = path.join("./src", distConfig.sourcePath.libs);
+    const target = path.join("./src", distConfig.path.libs);
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
@@ -119,8 +89,8 @@ function _libs_copy(done)
 
 function _corelibs_copy(done)
 {
-    const source = path.join("./src", config.sourcePath.corelibs);
-    const target = path.join("./src", defaultConfig.path.corelibs);
+    const source = path.join("./src", distConfig.sourcePath.corelibs);
+    const target = path.join("./src", distConfig.path.corelibs);
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
@@ -136,8 +106,8 @@ function _corelibs_copy(done)
 
 function _core_ops_copy(done)
 {
-    const source = path.join("./src", config.sourcePath.ops, "/base/");
-    const target = path.join("./src", defaultConfig.path.ops, "/base/");
+    const source = path.join("./src", distConfig.sourcePath.ops, "/base/");
+    const target = path.join("./src", distConfig.path.ops, "/base/");
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
@@ -153,8 +123,8 @@ function _core_ops_copy(done)
 
 function _extension_ops_copy(done)
 {
-    const source = path.join("./src", config.sourcePath.ops, "/extensions/");
-    const target = path.join("./src", defaultConfig.path.ops, "/extensions/");
+    const source = path.join("./src", distConfig.sourcePath.ops, "/extensions/");
+    const target = path.join("./src", distConfig.path.ops, "/extensions/");
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
@@ -170,8 +140,8 @@ function _extension_ops_copy(done)
 
 function _ui_copy(done)
 {
-    const source = path.join("./src", config.sourcePath.uiDist);
-    const target = path.join("./src", defaultConfig.path.uiDist);
+    const source = path.join("./src", distConfig.sourcePath.uiDist);
+    const target = path.join("./src", distConfig.path.uiDist);
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {

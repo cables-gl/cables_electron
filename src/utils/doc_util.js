@@ -5,7 +5,6 @@ import jsonfile from "jsonfile";
 import opsUtil from "./ops_util.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
-import projectsUtil from "./projects_util.js";
 
 class DocUtil extends SharedDocUtil
 {
