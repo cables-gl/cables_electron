@@ -48,8 +48,6 @@ release version: [![release build](https://github.com/cables-gl/cables_electron/
 
 dev version: [![dev build](https://github.com/cables-gl/cables_electron/actions/workflows/dev.yml/badge.svg)](https://github.com/cables-gl/cables_electron/releases)
 
-nightly builds: [![nightly build](https://github.com/cables-gl/cables_electron/actions/workflows/nightly.yml/badge.svg)](https://github.com/cables-gl/cables_electron/releases?q=nightly)
-
 ## About
 
 Cables Standalone uses Electron to bring the cables editor and ops to your desktop. For this it uses [Electron](https://www.electronjs.org/) to keep up
@@ -100,6 +98,10 @@ this.editorWindow = new BrowserWindow({
 * that repo contains scripts that will set up everything for you to get started
 * Read up about setting up everything for you to start contributing to cables in the section on ["Developing Cables"](https://cables.gl/docs/6_1_developing_cables/developing_cables)
   of the official cables documentation.
+
+#### config overrides
+* you can make changes to the settings in `cables_electron/cables_defaults.json` by creating `cables_electron/cables.json` and overriding settings
+* arrays and objects in these two files will be merged, any setting in `cables_electron/cables.json` will win
 
 ## Appreciation
 
