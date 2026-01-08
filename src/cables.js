@@ -152,7 +152,7 @@ if (app.isPackaged)
 }
 else
 {
-    path.resolve(__dirname, "..", "..", "gen", "electron", "cables.json");
+    configLocation = path.resolve(__dirname, "..", "..", "gen", "electron", "cables.json");
 }
 if (customConfig)
 {
