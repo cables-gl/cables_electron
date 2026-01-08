@@ -38,7 +38,7 @@ class FilesUtil extends SharedFilesUtil
             {
                 const opId = opsUtil.getOpIdByObjName(opName);
                 const code = opsUtil.getOpCode(opName);
-                electronApp.sendTalkerMessage(TalkerAPI.CMD_EXECUTE_OP, { "name": opName, "forceReload": true, "id": opId, "code": code });
+                electronApp.sendTalkerMessage(TalkerAPI.CMD_ELECTRON_EXECUTE_OP, { "name": opName, "forceReload": true, "id": opId, "code": code });
             }
         });
 
