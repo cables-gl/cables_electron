@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { app, ipcMain, net, shell } from "electron";
+import { app, ipcMain, net, shell, desktopCapturer } from "electron";
 import fs from "fs";
 import path from "path";
 import mkdirp from "mkdirp";
@@ -125,6 +125,44 @@ class ElectronApi
             }
             event.returnValue = deps.filter((dep) => { return dep.type === "npm"; }).map((dep) => { return dep.src[0]; });
         });
+
+        ipcMain.handle("getDesktopCaptureSources", async (event, opts) =>
+        {
+            try
+            {
+                const sources = await this._getRawDesktopSources(opts);
+                console.log("[Main] getDesktopCaptureSources IPC returning", sources.length, "sources");
+                return sources;
+            }
+            catch (e)
+            {
+                console.error("[Main] Error in getDesktopCaptureSources IPC:", e);
+                throw e;
+            }
+        });
+    }
+
+    async _getRawDesktopSources(data)
+    {
+        const opts = data || {
+            "types": ["window", "screen"],
+            "thumbnailSize": { "width": 0, "height": 0 }
+        };
+        const sources = await desktopCapturer.getSources(opts);
+        return sources.map((source) =>
+        {
+            return {
+                "id": source.id,
+                "name": source.name,
+            };
+        });
+    }
+
+    async getDesktopCaptureSources(data)
+    {
+        const result = await this._getRawDesktopSources(data);
+        console.log("DESKTOP SOURCES FOUND:", result.length);
+        return this.success("OK", result, true);
     }
 
     async talkerMessage(cmd, data, topicConfig = {})
