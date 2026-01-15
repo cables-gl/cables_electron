@@ -1326,9 +1326,9 @@ class ElectronApi
                 pickedFile = await electronApp.pickFileDialog(file, false, filters);
             }
             const assetPath = cables.getAssetPath();
-            pickedFile = pickedFile.replace(assetPath, "./");
+            if (pickedFile) pickedFile = pickedFile.replace(assetPath, "./");
             let pickedFileUrl = pickedFile;
-            if (!pickedFile.startsWith("./")) pickedFileUrl = helper.pathToFileURL(pickedFile);
+            if (pickedFile && !pickedFile.startsWith("./")) pickedFileUrl = helper.pathToFileURL(pickedFile);
             return this.success("OK", pickedFileUrl, true);
         }
         else
