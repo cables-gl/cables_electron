@@ -276,20 +276,24 @@ class ElectronApi
         const patchPath = settings.getCurrentProjectFile();
         const currentUser = settings.getCurrentUser();
         let currentProject = settings.getCurrentProject();
+
+        const templateProject = projectsUtil.generateNewProject(settings.getCurrentUser());
+
         if (patchPath && fs.existsSync(patchPath))
         {
             currentProject = fs.readFileSync(patchPath);
             currentProject = JSON.parse(currentProject.toString("utf-8"));
+            currentProject = { ...templateProject, ...currentProject };
             if (!currentProject.hasOwnProperty("userList")) currentProject.userList = [currentUser];
             if (!currentProject.hasOwnProperty("teams")) currentProject.teams = [];
+
         }
         else
         {
             if (!currentProject)
             {
-                const newProject = projectsUtil.generateNewProject(settings.getCurrentUser());
-                this.loadProject(patchPath, newProject);
-                currentProject = newProject;
+                this.loadProject(patchPath, templateProject);
+                currentProject = templateProject;
             }
         }
         currentProject.allowEdit = true;
