@@ -7,11 +7,6 @@ import filesUtil from "./files_util.js";
 
 class OpsUtil extends SharedOpsUtil
 {
-    constructor(provider)
-    {
-        super(provider);
-        this.PREFIX_LOCAL_OPS = "Ops.Local.";
-    }
 
     validateAndFormatOpCode(code)
     {
@@ -20,12 +15,6 @@ class OpsUtil extends SharedOpsUtil
             "error": false,
             "message": null
         };
-    }
-
-    isLocalOp(opName)
-    {
-        if (!opName) return false;
-        return opName.startsWith(this.PREFIX_LOCAL_OPS);
     }
 
     isCoreOp(opName)
