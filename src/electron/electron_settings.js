@@ -135,7 +135,7 @@ class ElectronSettings
         this._setCurrentProjectFile(projectFile);
         this._setCurrentProjectDir(projectDir);
         this._setCurrentProject(projectFile, newProject);
-        this.addToRecentProjects(projectFile, newProject);
+        // this.addToRecentProjects(projectFile, newProject);
     }
 
     getCurrentUser()

@@ -70,7 +70,7 @@ class ElectronApp
         this._commandLinePatch = null;
         if (app.commandLine.hasSwitch("patch"))
         {
-            this._commandLinePatch = app.commandLine.getSwitchValue("patch");
+            this._commandLinePatch = path.resolve(app.commandLine.getSwitchValue("patch"));
             if (!this._commandLinePatch || !fs.existsSync(this._commandLinePatch))
             {
                 console.error("COULD NOT FIND PATCHFILE AT", this._commandLinePatch);
@@ -85,7 +85,7 @@ class ElectronApp
 
         this.editorWindow = null;
 
-        settings.set("uiLoadStart", this._log.loadStart);
+        settings.set("uiLoadStart", this._log.loadStart, true);
         this._log.logStartup("started electron");
 
         process.on("uncaughtException", (error) =>
