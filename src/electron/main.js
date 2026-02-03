@@ -45,11 +45,12 @@ class ElectronApp
 
         let _cliHelpText = "\n";
         _cliHelpText += "Options:\n";
-        _cliHelpText += "  --help                Show this help.\n";
-        _cliHelpText += "  --fullscreen          Open in fullscreen mode.\n";
-        _cliHelpText += "  --maximize-renderer   Switch renderer to fullscreen on start (ESC to exit).\n";
-        _cliHelpText += "  --force-igpu          Force using integrated GPU when there are multiple GPUs available.\n";
-        _cliHelpText += "  --dont-force-dgpu     DO NOT force using discrete GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "  --help                          Show this help.\n";
+        _cliHelpText += "  --fullscreen                    Open in fullscreen mode.\n";
+        _cliHelpText += "  --maximize-renderer             Switch renderer to fullscreen on start (ESC to exit).\n";
+        _cliHelpText += "  --force-igpu                    Force using integrated GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "  --dont-force-dgpu               DO NOT force using discrete GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "  --patch=<path to .cables-file>  Open patch from .cables file on startup.\n";
         _cliHelpText += "\n";
 
         if (app.commandLine.hasSwitch("help") || app.commandLine.hasSwitch("usage"))
@@ -65,6 +66,17 @@ class ElectronApp
         let maximizeRenderer = settings.getUserSetting("maximizerenderer", false);
         if (!maximizeRenderer && app.commandLine.hasSwitch("maximize-renderer")) maximizeRenderer = true;
         this._maximizeRenderer = maximizeRenderer;
+
+        this._commandLinePatch = null;
+        if (app.commandLine.hasSwitch("patch"))
+        {
+            this._commandLinePatch = app.commandLine.getSwitchValue("patch");
+            if (!this._commandLinePatch || !fs.existsSync(this._commandLinePatch))
+            {
+                console.error("COULD NOT FIND PATCHFILE AT", this._commandLinePatch);
+                process.exit(1);
+            }
+        }
 
         this._defaultWindowBounds = {
             "width": 1920,
@@ -285,7 +297,11 @@ class ElectronApp
     {
         let patchFile = null;
         const openLast = settings.getUserSetting("openlastproject", false) || this._initialPatchFile;
-        if (openLast)
+        if (this._commandLinePatch)
+        {
+            patchFile = this._commandLinePatch;
+        }
+        else if (openLast)
         {
             const projectFile = this._initialPatchFile || settings.getCurrentProjectFile();
             if (fs.existsSync(projectFile)) patchFile = projectFile;
