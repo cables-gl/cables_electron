@@ -35,7 +35,7 @@ export default class PatchExportElectron extends HtmlExportElectron
     {
         const projectName = sanitizeFileName(proj.name).replace(/ /g, "_");
         const projectNameVer = projectName + proj.exports;
-        this.append(JSON.stringify(proj), { "name": projectNameVer + ".cables" });
+        this.append(this.makeCablesFileJson(proj), { "name": projectNameVer + ".cables" });
     }
 
     _getOpExportSubdir(opName)

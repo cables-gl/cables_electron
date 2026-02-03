@@ -153,7 +153,7 @@ class ElectronApi
                     }
                     else
                     {
-                        return this.error("CANCELLED", null, "info");
+                        return this.error("CANCELLED", "no patch selected", "info");
                     }
                 }
             }
@@ -1880,7 +1880,7 @@ class ElectronApi
             "namespaces": suggestedNamespaces,
             "problems": [],
             "consequences": [],
-            "action": "Rename"
+            "action": fromRename ? "Rename" : "Create"
         };
 
         if (!newName)
@@ -1925,10 +1925,10 @@ class ElectronApi
             suggestVersion = false;
         }
 
-        if (problems.namespace_missing_parts && opsUtil.isLocalOp(newName))
-        {
-            delete problems.namespace_missing_parts;
-        }
+        // if (problems.namespace_missing_parts && opsUtil.isLocalOp(newName))
+        // {
+        //     delete problems.namespace_missing_parts;
+        // }
 
         if (!fromRename && oldName)
         {

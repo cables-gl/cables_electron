@@ -289,7 +289,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_SAVE_PROJECT_OPDIRS_ORDER] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_REMOVE_PROJECT_OPDIR] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH] = { "needsProjectFile": true };
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH_BUNDLE] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH_HTML] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_PROJECT_OPDIR] = { "needsProjectFile": true };
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
