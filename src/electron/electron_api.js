@@ -1484,7 +1484,16 @@ class ElectronApi
             currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
             projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
         }
-        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
+        const opDirs = projectsUtil.getProjectOpDirs(currentProject, true);
+        const response = [];
+        opDirs.forEach((dir) =>
+        {
+            response.push({
+                "path": dir,
+                "new": dir === opDir
+            });
+        });
+        return this.success("OK", response);
     }
 
     async removeProjectOpDir(dirName)
