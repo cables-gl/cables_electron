@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import settings from "../electron/electron_settings.js";
 import electronApp from "../electron/main.js";
 import helper from "../utils/helper_util.js";
+import projectsUtil from "../utils/projects_util.js";
 
 export default class HtmlExportElectron extends SharedExportService
 {
@@ -142,6 +143,10 @@ export default class HtmlExportElectron extends SharedExportService
 
     _doAfterExport(originalProject, credentials, exportNumber, result)
     {
+        const currentProjectFile = settings.getCurrentProjectFile();
+        const currentProject = settings.getCurrentProject();
+        if (currentProject) currentProject.exports = exportNumber;
+        if (currentProjectFile) projectsUtil.writeProjectToFile(currentProjectFile, currentProject);
         return originalProject;
     }
 
