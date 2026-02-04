@@ -116,7 +116,7 @@ export default class CablesElectron
                         {
                             this.gui.on("uiloaded", () =>
                             {
-                                // if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
+                                if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
                             });
 
                             const corePatch = this.gui.corePatch();
