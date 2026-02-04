@@ -682,12 +682,21 @@ class ElectronApp
         this._unsavedContentLeave = false;
         const open = async () =>
         {
-            electronApi.loadProject(patchFile, null, rebuildCache);
-            this.updateTitle();
-            await this.editorWindow.loadFile("index.html");
-            const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
-            this._resetZoom();
-            if (rebuildCache) this._rebuildOpDocCache();
+            try
+            {
+                electronApi.loadProject(patchFile, null, rebuildCache);
+                this.updateTitle();
+                await this.editorWindow.loadFile("index.html");
+                const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
+                this._resetZoom();
+                if (rebuildCache) this._rebuildOpDocCache();
+            }
+            catch (e)
+            {
+                let message = "Failed to load patch!";
+                if (e.name === "OpDirsError") message = "Failed to load op directory!";
+                this._handleError(message, e);
+            }
         };
 
         if (this.isDocumentEdited())
@@ -1051,6 +1060,9 @@ class ElectronApp
 
     _handleError(title, error)
     {
+        const currentProject = settings.getCurrentProject();
+        const currentProjectFile = settings.getCurrentProjectFile();
+
         this._log.error(title, error);
         if (app.isReady())
         {
@@ -1060,6 +1072,7 @@ class ElectronApp
                 "&Quit",
                 process.platform === "darwin" ? "Copy Error" : "Copy error"
             ];
+            if (error.dir && currentProject && currentProjectFile) buttons.push("Remove Directory from Patch");
             const buttonIndex = dialog.showMessageBoxSync({
                 "type": "error",
                 buttons,
@@ -1084,6 +1097,12 @@ class ElectronApp
             if (buttonIndex === 3)
             {
                 clipboard.writeText(title + "\n" + error.stack);
+            }
+            if (buttonIndex === 4)
+            {
+                const newProject = projectsUtil.removeOpDir(currentProject, error.dir);
+                projectsUtil.writeProjectToFile(currentProjectFile, newProject);
+                this.reload();
             }
         }
         else

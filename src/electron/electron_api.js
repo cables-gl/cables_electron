@@ -1479,20 +1479,34 @@ class ElectronApi
         let currentProject = settings.getCurrentProject();
         if (!currentProject) return this.error("Please save your project before adding op directories", null, "warn");
         const opDir = await electronApp.pickOpDirDialog();
-        if (opDir)
-        {
-            currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
-            projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
-        }
-        const opDirs = projectsUtil.getProjectOpDirs(currentProject, true);
         const response = [];
-        opDirs.forEach((dir) =>
+        if (opDir && fs.existsSync(opDir))
         {
-            response.push({
-                "path": dir,
-                "new": dir === opDir
-            });
-        });
+            try
+            {
+                const files = helper.getFileNamesRecursive(opDir, ".json");
+                const maxFiles = 200;
+                if (files && files.length > maxFiles)
+                {
+                    return this.error("Directory too large, more than " + maxFiles + " possible ops found.", null, "error");
+                }
+                currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
+                projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
+                const opDirs = projectsUtil.getProjectOpDirs(currentProject, true);
+                opDirs.forEach((dir) =>
+                {
+                    response.push({
+                        "path": dir,
+                        "new": dir === opDir
+                    });
+                });
+            }
+            catch (e)
+            {
+                return this.error(e.message, null, "error");
+            }
+        }
+
         return this.success("OK", response);
     }
 
@@ -1608,8 +1622,18 @@ class ElectronApi
             {
                 settings.setProject(projectFile, project);
                 if (rebuildCache) projectsUtil.invalidateProjectCaches();
-                // add ops in project dirs to lookup
-                projectsUtil.getOpDocsInProjectDirs(project, false, false, true);
+                try
+                {
+                    // add ops in project dirs to lookup
+                    projectsUtil.getOpDocsInProjectDirs(project, false, false, true);
+                }
+                catch (e)
+                {
+                    const err = new Error(e.message);
+                    err.name = "OpDirsError";
+                    err.dir = e.dir;
+                    throw err;
+                }
                 filesUtil.registerAssetChangeListeners(project, true);
                 if (project.ops)
                 {

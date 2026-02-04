@@ -320,32 +320,41 @@ class ProjectsUtil extends SharedProjectsUtil
             {
                 if (fs.existsSync(opDir))
                 {
-                    const opJsons = helper.getFilesRecursive(opDir, ".json");
-                    for (let jsonPath in opJsons)
+                    try
                     {
-                        const opName = path.basename(jsonPath, ".json");
-                        if (opsUtil.isOpNameValid(opName))
+                        const opJsons = helper.getFilesRecursive(opDir, ".json");
+                        for (let jsonPath in opJsons)
                         {
-                            if (ops.hasOwnProperty(opName))
+                            const opName = path.basename(jsonPath, ".json");
+                            if (opsUtil.isOpNameValid(opName))
                             {
-                                if (!ops[opName].hasOwnProperty("overrides")) ops[opName].overrides = [];
-                                ops[opName].overrides.push(path.join(opDir, path.dirname(jsonPath)));
-                            }
-                            else
-                            {
-                                try
+                                if (ops.hasOwnProperty(opName))
                                 {
-                                    const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
-                                    opDoc.name = opName;
-                                    ops[opName] = this._docsUtil.buildOpDocs(opName);
+                                    if (!ops[opName].hasOwnProperty("overrides")) ops[opName].overrides = [];
+                                    ops[opName].overrides.push(path.join(opDir, path.dirname(jsonPath)));
                                 }
-                                catch (e)
+                                else
                                 {
-                                    this._log.warn("failed to parse opDoc for", opName, "from", jsonPath);
+                                    try
+                                    {
+                                        const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
+                                        opDoc.name = opName;
+                                        ops[opName] = this._docsUtil.buildOpDocs(opName);
+                                    }
+                                    catch (e)
+                                    {
+                                        this._log.warn("failed to parse opDoc for", opName, "from", jsonPath);
+                                    }
                                 }
                             }
                         }
                     }
+                    catch (e)
+                    {
+                        e.dir = opDir;
+                        throw e;
+                    }
+
                 }
             });
             let opDocs = Object.values(ops);
