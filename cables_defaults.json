@@ -18,5 +18,8 @@
         "corelibs": "../../cables/build/corelibs/",
         "js": "../dist/public/js/"
     },
+    "logger": {
+        "level": "info"
+    },
     "sourceMap": false
 }

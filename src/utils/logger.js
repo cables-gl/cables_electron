@@ -19,7 +19,37 @@ class Logger extends SharedLogger
 
     debug(...args)
     {
+        const level = "debug";
+        if (this._logLevelFiltered(level)) return;
         log.debug("[" + this._initiator + "]", "DEBUG", args.join(" "));
+    }
+
+    verbose(...args)
+    {
+        const level = "verbose";
+        if (this._logLevelFiltered(level)) return;
+        log.verbose("[" + this._initiator + "]", args.join(" "));
+    }
+
+    info(...args)
+    {
+        const level = "info";
+        if (this._logLevelFiltered(level)) return;
+        log.info("[" + this._initiator + "]", args.join(" "));
+    }
+
+    warn(...args)
+    {
+        const level = "warn";
+        if (this._logLevelFiltered(level)) return;
+        log.warn("[" + this._initiator + "]", "WARN", args.join(" "));
+    }
+
+    error(...args)
+    {
+        const level = "error";
+        if (this._logLevelFiltered(level)) return;
+        log.error("[" + this._initiator + "]", "ERROR", args.join(" "), this._getContext(args));
     }
 
     endTime(...args)
@@ -27,39 +57,14 @@ class Logger extends SharedLogger
         super.endTime(...args);
     }
 
-    error(...args)
-    {
-        log.error("[" + this._initiator + "]", "ERROR", args.join(" "), this._getContext(args));
-    }
-
-    info(...args)
-    {
-        log.info("[" + this._initiator + "]", args.join(" "));
-    }
-
     startTime(...args)
     {
         super.startTime(...args);
     }
 
-    uncaught(...args)
-    {
-        log.error("[" + this._initiator + "]", "UNCAUGHT", args.join(" "), this._getContext(args));
-    }
-
-    verbose(...args)
-    {
-        log.verbose("[" + this._initiator + "]", args.join(" "));
-    }
-
-    warn(...args)
-    {
-        log.warn("[" + this._initiator + "]", "WARN", args.join(" "));
-    }
-
     event(...args)
     {
-        log.verbose("[" + this._initiator + "]", args.join(" "));
+        // ignore events in electron
     }
 
     logStartup(title)
