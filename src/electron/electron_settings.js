@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import mkdirp from "mkdirp";
 import jsonfile from "jsonfile";
+import { sync as writeFileSync } from "write-file-atomic";
 import helper from "../utils/helper_util.js";
 import logger from "../utils/logger.js";
 import projectsUtil from "../utils/projects_util.js";
@@ -111,7 +112,7 @@ class ElectronSettings
         this.data[key] = val;
         if (!silent)
         {
-            fs.writeFileSync(this.settingsFile, JSON.stringify(this.data));
+            writeFileSync(this.settingsFile, JSON.stringify(this.data));
             this.refresh();
         }
     }
@@ -235,6 +236,7 @@ class ElectronSettings
         }
         catch (error)
         {
+            this._log.error("failed to parse usersettings, setting defaults", error);
             return defaults;
         }
     }

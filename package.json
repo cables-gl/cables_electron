@@ -168,7 +168,8 @@
         "pako": "2.1.0",
         "project-name-generator": "2.1.9",
         "sanitize-filename": "1.6.3",
-        "uuid-v4": "0.1.0"
+        "uuid-v4": "0.1.0",
+        "write-file-atomic": "7.0.0"
     },
     "devDependencies": {
         "@electron/notarize": "2.5.0",
