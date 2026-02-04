@@ -1903,6 +1903,13 @@ class ElectronApi
         const hints = {};
         const consequences = opsUtil.getOpRenameConsequences(newName, oldName, targetDir);
 
+        const newNamespace = opsUtil.getNamespace(newName);
+        const existingNamespace = opsUtil.namespaceExists(newNamespace, opDocs);
+        if (!existingNamespace && !opsUtil.isPatchOp(newNamespace))
+        {
+            hints.new_namespace = "New op will create a new namespace " + newNamespace;
+        }
+
         let newOpDocs = opDocs;
         if (!opsUtil.isCoreOp(newName)) newOpDocs = doc.getCollectionOpDocs(newName, currentUser);
 
