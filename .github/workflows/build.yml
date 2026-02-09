@@ -88,7 +88,7 @@ jobs:
     - name: build electron
       if: ${{ ! inputs.sign }}
       shell: bash
-      run: ./hook_standalone.sh ${{ inputs.target }}
+      run: ./build_standalone.sh ${{ inputs.target }}
       env:
         EXE_NAME: ${{ inputs.exe_name }}
         BUILD_VERSION: ${{ inputs.build_version }}
@@ -99,7 +99,7 @@ jobs:
     - name: build signed electron
       if: ${{ inputs.sign }}
       shell: bash
-      run: ./hook_standalone.sh ${{ inputs.target }}
+      run: ./build_standalone.sh ${{ inputs.target }}
       env:
         EXE_NAME: ${{ inputs.exe_name }}
         BUILD_VERSION: ${{ inputs.build_version }}
