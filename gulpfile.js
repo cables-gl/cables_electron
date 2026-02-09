@@ -6,6 +6,7 @@ import webpack from "webpack";
 import git from "git-last-commit";
 import { execa } from "execa";
 import { fileURLToPath } from "url";
+import rename from "gulp-rename";
 import webpackElectronConfig from "./webpack.electron.config.js";
 import helper from "./src/utils/buildhelper_util.js";
 
@@ -68,6 +69,15 @@ function _create_ops_dirs(done)
     mkdirp.sync(path.join(opsPath, "/teams/"));
     mkdirp.sync(path.join(opsPath, "/users/"));
     done();
+}
+
+function _copy_dist_env_file()
+{
+    console.info("copying dist environment config to dist/cables.json");
+    mkdirp.sync("./dist/");
+    return gulp.src("./cables_env_dist.json")
+        .pipe(rename("cables.json"))
+        .pipe(gulp.dest("./dist"));
 }
 
 function _libs_copy(done)
@@ -229,6 +239,7 @@ const defaultSeries = gulp.series(
 );
 
 gulp.task("build", gulp.series(
+    _copy_dist_env_file,
     _create_ops_dirs,
     gulp.parallel(
         defaultSeries,
