@@ -119,10 +119,10 @@
             "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
             "verifyUpdateCodeSignature": false,
             "signAndEditExecutable": false,
+            "executableName": "cables",
             "target": [
                 {
                     "target": "zip",
-                    "executableName": "cables",
                     "arch": [
                         "x64"
                     ]
