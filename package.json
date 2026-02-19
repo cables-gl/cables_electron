@@ -122,6 +122,7 @@
             "target": [
                 {
                     "target": "zip",
+                    "executableName": "cables",
                     "arch": [
                         "x64"
                     ]
