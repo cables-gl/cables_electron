@@ -49,14 +49,46 @@ class ElectronEndpoint
             let urlFile = request.url;
             let absoluteFile = helper.fileURLToPath(urlFile, false);
             let projectFile = helper.fileURLToPath(urlFile, true);
-            if (fs.existsSync(absoluteFile))
+
+            let absoluteReadable = false;
+            let projectReadable = false;
+            try
+            {
+                const statsAbs = fs.statSync(absoluteFile);
+                if (statsAbs && statsAbs.isFile())
+                {
+                    fs.accessSync(absoluteFile, fs.constants.R_OK);
+                    absoluteReadable = true;
+                }
+            }
+            catch (e)
+            {
+                this._log.info("failed to read absoluteFile", absoluteFile, e);
+                try
+                {
+                    const statsProj = fs.statSync(projectFile);
+                    if (statsProj && statsProj.isFile())
+                    {
+                        fs.accessSync(projectFile, fs.constants.R_OK);
+                        projectReadable = true;
+                    }
+                }
+                catch (eproj)
+                {
+                    // handle in next steps
+                    this._log.info("failed to read projectFile", projectFile, eproj);
+                }
+
+            }
+
+            if (absoluteReadable)
             {
                 Object.defineProperty(request, "url", { "value": helper.pathToFileURL(absoluteFile) });
                 const response = await net.fetch(request, { "bypassCustomProtocolHandlers": true });
                 this._addDefaultHeaders(request, response, absoluteFile);
                 return response;
             }
-            else if (fs.existsSync(projectFile))
+            else if (projectReadable)
             {
                 Object.defineProperty(request, "url", { "value": helper.pathToFileURL(projectFile) });
                 const response = await net.fetch(request, { "bypassCustomProtocolHandlers": true });
@@ -71,16 +103,27 @@ class ElectronEndpoint
                     {
                         projectFile = projectFile.split("?")[0];
                     }
-                    if (fs.existsSync(projectFile))
+                    try
                     {
-                        const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
-                        this._addDefaultHeaders(request, response, projectFile);
-                        return response;
+                        const statsProj = fs.statSync(projectFile);
+                        if (statsProj && statsProj.isFile())
+                        {
+                            fs.accessSync(projectFile, fs.constants.R_OK);
+
+                            const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
+                            this._addDefaultHeaders(request, response, projectFile);
+                            return response;
+                        }
+                        else
+                        {
+                            return new Response(null, { "headers": { "status": 404 } });
+                        }
                     }
-                    else
+                    catch (e)
                     {
                         return new Response(null, { "headers": { "status": 404 } });
                     }
+
                 }
                 catch (e)
                 {
@@ -292,6 +335,12 @@ class ElectronEndpoint
                 let dir = urlPath.replace("/openDir/", "");
                 await shell.showItemInFolder(dir);
                 return new Response(null, { "status": 404 });
+            }
+            else if (urlPath === "/")
+            {
+                return new Response(JSON.stringify({ "sandbox": true }), {
+                    "headers": { "content-type": "application/json" }
+                });
             }
             else
             {
