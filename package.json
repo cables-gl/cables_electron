@@ -21,7 +21,6 @@
         "start:presentation": "gulp watch --fullscreen --maximize-renderer",
         "start:nodgpu": "gulp watch --dont-force-dgpu",
         "start:igpu": "gulp watch --force-igpu",
-        "start:patch": "gulp watch --patch=../cables_api/test/assets/patches/exportest_1/exporttest_1.cables",
         "build": "gulp build",
         "clean": "rimraf dist/",
         "analyze": "gulp analyze",
