@@ -276,6 +276,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_UPLOAD_OP_DEPENDENCY] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_PATCH_SUMMARY] = {};
         this._talkerTopics[TalkerAPI.CMD_SEND_ERROR_REPORT] = {};
+        this._talkerTopics["getDesktopCaptureSources"] = {};
 
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_RENAME_OP] = { };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_DELETE_OP] = {};
