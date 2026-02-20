@@ -52,6 +52,11 @@ class ElectronSettings
 
         this.refresh();
         this.set("currentUser", this.getCurrentUser(), true);
+        if (electronApp.presentationMode)
+        {
+            this.set("showTipps", false);
+            this.set("introCompleted", true);
+        }
     }
 
     refresh()

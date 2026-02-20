@@ -67,6 +67,8 @@ class ElectronApp
         if (!maximizeRenderer && app.commandLine.hasSwitch("maximize-renderer")) maximizeRenderer = true;
         this._maximizeRenderer = maximizeRenderer;
 
+        this.presentationMode = this._maximizeRenderer || this._openFullscreen;
+
         this._commandLinePatch = null;
         if (app.commandLine.hasSwitch("patch"))
         {
