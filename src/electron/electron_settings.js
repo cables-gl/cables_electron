@@ -52,11 +52,6 @@ class ElectronSettings
 
         this.refresh();
         this.set("currentUser", this.getCurrentUser(), true);
-        if (electronApp.presentationMode)
-        {
-            this.set("showTipps", false);
-            this.set("introCompleted", true);
-        }
     }
 
     refresh()
@@ -242,7 +237,7 @@ class ElectronSettings
         }
         catch (error)
         {
-            this._log.error("failed to parse usersettings, setting defaults", error);
+            this._log.info("failed to find/parse usersettings, setting defaults", error);
             return defaults;
         }
     }

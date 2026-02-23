@@ -54,6 +54,14 @@ class ElectronApi
             settings.data.buildInfo = settings.getBuildInfo();
             settings.data.openFullscreen = electronApp.openFullscreen();
             settings.data.maximizeRenderer = electronApp.maximizeRenderer();
+            if (settings.data.openFullscreen || settings.data.maximizeRenderer)
+            {
+                this._log.info("skipping tour/hints in presentation mode");
+                settings.data.userSettings = settings.data.userSettings || {};
+                settings.data.userSettings.introCompleted = true;
+                settings.data.userSettings.showTipps = false;
+                settings.data.presentationMode = true;
+            }
             event.returnValue = settings.data;
         });
 
