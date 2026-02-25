@@ -45,12 +45,13 @@ class ElectronApp
 
         let _cliHelpText = "\n";
         _cliHelpText += "Options:\n";
-        _cliHelpText += "  --help                          Show this help.\n";
-        _cliHelpText += "  --fullscreen                    Open in fullscreen mode.\n";
-        _cliHelpText += "  --maximize-renderer             Switch renderer to fullscreen on start (ESC to exit).\n";
-        _cliHelpText += "  --force-igpu                    Force using integrated GPU when there are multiple GPUs available.\n";
-        _cliHelpText += "  --dont-force-dgpu               DO NOT force using discrete GPU when there are multiple GPUs available.\n";
-        _cliHelpText += "  --patch=<path to .cables-file>  Open patch from .cables file on startup.\n";
+        _cliHelpText += "  --help                                 Show this help.\n";
+        _cliHelpText += "  --fullscreen                           Open in fullscreen mode.\n";
+        _cliHelpText += "  --maximize-renderer                    Switch renderer to fullscreen on start (ESC to exit).\n";
+        _cliHelpText += "  --force-igpu                           Force using integrated GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "  --dont-force-dgpu                      DO NOT force using discrete GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "  --patch=<path to .cables-file>         Open patch from .cables file on startup.\n";
+        _cliHelpText += "  --screen=<name|\"external\"|number|x,y>  Open app on display by name, first external display, specified display number or xy-offset";
         _cliHelpText += "\n";
 
         if (app.commandLine.hasSwitch("help") || app.commandLine.hasSwitch("usage"))
@@ -66,6 +67,9 @@ class ElectronApp
         let maximizeRenderer = settings.getUserSetting("maximizerenderer", false);
         if (!maximizeRenderer && app.commandLine.hasSwitch("maximize-renderer")) maximizeRenderer = true;
         this._maximizeRenderer = maximizeRenderer;
+
+        this._screenSettings = null;
+        if (app.commandLine.hasSwitch("screen")) this._screenSettings = app.commandLine.getSwitchValue("screen");
 
         this.presentationMode = this._maximizeRenderer || this._openFullscreen;
 
@@ -335,9 +339,6 @@ class ElectronApp
             }
         };
 
-        this.editorWindow = new BrowserWindow(defaultWindowOptions);
-        this.editorWindow.setFullScreenable(true);
-
         let windowBounds = this._defaultWindowBounds;
         if (settings.getUserSetting("storeWindowBounds", true))
         {
@@ -364,6 +365,30 @@ class ElectronApp
                 }
             }
 
+        }
+
+        let delayedFullscreen = false;
+        if (this._screenSettings)
+        {
+            const requestedBounds = this._getScreenBoundsFromCommandLineSwitch();
+            if (requestedBounds)
+            {
+                windowBounds = { ...windowBounds, ...requestedBounds };
+
+                // fullscreen cannot be set during window creation on second display, needs to be done "later"
+                delete defaultWindowOptions.fullscreen;
+                delayedFullscreen = this._openFullscreen;
+            }
+        }
+
+        this.editorWindow = new BrowserWindow(defaultWindowOptions);
+        this.editorWindow.setFullScreenable(true);
+        if (delayedFullscreen)
+        {
+            this.editorWindow.once("ready-to-show", () =>
+            {
+                this.editorWindow.setFullScreen(true);
+            });
         }
 
         this.editorWindow.setBounds(windowBounds);
@@ -1185,6 +1210,77 @@ class ElectronApp
         dialog.showMessageBox(options);
     }
 
+    _getScreenBoundsFromCommandLineSwitch()
+    {
+        if (!this._screenSettings) return null;
+        const parts = this._screenSettings.split(",");
+        if (parts.length > 1)
+        {
+            // xy-bounds defined
+            parts.length = 2;
+            const bounds = {
+                "x": parseInt(parts[0]),
+                "y": parseInt(parts[1])
+            };
+            if (!helper.isNumeric(parts[0]) || !helper.isNumeric(parts[1]))
+            {
+                this._log.warn("failed to parse window position from", parts.join(","), "keeping defaults");
+            }
+            else
+            {
+                this._log.info("setting window position to", bounds);
+            }
+            return bounds;
+        }
+        else
+        {
+            // screen number given
+            const displays = screen.getAllDisplays();
+            const screenId = parts[0];
+            if (screenId)
+            {
+
+                /**
+                 * @type {Display}
+                 */
+                let display = null;
+                if (helper.isNumeric(screenId))
+                {
+                    display = displays[screenId];
+                }
+                else
+                {
+                    // try finding first external display, if requested
+                    if (screenId === "external")
+                    {
+                        display = displays.find((d) => { return !d.internal; });
+                    }
+                    else
+                    {
+                        // try finding display by label
+                        display = displays.find((d) => { return d.label && d.label.trim() === screenId.trim(); });
+                    }
+                }
+                if (display)
+                {
+                    return {
+                        "x": parseInt(display.bounds.x),
+                        "y": parseInt(display.bounds.y)
+                    };
+                }
+                else
+                {
+                    this._log.error("failed to find display", screenId, "keeping defaults");
+                }
+            }
+            else
+            {
+                this._log.error("failed to find display", screenId, "keeping defaults");
+            }
+        }
+
+        return null;
+    }
 }
 
 Menu.setApplicationMenu(null);

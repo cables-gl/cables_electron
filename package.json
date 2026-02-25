@@ -21,6 +21,8 @@
         "start:presentation": "gulp watch --fullscreen --maximize-renderer",
         "start:nodgpu": "gulp watch --dont-force-dgpu",
         "start:igpu": "gulp watch --force-igpu",
+        "start:secondscreen": "gulp watch --screen=1",
+        "start:screenoffset": "gulp watch --screen=-400,100",
         "build": "gulp build",
         "clean": "rimraf dist/",
         "analyze": "gulp analyze",
