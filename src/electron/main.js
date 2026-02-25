@@ -1224,11 +1224,11 @@ class ElectronApp
             };
             if (!helper.isNumeric(parts[0]) || !helper.isNumeric(parts[1]))
             {
-                this._log.warn("failed to parse window position from", parts.join(","), "keeping defaults");
+                console.error("failed to parse window position from", parts.join(","), "keeping defaults");
             }
             else
             {
-                this._log.info("setting window position to", bounds);
+                console.info("setting window position to", bounds);
             }
             return bounds;
         }
@@ -1270,12 +1270,12 @@ class ElectronApp
                 }
                 else
                 {
-                    this._log.error("failed to find display", screenId, "keeping defaults");
+                    console.error("failed to find display", screenId, "keeping defaults");
                 }
             }
             else
             {
-                this._log.error("failed to find display", screenId, "keeping defaults");
+                console.error("failed to find display", screenId, "keeping defaults");
             }
         }
 
