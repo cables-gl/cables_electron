@@ -1035,11 +1035,10 @@ class ElectronApi
         }
         if (targetDir === cables.getExtensionOpsPath())
         {
-            let opSource = opsUtil.getOpSourceNoHierarchy(opName, true);
-            targetDir = targetDir.replace(cables.EXTENSION_OPS_SUBDIR, "");
-            targetDir = path.join(targetDir, opSource);
+            let opNamespace = opsUtil.getNamespace(opName, true);
+            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
+            targetDir = path.join(targetDir, opNamespace);
         }
-
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir);
         filesUtil.registerOpChangeListeners([opName]);
         projectsUtil.invalidateProjectCaches();
@@ -1106,9 +1105,9 @@ class ElectronApi
         }
         if (targetDir === cables.getExtensionOpsPath())
         {
-            let opSource = opsUtil.getOpSourceNoHierarchy(newName, true);
-            targetDir = targetDir.replace(cables.EXTENSION_OPS_SUBDIR, "");
-            targetDir = path.join(targetDir, opSource);
+            let opNamespace = opsUtil.getNamespace(newName, true);
+            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
+            targetDir = path.join(targetDir, opNamespace);
         }
         const cloned = opsUtil.cloneOp(oldName, newName, currentUser, targetDir);
         projectsUtil.invalidateProjectCaches();
