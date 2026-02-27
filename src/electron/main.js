@@ -850,6 +850,11 @@ class ElectronApp
         this.openPatch(projectFile, false).then(() => { this._log.debug("reloaded", projectFile); });
     }
 
+    quit()
+    {
+        app.quit();
+    }
+
     setDocumentEdited(edited)
     {
         this.editorWindow.setDocumentEdited(edited);

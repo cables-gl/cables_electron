@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { app, ipcMain, net, shell, desktopCapturer } from "electron";
+import { app, desktopCapturer, ipcMain, net, shell } from "electron";
 import fs from "fs";
 import path from "path";
 import mkdirp from "mkdirp";
@@ -134,13 +134,16 @@ class ElectronApi
             event.returnValue = deps.filter((dep) => { return dep.type === "npm"; }).map((dep) => { return dep.src[0]; });
         });
 
+        ipcMain.on("closeApplication", () =>
+        {
+            electronApp.quit();
+        });
+
         ipcMain.handle("getDesktopCaptureSources", async (event, opts) =>
         {
             try
             {
-                const sources = await this._getRawDesktopSources(opts);
-                console.log("[Main] getDesktopCaptureSources IPC returning", sources.length, "sources");
-                return sources;
+                return await this._getRawDesktopSources(opts);
             }
             catch (e)
             {
