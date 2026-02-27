@@ -169,7 +169,6 @@ class ElectronApi
     async getDesktopCaptureSources(data)
     {
         const result = await this._getRawDesktopSources(data);
-        console.log("DESKTOP SOURCES FOUND:", result.length);
         return this.success("OK", result, true);
     }
 
