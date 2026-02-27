@@ -1036,8 +1036,7 @@ class ElectronApi
         if (targetDir === cables.getExtensionOpsPath())
         {
             let opSource = opsUtil.getOpSourceNoHierarchy(opName, true);
-            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + "/", "");
-            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + path.sep, "");
+            targetDir = targetDir.replace(cables.EXTENSION_OPS_SUBDIR, "");
             targetDir = path.join(targetDir, opSource);
         }
 
@@ -1108,8 +1107,7 @@ class ElectronApi
         if (targetDir === cables.getExtensionOpsPath())
         {
             let opSource = opsUtil.getOpSourceNoHierarchy(newName, true);
-            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + "/", "");
-            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + path.sep, "");
+            targetDir = targetDir.replace(cables.EXTENSION_OPS_SUBDIR, "");
             targetDir = path.join(targetDir, opSource);
         }
         const cloned = opsUtil.cloneOp(oldName, newName, currentUser, targetDir);
