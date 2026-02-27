@@ -290,12 +290,12 @@ CMD_ELECTRON_COMMANDS.push(
         "func": CABLES_CMD_ELECTRON.manageOpDirs,
         "icon": "folder"
     },
-    {
-        "cmd": "install ops from package.json",
-        "category": "ops",
-        "func": CABLES_CMD_ELECTRON.addOpPackage,
-        "icon": "op"
-    },
+    // {
+    //     "cmd": "install ops from package.json",
+    //     "category": "ops",
+    //     "func": CABLES_CMD_ELECTRON.addOpPackage,
+    //     "icon": "op"
+    // },
     {
         "cmd": "copy op dir to clipboard",
         "category": "ops",

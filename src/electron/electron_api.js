@@ -1033,6 +1033,14 @@ class ElectronApi
                 targetDir = projectOpDirs[0].dir;
             }
         }
+        if (targetDir === cables.getExtensionOpsPath())
+        {
+            let opSource = opsUtil.getOpSourceNoHierarchy(opName, true);
+            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + "/", "");
+            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + path.sep, "");
+            targetDir = path.join(targetDir, opSource);
+        }
+
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir);
         filesUtil.registerOpChangeListeners([opName]);
         projectsUtil.invalidateProjectCaches();
@@ -1088,7 +1096,23 @@ class ElectronApi
         const newName = data.name;
         const oldName = opsUtil.getOpNameById(data.opname) || data.opname;
         const currentUser = settings.getCurrentUser();
-        const cloned = opsUtil.cloneOp(oldName, newName, currentUser, data.opTargetDir);
+        let targetDir = data.opTargetDir;
+        if (!targetDir)
+        {
+            const projectOpDirs = projectsUtil.getOpDirs(settings.getCurrentProject());
+            if (projectOpDirs && projectOpDirs.length > 0)
+            {
+                targetDir = projectOpDirs[0].dir;
+            }
+        }
+        if (targetDir === cables.getExtensionOpsPath())
+        {
+            let opSource = opsUtil.getOpSourceNoHierarchy(newName, true);
+            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + "/", "");
+            opSource = opSource.replace(cables.EXTENSION_OPS_SUBDIR + path.sep, "");
+            targetDir = path.join(targetDir, opSource);
+        }
+        const cloned = opsUtil.cloneOp(oldName, newName, currentUser, targetDir);
         projectsUtil.invalidateProjectCaches();
         return this.success("OK", cloned, true);
     }
@@ -2009,21 +2033,6 @@ class ElectronApi
         if (problems.illegal_ops)
         {
             suggestVersion = false;
-        }
-
-        // if (problems.namespace_missing_parts && opsUtil.isLocalOp(newName))
-        // {
-        //     delete problems.namespace_missing_parts;
-        // }
-
-        if (!fromRename && oldName)
-        {
-            const hierarchyProblem = opsUtil.getNamespaceHierarchyProblem(oldName, newName);
-            if (hierarchyProblem)
-            {
-                problems.bad_op_hierarchy = hierarchyProblem;
-                suggestVersion = false;
-            }
         }
 
         if (suggestVersion)
