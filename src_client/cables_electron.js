@@ -117,6 +117,16 @@ export default class CablesElectron
                             this.gui.on("uiloaded", () =>
                             {
                                 if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
+                                if (this.gui.userSettings && this.gui.userSettings.add)
+                                {
+                                    this.gui.userSettings.add({
+                                        "name": "transparentpopout",
+                                        "label": "Transparent Popout Canvas",
+                                        "category": "Standalone",
+                                        "type": "boolean",
+                                        "defaultValue": false
+                                    });
+                                }
                             });
 
                             const corePatch = this.gui.corePatch();

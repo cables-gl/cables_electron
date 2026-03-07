@@ -24,6 +24,13 @@ function bytesArrToBase64(arr)
     return result;
 }
 
+// CABLES_CMD_ELECTRON.toggleTransparentPopout = () =>
+// {
+//     const current = gui.userSettings.get("transparentpopout", true);
+//     gui.userSettings.set("transparentpopout", !current);
+//     cablesElectron.editor.notify("Transparent popout canvas: " + (!current ? "enabled" : "disabled"));
+// };
+
 CABLES_CMD_ELECTRON.openOpDir = (opId = null, opName = null) =>
 {
     const gui = cablesElectron.gui;
@@ -240,6 +247,26 @@ CABLES_CMD_ELECTRON_OVERRIDES.RENDERER = {};
 CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.fullscreen = () =>
 {
     cablesElectron.editor.api("cycleFullscreen", { }, (_err, r) => {});
+};
+
+CABLES_CMD_ELECTRON_OVERRIDES.RENDERER.popoutCanvas = () =>
+{
+    const gui = cablesElectron.gui;
+    if (gui && gui.canvasManager)
+    {
+        gui.canvasManager.popOut();
+        if (gui.canvasManager.subWindow)
+        {
+            const transparent = gui.userSettings.get("transparentpopout", false);
+            if (transparent)
+            {
+                const nDocument = gui.canvasManager.subWindow.document;
+                const style = nDocument.createElement("style");
+                style.innerHTML = "body { background-color: transparent !important; } .bgpatternDark, .bgPatternDark { background-image: none !important; background-color: transparent !important; }";
+                nDocument.body.appendChild(style);
+            }
+        }
+    }
 };
 
 CABLES_CMD_ELECTRON_OVERRIDES.UI = {};
