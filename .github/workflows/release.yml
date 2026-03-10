@@ -16,7 +16,7 @@ jobs:
    steps:
      - name: fetch latest changelog
        id: fetch_changelog
-       uses: tyrrrz/action-http-request@master
+       uses: tyrrrz/action-http-request@v1
        with:
          url: "https://dev.cables.gl/api/changelog?num=1&format=md"
      - name: create release
