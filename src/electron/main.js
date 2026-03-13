@@ -985,16 +985,6 @@ class ElectronApp
             }
         });
 
-        this.editorWindow.webContents.setWindowOpenHandler(({ url }) =>
-        {
-            if (url && url.startsWith("http"))
-            {
-                shell.openExternal(url);
-                return { "action": "deny" };
-            }
-            return { "action": "allow" };
-        });
-
         this.editorWindow.webContents.setWindowOpenHandler(({ url, frameName }) =>
         {
             if (url && url.startsWith("http"))
@@ -1005,18 +995,6 @@ class ElectronApp
 
             const options = {
                 "action": "allow",
-                "overrideBrowserWindowOptions": {
-                    "autoHideMenuBar": true,
-                    "backgroundColor": "#222",
-                    "webPreferences": {
-                        "partition": settings.SESSION_PARTITION,
-                        "nodeIntegration": true,
-                        "nodeIntegrationInSubFrames": true,
-                        "contextIsolation": false,
-                        "backgroundThrottling": false,
-                        "autoplayPolicy": "no-user-gesture-required"
-                    }
-                }
             };
 
             if (frameName.startsWith("view#"))
@@ -1024,10 +1002,21 @@ class ElectronApp
                 const transparent = settings.getUserSetting("transparentpopout", false);
                 if (transparent)
                 {
-                    options.overrideBrowserWindowOptions.transparent = true;
-                    options.overrideBrowserWindowOptions.frame = false;
-                    options.overrideBrowserWindowOptions.hasShadow = false;
-                    options.overrideBrowserWindowOptions.backgroundColor = "#00000000";
+                    options.overrideBrowserWindowOptions = {
+                        "autoHideMenuBar": true,
+                        "transparent": true,
+                        "frame": false,
+                        "hasShadow": false,
+                        "backgroundColor": "#00000000",
+                        "webPreferences": {
+                            "partition": settings.SESSION_PARTITION,
+                            "nodeIntegration": true,
+                            "nodeIntegrationInSubFrames": true,
+                            "contextIsolation": false,
+                            "backgroundThrottling": false,
+                            "autoplayPolicy": "no-user-gesture-required"
+                        }
+                    };
                 }
             }
 
