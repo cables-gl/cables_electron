@@ -6,6 +6,7 @@ import webpack from "webpack";
 import git from "git-last-commit";
 import { execa } from "execa";
 import { fileURLToPath } from "url";
+import jsonfile from "jsonfile";
 import webpackElectronConfig from "./webpack.electron.config.js";
 import helper from "./src/utils/buildhelper_util.js";
 
@@ -128,8 +129,37 @@ function _extension_ops_copy(done)
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
-        console.info("copying extensions from", source, "to", target);
-        return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
+        const extensionGlobs = [];
+        const allExtensions = fs.readdirSync(source);
+        allExtensions.forEach((extension) =>
+        {
+            if (extension.startsWith("Ops."))
+            {
+                const configFile = path.join(source, extension, extension + ".json");
+                if (fs.existsSync(configFile))
+                {
+                    try
+                    {
+                        const extensionConfig = jsonfile.readFileSync(configFile);
+                        if (extensionConfig.visibility !== "private")
+                        {
+                            extensionGlobs.push(path.join(source, extension, "**"));
+                        }
+                    }
+                    catch (e)
+                    {
+                        console.warn("FAILED to parse extension config", configFile, "treating as public extension");
+                        extensionGlobs.push(path.join(source, extension, "**"));
+                    }
+                }
+                else
+                {
+                    extensionGlobs.push(path.join(source, extension, "**"));
+                }
+            }
+        });
+        console.info("copying public/unlisted extensions from", source, "to", target);
+        return gulp.src(extensionGlobs, { "encoding": false, "base": source }).pipe(gulp.dest(target));
     }
     else
     {
