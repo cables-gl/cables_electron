@@ -298,6 +298,7 @@ class ElectronApi
         this.loadProject(currentProjectFile);
         re.updated = currentProject.updated;
         re.updatedByUser = currentProject.updatedByUser;
+        re.currentPatchDir = currentProjectFile;
         return this.success("OK", re, true);
     }
 
