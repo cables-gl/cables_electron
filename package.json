@@ -101,6 +101,7 @@
             }
         ],
         "mac": {
+            "executableName": "cables",
             "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
             "hardenedRuntime": true,
             "gatekeeperAssess": false,
@@ -132,6 +133,7 @@
             ]
         },
         "linux": {
+            "executableName": "cables",
             "artifactName": "${productName}-${version}-${os}-x64.${ext}",
             "target": [
                 {
