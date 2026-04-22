@@ -740,22 +740,38 @@ class ElectronApp
         }
     }
 
-    updateTitle()
+    /**
+     *
+     * @param {boolean} unsaved adds an unsaved indicator (*) to the end of the title
+     */
+    updateTitle(unsaved = false)
     {
         const buildInfo = settings.getBuildInfo();
         let title = "cables";
+
         if (buildInfo && buildInfo.api)
         {
             if (buildInfo.api.version)
             {
                 title += " - " + buildInfo.api.version;
             }
+            else if (!app.isPackaged)
+            {
+                title += " - local";
+            }
         }
+
         const projectFile = settings.getCurrentProjectFile();
         if (projectFile)
         {
             title = title + " - " + projectFile;
         }
+
+        if (unsaved)
+        {
+            title += " *";
+        }
+
         const project = settings.getCurrentProject();
         if (project)
         {

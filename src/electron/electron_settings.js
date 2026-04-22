@@ -357,7 +357,6 @@ class ElectronSettings
             }
             this._updateRecentProjects();
         }
-
         electronApp.updateTitle();
     }
 

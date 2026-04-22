@@ -902,19 +902,14 @@ class ElectronApi
 
     setIconSaved()
     {
-        let title = electronApp.editorWindow.getTitle();
-        const pos = title.lastIndexOf(" *");
-        let newTitle = title;
-        if (pos !== -1) newTitle = title.substring(0, pos);
         electronApp.setDocumentEdited(false);
-        electronApp.editorWindow.setTitle(newTitle);
+        electronApp.updateTitle();
     }
 
     setIconUnsaved()
     {
-        const title = electronApp.editorWindow.getTitle();
         if (settings.getCurrentProject()) electronApp.setDocumentEdited(true);
-        electronApp.editorWindow.setTitle(title + " *");
+        electronApp.updateTitle(true);
     }
 
     saveScreenshot(data)
