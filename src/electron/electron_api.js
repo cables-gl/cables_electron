@@ -562,10 +562,12 @@ class ElectronApi
     saveOpCode(data)
     {
         const opName = opsUtil.getOpNameById(data.opname);
+
         const code = data.code;
         let returnedCode = code;
 
         const format = opsUtil.validateAndFormatOpCode(code);
+
         if (format.error)
         {
             const {
@@ -589,8 +591,6 @@ class ElectronApi
             returnedCode = formatedCode;
         }
         returnedCode = opsUtil.updateOpCode(opName, settings.getCurrentUser(), returnedCode);
-        doc.updateOpDocs(opName);
-
         return this.success("OK", { "opFullCode": returnedCode }, true);
     }
 
