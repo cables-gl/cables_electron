@@ -17,6 +17,7 @@ export default class PatchExportElectron extends HtmlExportElectron
         this.options.assetsInSubdirs = true;
 
         this.finalAssetPath = "assets/";
+        this.finalAssetPathPrefix = "./";
         this.finalJsPath = "/";
     }
 
