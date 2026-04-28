@@ -19,8 +19,8 @@ export default class HtmlExportElectron extends SharedExportService
         this.options.hideMadeWithCables = true;
         this.options.combineJs = false;
         this.options.minify = false;
-        this.options.handleAssets = "auto";
-        this.options.rewriteAssetPorts = true;
+        this.options.handleAssets = "all";
+        this.options.rewriteAssetPorts = false;
         this.options.flattenAssetNames = true;
 
         this.finalAssetPath = "assets/";
@@ -122,13 +122,13 @@ export default class HtmlExportElectron extends SharedExportService
 
     _getFilesForProjects(theProjects, options, cb)
     {
-        const user = settings.getCurrentUser();
         if (!theProjects)
         {
             cb([]);
             return;
         }
         const theFiles = [];
+        const user = settings.getCurrentUser();
         theProjects.forEach((project) =>
         {
             const assetFilenames = this._projectsUtil.getUsedAssetFilenames(project, true);
@@ -192,5 +192,23 @@ export default class HtmlExportElectron extends SharedExportService
         {
             return result;
         }
+    }
+
+    _addAssets(proj, allFiles, options)
+    {
+        for (let iaf = 0; iaf < allFiles.length; iaf++)
+        {
+            if (!allFiles[iaf].path) continue;
+            const assetPath = this._getAssetPath(allFiles[iaf]);
+            let lzipFileName = allFiles[iaf].path.replace(this._projectsUtil.getAssetPath(proj._id), "");
+            lzipFileName = this.appendFile(assetPath, lzipFileName, options.handleAssets);
+            allFiles.push(lzipFileName);
+        }
+        return this._replaceAssetFilePathes(proj, options.handleAssets);
+    }
+
+    _getAssetPath(file)
+    {
+        return file.path;
     }
 }

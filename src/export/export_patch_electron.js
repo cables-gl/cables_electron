@@ -1,6 +1,5 @@
 import sanitizeFileName from "sanitize-filename";
 import path from "path";
-import { fileURLToPath } from "url";
 import HtmlExportElectron from "./export_html_electron.js";
 
 export default class PatchExportElectron extends HtmlExportElectron
@@ -12,9 +11,9 @@ export default class PatchExportElectron extends HtmlExportElectron
         this.options.combineJS = false;
         this.options.addOpCode = true;
         this.options.removeIndexHtml = true;
-        this.options.rewriteAssetPorts = true;
+        this.options.rewriteAssetPorts = false;
         this.options.flattenAssetNames = false;
-        this.options.handleAssets = "auto";
+        this.options.handleAssets = "all";
         this.options.assetsInSubdirs = true;
 
         this.finalAssetPath = "assets/";

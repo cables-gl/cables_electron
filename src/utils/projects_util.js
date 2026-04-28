@@ -174,7 +174,12 @@ class ProjectsUtil extends SharedProjectsUtil
         const fileNames = [];
         if (!project || !project.ops) return [];
         const assetPorts = this.getProjectAssetPorts(project, includeLibraryAssets);
-        let urls = assetPorts.map((assetPort) => { return helper.pathToFileURL(assetPort.value, true); });
+        let urls = assetPorts.map((assetPort) =>
+        {
+            let value = assetPort.value;
+            if (value && value.startsWith("/assets/")) value = value.substring(1);
+            return helper.pathToFileURL(value, true);
+        });
         urls.forEach((url) =>
         {
             let fullPath = helper.fileURLToPath(url, true);
