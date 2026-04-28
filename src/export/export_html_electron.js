@@ -131,7 +131,17 @@ export default class HtmlExportElectron extends SharedExportService
         const user = settings.getCurrentUser();
         theProjects.forEach((project) =>
         {
-            const assetFilenames = this._projectsUtil.getUsedAssetFilenames(project, true);
+            let assetFilenames = this._projectsUtil.getUsedAssetFilenames(project, true);
+            if (options.handleAssets === "all" && project._id)
+            {
+                const assetPath = path.join(this._projectsUtil.getAssetPath(project._id), "assets/");
+                const assets = this._helperUtil.getFileNamesRecursive(assetPath);
+                assets.forEach((asset) =>
+                {
+                    if (!path.basename(asset).startsWith(".")) assetFilenames.push(path.join(assetPath, asset));
+                });
+            }
+            assetFilenames = this._helperUtil.uniqueArray(assetFilenames);
             assetFilenames.forEach((fileName) =>
             {
                 const fileDb = this._filesUtil.getFileDb(fileName, user, project);
