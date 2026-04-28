@@ -26,11 +26,6 @@ export default class PatchExportElectron extends HtmlExportElectron
         return "patch";
     }
 
-    _replaceInString(replacements, theString)
-    {
-        return theString;
-    }
-
     _addProjectHtmlCode(proj, options, libs, coreLibs, template = "/patchview/patchview_export.html", _dependencies = [])
     {
         const projectName = sanitizeFileName(proj.name).replace(/ /g, "_");
