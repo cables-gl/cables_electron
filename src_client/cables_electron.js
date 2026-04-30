@@ -146,7 +146,7 @@ export default class CablesElectron
 
                         if (this.gui)
                         {
-                            if (this._settings.maximizeRenderer) this.gui.toggleMaximizeCanvas();
+                            if (this._settings.maximizeRenderer) this.gui.toggleMaximized();
 
                         }
                     });
