@@ -16,6 +16,17 @@ import projectsUtil from "../utils/projects_util.js";
 
 protocol.registerSchemesAsPrivileged([
     {
+        "scheme": "esm",
+        "privileges": {
+            "secure": true,
+            "stream": true,
+            "bypassCSP": true,
+            "supportFetchAPI": true,
+            "corsEnabled": true,
+            "allowServiceWorkers": true
+        }
+    },
+    {
         "scheme": "cables",
         "privileges": {
             "bypassCSP": true,
@@ -129,6 +140,35 @@ class ElectronEndpoint
                 {
                     return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
                 }
+            }
+        });
+
+
+        ses.protocol.handle("esm", async (request) =>
+        {
+            const urlPath = request.url.replace("esm://", "").split("?")[0];
+
+            let file = "";
+            if (path.isAbsolute(urlPath))
+            {
+                file = urlPath;
+            }
+            else
+            {
+                // 1. Try project root (patch directory)
+                file = helper.fileURLToPath(urlPath, true);
+            }
+
+            try
+            {
+                const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(request, response, file);
+                response.headers.set("Access-Control-Allow-Origin", "*");
+                return response;
+            }
+            catch (e)
+            {
+                return new Response(null, { "status": 404 });
             }
         });
 
@@ -545,6 +585,8 @@ class ElectronEndpoint
                 response.headers.append("Content-Length", (endByte + 1) - startByte);
             }
             let mimeType = mime.getType(existingFile);
+            if (existingFile.endsWith(".mjs") || existingFile.endsWith(".js")) mimeType = "text/javascript";
+            if (existingFile.endsWith(".wasm")) mimeType = "application/wasm";
             if (mimeType)
             {
                 if (mimeType === "application/node") mimeType = "text/javascript";
