@@ -1723,6 +1723,19 @@ class ElectronApi
         electronApp.updateTitle();
     }
 
+    saveOpDependency(options)
+    {
+        this.opAttachmentSave(options);
+    }
+
+    async getOpDependency(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        const depName = data.name;
+        const content = opsUtil.getOpDependencyCode(opName, depName);
+        return this.success("OK", { "content": content });
+    }
+
     async addOpDependency(options)
     {
         let opName = options.opName;

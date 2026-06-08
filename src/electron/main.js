@@ -1063,6 +1063,15 @@ class ElectronApp
                 this.sendTalkerMessage(TalkerAPI.CMD_UI_NOTIFY, { "msg": "File saved to " + link });
             }
         });
+
+        this.editorWindow.webContents.session.setDevicePermissionHandler((details) =>
+        {
+            if (details.deviceType === "serial")
+            {
+                return true;
+            }
+            return false;
+        });
     }
 
     _zoomIn()
