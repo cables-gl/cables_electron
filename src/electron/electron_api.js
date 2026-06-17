@@ -155,7 +155,6 @@ class ElectronApi
 
     async _getRawDesktopSources(data)
     {
-        this._log.info("[Main] _getRawDesktopSources called with options: " + JSON.stringify(data));
         const opts = data || {
             "types": ["window", "screen"],
             "thumbnailSize": { "width": 0, "height": 0 }
@@ -163,10 +162,6 @@ class ElectronApi
         try
         {
             const sources = await desktopCapturer.getSources(opts);
-            this._log.info("[Main] desktopCapturer.getSources returned " + sources.length + " sources.");
-            sources.forEach((s) => {
-                this._log.info("[Main]   - Source: id=" + s.id + ", name=" + s.name);
-            });
             return sources.map((source) =>
             {
                 return {
