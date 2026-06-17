@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { net, protocol, session, shell } from "electron";
+import { net, protocol, session, shell, ipcMain, desktopCapturer } from "electron";
 import fs from "fs";
 import path from "path";
 import mime from "mime";
@@ -43,6 +42,29 @@ class ElectronEndpoint
     {
         const partition = settings.SESSION_PARTITION;
         const ses = session.fromPartition(partition, { "cache": false });
+
+        if (process.platform === "darwin" || process.platform === "win32")
+        {
+            ses.setDisplayMediaRequestHandler((request, callback) =>
+            {
+                desktopCapturer.getSources({ "types": ["screen"] })
+                    .then((sources) =>
+                    {
+                        const source = sources[0];
+                        callback({
+                            "video": source,
+                            "audio": "loopback"
+                        });
+                    })
+                    .catch((err) =>
+                    {
+                        logger.error("Error in setDisplayMediaRequestHandler:", err);
+                        callback({
+                            "audio": "loopback"
+                        });
+                    });
+            });
+        }
 
         ses.protocol.handle("file", async (request) =>
         {

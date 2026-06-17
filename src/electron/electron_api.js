@@ -155,18 +155,31 @@ class ElectronApi
 
     async _getRawDesktopSources(data)
     {
+        this._log.info("[Main] _getRawDesktopSources called with options: " + JSON.stringify(data));
         const opts = data || {
             "types": ["window", "screen"],
             "thumbnailSize": { "width": 0, "height": 0 }
         };
-        const sources = await desktopCapturer.getSources(opts);
-        return sources.map((source) =>
+        try
         {
-            return {
-                "id": source.id,
-                "name": source.name,
-            };
-        });
+            const sources = await desktopCapturer.getSources(opts);
+            this._log.info("[Main] desktopCapturer.getSources returned " + sources.length + " sources.");
+            sources.forEach((s) => {
+                this._log.info("[Main]   - Source: id=" + s.id + ", name=" + s.name);
+            });
+            return sources.map((source) =>
+            {
+                return {
+                    "id": source.id,
+                    "name": source.name,
+                };
+            });
+        }
+        catch (e)
+        {
+            this._log.error("[Main] Error in getDesktopCaptureSources:", e);
+            throw e;
+        }
     }
 
     async getDesktopCaptureSources(data)

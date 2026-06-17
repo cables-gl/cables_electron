@@ -116,7 +116,13 @@
                         "arm64"
                     ]
                 }
-            ]
+            ],
+            "extendInfo": {
+                "NSMicrophoneUsageDescription": "cables needs microphone access to visualize and process external audio inputs.",
+                "NSScreenCaptureUsageDescription": "cables needs screen recording access to capture desktop screens, window textures, and application audio.",
+                "NSAudioCaptureUsageDescription": "cables needs audio capture access to record and process system audio.",
+                "NSSpeechRecognitionUsageDescription": "cables needs speech recognition access to run speech-to-text operations."
+            }
         },
         "win": {
             "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",

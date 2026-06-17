@@ -30,5 +30,7 @@
     <true/>
     <key>com.apple.security.print</key>
     <true/>
+    <key>com.apple.security.personal-information.speech-recognition</key>
+    <true/>
   </dict>
 </plist>
