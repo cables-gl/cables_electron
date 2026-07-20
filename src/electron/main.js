@@ -1138,7 +1138,6 @@ class ElectronApp
         this._log.logStartup("rebuilding op caches");
         doc.rebuildOpCaches(() =>
         {
-            this._log.logStartup("rebuilt op caches");
             if (cb) cb();
         }, ["core", "extensions"], true);
     }

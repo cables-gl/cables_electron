@@ -1,6 +1,7 @@
 import { Logger } from "cables-shared-client";
 import ElectronEditor from "./electron_editor.js";
-import electronCommands from "./cmd_electron.js";
+import { CmdElectron } from "./cmd_electron.js";
+import { CmdElectronOverridesPatch } from "./cmd_electron_overrides_patch.js";
 
 /**
  * frontend class for cablesElectron
@@ -125,6 +126,8 @@ export default class CablesElectron
                                 this._electron.ipcRenderer.invoke("documentChanged");
                             });
 
+                            this._registerCommands();
+
                         }
 
                         if (npmResult.error && npmResult.data && npmResult.msg !== "UNSAVED_PROJECT")
@@ -147,7 +150,6 @@ export default class CablesElectron
                         if (this.gui)
                         {
                             if (this._settings.maximizeRenderer) this.gui.toggleMaximized();
-
                         }
                     });
                 };
@@ -201,7 +203,7 @@ export default class CablesElectron
                     "prefixAssetPath": this._settings.currentPatchDir,
                     "assetPath": this._settings.paths.assetPath,
                     "paths": this._settings.paths
-                },
+                }
             }
         });
     }
@@ -225,21 +227,18 @@ export default class CablesElectron
             }
 
             this.CABLES.UI.DEFAULTOPNAMES.defaultOpFallback = this.CABLES.UI.DEFAULTOPNAMES.HttpRequest;
-            this.CABLES.CMD.ELECTRON = electronCommands.functions;
-            this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(electronCommands.commands);
-            Object.assign(this.CABLES.CMD.UI, electronCommands.functionOverrides.UI);
-            Object.assign(this.CABLES.CMD.PATCH, electronCommands.functionOverrides.PATCH);
-            Object.assign(this.CABLES.CMD.RENDERER, electronCommands.functionOverrides.RENDERER);
-            const commandOverrides = electronCommands.commandOverrides;
-            this.CABLES.CMD.commands.forEach((command) =>
-            {
-                const commandOverride = commandOverrides.find((override) => { return override.cmd === command.cmd; });
-                if (commandOverride)
-                {
-                    Object.assign(command, commandOverride);
-                }
-            });
         }
+    }
+
+    _registerCommands()
+    {
+        this.CABLES.CMD.ELECTRON = CmdElectron;
+        CmdElectron.commands.forEach((command) =>
+        {
+            this.gui.cmdPalette.addCommand(command.category, command.cmd, command.func, command.icon);
+        });
+        // this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(CmdElectron.commands);
+        this._extendStatic(this.CABLES.CMD.PATCH, CmdElectronOverridesPatch);
     }
 
     _opRequire(moduleName, op, thisClass)
@@ -279,7 +278,7 @@ export default class CablesElectron
                 {
                     try
                     {
-                        moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op.name, "opId": op.opId, "moduleName": moduleName, });
+                        moduleFile = window.ipcRenderer.sendSync("getOpModuleLocation", { "opName": op.objName || op.name, "opId": op.opId, "moduleName": moduleName });
                         this._loadedModules[moduleName] = this._importSync(moduleFile);
                         return this._loadedModules[moduleName];
                     }
@@ -303,5 +302,23 @@ export default class CablesElectron
     _incrementStartup()
     {
         if (this.editorWindow && this.editorWindow.logStartup) this.editorWindow.incrementStartup();
+    }
+
+    _extendStatic(base, extend)
+    {
+
+        for (const key of Object.getOwnPropertyNames(extend.prototype))
+        {
+            if (key === "constructor") continue;
+            Object.defineProperty(base.prototype, key, Object.getOwnPropertyDescriptor(extend.prototype, key));
+        }
+
+        for (const key of Object.getOwnPropertyNames(extend))
+        {
+            if (["length", "name", "prototype"].includes(key)) continue;
+            Object.defineProperty(base, key, Object.getOwnPropertyDescriptor(extend, key));
+        }
+
+        return base;
     }
 }
