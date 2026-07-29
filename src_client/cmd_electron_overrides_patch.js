@@ -8,7 +8,6 @@ class CmdElectronOverridesPatch
 
     static saveAs()
     {
-        console.log("HERE");
         const gui = cablesElectron.gui;
         let patchName = cablesElectron.gui.project() ? cablesElectron.gui.project().name : null;
 
