@@ -19,7 +19,8 @@ protocol.registerSchemesAsPrivileged([
         "scheme": "cables",
         "privileges": {
             "bypassCSP": true,
-            "supportFetchAPI": true
+            "supportFetchAPI": true,
+            "corsEnabled": true
         }
     },
     {
