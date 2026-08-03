@@ -10,28 +10,28 @@ on:
       mac:
         type: boolean
         description: "mac"
-        default: 'true'
+        default: "true"
         required: false
       win:
         type: boolean
         description: "win"
-        default: 'true'
+        default: "true"
         required: false
       linux:
         type: boolean
         description: "linux"
-        default: 'true'
+        default: "true"
         required: false
 
 jobs:
   draft_release:
     runs-on: ubuntu-latest
     outputs:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: create release
         id: create_release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: "${{ inputs.version }}"
           token: ${{ secrets.GITHUB_TOKEN }}
