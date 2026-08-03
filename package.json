@@ -11,7 +11,7 @@
     "main": "src/electron/main.js",
     "type": "module",
     "engines": {
-        "node": "20.13.1"
+        "node": "24.18.1"
     },
     "scripts": {
         "start": "gulp watch",
@@ -42,7 +42,7 @@
     "build": {
         "productName": "cables",
         "appId": "gl.cables.standalone",
-        "nodeVersion": "20.13.1",
+        "nodeVersion": "24.18.1",
         "asar": true,
         "includeSubNodeModules": true,
         "electronLanguages": [
@@ -195,5 +195,9 @@
         "terser-webpack-plugin": "5.3.10",
         "webpack": "5.91.0",
         "webpack-bundle-analyzer": "4.10.2"
+    },
+    "allowScripts": {
+        "fsevents@2.3.3": true,
+        "electron@31.7.3": true
     }
 }
