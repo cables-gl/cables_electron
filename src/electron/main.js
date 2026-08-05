@@ -647,6 +647,7 @@ class ElectronApp
                     },
                     {
                         "label": "Reset Zoom",
+                        "accelerator": "CmdOrCtrl+0",
                         "click": () =>
                         {
                             this._resetZoom();
@@ -1010,7 +1011,7 @@ class ElectronApp
             }
 
             const options = {
-                "action": "allow",
+                "action": "allow"
             };
 
             if (frameName.startsWith("view#"))
@@ -1159,7 +1160,7 @@ class ElectronApp
             if (error.dir && currentProject && currentProjectFile) buttons.push("Remove Directory from Patch");
             const buttonIndex = dialog.showMessageBoxSync({
                 "type": "error",
-                buttons,
+                "buttons": buttons,
                 "defaultId": 0,
                 "noLink": true,
                 "message": title,
