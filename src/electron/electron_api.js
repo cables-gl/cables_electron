@@ -164,7 +164,7 @@ class ElectronApi
         {
             return {
                 "id": source.id,
-                "name": source.name,
+                "name": source.name
             };
         });
     }
@@ -454,7 +454,7 @@ class ElectronApi
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
 
-        const extensions = await doc.getAllExtensionDocs(true, true);
+        const extensions = await doc.getAllExtensionDocs(true, true, false);
         const libs = projectsUtil.getAvailableLibs(currentProject);
         const coreLibs = projectsUtil.getCoreLibs();
 
@@ -575,13 +575,13 @@ class ElectronApi
                 message
             } = format.message;
             this._log.info({
-                line,
-                message
+                "line": line,
+                "message": message
             });
             return {
                 "error": {
-                    line,
-                    message
+                    "line": line,
+                    "message": message
                 }
             };
         }
