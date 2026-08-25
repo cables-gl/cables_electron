@@ -454,7 +454,8 @@ class ElectronApi
         const cleanDocs = doc.makeReadable(opDocs);
         opsUtil.addPermissionsToOps(cleanDocs, null);
 
-        const extensions = await doc.getAllExtensionDocs(true, true, false);
+        const publicOnly = cables.isPackaged();
+        const extensions = await doc.getAllExtensionDocs(true, true, publicOnly);
         const libs = projectsUtil.getAvailableLibs(currentProject);
         const coreLibs = projectsUtil.getCoreLibs();
 
