@@ -86,6 +86,23 @@ export default class CablesElectron
         {
             if (this.editorWindow)
             {
+                 if (window.HTMLWebViewElement && !this.editorWindow.HTMLWebViewElement)
+                {
+                    this.editorWindow.HTMLWebViewElement = window.HTMLWebViewElement;
+                }
+                const editorDoc = this.editorIframe.contentDocument;
+                if (editorDoc)
+                {
+                    const _origCreateElement = editorDoc.createElement.bind(editorDoc);
+                    editorDoc.createElement = (tagName, options) =>
+                    {
+                        if (tagName && typeof tagName === "string" && tagName.toLowerCase() === "webview")
+                        {
+                            return document.createElement("webview", options);
+                        }
+                        return _origCreateElement(tagName, options);
+                    };
+                }
                 const waitForUi = this.editorWindow.waitForAce;
                 this.editorWindow.waitForAce = () =>
                 {
