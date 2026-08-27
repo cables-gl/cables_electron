@@ -31,6 +31,7 @@ app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 app.commandLine.appendSwitch("no-user-gesture-required", "true");
 app.commandLine.appendSwitch("disable-hid-blocklist", "true");
 app.commandLine.appendSwitch("enable-web-bluetooth");
+app.commandLine.appendSwitch("enable-blink-features", "CanvasDrawElement");
 app.disableDomainBlockingFor3DAPIs();
 
 logger.info("--- starting");
@@ -335,7 +336,8 @@ class ElectronApp
                 "experimentalFeatures": true,
                 "v8CacheOptions": "none",
                 "backgroundThrottling": false,
-                "autoplayPolicy": "no-user-gesture-required"
+                "autoplayPolicy": "no-user-gesture-required",
+                "webviewTag": true
             }
         };
 
@@ -1031,7 +1033,8 @@ class ElectronApp
                             "nodeIntegrationInSubFrames": true,
                             "contextIsolation": false,
                             "backgroundThrottling": false,
-                            "autoplayPolicy": "no-user-gesture-required"
+                            "autoplayPolicy": "no-user-gesture-required",
+                            "webviewTag": true
                         }
                     };
                 }
