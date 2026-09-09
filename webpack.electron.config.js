@@ -46,8 +46,8 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false, sourceM
                         }
                         return JSON.stringify(buildInfo);
                     }
-                },
-            ],
+                }
+            ]
         })
     ];
 
@@ -66,11 +66,11 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false, sourceM
         "mode": isLiveBuild ? "production" : "development",
         "devtool": minify ? "source-map" : sourceMap,
         "entry": {
-            "scripts.electron.js": [path.resolve("./src_client", "renderer.js")],
+            "iframe.electron.js": [path.resolve("./src_client", "renderer.js")]
         },
         "output": {
             "path": path.resolve("./dist", "public", "js"),
-            "filename": "[name]",
+            "filename": "[name]"
         },
         "optimization": {
             "concatenateModules": true,
@@ -85,8 +85,8 @@ export default (isLiveBuild, buildInfo, minify = false, analyze = false, sourceM
         "resolve": {
             "extensions": [".js"],
             "plugins": [
-                new ModuleScopePlugin.default("src_client/"),
-            ],
+                new ModuleScopePlugin.default("src_client/")
+            ]
         },
         "plugins": plugins
     };

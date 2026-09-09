@@ -149,6 +149,7 @@ class ElectronEndpoint
             if (urlPath.startsWith("/api/corelib/"))
             {
                 req.params.name = urlPath.split("/", 4)[3];
+                req.params.name = path.basename(req.params.name, ".js");
                 const libCode = this.apiGetCoreLibs(req);
                 if (libCode)
                 {
@@ -208,7 +209,7 @@ class ElectronEndpoint
                     });
                 }
             }
-            else if (urlPath === "/api/changelog")
+            else if (urlPath === "/api/changelog.json")
             {
                 return new Response(JSON.stringify(this.apiGetChangelog(req)), {
                     "headers": { "content-type": "application/json" }
@@ -221,7 +222,7 @@ class ElectronEndpoint
                     "headers": { "content-type": "application/json" }
                 });
             }
-            else if (urlPath.startsWith("/api/ops/code"))
+            else if (urlPath.startsWith("/api/ops/ops.core.js"))
             {
                 const code = this.apiGetCoreOpsCode(req);
                 if (code)
