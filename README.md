@@ -30,6 +30,19 @@ the shown dialog. Once that is done, start patching!
 Once you downloaded the package, set its permissions to executable via your file-manager or using the terminal (`chmod +x ...AppImage`).
 Open the AppImage and start patching!
 
+#### NVIDIA discrete GPU on Linux (Wayland/PRIME)
+
+On dual-GPU laptops Cables forces the discrete GPU and ignores the Chromium GPU blocklist when an NVIDIA render node exists, so no flags are needed - launch via `switcherooctl` and verify with `nvidia-smi`:
+
+```
+switcherooctl launch --gpu=1 /path/to/cables-linux-x64.AppImage
+nvidia-smi --query-compute-apps=pid,process_name --format=csv
+```
+
+(pick the `--gpu` index of your NVIDIA device from `switcherooctl list`).
+
+Pass `--dont-force-dgpu` to opt out (keeps the blocklist enabled, NVIDIA stays unused). Details in [cables-gl/cables#8570](https://github.com/cables-gl/cables/issues/8570).
+
 #### Ubuntu > 24.04
 
 Make sure you download and run at least version >= 0.5.15 of cables to workaround any issued with `libfuse2`.
@@ -41,6 +54,8 @@ You can read up on why and other workarounds [here](https://github.com/ivan-hc/A
 
 - `--fullscreen` open editor in fullscreen window on start
 - `--maximize-renderer` maximize the renderer to window size on start
+- `--force-igpu` force using integrated GPU when there are multiple GPUs available (also keeps the Chromium GPU blocklist enabled)
+- `--dont-force-dgpu` do NOT force using discrete GPU (on Linux also keeps the Chromium GPU blocklist enabled)
 
 ## Builds
 

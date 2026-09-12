@@ -19,8 +19,44 @@ import Npm from "../../node_modules/npm/lib/npm.js";
 import opsUtil from "../utils/ops_util.js";
 import cables from "../cables.js";
 
+/**
+ * check for a PRIME-style setup: an NVIDIA render node plus at least one other
+ * GPU node, covers dual-GPU laptops, never throws - cables-gl/cables#8570
+ * @returns {boolean} true on multi-GPU systems with an NVIDIA node
+ */
+function hasNvidiaGpuNode()
+{
+    try
+    {
+        const nodes = fs.readdirSync("/dev/dri").filter((node) => { return node.startsWith("renderD"); });
+        if (nodes.length < 2) return false;
+        return nodes.some((node) =>
+        {
+            try
+            {
+                return fs.readFileSync("/sys/class/drm/" + node + "/device/vendor", "utf8").trim() === "0x10de";
+            }
+            catch (e)
+            {
+                return false;
+            }
+        });
+    }
+    catch (e)
+    {
+        return false;
+    }
+}
+
 app.commandLine.appendSwitch("disable-http-cache", "true");
 if (!app.commandLine.hasSwitch("dont-force-dgpu")) app.commandLine.appendSwitch("force_high_performance_gpu", "true");
+if (process.platform === "linux" && !app.commandLine.hasSwitch("dont-force-dgpu") && !app.commandLine.hasSwitch("force-igpu") && hasNvidiaGpuNode())
+{
+    // the "force discrete GPU" hint alone never engages NVIDIA on PRIME/Wayland,
+    // Chromium blocklists these configs - ignore it on multi-GPU NVIDIA systems, cables-gl/cables#8570
+    logger.warn("NVIDIA GPU detected, ignoring Chromium GPU blocklist so it can be used via PRIME offload (pass --dont-force-dgpu to opt out)");
+    app.commandLine.appendSwitch("ignore-gpu-blocklist");
+}
 if (app.commandLine.hasSwitch("force-igpu"))
 {
     logger.warn("forcing use of internal GPU, this might be slow!");
@@ -49,8 +85,9 @@ class ElectronApp
         _cliHelpText += "  --help                                 Show this help.\n";
         _cliHelpText += "  --fullscreen                           Open in fullscreen mode.\n";
         _cliHelpText += "  --maximize-renderer                    Switch renderer to fullscreen on start (ESC to exit).\n";
-        _cliHelpText += "  --force-igpu                           Force using integrated GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "  --force-igpu                           Force using integrated GPU when there are multiple GPUs available (also keeps the Chromium GPU blocklist enabled).\n";
         _cliHelpText += "  --dont-force-dgpu                      DO NOT force using discrete GPU when there are multiple GPUs available.\n";
+        _cliHelpText += "                                           (on Linux this also keeps the Chromium GPU blocklist enabled, so NVIDIA stays unused, see cables-gl/cables#8570)\n";
         _cliHelpText += "  --patch=<path to .cables-file>         Open patch from .cables file on startup.\n";
         _cliHelpText += "  --screen=<name|\"external\"|number|x,y>  Open app on display by name, first external display, specified display number or xy-offset";
         _cliHelpText += "\n";
