@@ -665,7 +665,7 @@ class ElectronApp
                         }
                     },
                     {
-                        "label": "Insepect Elements",
+                        "label": "Inspect Elements",
                         "accelerator": inspectElementAcc,
                         "click": () =>
                         {
