@@ -50,12 +50,23 @@ function hasNvidiaGpuNode()
 
 app.commandLine.appendSwitch("disable-http-cache", "true");
 if (!app.commandLine.hasSwitch("dont-force-dgpu")) app.commandLine.appendSwitch("force_high_performance_gpu", "true");
-if (process.platform === "linux" && !app.commandLine.hasSwitch("dont-force-dgpu") && !app.commandLine.hasSwitch("force-igpu") && hasNvidiaGpuNode())
+if (app.commandLine.hasSwitch("force-dgpu"))
 {
-    // the "force discrete GPU" hint alone never engages NVIDIA on PRIME/Wayland,
-    // Chromium blocklists these configs - ignore it on multi-GPU NVIDIA systems, cables-gl/cables#8570
-    logger.warn("NVIDIA GPU detected, ignoring Chromium GPU blocklist so it can be used via PRIME offload (pass --dont-force-dgpu to opt out)");
-    app.commandLine.appendSwitch("ignore-gpu-blocklist");
+    // explicit user opt-in: accept the stability tradeoff of bypassing the
+    // Chromium GPU blocklist in exchange for dGPU use, cables-gl/cables#8570
+    if (app.commandLine.hasSwitch("dont-force-dgpu") || app.commandLine.hasSwitch("force-igpu"))
+    {
+        logger.warn("ignoring --force-dgpu, --dont-force-dgpu/--force-igpu takes precedence, GPU blocklist stays enabled");
+    }
+    else if (process.platform !== "linux" || !hasNvidiaGpuNode())
+    {
+        logger.warn("ignoring --force-dgpu, it is only supported on Linux with an NVIDIA render node, GPU blocklist stays enabled");
+    }
+    else
+    {
+        logger.warn("forcing discrete GPU, ignoring Chromium GPU blocklist (may be unstable on blocklisted configs)");
+        app.commandLine.appendSwitch("ignore-gpu-blocklist");
+    }
 }
 if (app.commandLine.hasSwitch("force-igpu"))
 {
@@ -86,8 +97,8 @@ class ElectronApp
         _cliHelpText += "  --fullscreen                           Open in fullscreen mode.\n";
         _cliHelpText += "  --maximize-renderer                    Switch renderer to fullscreen on start (ESC to exit).\n";
         _cliHelpText += "  --force-igpu                           Force using integrated GPU when there are multiple GPUs available (also keeps the Chromium GPU blocklist enabled).\n";
-        _cliHelpText += "  --dont-force-dgpu                      DO NOT force using discrete GPU when there are multiple GPUs available.\n";
-        _cliHelpText += "                                           (on Linux this also keeps the Chromium GPU blocklist enabled, so NVIDIA stays unused, see cables-gl/cables#8570)\n";
+        _cliHelpText += "  --force-dgpu                           Force using discrete GPU, on Linux with NVIDIA this also ignores the Chromium GPU blocklist (may be unstable).\n";
+        _cliHelpText += "  --dont-force-dgpu                      DO NOT force using discrete GPU when there are multiple GPUs available (cancels --force-dgpu).\n";
         _cliHelpText += "  --patch=<path to .cables-file>         Open patch from .cables file on startup.\n";
         _cliHelpText += "  --screen=<name|\"external\"|number|x,y>  Open app on display by name, first external display, specified display number or xy-offset";
         _cliHelpText += "\n";

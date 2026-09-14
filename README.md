@@ -32,16 +32,16 @@ Open the AppImage and start patching!
 
 #### NVIDIA discrete GPU on Linux (Wayland/PRIME)
 
-On dual-GPU laptops Cables forces the discrete GPU and ignores the Chromium GPU blocklist when an NVIDIA render node exists, so no flags are needed - launch via `switcherooctl` and verify with `nvidia-smi`:
+On dual-GPU laptops Cables defaults to the integrated GPU stack because Chromium blocklists NVIDIA + Wayland configs. To use the discrete GPU, opt in explicitly (you accept the stability tradeoff of bypassing that blocklist) and launch via `switcherooctl`, then verify with `nvidia-smi`:
 
 ```
-switcherooctl launch --gpu=1 /path/to/cables-linux-x64.AppImage
+switcherooctl launch --gpu=1 /path/to/cables-linux-x64.AppImage --force-dgpu
 nvidia-smi --query-compute-apps=pid,process_name --format=csv
 ```
 
 (pick the `--gpu` index of your NVIDIA device from `switcherooctl list`).
 
-Pass `--dont-force-dgpu` to opt out (keeps the blocklist enabled, NVIDIA stays unused). Details in [cables-gl/cables#8570](https://github.com/cables-gl/cables/issues/8570).
+`--dont-force-dgpu` / `--force-igpu` cancel `--force-dgpu`. Details in [cables-gl/cables#8570](https://github.com/cables-gl/cables/issues/8570).
 
 #### Ubuntu > 24.04
 
@@ -54,8 +54,9 @@ You can read up on why and other workarounds [here](https://github.com/ivan-hc/A
 
 - `--fullscreen` open editor in fullscreen window on start
 - `--maximize-renderer` maximize the renderer to window size on start
-- `--force-igpu` force using integrated GPU when there are multiple GPUs available (also keeps the Chromium GPU blocklist enabled)
-- `--dont-force-dgpu` do NOT force using discrete GPU (on Linux also keeps the Chromium GPU blocklist enabled)
+- `--force-igpu` force using integrated GPU when there are multiple GPUs available
+- `--force-dgpu` force using discrete GPU (on Linux with NVIDIA also ignores the Chromium GPU blocklist, may be unstable)
+- `--dont-force-dgpu` do NOT force using discrete GPU (cancels `--force-dgpu`)
 
 ## Builds
 
