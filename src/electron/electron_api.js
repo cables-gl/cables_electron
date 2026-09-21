@@ -564,7 +564,6 @@ class ElectronApi
     saveOpCode(data)
     {
         const opName = opsUtil.getOpNameById(data.opname);
-
         const code = data.code;
         let returnedCode = code;
 
