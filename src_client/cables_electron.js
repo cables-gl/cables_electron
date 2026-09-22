@@ -232,13 +232,13 @@ export default class CablesElectron
 
     _registerCommands()
     {
-        this.CABLES.CMD.ELECTRON = CmdElectron;
+        this.editorWindow.CABLES.CMD.ELECTRON = CmdElectron;
         CmdElectron.commands.forEach((command) =>
         {
             this.gui.cmdPalette.addCommand(command.category, command.cmd, command.func, command.icon);
         });
         // this.CABLES.CMD.commands = this.CABLES.CMD.commands.concat(CmdElectron.commands);
-        this._extendStatic(this.CABLES.CMD.PATCH, CmdElectronOverridesPatch);
+        this._extendStatic(this.editorWindow.CABLES.CMD.PATCH, CmdElectronOverridesPatch);
     }
 
     _opRequire(moduleName, op, thisClass)
