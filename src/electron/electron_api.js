@@ -471,7 +471,7 @@ class ElectronApi
     async getOpDocs(data)
     {
         const opIdentifier = data.opIdentifier || data;
-        const opName = opsUtil.getOpNameById(data) || opIdentifier;
+        const opName = opsUtil.getOpNameById(opIdentifier) || opIdentifier;
         if (!opName)
         {
             return {};
@@ -509,7 +509,7 @@ class ElectronApi
         }
         else
         {
-            let text = "Could not find op with id " + data + " in:";
+            let text = "Could not find op with id " + opIdentifier + " in:";
             const footer = "Try adding other directories via 'Manage Op Directories' after loading the patch.";
             const reasons = [];
 
@@ -533,7 +533,7 @@ class ElectronApi
                 const getOpEnvironmentDocs = promisify(opsUtil.getOpEnvironmentDocs.bind(opsUtil));
                 try
                 {
-                    const envDocs = await getOpEnvironmentDocs(data);
+                    const envDocs = await getOpEnvironmentDocs(opIdentifier);
                     if (envDocs && envDocs.environments && envDocs.environments.length > 0)
                     {
                         const otherEnvName = envDocs.environments[0];
