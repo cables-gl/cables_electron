@@ -194,13 +194,6 @@ class CmdElectron
         }
     }
 
-    // static toggleTransparentPopout()
-    // {
-    //     const current = gui.userSettings.get("transparentpopout", true);
-    //     gui.userSettings.set("transparentpopout", !current);
-    //     cablesElectron.editor.notify("Transparent popout canvas: " + (!current ? "enabled" : "disabled"));
-    // };
-
     static openOpDir(opId = null, opName = null)
     {
         const gui = cablesElectron.gui;
