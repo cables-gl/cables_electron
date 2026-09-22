@@ -241,7 +241,7 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/op/layout/"))
             {
-                let opName = urlPath.split("/", 5)[4];
+                let opName = path.basename(urlPath, ".svg");
                 if (opsUtil.isOpId(opName))
                 {
                     opName = opsUtil.getOpNameById(opName);
@@ -264,7 +264,7 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/op/"))
             {
-                let opName = urlPath.split("/", 4)[3];
+                let opName = path.basename(urlPath, ".js");
                 if (opsUtil.isOpId(opName))
                 {
                     opName = opsUtil.getOpNameById(opName);
@@ -297,7 +297,7 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/op/screenshot"))
             {
-                let opName = urlPath.split("/", 4)[3];
+                let opName = path.basename(urlPath, ".png");
                 if (opName) opName = opName.replace(/.png$/, "");
                 const absolutePath = opsUtil.getOpAbsolutePath(opName);
                 let file = path.join(absolutePath, "screenshot.png");
