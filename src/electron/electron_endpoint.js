@@ -264,15 +264,16 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/op/"))
             {
-                let opName = path.basename(urlPath, ".js");
-                if (opsUtil.isOpId(opName))
+                let opIdentifier = path.basename(urlPath, ".js");
+                let opName = opIdentifier;
+                if (opsUtil.isOpId(opIdentifier))
                 {
                     opName = opsUtil.getOpNameById(opName);
                 }
-                if (opName)
+                if (opName && opsUtil.opExists(opName, true))
                 {
                     req.params.opName = opName;
-                    const opCode = this.apiGetOpCode(req);
+                    const opCode = this.apiGetOpCode(opName, req.query.preview);
                     if (opCode)
                     {
                         return new Response(opCode, {
@@ -281,9 +282,10 @@ class ElectronEndpoint
                     }
                     else
                     {
+                        doc.removeOpNameFromLookup(opName);
                         return new Response(opCode, {
                             "headers": { "content-type": "application/javascript" },
-                            "status": 500
+                            "status": 404
                         });
                     }
                 }
@@ -425,10 +427,8 @@ class ElectronEndpoint
         return fullCode;
     }
 
-    apiGetOpCode(req)
+    apiGetOpCode(opName, preview = false)
     {
-        const preview = !!req.query.preview;
-        const opName = req.params.opName;
         let code = "";
         const currentProject = settings.getCurrentProject();
         try

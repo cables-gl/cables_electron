@@ -509,54 +509,8 @@ class ElectronApi
         }
         else
         {
-            let text = "Could not find op with id " + opIdentifier + " in:";
-            const footer = "Try adding other directories via 'Manage Op Directories' after loading the patch.";
-            const reasons = [];
-
-            const errorVars = {
-                "text": text,
-                "footer": footer,
-                "reasons": reasons,
-                "hideEnvButton": true
-            };
-
-            const currentProject = settings.getCurrentProject();
-            const projectOpDirs = projectsUtil.getProjectOpDirs(currentProject, true);
-            projectOpDirs.forEach((projectOpDir) =>
-            {
-                const link = "<a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + projectOpDir + "'});\"><span class=\"icon icon-folder\"></span> " + projectOpDir + "</a>";
-                reasons.push(link);
-            });
-
-            if (net.isOnline())
-            {
-                const getOpEnvironmentDocs = promisify(opsUtil.getOpEnvironmentDocs.bind(opsUtil));
-                try
-                {
-                    const envDocs = await getOpEnvironmentDocs(opIdentifier);
-                    if (envDocs && envDocs.environments && envDocs.environments.length > 0)
-                    {
-                        const otherEnvName = envDocs.environments[0];
-                        errorVars.editorLink = "https://" + otherEnvName + "/op/" + envDocs.name;
-                        errorVars.otherEnvButton = "Visit " + otherEnvName;
-
-                        text = "Could not find <a href=\"" + errorVars.editorLink + "\" target=\"_blank\">" + envDocs.name + "</a> in:";
-
-                        envDocs.environments.forEach((envName) =>
-                        {
-                            const opLink = "https://" + envName + "/op/" + envDocs.name;
-                            reasons.push("Found <a href=\"" + opLink + "\" target=\"_blank\">" + envDocs.name + "</a> on " + envName);
-                        });
-                    }
-                    errorVars.text = text;
-                    errorVars.reasons = reasons;
-                    errorVars.hideEnvButton = false;
-                }
-                catch (e)
-                { // something went wrong, no internet or something, this is informational anyhow}
-                }
-            }
-
+            const errorVars = await helper.getOpNotFoundErrorVars(opIdentifier);
+            doc.removeOpNameFromLookup(opName);
             return this.error("OP_NOT_FOUND", errorVars, "warn");
         }
     }

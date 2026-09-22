@@ -195,8 +195,12 @@ class OpsUtil extends SharedOpsUtil
             if (!fs.existsSync(newOpDir))
             {
                 delete problems.target_exists;
-                const existingOpDir = this.getOpSourceDir(newName);
-                problems.overruled_by_other_op = "The new Op would conflict with the Op at:<br/> <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + existingOpDir + "'});\">" + existingOpDir + "</a>";
+                const opExists = this.opExists(newName, true);
+                if (opExists)
+                {
+                    const existingOpDir = this.getOpSourceDir(newName);
+                    problems.overruled_by_other_op = "The new Op would conflict with the Op at:<br/> <a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + existingOpDir + "'});\">" + existingOpDir + "</a>";
+                }
             }
         }
         return problems;
@@ -337,5 +341,6 @@ class OpsUtil extends SharedOpsUtil
         if (opName.startsWith(this.PREFIX_LOCAL_OPS)) return this.PREFIX_LOCAL_OPS;
         return super.getCollectionName(opName);
     }
+
 }
 export default new OpsUtil(utilProvider);
