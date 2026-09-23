@@ -18,7 +18,7 @@ jobs:
         id: fetch_changelog
         uses: tyrrrz/action-http-request@v1
         with:
-          url: "https://dev.cables.gl/api/changelog?num=1&format=md"
+          url: "https://dev.cables.gl/api/changelog.json?num=1&format=md"
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v3
