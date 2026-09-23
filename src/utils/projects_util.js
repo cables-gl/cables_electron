@@ -116,7 +116,7 @@ class ProjectsUtil extends SharedProjectsUtil
     isFixedPositionOpDir(dir)
     {
         const projectDir = settings.getCurrentProjectDir();
-        if (projectDir) if (dir === path.join(projectDir, "ops/")) return false;
+        if (projectDir) if (dir === path.join(projectDir, "ops")) return true;
         if (dir === "./ops") return true;
         if (dir === cables.getOsOpsDir()) return true;
         if (cables.isPackaged()) return false;
@@ -236,31 +236,34 @@ class ProjectsUtil extends SharedProjectsUtil
         };
     }
 
-    getOpDirs(currentProject)
+    getOpDirs(currentProject, includeOps = false)
     {
         const dirs = this.getProjectOpDirs(currentProject, true);
         const dirInfos = [];
 
         dirs.forEach((dir) =>
         {
-            const opJsons = helper.getFileNamesRecursive(dir, ".json");
-            const opLocations = {};
-            opJsons.forEach((jsonLocation) =>
-            {
-                const jsonName = path.basename(jsonLocation, ".json");
-                if (opsUtil.isOpNameValid(jsonName) && !opLocations.hasOwnProperty(jsonName))
-                {
-                    opLocations[jsonName] = path.dirname(path.join(dir, jsonLocation));
-                }
-            });
-            const opNames = Object.keys(opLocations);
-
-            dirInfos.push({
+            const dirInfo = {
                 "dir": dir,
-                "opLocations": opLocations,
-                "numOps": opNames.length,
                 "fixedPlace": this.isFixedPositionOpDir(dir)
-            });
+            };
+            if (includeOps)
+            {
+                const opJsons = helper.getFileNamesRecursive(dir, ".json");
+                const opLocations = {};
+                opJsons.forEach((jsonLocation) =>
+                {
+                    const jsonName = path.basename(jsonLocation, ".json");
+                    if (opsUtil.isOpNameValid(jsonName) && !opLocations.hasOwnProperty(jsonName))
+                    {
+                        opLocations[jsonName] = path.dirname(path.join(dir, jsonLocation));
+                    }
+                });
+                const opNames = Object.keys(opLocations);
+                dirInfo.opLocations = opLocations;
+                dirInfo.numOps = opNames.length;
+            }
+            dirInfos.push(dirInfo);
         });
         return dirInfos;
     }
@@ -287,7 +290,7 @@ class ProjectsUtil extends SharedProjectsUtil
         const currentProject = settings.getCurrentProject();
         if (!this._dirInfos)
         {
-            this._dirInfos = this.getOpDirs(currentProject);
+            this._dirInfos = this.getOpDirs(currentProject, true);
         }
         if (!this._dirInfos) return this._opsUtil.getOpSourceNoHierarchy(opName);
 
