@@ -215,12 +215,47 @@ class ElectronEndpoint
                     "headers": { "content-type": "application/json" }
                 });
             }
-            else if (urlPath.startsWith("/api/ops/code/project"))
+            else if (urlPath.startsWith("/api/ops/code/project/"))
             {
                 const code = this.apiGetProjectOpsCode(req);
                 return new Response(code, {
                     "headers": { "content-type": "application/json" }
                 });
+            }
+            else if (urlPath.startsWith("/api/ops/code/team/") || urlPath.startsWith("/api/ops/code/extension"))
+            {
+                let opIdentifier = path.basename(urlPath, ".js");
+                let opName = opIdentifier;
+                if (opsUtil.isOpId(opIdentifier))
+                {
+                    opName = opsUtil.getOpNameById(opName);
+                }
+                if (opName)
+                {
+                    req.params.opName = opName;
+                    const opCode = this.apiGetOpCode(opName, req.query.preview);
+                    if (opCode)
+                    {
+                        return new Response(opCode, {
+                            "headers": { "content-type": "application/javascript" }
+                        });
+                    }
+                    else
+                    {
+                        doc.removeOpNameFromLookup(opName);
+                        return new Response(opCode, {
+                            "headers": { "content-type": "application/javascript" },
+                            "status": 404
+                        });
+                    }
+                }
+                else
+                {
+                    return new Response("", {
+                        "headers": { "content-type": "application/javascript" },
+                        "status": 404
+                    });
+                }
             }
             else if (urlPath.startsWith("/api/ops/ops.core.js"))
             {
