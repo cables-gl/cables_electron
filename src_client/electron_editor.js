@@ -278,6 +278,8 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_SAVE_OP_DEPENDENCY] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_PATCH_SUMMARY] = {};
         this._talkerTopics[TalkerAPI.CMD_SEND_ERROR_REPORT] = {};
+        this._talkerTopics[TalkerAPI.CMD_ADD_OP_CREDITS] = {};
+        this._talkerTopics[TalkerAPI.CMD_REMOVE_OP_CREDITS] = {};
 
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_RENAME_OP] = { };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_DELETE_OP] = {};
