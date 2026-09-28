@@ -217,6 +217,7 @@ class ElectronApi
     getOpInfo(data)
     {
         const opName = opsUtil.getOpNameById(data.opName) || data.opName;
+        const numChangelogEntries = data.cl || 5;
 
         let warns = [];
         try
@@ -251,20 +252,24 @@ class ElectronApi
 
                 const opDocs = doc.getDocForOp(opName);
                 let changelogEntries = [];
-                if (opDocs && opDocs.changelog)
+                if (opDocs)
                 {
-                    // copy array to not modify reference
-                    changelogEntries = changelogEntries.concat(opDocs.changelog);
-                    if (data.sort === "asc")
+                    if (opDocs.changelog)
                     {
-                        changelogEntries.sort((a, b) => { return a.date - b.date; });
+                        // copy array to not modify reference
+                        changelogEntries = changelogEntries.concat(opDocs.changelog);
+                        if (data.sort === "asc")
+                        {
+                            changelogEntries.sort((a, b) => { return a.date - b.date; });
+                        }
+                        else
+                        {
+                            changelogEntries.sort((a, b) => { return b.date - a.date; });
+                        }
+                        result.changelog = changelogEntries.slice(0, numChangelogEntries);
                     }
-                    else
-                    {
-                        changelogEntries.sort((a, b) => { return b.date - a.date; });
-                    }
-                    const numChangelogEntries = data.cl || 5;
-                    result.changelog = changelogEntries.slice(0, numChangelogEntries);
+
+                    if (opDocs.credits) result.credits = opDocs.credits;
                 }
                 return this.success("OK", result, true);
             }
@@ -1018,23 +1023,17 @@ class ElectronApi
     opSetSummary(data)
     {
         const opName = opsUtil.getOpNameById(data.opId) || data.name;
-        let summary = data.summary || "";
-        if (summary === "No Summary") summary = "";
-        const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
-        if (fs.existsSync(opDocFile))
+        if (opName)
         {
-            let opDoc = jsonfile.readFileSync(opDocFile);
+            const opDoc = opsUtil.setSummary(opName, data.summary);
             if (opDoc)
             {
-                opDoc.summary = summary;
-                opDoc = doc.cleanOpDocData(opDoc);
-                jsonfile.writeFileSync(opDocFile, opDoc, {
-                    "encoding": "utf-8",
-                    "spaces": 4
-                });
-                doc.updateOpDocs();
+                return this.success("OK", opDoc, true);
             }
-            return this.success("OK", opDoc, true);
+            else
+            {
+                return this.error("UNKNOWN_OP", null, "error");
+            }
         }
         else
         {
@@ -1882,6 +1881,40 @@ class ElectronApi
             this._log.info("failed to parse error report", e);
         }
         this.success("OK");
+    }
+
+    async addOpCredits(data)
+    {
+
+        const opName = opsUtil.getOpNameById(data.opId);
+        const opCredit = data.credit;
+        if (opCredit)
+        {
+            const currentUser = settings.getCurrentUser();
+            opsUtil.addOpCredit(currentUser, opName, opCredit);
+            const opDocs = doc.getOpDocsFromFile(opName);
+            this.success("OK", opDocs);
+        }
+        else
+        {
+            this.error("No credit-data provided.", 400);
+        }
+    }
+
+    async removeOpCredit(data)
+    {
+        const opName = opsUtil.getOpNameById(data.opId);
+        const opCredit = data.credit;
+        if (opCredit)
+        {
+            opsUtil.removeOpCredit(opName, opCredit);
+            const opCredits = doc.getOpDocsFromFile(opName);
+            this.success("OK", opCredits);
+        }
+        else
+        {
+            this.error("No credit-data provided.");
+        }
     }
 
     success(msg, data = null, raw = false)
