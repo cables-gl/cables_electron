@@ -582,7 +582,9 @@ class ElectronApi
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
         const attName = data.name;
-        const p = opsUtil.addAttachment(opName, "att_" + attName, "hello attachment");
+        let content = "hello attachment";
+        if (attName.endsWith(".js")) content = "console.log('hello attachment');";
+        const p = opsUtil.addAttachment(opName, "att_" + attName, content);
         this._log.info("created attachment!", p);
         doc.updateOpDocs(opName);
         this.success("OK");
