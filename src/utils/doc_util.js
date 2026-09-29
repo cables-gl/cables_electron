@@ -17,6 +17,14 @@ class DocUtil extends SharedDocUtil
     {
         if (!opName) return null;
         if (!this._opsUtil.isOpNameValid(opName)) return null;
+        if (!docs) docs = this.getOpDocs();
+        for (let i = 0; i < docs.length; i++)
+        {
+            if (docs[i].name === opName)
+            {
+                return docs[i];
+            }
+        }
         return this.buildOpDocs(opName);
     }
 
