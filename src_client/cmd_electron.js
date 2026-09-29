@@ -10,6 +10,12 @@ class CmdElectron
 
         return [
             {
+                "cmd": "Rebuild op cache",
+                "category": "debug",
+                "func": CmdElectron.rebuildOpCache,
+                "icon": "command"
+            },
+            {
                 "cmd": "collect assets into patch dir",
                 "category": "patch",
                 "func": CmdElectron.collectAssets,
@@ -165,6 +171,18 @@ class CmdElectron
     static openProjectDir()
     {
         cablesElectron.editor.api("openProjectDir", {}, (_err, r) => {});
+    }
+
+    static rebuildOpCache()
+    {
+        const gui = cablesElectron.gui;
+        if (gui) gui.jobs().start({ "id": "rebuildOpCache" });
+
+        cablesElectron.editor.api("rebuildOpCache", {}, (_err, r) =>
+        {
+            gui.jobs().finish("rebuildOpCache");
+            cablesElectron.editor.notify("Rebuilt op cache");
+        });
     }
 
     static openFileManager(url = null)

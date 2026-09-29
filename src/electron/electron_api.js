@@ -397,6 +397,23 @@ class ElectronApi
 
         let projectOps = [];
         let projectNamespaces = [];
+
+        // add all userops of the current user
+        if (currentUser)
+        {
+            projectNamespaces.push(opsUtil.getUserNamespace(currentUser));
+        }
+
+        let coreOpDocs = doc.getOpDocs();
+
+        // add all the patchops of the current patch
+        const patchOps = opsUtil.getPatchOpsNamespaceForProject(project);
+        if (patchOps) projectNamespaces.push(patchOps);
+
+        // add all collections (teamops/extensions/patchops) used in project
+        const extensionNames = projectsUtil.getCollectionNamespacesUsedInProject(project);
+        projectNamespaces = projectNamespaces.concat(extensionNames);
+
         let usedOpIds = [];
         // add all ops that are used in the toplevel of the project, save them as used
         project.ops.forEach((projectOp) =>
@@ -406,7 +423,15 @@ class ElectronApi
         });
 
         // add all ops in any of the project op directory
-        const otherDirsOps = projectsUtil.getOpDocsInProjectDirs(project, true, true).map((opDoc) => { return opDoc.name; });
+        let allOtherDirsDocs = projectsUtil.getOpDocsInProjectDirs(project);
+        if (allOtherDirsDocs)
+        {
+            allOtherDirsDocs = opsUtil.addVersionInfoToOps(allOtherDirsDocs);
+            coreOpDocs = coreOpDocs.concat(allOtherDirsDocs);
+        }
+
+        const otherDirsDocs = projectsUtil.getOpDocsInProjectDirs(project, true, true);
+        const otherDirsOps = otherDirsDocs.map((opDoc) => { return opDoc.name; });
         projectOps = projectOps.concat(otherDirsOps);
 
         // now we should have all the ops that are used in the project, walk subPatchOps
@@ -424,7 +449,6 @@ class ElectronApi
         projectOps = helper.uniqueArray(projectOps);
         usedOpIds = helper.uniqueArray(usedOpIds);
         projectNamespaces = helper.uniqueArray(projectNamespaces);
-        const coreOpDocs = doc.getOpDocs();
         projectOps.forEach((opName) =>
         {
             let opDoc = doc.getDocForOp(opName, coreOpDocs);
@@ -442,10 +466,10 @@ class ElectronApi
             if (usedOpIds.includes(opDoc.id)) opDoc.usedInProject = true;
         });
 
+        opDocs = doc.makeReadable(opDocs);
         opDocs = opsUtil.addPermissionsToOps(opDocs, currentUser, [], project);
         opDocs = opsUtil.addVersionInfoToOps(opDocs);
 
-        opDocs = doc.makeReadable(opDocs);
         return this.success("OK", opDocs, true);
     }
 
@@ -484,7 +508,8 @@ class ElectronApi
         const result = {};
         result.opDocs = [];
 
-        const opDoc = doc.getDocForOp(opName);
+        const allDocs = doc.getOpDocs();
+        const opDoc = doc.getDocForOp(opName, allDocs);
         result.content = "No docs yet...";
 
         const opDocs = [];
@@ -1450,8 +1475,7 @@ class ElectronApi
                 fs.unlinkSync(newPath);
             }
         }
-        catch (e)
-        {}
+        catch (e) { }
 
         this._log.info("edit file", newPath);
 
@@ -1917,6 +1941,13 @@ class ElectronApi
         {
             this.error("No credit-data provided.");
         }
+    }
+
+    async rebuildOpCache(data)
+    {
+        const rebuildOpDocCache = promisify(electronApp.rebuildOpDocCache).bind(this);
+        const docs = await rebuildOpDocCache();
+        this.success("OK", docs);
     }
 
     success(msg, data = null, raw = false)
