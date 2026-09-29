@@ -1142,7 +1142,23 @@ class ElectronApp
         this._log.logStartup("rebuilding op caches");
         doc.rebuildOpCaches((docs) =>
         {
-            if (cb) cb(null, docs);
+            const currentProject = settings.getCurrentProject();
+            if (currentProject)
+            {
+                projectsUtil.invalidateProjectCaches();
+                try
+                {
+                    // add ops in project dirs to lookup and rebuild cache
+                    const projectDocs = projectsUtil.getOpDocsInProjectDirs(currentProject, false, false, true);
+                    this._log.info("updated cache with", projectDocs.length, "ops in project dirs");
+                    if (cb) cb(null, docs);
+                }
+                catch (e)
+                {
+                    if (cb) cb(e.message, docs);
+                }
+
+            }
         }, ["core", "extensions"], true);
     }
 
