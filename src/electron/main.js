@@ -627,7 +627,7 @@ class ElectronApp
                         "label": "Reset Size and Position",
                         "click": () =>
                         {
-                            this._resetSizeAndPostion();
+                            this._resetSizeAndPosition();
                         }
                     },
                     { "type": "separator" },
@@ -687,7 +687,7 @@ class ElectronApp
                 ]
             }
         ];
-        // prevent osx from showin currently running process as name (e.g. `npm`)
+        // prevent osx from showing currently running process as name (e.g. `npm`)
         if (process.platform == "darwin") menuTemplate.unshift({ "label": "" });
         let menu = Menu.buildFromTemplate(menuTemplate);
 
@@ -1101,7 +1101,7 @@ class ElectronApp
         this.editorWindow.webContents.setZoomFactor(1.0);
     }
 
-    _resetSizeAndPostion()
+    _resetSizeAndPosition()
     {
         if (this.editorWindow)
         {
