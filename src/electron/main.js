@@ -719,7 +719,7 @@ class ElectronApp
                 await this.editorWindow.loadFile("index.html");
                 const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
                 this._resetZoom();
-                if (rebuildCache) this._rebuildOpDocCache();
+                if (rebuildCache) this.rebuildOpDocCache();
             }
             catch (e)
             {
@@ -1120,29 +1120,45 @@ class ElectronApp
             {
                 if (!cachedOpDocs || !cachedOpDocs.opDocs || cachedOpDocs.opDocs.length === 0)
                 {
-                    this._rebuildOpDocCache(cb);
+                    this.rebuildOpDocCache(cb);
                     return;
                 }
                 cb();
             }).catch((e) =>
             {
                 this._log.logStartup("failed to parse opdocs cache file!", e);
-                this._rebuildOpDocCache(cb);
+                this.rebuildOpDocCache(cb);
             });
         }
         else
         {
-            this._rebuildOpDocCache(cb);
+            this.rebuildOpDocCache(cb);
         }
 
     }
 
-    _rebuildOpDocCache(cb)
+    rebuildOpDocCache(cb)
     {
         this._log.logStartup("rebuilding op caches");
-        doc.rebuildOpCaches(() =>
+        doc.rebuildOpCaches((docs) =>
         {
-            if (cb) cb();
+            const currentProject = settings.getCurrentProject();
+            if (currentProject)
+            {
+                projectsUtil.invalidateProjectCaches();
+                try
+                {
+                    // add ops in project dirs to lookup and rebuild cache
+                    const projectDocs = projectsUtil.getOpDocsInProjectDirs(currentProject, false, false, true);
+                    this._log.info("updated cache with", projectDocs.length, "ops in project dirs");
+                    if (cb) cb(null, docs);
+                }
+                catch (e)
+                {
+                    if (cb) cb(e.message, docs);
+                }
+
+            }
         }, ["core", "extensions"], true);
     }
 
