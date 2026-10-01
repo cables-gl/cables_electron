@@ -477,14 +477,17 @@ class ElectronApi
     {
         const currentUser = settings.getCurrentUser();
         const currentProject = settings.getCurrentProject();
+        // the editor keeps these until the next reload, do not wait for the next regular check
+        doc.validateOpCaches(true);
+        projectsUtil.validateProjectCaches(true);
         let opDocs = doc.getOpDocs(true, true);
         opDocs = opDocs.concat(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser));
         opDocs = opDocs.concat(projectsUtil.getOpDocsInProjectDirs(currentProject, true, true));
-        const cleanDocs = doc.makeReadable(opDocs);
-        opsUtil.addPermissionsToOps(cleanDocs, null);
-
+        let cleanDocs = doc.makeReadable(opDocs);
+        cleanDocs = opsUtil.addPermissionsToOps(cleanDocs, null);
+        cleanDocs = opsUtil.addVersionInfoToOps(cleanDocs);
         const publicOnly = cables.isPackaged();
-        const extensions = await doc.getAllExtensionDocs(true, true, publicOnly);
+        const extensions = [];
         const libs = projectsUtil.getAvailableLibs(currentProject);
         const coreLibs = projectsUtil.getCoreLibs();
 
@@ -1447,7 +1450,7 @@ class ElectronApi
         }
         if (project && projectFile)
         {
-            electronApp.openPatch(projectFile);
+            electronApp.openPatch(projectFile, false);
             return this.success("OK", true, true);
         }
         else
@@ -1945,9 +1948,9 @@ class ElectronApi
 
     async rebuildOpCache(data)
     {
-        const rebuildOpDocCache = promisify(electronApp.rebuildOpDocCache).bind(this);
+        const rebuildOpDocCache = promisify(electronApp.rebuildOpDocCache).bind(electronApp);
         const docs = await rebuildOpDocCache();
-        this.success("OK", docs);
+        return this.success("OK", docs);
     }
 
     success(msg, data = null, raw = false)

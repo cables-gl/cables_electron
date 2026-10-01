@@ -15,6 +15,7 @@
     },
     "scripts": {
         "start": "gulp watch",
+        "start:debug": "gulp debug",
         "start:help": "gulp watch --usage",
         "start:fullscreen": "gulp watch --fullscreen",
         "start:maximize": "gulp watch --maximize-renderer",

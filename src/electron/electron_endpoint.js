@@ -260,6 +260,7 @@ class ElectronEndpoint
             else if (urlPath.startsWith("/api/ops/ops.core.js"))
             {
                 const code = this.apiGetCoreOpsCode(req);
+
                 if (code)
                 {
                     return new Response(code, {
@@ -407,9 +408,10 @@ class ElectronEndpoint
 
         let code = "";
         let missingOps = [];
+        let opDocs = doc.getOpDocs(true, true);
+
         if (project)
         {
-            let opDocs = doc.getOpDocs(true, true);
             let allOps = [];
             if (project.ops) allOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
             const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project);
@@ -419,47 +421,18 @@ class ElectronEndpoint
             missingOps = allOps.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId || d.id === op.id; }); });
         }
 
-        const opsWithCode = [];
-        let codeNamespaces = [];
-
         missingOps.forEach((missingOp) =>
         {
             const opId = missingOp.opId || missingOp.id;
             const opName = missingOp.name || opsUtil.getOpNameById(opId);
             if (opId && opName)
             {
-                if (!opsWithCode.includes(opName))
-                {
-                    const parts = opName.split(".");
-                    for (let k = 1; k < parts.length; k++)
-                    {
-                        let partPartname = "";
-                        for (let j = 0; j < k; j++) partPartname += parts[j] + ".";
-
-                        partPartname = partPartname.substr(0, partPartname.length - 1);
-                        codeNamespaces.push(partPartname + "=" + partPartname + " || {};");
-                    }
-                    const fn = opsUtil.getOpAbsoluteFileName(opName);
-                    if (fn)
-                    {
-                        code += opsUtil.getOpFullCode(fn, opName, opId);
-                        opsWithCode.push(opName);
-                    }
-                }
                 doc.addOpToLookup(opId, opName);
             }
         });
 
-        codeNamespaces = helper.sortAndReduce(codeNamespaces);
-        let fullCode = opsUtil.OPS_CODE_PREFIX;
-        if (codeNamespaces && codeNamespaces.length > 0)
-        {
-            codeNamespaces[0] = "var " + codeNamespaces[0];
-            fullCode += codeNamespaces.join("\n") + "\n\n";
-        }
-
-        fullCode += code;
-        return fullCode;
+        code = preview ? opsUtil.buildPreviewCode(missingOps.map((missingOp) => { return missingOp.name; })) : opsUtil.buildFullCode(missingOps, opsUtil.PREFIX_OPS, false, false, opDocs);
+        return code;
     }
 
     apiGetOpCode(opName, preview = false)

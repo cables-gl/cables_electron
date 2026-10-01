@@ -59,6 +59,22 @@ function _serve(done)
     done();
 }
 
+function _debug(done)
+{
+    let args = process.argv.slice(3);
+    execa(
+        "electron",
+        [".", "--inspect=9229", ...args],
+        { "preferLocal": true, "stdout": "inherit", "stderr": "inherit" }).then((o, te, thr) =>
+    {
+        watchers.forEach((watcher) =>
+        {
+            watcher.close();
+        });
+    });
+    done();
+}
+
 function _create_ops_dirs(done)
 {
     const opsPath = path.join("./src", config.path.ops);
@@ -255,7 +271,7 @@ const getBuildInfo = (cb) =>
  */
 
 const defaultSeries = gulp.series(
-    _editor_scripts_webpack,
+    _editor_scripts_webpack
 );
 
 gulp.task("build", gulp.series(
@@ -267,7 +283,7 @@ gulp.task("build", gulp.series(
         _extension_ops_copy,
         _libs_copy,
         _ui_copy
-    ),
+    )
 ));
 
 gulp.task("analyze", gulp.series(_analyze, defaultSeries));
@@ -276,6 +292,14 @@ gulp.task("watch", gulp.series(
     defaultSeries,
     gulp.parallel(
         _serve,
+        _watch
+    )
+));
+
+gulp.task("debug", gulp.series(
+    defaultSeries,
+    gulp.parallel(
+        _debug,
         _watch
     )
 ));

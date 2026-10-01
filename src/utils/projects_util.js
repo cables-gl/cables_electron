@@ -20,8 +20,12 @@ class ProjectsUtil extends SharedProjectsUtil
         super(provider);
         this.CABLES_PROJECT_FILE_EXTENSION = "cables";
 
+        this.CACHE_CHECK_INTERVAL = 2000;
+
         this._dirInfos = null;
         this._projectOpDocs = null;
+        this._projectCachesSignature = null;
+        this._lastProjectCacheCheck = 0;
     }
 
     getAssetPath(projectId)
@@ -288,8 +292,10 @@ class ProjectsUtil extends SharedProjectsUtil
     getAbsoluteOpDirFromHierarchy(opName)
     {
         const currentProject = settings.getCurrentProject();
+        this.validateProjectCaches();
         if (!this._dirInfos)
         {
+            this._signProjectCaches();
             this._dirInfos = this.getOpDirs(currentProject, true);
         }
         if (!this._dirInfos) return this._opsUtil.getOpSourceNoHierarchy(opName);
@@ -297,8 +303,8 @@ class ProjectsUtil extends SharedProjectsUtil
         for (let i = 0; i < this._dirInfos.length; i++)
         {
             const dirInfo = this._dirInfos[i];
-            const opNames = dirInfo.opLocations ? Object.keys(dirInfo.opLocations) : [];
-            if (opNames.includes(opName))
+
+            if (dirInfo.opLocations && dirInfo.opLocations.hasOwnProperty(opName))
             {
                 return dirInfo.opLocations[opName];
             }
@@ -310,6 +316,78 @@ class ProjectsUtil extends SharedProjectsUtil
     {
         this._dirInfos = null;
         this._projectOpDocs = null;
+        this._projectCachesSignature = null;
+    }
+
+    /**
+     * invalidates the project caches if anything changed on disk in the op directories of the project
+     *
+     * @param {Boolean} [force] check now, even if the last check just happened
+     * @returns {Boolean} true if caches have been invalidated
+     */
+    validateProjectCaches(force = false)
+    {
+        if (!this._projectCachesSignature) return false;
+
+        const now = Date.now();
+        if (!force && (now - this._lastProjectCacheCheck) < this.CACHE_CHECK_INTERVAL) return false;
+        this._lastProjectCacheCheck = now;
+
+        if (this._getProjectOpDirsSignature() === this._projectCachesSignature) return false;
+        this._log.info("op directories changed on disk, invalidating project caches");
+        this.invalidateProjectCaches();
+        return true;
+    }
+
+    _signProjectCaches()
+    {
+        // get this before reading any ops, changes while building the caches will then be picked up by the next check
+        if (!this._projectCachesSignature) this._projectCachesSignature = this._getProjectOpDirsSignature();
+    }
+
+    _getProjectOpDirsSignature()
+    {
+        // core and extensions are taken care of by docsutil
+        const opDirs = this.getProjectOpDirs(settings.getCurrentProject(), true, false, false);
+        const signature = [];
+        opDirs.forEach((opDir) => { this._addDirToSignature(opDir, signature); });
+        return crypto
+            .createHash("sha1")
+            .update(signature.join("|"))
+            .digest("hex");
+    }
+
+    _addDirToSignature(dir, signature)
+    {
+        let files = [];
+        try
+        {
+            // the directory itself changes whenever files are added or removed
+            signature.push(dir + ":" + fs.statSync(dir).mtimeMs);
+            files = fs.readdirSync(dir);
+        }
+        catch (e)
+        {
+            return;
+        }
+        files.forEach((fileName) =>
+        {
+            if (fileName.startsWith(".") || fileName === "node_modules") return;
+            const file = path.join(dir, fileName);
+            try
+            {
+                const stats = fs.statSync(file);
+                if (stats.isDirectory())
+                {
+                    this._addDirToSignature(file, signature);
+                }
+                else if (fileName.endsWith(".json") || fileName.endsWith(".md"))
+                {
+                    signature.push(file + ":" + stats.mtimeMs);
+                }
+            }
+            catch (e) {}
+        });
     }
 
     isOpInProjectDir(opName)
@@ -320,8 +398,18 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getOpDocsInProjectDirs(project, filterOldVersions = false, filterDeprecated = false, rebuildCache = false)
     {
-        if (!this._projectOpDocs || rebuildCache)
+        if (rebuildCache)
         {
+            this.invalidateProjectCaches();
+        }
+        else
+        {
+            this.validateProjectCaches();
+        }
+        const rebuiltProjectOpDocs = !this._projectOpDocs;
+        if (!this._projectOpDocs)
+        {
+            this._signProjectCaches();
             const ops = {};
             const opDirs = this.getProjectOpDirs(project, true, false, false);
 
@@ -386,6 +474,8 @@ class ProjectsUtil extends SharedProjectsUtil
             filteredOpDocs = this._projectOpDocs;
         }
         this._docsUtil.addOpsToLookup(this._projectOpDocs);
+        // project op dirs have been read again, also drop ops that were deleted on disk
+        if (rebuiltProjectOpDocs) this._docsUtil.removeMissingOpsFromLookup();
         return filteredOpDocs;
     }
 

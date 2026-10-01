@@ -90,6 +90,13 @@ class OpsUtil extends SharedOpsUtil
         return true;
     }
 
+    addOpDocsForCollections(opNames, opDocs = [], forceRebuild = false)
+    {
+        // this reads the collection caches directly, make sure they are up to date
+        this._docsUtil.validateOpCaches();
+        return super.addOpDocsForCollections(opNames, opDocs, forceRebuild);
+    }
+
     getOpAbsolutePath(opName)
     {
         return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);
