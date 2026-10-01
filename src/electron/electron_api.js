@@ -535,9 +535,17 @@ class ElectronApi
                 const packageDir = opsUtil.getOpAbsolutePath(opName);
                 result.dependenciesOutput = await electronApp.installPackages(packageDir, opPackages, opName);
             }
-            result.opDocs = doc.makeReadable(opDocs);
-            result.opDocs = opsUtil.addVersionInfoToOps(opDocs);
-            result.opDocs = opsUtil.addPermissionsToOps(result.opDocs, null);
+            const nameNoVersion = opsUtil.getOpNameWithoutVersion(opName);
+            const otherVersions = {};
+            allDocs.concat(projectOps).forEach((versionDoc) =>
+            {
+                if (versionDoc.name !== opName && opsUtil.getOpNameWithoutVersion(versionDoc.name) === nameNoVersion) otherVersions[versionDoc.name] = versionDoc;
+            });
+
+            let versionDocs = doc.makeReadable(opDocs.concat(Object.values(otherVersions)));
+            versionDocs = opsUtil.addVersionInfoToOps(versionDocs, true);
+            versionDocs.forEach((versionDoc) => { if (versionDoc.oldVersion) versionDoc.hidden = true; });
+            result.opDocs = opsUtil.addPermissionsToOps(versionDocs, null);
             return this.success("OK", result, true);
         }
         else
