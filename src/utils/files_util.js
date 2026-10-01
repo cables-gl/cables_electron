@@ -47,7 +47,8 @@ class FilesUtil extends SharedFilesUtil
             const opName = opsUtil.getOpNameByAbsoluteFileName(fileName);
             if (opName)
             {
-                electronApp.sendTalkerMessage(TalkerAPI.CMD_ELECTRON_DELETE_OP, { "name": opName });
+                const opId = opsUtil.getOpIdByObjName(opName);
+                electronApp.sendTalkerMessage(TalkerAPI.CMD_ELECTRON_DELETE_OP, { "opId": opId });
             }
         });
 
