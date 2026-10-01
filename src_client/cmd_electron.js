@@ -33,12 +33,6 @@ class CmdElectron
                 "func": CmdElectron.manageOpDirs,
                 "icon": "folder"
             },
-            // {
-            //     "cmd": "install ops from package.json",
-            //     "category": "ops",
-            //     "func": CmdElectron.addOpPackage,
-            //     "icon": "op"
-            // },
             {
                 "cmd": "copy op dir to clipboard",
                 "category": "ops",

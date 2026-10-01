@@ -90,6 +90,53 @@ class OpsUtil extends SharedOpsUtil
         return true;
     }
 
+    addVersionInfoToOps(opDocs, forceUpdate = false)
+    {
+        if (!opDocs) return opDocs;
+
+        // versions of an op are only ever compared to each other, group them once instead of
+        // comparing every op to all other ops (~1800 * 1800 iterations for core)
+        const versionsByName = new Map();
+        opDocs.forEach((opDoc) =>
+        {
+            if (!opDoc || !opDoc.nameNoVersion) return;
+            if (!versionsByName.has(opDoc.nameNoVersion)) versionsByName.set(opDoc.nameNoVersion, []);
+            versionsByName.get(opDoc.nameNoVersion).push(opDoc);
+        });
+
+        opDocs.forEach((opDoc) =>
+        {
+            if (opDoc)
+            {
+                const versionDocs = versionsByName.get(this.getOpNameWithoutVersion(opDoc.name)) || [];
+                if (forceUpdate || !opDoc.hasOwnProperty("oldVersion")) opDoc.oldVersion = this.isOpOldVersion(opDoc.name, versionDocs);
+                if (this.isPrivateOp(opDoc.name))
+                {
+                    opDoc.hidden = false;
+                }
+                else
+                {
+                    if (opDoc.oldVersion) opDoc.hidden = true;
+                }
+
+                if (forceUpdate || !opDoc.hasOwnProperty("versions")) opDoc.versions = this.getOpVersionNumbers(opDoc.name, versionDocs);
+
+                if (opDoc.versions)
+                {
+                    opDoc.newestVersion = opDoc.versions[opDoc.versions.length - 1];
+                }
+            }
+        });
+        return opDocs;
+    }
+
+    addOpDocsForCollections(opNames, opDocs = [], forceRebuild = false)
+    {
+        // this reads the collection caches directly, make sure they are up to date
+        this._docsUtil.validateOpCaches();
+        return super.addOpDocsForCollections(opNames, opDocs, forceRebuild);
+    }
+
     getOpAbsolutePath(opName)
     {
         return projectsUtil.getAbsoluteOpDirFromHierarchy(opName);

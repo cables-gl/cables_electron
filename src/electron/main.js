@@ -707,6 +707,11 @@ class ElectronApp
         }
     }
 
+    /**
+     *
+     * @param {String} patchFile
+     * @param {Boolean} [rebuildCache=true]
+     */
     async openPatch(patchFile, rebuildCache = true)
     {
         this._unsavedContentLeave = false;
@@ -715,11 +720,14 @@ class ElectronApp
             try
             {
                 electronApi.loadProject(patchFile, null, rebuildCache);
-                this.updateTitle();
-                await this.editorWindow.loadFile("index.html");
+
                 const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
                 this._resetZoom();
-                if (rebuildCache) this.rebuildOpDocCache();
+                // rebuilds the caches of all ops that changed on disk, needs to be done before the editor loads
+                if (rebuildCache) doc.validateOpCaches(true);
+                this.rebuildProjectCaches();
+                this.updateTitle();
+                await this.editorWindow.loadFile("index.html");
             }
             catch (e)
             {
@@ -1123,6 +1131,18 @@ class ElectronApp
                     this.rebuildOpDocCache(cb);
                     return;
                 }
+                try
+                {
+                    // rebuild the caches of all ops that changed on disk since the last start
+                    doc.setCachedOpDocs(cachedOpDocs);
+                    doc.validateOpCaches(true);
+                }
+                catch (e)
+                {
+                    this._log.logStartup("failed to update op caches!", e);
+                    this.rebuildOpDocCache(cb);
+                    return;
+                }
                 cb();
             }).catch((e) =>
             {
@@ -1140,26 +1160,33 @@ class ElectronApp
     rebuildOpDocCache(cb)
     {
         this._log.logStartup("rebuilding op caches");
+
         doc.rebuildOpCaches((docs) =>
         {
-            const currentProject = settings.getCurrentProject();
-            if (currentProject)
+            try
             {
-                projectsUtil.invalidateProjectCaches();
-                try
-                {
-                    // add ops in project dirs to lookup and rebuild cache
-                    const projectDocs = projectsUtil.getOpDocsInProjectDirs(currentProject, false, false, true);
-                    this._log.info("updated cache with", projectDocs.length, "ops in project dirs");
-                    if (cb) cb(null, docs);
-                }
-                catch (e)
-                {
-                    if (cb) cb(e.message, docs);
-                }
-
+                this.rebuildProjectCaches();
+                if (cb) cb(null, docs);
+            }
+            catch (e)
+            {
+                if (cb) cb(e.message, docs);
             }
         }, ["core", "extensions"], true);
+    }
+
+    rebuildProjectCaches()
+    {
+        const currentProject = settings.getCurrentProject();
+        let projectDocs = [];
+        if (currentProject)
+        {
+            projectsUtil.invalidateProjectCaches();
+            // add ops in project dirs to lookup and rebuild cache
+            projectDocs = projectsUtil.getOpDocsInProjectDirs(currentProject, false, false, true);
+            this._log.info("updated cache with", projectDocs.length, "ops in project dirs");
+        }
+        return projectDocs;
     }
 
     _handleError(title, error)
