@@ -262,7 +262,17 @@ class DocUtil extends SharedDocUtil
     {
         const cachedLookup = this.getCachedOpLookup(false);
         if (!cachedLookup || !cachedLookup.names) return;
-        const missingOps = Object.keys(cachedLookup.names).filter((opName) => { return !opsUtil.opFileExists(opName); });
+
+        // ops in core and extensions are in the signature, validateOpCaches removes them as soon as they are deleted on disk
+        const cachedOpDocs = this.getCachedOpDocs();
+        const signature = (cachedOpDocs && cachedOpDocs.signature) || {};
+        const coreOps = signature.core || {};
+        const extensionOps = signature.extensions || {};
+        const missingOps = Object.keys(cachedLookup.names).filter((opName) =>
+        {
+            if (coreOps.hasOwnProperty(opName) || extensionOps.hasOwnProperty(opName)) return false;
+            return !opsUtil.opFileExists(opName);
+        });
         if (missingOps.length === 0) return;
         this._log.info("removing", missingOps.length, "ops that no longer exist on disk from lookup");
         this.removeOpNamesFromLookup(missingOps);

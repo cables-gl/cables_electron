@@ -468,9 +468,31 @@ class ElectronApi
 
         opDocs = doc.makeReadable(opDocs);
         opDocs = opsUtil.addPermissionsToOps(opDocs, currentUser, [], project);
-        opDocs = opsUtil.addVersionInfoToOps(opDocs);
+        opDocs = this._addAllVersionInfoToOps(opDocs);
 
         return this.success("OK", opDocs, true);
+    }
+
+    /**
+     * versions of an op can be in core and in the op dirs of the project, update the version info
+     * of the given docs comparing them to all of these, the cached docs stay untouched
+     *
+     * @param {Array} opDocs readable docs, see makeReadable
+     * @returns {Array}
+     */
+    _addAllVersionInfoToOps(opDocs)
+    {
+        const currentProject = settings.getCurrentProject();
+        const opNames = new Set(opDocs.map((opDoc) => { return opDoc.name; }));
+        const namesNoVersion = new Set(opDocs.map((opDoc) => { return opsUtil.getOpNameWithoutVersion(opDoc.name); }));
+        const otherVersions = doc.getOpDocs()
+            .concat(currentProject ? projectsUtil.getOpDocsInProjectDirs(currentProject) : [])
+            .filter((opDoc) => { return namesNoVersion.has(opDoc.nameNoVersion) && !opNames.has(opDoc.name); })
+            .map((opDoc) => { return { ...opDoc }; });
+
+        // this also hides old versions in opselect
+        opsUtil.addVersionInfoToOps(opDocs.concat(otherVersions), true);
+        return opDocs;
     }
 
     async getOpDocsAll()
@@ -480,12 +502,13 @@ class ElectronApi
         // the editor keeps these until the next reload, do not wait for the next regular check
         doc.validateOpCaches(true);
         projectsUtil.validateProjectCaches(true);
-        let opDocs = doc.getOpDocs(true, true);
-        opDocs = opDocs.concat(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser));
-        opDocs = opDocs.concat(projectsUtil.getOpDocsInProjectDirs(currentProject, true, true));
-        let cleanDocs = doc.makeReadable(opDocs);
+        // ops in core and project dirs can be versions of each other, get the version info from all of them
+        // before leaving out old versions, makeReadable copies the docs, so this does not change the caches
+        const versionedDocs = doc.makeReadable(doc.getOpDocs().concat(projectsUtil.getOpDocsInProjectDirs(currentProject)));
+        const standaloneDocs = new Set(doc.makeReadable(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser)));
+        let cleanDocs = opsUtil.addVersionInfoToOps(versionedDocs.concat([...standaloneDocs]), true);
+        cleanDocs = cleanDocs.filter((opDoc) => { return standaloneDocs.has(opDoc) || (!opDoc.oldVersion && !opsUtil.isDeprecated(opDoc.name)); });
         cleanDocs = opsUtil.addPermissionsToOps(cleanDocs, null);
-        cleanDocs = opsUtil.addVersionInfoToOps(cleanDocs);
         const publicOnly = cables.isPackaged();
         const extensions = [];
         const libs = projectsUtil.getAvailableLibs(currentProject);
@@ -542,9 +565,7 @@ class ElectronApi
                 if (versionDoc.name !== opName && opsUtil.getOpNameWithoutVersion(versionDoc.name) === nameNoVersion) otherVersions[versionDoc.name] = versionDoc;
             });
 
-            let versionDocs = doc.makeReadable(opDocs.concat(Object.values(otherVersions)));
-            versionDocs = opsUtil.addVersionInfoToOps(versionDocs, true);
-            versionDocs.forEach((versionDoc) => { if (versionDoc.oldVersion) versionDoc.hidden = true; });
+            const versionDocs = this._addAllVersionInfoToOps(doc.makeReadable(opDocs.concat(Object.values(otherVersions))));
             result.opDocs = opsUtil.addPermissionsToOps(versionDocs, null);
             return this.success("OK", result, true);
         }

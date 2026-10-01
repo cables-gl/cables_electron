@@ -409,6 +409,8 @@ class ProjectsUtil extends SharedProjectsUtil
         const rebuiltProjectOpDocs = !this._projectOpDocs;
         if (!this._projectOpDocs)
         {
+            // get these first, updating the core caches might invalidate the project caches
+            const coreOpDocs = this._docsUtil.getOpDocs();
             this._signProjectCaches();
             const ops = {};
             const opDirs = this.getProjectOpDirs(project, true, false, false);
@@ -455,7 +457,14 @@ class ProjectsUtil extends SharedProjectsUtil
                 }
             });
             let opDocs = Object.values(ops);
-            opDocs = this._opsUtil.addVersionInfoToOps(opDocs, true);
+
+            // newer versions of core ops can be in the op dirs of the project, get the version info including
+            // the versions in core, use copies of those so the version info in the core cache stays untouched
+            const projectOpNames = new Set(opDocs.map((opDoc) => { return opDoc.nameNoVersion; }));
+            const coreVersions = coreOpDocs
+                .filter((opDoc) => { return projectOpNames.has(opDoc.nameNoVersion) && !ops.hasOwnProperty(opDoc.name); })
+                .map((opDoc) => { return { ...opDoc }; });
+            opDocs = this._opsUtil.addVersionInfoToOps(opDocs.concat(coreVersions), true).slice(0, opDocs.length);
             this._projectOpDocs = opDocs;
         }
         let filteredOpDocs = [];
