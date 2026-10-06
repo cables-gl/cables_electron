@@ -280,10 +280,10 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_SEND_ERROR_REPORT] = {};
         this._talkerTopics[TalkerAPI.CMD_ADD_OP_CREDITS] = {};
         this._talkerTopics[TalkerAPI.CMD_REMOVE_OP_CREDITS] = {};
+        this._talkerTopics[TalkerAPI.CMD_SET_OP_SUMMARY] = { };
 
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_RENAME_OP] = { };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_DELETE_OP] = {};
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SET_OP_SUMMARY] = { };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_GET_PROJECT_OPDIRS] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_OPEN_DIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_SELECT_FILE] = {};

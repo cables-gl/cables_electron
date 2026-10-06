@@ -1081,7 +1081,7 @@ class ElectronApi
 
     opSetSummary(data)
     {
-        const opName = opsUtil.getOpNameById(data.opId) || data.name;
+        const opName = opsUtil.getOpNameById(data.opId);
         if (opName)
         {
             const opDoc = opsUtil.setSummary(opName, data.summary);

@@ -200,7 +200,7 @@ class DocUtil extends SharedDocUtil
             if (!opsUtil.isOpNameValid(opName)) return;
             const opDir = path.join(opsDir, opName);
             // the directory itself changes whenever files (i.e. attachments) are added or removed
-            const files = [opDir, path.join(opDir, opName + ".json"), path.join(opDir, opName + ".md")];
+            const files = [opDir, path.join(opDir, opName + ".json"), this._opsUtil.getOpAbsoluteMarkdownFilename(opName)];
             signature[opName] = files.map((file) =>
             {
                 try
