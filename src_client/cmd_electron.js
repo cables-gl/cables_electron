@@ -206,18 +206,21 @@ class CmdElectron
         }
     }
 
-    static openOpDir(opId = null, opName = null)
+    /**
+     *
+     * @param {String} opName
+     */
+    static openOpDir(opName = null)
     {
         const gui = cablesElectron.gui;
         if (gui)
         {
-            let options = { "opId": opId, "opName": opName };
-            if (!opId && !opName)
+            let options = { "opName": opName };
+            if (!opName)
             {
                 const ops = gui.patchView.getSelectedOps();
                 if (!ops.length) return;
                 options = {
-                    "opId": ops[0].opId,
                     "opName": ops[0].name
                 };
             }

@@ -290,7 +290,7 @@ class ElectronApp
                     result.stderr = "failed to natively compile using node-gyp";
                     if (opName)
                     {
-                        const onClick = "CABLES.CMD.ELECTRON.openOpDir('', '" + opName + "');";
+                        const onClick = "CABLES.CMD.ELECTRON.openOpDir('" + opName + "');";
                         const opDir = opsUtil.getOpSourceDir(opName);
                         result.stderr += ", try running `npm --prefix ./ install " + packageNames.join(" ") + "` manually <a onclick=\"" + onClick + "\">in the op dir</a>: `" + opDir + "`";
                     }

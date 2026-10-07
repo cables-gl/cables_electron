@@ -23,6 +23,10 @@ import libsUtil from "../utils/libs_util.js";
 import HtmlExportElectron from "../export/export_html_electron.js";
 import PatchExportElectron from "../export/export_patch_electron.js";
 
+/**
+ * @typedef {import("cables-shared-client").ApiResponse} ApiResponse
+ */
+
 class ElectronApi
 {
     constructor()
@@ -1324,9 +1328,15 @@ class ElectronApi
         return this.success("OK", {}, true);
     }
 
+    /**
+     *
+     * @param {Object} options
+     * @param {String} options.opName
+     * @returns {ApiResponse}
+     */
     async openOpDir(options)
     {
-        const opName = opsUtil.getOpNameById(options.opId) || options.opName;
+        const opName = options.opName;
         if (!opName) return;
         const opDir = opsUtil.getOpAbsoluteFileName(opName);
         if (opDir)
@@ -1982,6 +1992,13 @@ class ElectronApi
         return this.success("OK", docs);
     }
 
+    /**
+     *
+     * @param {String} msg
+     * @param {Any} [data]
+     * @param {Boolean} [raw]
+     * @returns {import("cables-shared-client").ApiResponse}
+     */
     success(msg, data = null, raw = false)
     {
         if (raw)
@@ -1994,6 +2011,7 @@ class ElectronApi
             return {
                 "success": true,
                 "msg": msg,
+                "code": 200,
                 "data": data || {}
             };
         }

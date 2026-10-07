@@ -104,7 +104,7 @@ export default class CablesElectron
                                 const opNameIndex = dirParts.findIndex((part) => { return part.startsWith("Ops."); });
                                 const opName = dirParts[opNameIndex];
                                 const packageName = dirParts[opNameIndex + 2];
-                                const onClick = "CABLES.CMD.ELECTRON.openOpDir('', '" + opName + "');";
+                                const onClick = "CABLES.CMD.ELECTRON.openOpDir('" + opName + "');";
 
                                 const msg = "try running this <a onclick=\"" + onClick + "\" > in the op dir</a>:";
                                 this._log.error(msg);
