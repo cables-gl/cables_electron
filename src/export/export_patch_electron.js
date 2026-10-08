@@ -11,7 +11,7 @@ export default class PatchExportElectron extends HtmlExportElectron
         this.options.combineJS = false;
         this.options.addOpCode = true;
         this.options.removeIndexHtml = true;
-        this.options.rewriteAssetPorts = false;
+        this.options.rewriteAssetPorts = true;
         this.options.flattenAssetNames = false;
         this.options.handleAssets = "all";
         this.options.assetsInSubdirs = true;
@@ -36,6 +36,11 @@ export default class PatchExportElectron extends HtmlExportElectron
     _getOpExportSubdir(opName)
     {
         return path.join("ops", this._opsUtil.getOpTargetDir(opName, true));
+    }
+
+    _addProjectJsCode(proj, opsCode, libs, coreLibs, replacedOpIds)
+    {
+        return replacedOpIds;
     }
 
     static getExportOptions(user, teams, project, exportQuota)
