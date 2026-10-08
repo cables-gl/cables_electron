@@ -190,7 +190,9 @@ class ElectronApi
                 const projectFile = settings.getCurrentProjectFile();
                 if (!projectFile)
                 {
-                    const newName = data ? data.name : projectsUtil.getNewProjectName();
+                    let newName = data ? data.name : projectsUtil.getNewProjectName();
+                    const currentProjectDir = settings.getCurrentProjectDir();
+                    if (currentProjectDir) newName = path.join(currentProjectDir, newName);
                     const newProjectFile = await electronApp.saveProjectFileDialog(newName);
                     if (newProjectFile)
                     {
@@ -317,7 +319,14 @@ class ElectronApi
             "msg": "BACKUP_CREATED"
         };
         const currentProject = settings.getCurrentProject();
-        const projectFile = await electronApp.saveProjectFileDialog();
+        const currentProjectDir = settings.getCurrentProjectDir();
+        let suggestedPath = null;
+        if (currentProjectDir)
+        {
+            suggestedPath = currentProjectDir;
+            if (currentProject.name) suggestedPath = path.join(suggestedPath, currentProject.name.toLowerCase() + "_backup");
+        }
+        const projectFile = await electronApp.saveProjectFileDialog(suggestedPath);
         if (!projectFile)
         {
             logger.info("no backup file chosen");
@@ -1446,7 +1455,11 @@ class ElectronApi
 
     async saveProjectAs(data)
     {
-        const projectFile = await electronApp.saveProjectFileDialog(data.name);
+        let suggestedName = data.name;
+        if (suggestedName) suggestedName = suggestedName.toLowerCase();
+        const currentProjectDir = settings.getCurrentProjectDir();
+        if (currentProjectDir) suggestedName = path.join(currentProjectDir, suggestedName);
+        const projectFile = await electronApp.saveProjectFileDialog(suggestedName);
         if (!projectFile)
         {
             return this.error("no project dir chosen", null, "info");
