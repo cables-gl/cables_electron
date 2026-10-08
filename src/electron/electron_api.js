@@ -1538,18 +1538,36 @@ class ElectronApi
         return this.success("OK", { "filename": newPath }, true);
     }
 
-    getProjectOpDirs()
+    /**
+     *
+     * @param {Object} data
+     * @param {String} data.opName
+     * @returns
+     */
+    getProjectOpDirs(data)
     {
+        const opName = data.opName;
+        let selectedDir = "";
+        if (opName) selectedDir = opsUtil.getOpAbsolutePath(opName);
         const currentProject = settings.getCurrentProject();
         const dirInfos = projectsUtil.getOpDirs(currentProject);
+
+        dirInfos.forEach((dirInfo) =>
+        {
+            if (dirInfo.dir && selectedDir.startsWith(dirInfo.dir))
+            {
+                dirInfo.selected = true;
+                return;
+            }
+        });
 
         const opDirs = {};
         if (currentProject && currentProject.ops)
         {
             currentProject.ops.forEach((op) =>
             {
-                const opName = opsUtil.getOpNameById(op.opId);
-                const opPath = opsUtil.getOpAbsolutePath(opName);
+                const projectOpName = opsUtil.getOpNameById(op.opId);
+                const opPath = opsUtil.getOpAbsolutePath(projectOpName);
                 if (opPath)
                 {
                     if (!opDirs.hasOwnProperty(opPath)) opDirs[opPath] = 0;
