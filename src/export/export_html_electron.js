@@ -98,7 +98,6 @@ export default class HtmlExportElectron extends SharedExportService
 
     collectFiles(project, callbackFilesCollected, callbackError, options, next)
     {
-        this._log.info("...export");
         if (project)
         {
             options.handleAssets = options.handleAssets || "auto";
