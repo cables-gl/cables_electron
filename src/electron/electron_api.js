@@ -150,6 +150,16 @@ class ElectronApi
                 throw e;
             }
         });
+
+        ipcMain.on("setSerialPort", (event, arg) =>
+        {
+            electronApp.setSelectedSerialPort(arg);
+        });
+
+        ipcMain.handle("getSerialPorts", async () =>
+        {
+            await electronApp.getSerialPorts();
+        });
     }
 
     async _getRawDesktopSources(data)

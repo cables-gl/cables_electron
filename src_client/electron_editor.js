@@ -160,6 +160,19 @@ export default class ElectronEditor
             });
         });
 
+        this._talker.on(TalkerAPI.CMD_ELECTRON_SET_SERIAL_PORT, (data, next) =>
+        {
+            window.ipcRenderer.send("setSerialPort", data);
+            next(null, data);
+        });
+
+        this._talker.on(TalkerAPI.CMD_ELECTRON_GET_SERIAL_PORT, (data, next) =>
+        {
+            window.ipcRenderer.once("getSerialPort", (event, arg) => { return next(null, JSON.parse(arg)); });
+            // need to invoke list here to get dropdown values
+            window.ipcRenderer.invoke("getSerialPorts");
+        });
+
         this._talker.on(TalkerAPI.CMD_ADD_OP_PACKAGE, (data, next) =>
         {
             let opTargetDir = null;

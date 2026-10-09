@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { app, BrowserWindow, dialog, Menu, shell, clipboard, nativeTheme, nativeImage, screen } from "electron";
 import path from "path";
 import localShortcut from "electron-localshortcut";
@@ -38,9 +37,18 @@ logger.info("--- starting");
 
 class ElectronApp
 {
+
+    #log = logger;
+    #selectedSerialPort = null;
+    #listSerialPortsOnly = false;
+
+    #defaultWindowBounds = {
+        "width": 1920,
+        "height": 1080
+    };
+
     constructor()
     {
-        this._log = logger;
         this.appName = "name" in app ? app.name : app.getName();
         this.appIcon = nativeImage.createFromPath("../../resources/cables.png");
 
@@ -85,15 +93,10 @@ class ElectronApp
             }
         }
 
-        this._defaultWindowBounds = {
-            "width": 1920,
-            "height": 1080
-        };
-
         this.editorWindow = null;
 
-        settings.set("uiLoadStart", this._log.loadStart, true);
-        this._log.logStartup("started electron");
+        settings.set("uiLoadStart", this.#log.loadStart, true);
+        this.#log.logStartup("started electron");
 
         process.on("uncaughtException", (error) =>
         {
@@ -171,12 +174,12 @@ class ElectronApp
             });
             this._npm.load().then(() =>
             {
-                this._log.info("loaded npm", this._npm.version);
+                this.#log.info("loaded npm", this._npm.version);
             });
         }
         catch (e)
         {
-            this._log.error("failed to load npm", e);
+            this.#log.error("failed to load npm", e);
         }
     }
 
@@ -263,7 +266,7 @@ class ElectronApp
         };
         process.on("output", logToVariable);
         console.log = (l) => { result.stdout += l; };
-        this._log.debug("installing", packageNames, "to", targetDir);
+        this.#log.debug("installing", packageNames, "to", targetDir);
         try
         {
             await this._npm.exec("install", packageNames);
@@ -341,7 +344,7 @@ class ElectronApp
             }
         };
 
-        let windowBounds = this._defaultWindowBounds;
+        let windowBounds = this.#defaultWindowBounds;
         if (settings.getUserSetting("storeWindowBounds", true))
         {
             const userWindowBounds = settings.get(settings.WINDOW_BOUNDS);
@@ -401,7 +404,7 @@ class ElectronApp
             this._registerShortcuts();
             this.openPatch(patchFile, false).then(() =>
             {
-                this._log.logStartup("electron loaded");
+                this.#log.logStartup("electron loaded");
             });
         });
     }
@@ -874,7 +877,7 @@ class ElectronApp
     reload()
     {
         const projectFile = settings.getCurrentProjectFile();
-        this.openPatch(projectFile, false).then(() => { this._log.debug("reloaded", projectFile); });
+        this.openPatch(projectFile, false).then(() => { this.#log.debug("reloaded", projectFile); });
     }
 
     quit()
@@ -1083,6 +1086,47 @@ class ElectronApp
             }
             return false;
         });
+
+        this.editorWindow.webContents.session.on("select-serial-port", (event, portList, webContents, callback) =>
+        {
+            webContents.send("getSerialPort", JSON.stringify(portList));
+            event.preventDefault();
+
+            if (this.#listSerialPortsOnly)
+            {
+                // request was only started to send the port list, do not select a port
+                callback("");
+                return;
+            }
+
+            const wanted = this.#selectedSerialPort;
+            const selectedPort = wanted && portList.find((device) =>
+            {
+                // same device name
+                if (wanted.portName && device.portName === wanted.portName)
+                {
+                    return true;
+                }
+
+                // same usb device, only if usb info was given
+                if (!wanted.serialNumber)
+                {
+                    return false;
+                }
+                const sameSerialNumber = device.serialNumber === wanted.serialNumber;
+                const sameVendor = device.vendorId === wanted.vendorId;
+                const sameProduct = device.productId === wanted.productId;
+                return sameSerialNumber && sameVendor && sameProduct;
+            });
+            if (!selectedPort)
+            {
+                callback("");
+            }
+            else
+            {
+                callback(selectedPort.portId);
+            }
+        });
     }
 
     _zoomIn()
@@ -1112,7 +1156,7 @@ class ElectronApp
     {
         if (this.editorWindow)
         {
-            this.editorWindow.setBounds(this._defaultWindowBounds);
+            this.editorWindow.setBounds(this.#defaultWindowBounds);
             this.editorWindow.center();
         }
     }
@@ -1138,14 +1182,14 @@ class ElectronApp
                 }
                 catch (e)
                 {
-                    this._log.logStartup("failed to update op caches!", e);
+                    this.#log.logStartup("failed to update op caches!", e);
                     this.rebuildOpDocCache(cb);
                     return;
                 }
                 cb();
             }).catch((e) =>
             {
-                this._log.logStartup("failed to parse opdocs cache file!", e);
+                this.#log.logStartup("failed to parse opdocs cache file!", e);
                 this.rebuildOpDocCache(cb);
             });
         }
@@ -1158,7 +1202,7 @@ class ElectronApp
 
     rebuildOpDocCache(cb)
     {
-        this._log.logStartup("rebuilding op caches");
+        this.#log.logStartup("rebuilding op caches");
 
         doc.rebuildOpCaches((docs) =>
         {
@@ -1183,7 +1227,7 @@ class ElectronApp
             projectsUtil.invalidateProjectCaches();
             // add ops in project dirs to lookup and rebuild cache
             projectDocs = projectsUtil.getOpDocsInProjectDirs(currentProject, false, false, true);
-            this._log.info("updated cache with", projectDocs.length, "ops in project dirs");
+            this.#log.info("updated cache with", projectDocs.length, "ops in project dirs");
         }
         return projectDocs;
     }
@@ -1193,7 +1237,7 @@ class ElectronApp
         const currentProject = settings.getCurrentProject();
         const currentProjectFile = settings.getCurrentProjectFile();
 
-        this._log.error(title, error);
+        this.#log.error(title, error);
         if (app.isReady())
         {
             const buttons = [
@@ -1383,6 +1427,24 @@ class ElectronApp
         }
 
         return null;
+    }
+
+    setSelectedSerialPort(port) {
+        this.#selectedSerialPort = port;
+    }
+
+    async getSerialPorts()
+    {
+        if (!this.editorWindow) return;
+        this.#listSerialPortsOnly = true;
+        try
+        {
+            await this.editorWindow.webContents.executeJavaScript("navigator.serial.requestPort().then(() => { return true; }).catch(() => { return false; })", true);
+        }
+        finally
+        {
+            this.#listSerialPortsOnly = false;
+        }
     }
 }
 
