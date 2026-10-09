@@ -98,7 +98,6 @@ export default class HtmlExportElectron extends SharedExportService
 
     collectFiles(project, callbackFilesCollected, callbackError, options, next)
     {
-        this._log.info("...export");
         if (project)
         {
             options.handleAssets = options.handleAssets || "auto";
@@ -210,7 +209,7 @@ export default class HtmlExportElectron extends SharedExportService
         {
             if (!allFiles[iaf].path) continue;
             const assetPath = this._getAssetPath(allFiles[iaf]);
-            let lzipFileName = allFiles[iaf].path.replace(this._projectsUtil.getAssetPath(proj._id), "");
+            let lzipFileName = path.join("assets/", path.basename(allFiles[iaf].path));
             lzipFileName = this.appendFile(assetPath, lzipFileName, options.handleAssets);
             allFiles.push(lzipFileName);
         }

@@ -79,7 +79,7 @@ class ElectronSettings
                 "pictures": app.getPath("pictures"),
                 "videos": app.getPath("videos"),
                 "logs": app.getPath("logs"),
-                "crashDumps": app.getPath("crashDumps"),
+                "crashDumps": app.getPath("crashDumps")
             };
             const dir = this.get(this.CURRENTPROJECTDIR_FIELD);
             const id = this.get(this.PATCHID_FIELD);
@@ -118,6 +118,10 @@ class ElectronSettings
         }
     }
 
+    /**
+     *
+     * @returns {String|null}
+     */
     getCurrentProjectDir()
     {
         let value = this.get(this.CURRENTPROJECTDIR_FIELD);
