@@ -507,18 +507,17 @@ class ElectronApi
     {
         const currentUser = settings.getCurrentUser();
         const currentProject = settings.getCurrentProject();
-        // the editor keeps these until the next reload, do not wait for the next regular check
+        // the editor keeps these until the next reload
         doc.validateOpCaches(true);
         projectsUtil.validateProjectCaches(true);
         // ops in core and project dirs can be versions of each other, get the version info from all of them
-        // before leaving out old versions, makeReadable copies the docs, so this does not change the caches
         const versionedDocs = doc.makeReadable(doc.getOpDocs().concat(projectsUtil.getOpDocsInProjectDirs(currentProject)));
         const standaloneDocs = new Set(doc.makeReadable(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser)));
         let cleanDocs = opsUtil.addVersionInfoToOps(versionedDocs.concat([...standaloneDocs]), true);
         cleanDocs = cleanDocs.filter((opDoc) => { return standaloneDocs.has(opDoc) || (!opDoc.oldVersion && !opsUtil.isDeprecated(opDoc.name)); });
         cleanDocs = opsUtil.addPermissionsToOps(cleanDocs, null);
         const publicOnly = cables.isPackaged();
-        const extensions = [];
+        const extensions = await doc.getAllExtensionDocs(true, true, publicOnly);
         const libs = projectsUtil.getAvailableLibs(currentProject);
         const coreLibs = projectsUtil.getCoreLibs();
 
@@ -1601,7 +1600,7 @@ class ElectronApi
                 const maxFiles = 200;
                 if (files && files.length > maxFiles)
                 {
-                    return this.error("Directory too large, more than " + maxFiles + " possible ops found.", null, "error");
+                    return this.error("Directory too large, more than " + maxFiles + " possible ops found.", null, "warn");
                 }
                 currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
                 projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
@@ -1616,7 +1615,7 @@ class ElectronApi
             }
             catch (e)
             {
-                return this.error(e.message, null, "error");
+                return this.error(e.message, null, "warn");
             }
         }
 
