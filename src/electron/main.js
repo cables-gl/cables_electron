@@ -999,17 +999,16 @@ class ElectronApp
             }
         });
 
+        // the ui only blocks unloading when it has unsaved changes, so always ask then
         this.editorWindow.webContents.on("will-prevent-unload", (event) =>
         {
-            if (!this._unsavedContentLeave && this.isDocumentEdited())
-            {
-                const leave = this._unsavedContentDialog();
-                if (leave) event.preventDefault();
-            }
-            else
-            {
-                event.preventDefault();
-            }
+            if (this._unsavedContentDialog()) event.preventDefault();
+        });
+
+        // a "leave" answer is only valid for the page that was unloaded, ask again after a reload
+        this.editorWindow.webContents.on("did-finish-load", () =>
+        {
+            this._unsavedContentLeave = false;
         });
 
         this.editorWindow.webContents.setWindowOpenHandler(({ url, frameName }) =>

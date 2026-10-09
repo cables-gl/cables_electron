@@ -14,7 +14,7 @@
         "node": "24.18.1"
     },
     "scripts": {
-        "start": "gulp watch",
+        "start": "gulp watch --remote-debugging-port=9222",
         "start:debug": "gulp debug",
         "start:help": "gulp watch --usage",
         "start:fullscreen": "gulp watch --fullscreen",
