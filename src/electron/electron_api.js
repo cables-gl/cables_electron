@@ -48,11 +48,6 @@ class ElectronApi
             }
         });
 
-        ipcMain.handle("documentChanged", async (event, _cmd, data) =>
-        {
-            return electronApp.editorWindow.setDocumentEdited(true);
-        });
-
         ipcMain.on("platformSettings", (event, _cmd, _data) =>
         {
             settings.data.buildInfo = settings.getBuildInfo();

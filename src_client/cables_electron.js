@@ -120,12 +120,6 @@ export default class CablesElectron
                                 if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
                             });
 
-                            const corePatch = this.gui.corePatch();
-                            corePatch.on("onOpAdd", (op) =>
-                            {
-                                this._electron.ipcRenderer.invoke("documentChanged");
-                            });
-
                             this._registerCommands();
 
                         }
