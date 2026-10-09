@@ -110,7 +110,7 @@ class ElectronApp
 
         const initialDevToolsOpen = (event, win) =>
         {
-            if (settings.get(settings.OPEN_DEV_TOOLS_FIELD))
+            if (settings.getOpenDevTools())
             {
                 win.webContents.once("dom-ready", this._toggleDevTools.bind(this));
             }
@@ -347,7 +347,7 @@ class ElectronApp
         let windowBounds = this.#defaultWindowBounds;
         if (settings.getUserSetting("storeWindowBounds", true))
         {
-            const userWindowBounds = settings.get(settings.WINDOW_BOUNDS);
+            const userWindowBounds = settings.getWindowBounds();
             if (userWindowBounds)
             {
                 if (userWindowBounds.x && userWindowBounds.y && userWindowBounds.width && userWindowBounds.height)
@@ -724,7 +724,6 @@ class ElectronApp
             {
                 electronApi.loadProject(patchFile, null, rebuildCache);
 
-                const userZoom = settings.get(settings.WINDOW_ZOOM_FACTOR); // maybe set stored zoom later
                 this._resetZoom();
                 // rebuilds the caches of all ops that changed on disk, needs to be done before the editor loads
                 if (rebuildCache) doc.validateOpCaches(true);
@@ -996,9 +995,9 @@ class ElectronApp
             if (this._openFullscreen) return;
             if (settings.getUserSetting("storeWindowBounds", true))
             {
-                const windowBounds = settings.get(settings.WINDOW_BOUNDS) || {};
+                const windowBounds = settings.getWindowBounds();
                 windowBounds[this._displaySetupId] = this.editorWindow.getBounds();
-                settings.set(settings.WINDOW_BOUNDS, windowBounds);
+                settings.setWindowBounds(windowBounds);
             }
         });
 
@@ -1055,12 +1054,12 @@ class ElectronApp
 
         this.editorWindow.webContents.on("devtools-opened", (event, win) =>
         {
-            settings.set(settings.OPEN_DEV_TOOLS_FIELD, true);
+            settings.setOpenDevTools(true);
         });
 
         this.editorWindow.webContents.on("devtools-closed", (event, win) =>
         {
-            settings.set(settings.OPEN_DEV_TOOLS_FIELD, false);
+            settings.setOpenDevTools(false);
         });
 
         this.editorWindow.webContents.session.on("will-download", (event, item, webContents) =>
@@ -1133,7 +1132,7 @@ class ElectronApp
     {
         let newZoom = this.editorWindow.webContents.getZoomFactor() + 0.2;
         this.editorWindow.webContents.setZoomFactor(newZoom);
-        settings.set(settings.WINDOW_ZOOM_FACTOR, newZoom);
+        settings.setWindowZoomFactor(newZoom);
     }
 
     _zoomOut()
@@ -1143,7 +1142,7 @@ class ElectronApp
         if (newZoom > 0)
         {
             this.editorWindow.webContents.setZoomFactor(newZoom);
-            settings.set(settings.WINDOW_ZOOM_FACTOR, newZoom);
+            settings.setWindowZoomFactor(newZoom);
         }
     }
 
@@ -1234,9 +1233,6 @@ class ElectronApp
 
     _handleError(title, error)
     {
-        const currentProject = settings.getCurrentProject();
-        const currentProjectFile = settings.getCurrentProjectFile();
-
         this.#log.error(title, error);
         if (app.isReady())
         {
@@ -1246,7 +1242,8 @@ class ElectronApp
                 "&Quit",
                 process.platform === "darwin" ? "Copy Error" : "Copy error"
             ];
-            if (error.dir && currentProject && currentProjectFile) buttons.push("Remove Directory from Patch");
+            // op dirs are stored in the settings now, fixed dirs (patch, os, core) can not be removed
+            if (error.dir && !settings.isFixedOpDir(error.dir)) buttons.push("Remove Op Directory");
             const buttonIndex = dialog.showMessageBoxSync({
                 "type": "error",
                 "buttons": buttons,
@@ -1274,8 +1271,7 @@ class ElectronApp
             }
             if (buttonIndex === 4)
             {
-                const newProject = projectsUtil.removeOpDir(currentProject, error.dir);
-                projectsUtil.writeProjectToFile(currentProjectFile, newProject);
+                settings.removeOpDir(error.dir);
                 this.reload();
             }
         }

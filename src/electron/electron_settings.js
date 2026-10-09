@@ -12,43 +12,62 @@ import projectsUtil from "../utils/projects_util.js";
 import cables from "../cables.js";
 import electronApp from "./main.js";
 
+/**
+ * @typedef ElectronSettings
+ * @param {any} defaults
+ * @param {string} configName
+ *
+ */
 class ElectronSettings
 {
+
+    #MAIN_CONFIG_NAME = "cables-electron-preferences";
+    #PATCHID_FIELD = "patchId";
+    #PROJECTFILE_FIELD = "patchFile";
+    #CURRENTPROJECTDIR_FIELD = "currentPatchDir";
+    #STORAGEDIR_FIELD = "storageDir";
+    #USER_SETTINGS_FIELD = "userSettings";
+    #RECENT_PROJECTS_FIELD = "recentProjects";
+    #OPEN_DEV_TOOLS_FIELD = "openDevTools";
+    #DOWNLOAD_PATH = "downloadPath";
+    #OP_DIRS_FIELD = "opDirectories";
+    #WINDOW_BOUNDS = "windowBounds";
+    #WINDOW_ZOOM_FACTOR = "windowZoomFactor";
+
+    /** @type ElectronSettings */
+    #opts = { "defaults": {} };
+
+    #data = {};
+    #temporaryData = {};
+    #settingsFile = {};
+
+    #log = logger;
+
     constructor(storageDir)
     {
-        this._log = logger;
+
         this.SESSION_PARTITION = "persist:cables:standalone";
 
         if (storageDir && !fs.existsSync(storageDir))
         {
             mkdirp.sync(storageDir);
         }
-        this.MAIN_CONFIG_NAME = "cables-electron-preferences";
-        this.PATCHID_FIELD = "patchId";
-        this.PROJECTFILE_FIELD = "patchFile";
-        this.CURRENTPROJECTDIR_FIELD = "currentPatchDir";
-        this.STORAGEDIR_FIELD = "storageDir";
-        this.USER_SETTINGS_FIELD = "userSettings";
-        this.RECENT_PROJECTS_FIELD = "recentProjects";
-        this.OPEN_DEV_TOOLS_FIELD = "openDevTools";
-        this.WINDOW_ZOOM_FACTOR = "windowZoomFactor";
-        this.WINDOW_BOUNDS = "windowBounds";
-        this.DOWNLOAD_PATH = "downloadPath";
 
-        this.opts = {};
-        this.opts.defaults = {};
-        this.opts.configName = this.MAIN_CONFIG_NAME;
-        this.opts.defaults[this.USER_SETTINGS_FIELD] = {};
-        this.opts.defaults[this.PATCHID_FIELD] = null;
-        this.opts.defaults[this.PROJECTFILE_FIELD] = null;
-        this.opts.defaults[this.CURRENTPROJECTDIR_FIELD] = null;
-        this.opts.defaults[this.STORAGEDIR_FIELD] = storageDir;
-        this.opts.defaults[this.RECENT_PROJECTS_FIELD] = {};
-        this.opts.defaults[this.OPEN_DEV_TOOLS_FIELD] = false;
-        this.opts.defaults[this.DOWNLOAD_PATH] = app.getPath("downloads");
+        this.#opts.configName = this.#MAIN_CONFIG_NAME;
 
-        this.data = this.opts.defaults;
-        this.settingsFile = path.join(this.data[this.STORAGEDIR_FIELD], this.opts.configName + ".json");
+        this.#opts.defaults[this.#USER_SETTINGS_FIELD] = {};
+        this.#opts.defaults[this.#PATCHID_FIELD] = null;
+        this.#opts.defaults[this.#PROJECTFILE_FIELD] = null;
+        this.#opts.defaults[this.#CURRENTPROJECTDIR_FIELD] = null;
+        this.#opts.defaults[this.#STORAGEDIR_FIELD] = storageDir;
+        this.#opts.defaults[this.#RECENT_PROJECTS_FIELD] = {};
+        this.#opts.defaults[this.#OP_DIRS_FIELD] = [];
+
+        this.#opts.defaults[this.#OPEN_DEV_TOOLS_FIELD] = false;
+        this.#opts.defaults[this.#DOWNLOAD_PATH] = app.getPath("downloads");
+
+        this.#data = this.#opts.defaults;
+        this.#settingsFile = path.join(this.#data[this.#STORAGEDIR_FIELD], this.#opts.configName + ".json");
 
         this.refresh();
         this.set("currentUser", this.getCurrentUser(), true);
@@ -56,15 +75,17 @@ class ElectronSettings
 
     refresh()
     {
-        if (this.data && this.data.hasOwnProperty(this.STORAGEDIR_FIELD) && this.data[this.STORAGEDIR_FIELD])
+        if (this.#data && this.#data.hasOwnProperty(this.#STORAGEDIR_FIELD) && this.#data[this.#STORAGEDIR_FIELD])
         {
-            const storedData = this._parseDataFile(this.settingsFile, this.opts.defaults);
-            Object.keys(this.opts.defaults).forEach((key) =>
+            const storedData = this._parseDataFile(this.#settingsFile, { ...this.#opts.defaults });
+            Object.keys(this.#opts.defaults).forEach((key) =>
             {
-                if (!storedData.hasOwnProperty(key)) storedData[key] = this.opts.defaults[key];
+                if (!storedData.hasOwnProperty(key)) storedData[key] = this.#opts.defaults[key];
             });
-            this.data = storedData;
-            this.data.paths = {
+            // temporary values are not in the file, keep them in memory
+            Object.assign(storedData, this.#temporaryData);
+            this.#data = storedData;
+            this.#data.paths = {
                 "home": app.getPath("home"),
                 "appData": app.getPath("appData"),
                 "userData": app.getPath("userData"),
@@ -81,41 +102,76 @@ class ElectronSettings
                 "logs": app.getPath("logs"),
                 "crashDumps": app.getPath("crashDumps")
             };
-            const dir = this.get(this.CURRENTPROJECTDIR_FIELD);
-            const id = this.get(this.PATCHID_FIELD);
+            const dir = this.get(this.#CURRENTPROJECTDIR_FIELD);
+            const id = this.get(this.#PATCHID_FIELD);
             if (dir && id)
             {
-                this.data.paths.assetPath = path.join(dir, "assets", id, "/");
-                this.data.paths.patchPath = path.join(dir, "/");
+                this.#data.paths.assetPath = path.join(dir, "assets", id, "/");
+                this.#data.paths.patchPath = path.join(dir, "/");
             }
             else if (id)
             {
-                this.data.paths.assetPath = path.join(".", "assets", id, "/");
+                this.#data.paths.assetPath = path.join(".", "assets", id, "/");
             }
             if (process.platform === "win32")
             {
-                this.data.paths.recent = app.getPath("recent");
+                this.#data.paths.recent = app.getPath("recent");
             }
         }
     }
 
-    get(key)
-    {
-        if (!this.data)
-        {
-            return null;
-        }
-        return this.data[key];
+    getAll() {
+        return this.#data;
     }
 
-    set(key, val, silent)
+    get(key, defaultValue = null)
     {
-        this.data[key] = val;
-        if (!silent)
+        if (!this.#data)
         {
-            writeFileSync(this.settingsFile, JSON.stringify(this.data));
-            this.refresh();
+            return defaultValue;
         }
+        return this.#data.hasOwnProperty(key) ? this.#data[key] : defaultValue;
+    }
+
+    /**
+     *
+     * @param {String} key
+     * @param {Any} val
+     * @param {Boolean} [temporary=false]
+     */
+    set(key, val, temporary = false)
+    {
+        this.#data[key] = val;
+        if (temporary)
+        {
+            // only this session, never written to the file
+            this.#temporaryData[key] = val;
+            return;
+        }
+        delete this.#temporaryData[key];
+
+        let storedData = this._parseDataFile(this.#settingsFile, null);
+        if (!storedData || typeof storedData !== "object") storedData = this.#getPersistentData();
+        storedData[key] = val;
+        delete storedData.paths;
+
+        writeFileSync(this.#settingsFile, JSON.stringify(storedData));
+        this.refresh();
+    }
+
+    /**
+     * settings from memory without temporary values and computed paths
+     *
+     * @returns {Object}
+     */
+    #getPersistentData()
+    {
+        const data = { ...this.#data };
+        Object.keys(this.#temporaryData).forEach((key) => {
+            delete data[key];
+        });
+        delete data.paths;
+        return data;
     }
 
     /**
@@ -124,7 +180,7 @@ class ElectronSettings
      */
     getCurrentProjectDir()
     {
-        let value = this.get(this.CURRENTPROJECTDIR_FIELD);
+        let value = this.get(this.#CURRENTPROJECTDIR_FIELD);
         if (value && !value.endsWith("/")) value = path.join(value, "/");
         return value;
     }
@@ -141,7 +197,6 @@ class ElectronSettings
         this._setCurrentProjectFile(projectFile);
         this._setCurrentProjectDir(projectDir);
         this._setCurrentProject(projectFile, newProject);
-        // this.addToRecentProjects(projectFile, newProject);
     }
 
     getCurrentUser()
@@ -161,20 +216,28 @@ class ElectronSettings
 
     setUserSettings(value)
     {
-        this.set(this.USER_SETTINGS_FIELD, value);
+        this.set(this.#USER_SETTINGS_FIELD, value);
     }
 
     getUserSetting(key, defaultValue = null)
     {
-        const userSettings = this.get(this.USER_SETTINGS_FIELD);
+        const userSettings = this.get(this.#USER_SETTINGS_FIELD);
         if (!userSettings) return defaultValue;
         if (!userSettings.hasOwnProperty(key)) return defaultValue;
         return userSettings[key];
     }
 
+    /**
+     *
+     * @returns {Object}
+     */
+    getUserSettings() {
+        return this.get(this.#USER_SETTINGS_FIELD, {})
+    }
+
     getCurrentProjectFile()
     {
-        const projectFile = this.get(this.PROJECTFILE_FIELD);
+        const projectFile = this.get(this.#PROJECTFILE_FIELD);
         if (projectFile && projectFile.endsWith(projectsUtil.CABLES_PROJECT_FILE_EXTENSION)) return projectFile;
         return null;
     }
@@ -193,7 +256,7 @@ class ElectronSettings
             }
             catch (e)
             {
-                this._log.info("failed to parse buildinfo from", coreFile);
+                this.#log.info("failed to parse buildinfo from", coreFile);
             }
         }
 
@@ -206,7 +269,7 @@ class ElectronSettings
             }
             catch (e)
             {
-                this._log.info("failed to parse buildinfo from", uiFile);
+                this.#log.info("failed to parse buildinfo from", uiFile);
             }
         }
 
@@ -219,7 +282,7 @@ class ElectronSettings
             }
             catch (e)
             {
-                this._log.info("failed to parse buildinfo from", electronFile);
+                this.#log.info("failed to parse buildinfo from", electronFile);
             }
         }
 
@@ -241,20 +304,20 @@ class ElectronSettings
         }
         catch (error)
         {
-            this._log.info("failed to find/parse usersettings, setting defaults", error);
+            this.#log.info("failed to find/parse usersettings, setting defaults", error);
             return defaults;
         }
     }
 
     getRecentProjects()
     {
-        const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        const recentProjects = this.get(this.#RECENT_PROJECTS_FIELD) || {};
         return Object.values(recentProjects);
     }
 
     getRecentProjectFile(projectId)
     {
-        const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        const recentProjects = this.get(this.#RECENT_PROJECTS_FIELD) || {};
         for (const file in recentProjects)
         {
             const recent = recentProjects[file];
@@ -269,12 +332,12 @@ class ElectronSettings
     setRecentProjects(recents)
     {
         if (!recents) recents = {};
-        return this.set(this.RECENT_PROJECTS_FIELD, recents);
+        return this.set(this.#RECENT_PROJECTS_FIELD, recents);
     }
 
     replaceInRecentProjects(oldFile, newFile, newProject)
     {
-        const recents = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        const recents = this.get(this.#RECENT_PROJECTS_FIELD) || {};
         recents[newFile] = this._toRecentProjectInfo(newProject);
         delete recents[oldFile];
         this._updateRecentProjects();
@@ -283,7 +346,7 @@ class ElectronSettings
 
     _updateRecentProjects()
     {
-        const recents = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        const recents = this.get(this.#RECENT_PROJECTS_FIELD) || {};
 
         let files = Object.keys(recents);
         files = files.filter((f) => { return fs.existsSync(f); });
@@ -310,7 +373,7 @@ class ElectronSettings
                 }
                 catch (e)
                 {
-                    this._log.info("failed to parse project file for recent projects, ignoring", key);
+                    this.#log.info("failed to parse project file for recent projects, ignoring", key);
                 }
             }
         }
@@ -319,7 +382,7 @@ class ElectronSettings
 
     _setCurrentProjectFile(value)
     {
-        this.set(this.PROJECTFILE_FIELD, value);
+        this.set(this.#PROJECTFILE_FIELD, value);
     }
 
     _toRecentProjectInfo(project)
@@ -338,7 +401,7 @@ class ElectronSettings
     _setCurrentProjectDir(value)
     {
         if (value) value = path.join(value, "/");
-        this.set(this.CURRENTPROJECTDIR_FIELD, value);
+        this.set(this.#CURRENTPROJECTDIR_FIELD, value);
     }
 
     _setCurrentProject(projectFile, project)
@@ -347,7 +410,7 @@ class ElectronSettings
         projectsUtil.invalidateProjectCaches();
         if (project)
         {
-            this.set(this.PATCHID_FIELD, project._id);
+            this.set(this.#PATCHID_FIELD, project._id);
         }
         if (projectFile && project)
         {
@@ -368,7 +431,7 @@ class ElectronSettings
     {
         if (!projectFile || !project) return;
         app.addRecentDocument(projectFile);
-        const recentProjects = this.get(this.RECENT_PROJECTS_FIELD) || {};
+        const recentProjects = this.get(this.#RECENT_PROJECTS_FIELD) || {};
         const recent = this._toRecentProjectInfo(project);
         if (recent) recentProjects[projectFile] = recent;
         this.setRecentProjects(recentProjects);
@@ -385,15 +448,151 @@ class ElectronSettings
         }
         catch (e)
         {
-            this._log.error("failed to parse project from projectfile", projectFile, e);
+            this.#log.error("failed to parse project from projectfile", projectFile, e);
         }
         return null;
     }
 
     getDownloadPath()
     {
-        const customDownloadPath = this.get(this.DOWNLOAD_PATH);
+        const customDownloadPath = this.get(this.#DOWNLOAD_PATH);
         return customDownloadPath || app.getPath("downloads");
+    }
+
+    /**
+     *
+     * @returns {Boolean}
+     */
+    getOpenDevTools() {
+        return !!this.get(this.#OPEN_DEV_TOOLS_FIELD, false);
+    }
+
+    /**
+     *
+     * @param {Boolean} value
+     */
+    setOpenDevTools(value) {
+        this.set(this.#OPEN_DEV_TOOLS_FIELD, !!value);
+    }
+
+    /**
+     *
+     * @returns {Object<String, Object>}
+     */
+    getWindowBounds() {
+        return this.get(this.#WINDOW_BOUNDS, {});
+    }
+
+    /**
+     *
+     * @param {Object<String, Object>} value
+     */
+    setWindowBounds(value) {
+        this.set(this.#WINDOW_BOUNDS, value)
+    }
+
+    /**
+     *
+     * @returns {Number}
+     */
+    getWindowZoomFactor() {
+        return this.get(this.#WINDOW_ZOOM_FACTOR, 1.0);
+    }
+
+    /**
+     *
+     * @param {Number} value
+     */
+    setWindowZoomFactor(value) {
+        this.set(this.#WINDOW_ZOOM_FACTOR, value)
+    }
+
+
+    /**
+     *
+     * @returns {String[]}
+     */
+    getOpDirs()
+    {
+        return this.get(this.#OP_DIRS_FIELD, []);
+    }
+
+    /**
+     *
+     * @param {String} opDir
+     * @param {Boolean} [atTop=false]
+     * @returns {String[]}
+     */
+    addOpDir(opDir, atTop = false)
+    {
+        let dirs = this.get(this.#OP_DIRS_FIELD, []);
+        if (atTop)
+        {
+            dirs.unshift(opDir);
+        }
+        else
+        {
+            dirs.push(opDir);
+        }
+        dirs = helper.uniqueArray(dirs);
+        this.set(this.#OP_DIRS_FIELD, dirs);
+        projectsUtil.invalidateProjectCaches(opDir, atTop);
+        return dirs;
+    }
+
+    /**
+     *
+     * @param {String} opDir
+     * @returns {String[]}
+     */
+    removeOpDir(opDir)
+    {
+        let dirs = this.get(this.#OP_DIRS_FIELD, []);
+        dirs = dirs.filter((dirName) =>
+        {
+            return dirName !== opDir;
+        });
+        dirs = helper.uniqueArray(dirs);
+        this.set(this.#OP_DIRS_FIELD, dirs);
+        projectsUtil.invalidateProjectCaches(opDir);
+        return dirs;
+    }
+
+    /**
+     *
+     * @param {String[]} orderedOpDirs
+     * @returns {String[]}
+     */
+    reorderOpDirs(orderedOpDirs)
+    {
+        let newOrder = [];
+        orderedOpDirs.forEach((opDir) =>
+        {
+            if (fs.existsSync(opDir)) newOrder.push(opDir);
+        });
+
+        // fixed dirs (patch, os, core) are not stored in the settings
+        let dirs = newOrder.filter((dir) => { return !this.isFixedOpDir(dir); });
+        dirs = helper.uniqueArray(dirs);
+        this.set(this.#OP_DIRS_FIELD, dirs);
+        projectsUtil.invalidateProjectCaches();
+        return dirs;
+    }
+
+    /**
+     *
+     * @param {String} dir
+     * @returns {Boolean}
+     */
+    isFixedOpDir(dir)
+    {
+        const projectDir = this.getCurrentProjectDir();
+        if (projectDir) if (dir === path.join(projectDir, "ops")) return true;
+        if (dir === "./ops") return true;
+        if (dir === cables.getOsOpsDir()) return true;
+        if (cables.isPackaged()) return false;
+        if (dir === cables.getExtensionOpsPath()) return true;
+        return dir === cables.getCoreOpsPath();
     }
 }
 export default new ElectronSettings(path.join(app.getPath("userData")));

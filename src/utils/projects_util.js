@@ -94,14 +94,13 @@ class ProjectsUtil extends SharedProjectsUtil
             opsDirs.push(currentDir);
         }
 
-        if (project && project.dirs && project.dirs.ops)
+        const settingsDirs = settings.getOpDirs();
+        settingsDirs.forEach((dir) =>
         {
-            project.dirs.ops.forEach((dir) =>
-            {
-                if (projectDir && !path.isAbsolute(dir)) dir = path.join(projectDir, dir);
-                opsDirs.push(dir);
-            });
-        }
+            if (projectDir && !path.isAbsolute(dir)) dir = path.join(projectDir, dir);
+            opsDirs.push(dir);
+        });
+
         if (includeOsDir)
         {
             const osOpsDir = cables.getOsOpsDir();
@@ -115,17 +114,6 @@ class ProjectsUtil extends SharedProjectsUtil
         opsDirs = helper.uniqueArray(opsDirs);
         if (reverse) return opsDirs.reverse();
         return opsDirs;
-    }
-
-    isFixedPositionOpDir(dir)
-    {
-        const projectDir = settings.getCurrentProjectDir();
-        if (projectDir) if (dir === path.join(projectDir, "ops")) return true;
-        if (dir === "./ops") return true;
-        if (dir === cables.getOsOpsDir()) return true;
-        if (cables.isPackaged()) return false;
-        if (dir === cables.getExtensionOpsPath()) return true;
-        return dir === cables.getCoreOpsPath();
     }
 
     getProjectFileName(project)
@@ -196,36 +184,6 @@ class ProjectsUtil extends SharedProjectsUtil
         return helper.uniqueArray(fileNames);
     }
 
-    addOpDir(project, opDir, atTop = false)
-    {
-        if (!project.dirs) project.dirs = {};
-        if (!project.dirs.ops) project.dirs.ops = [];
-        if (atTop)
-        {
-            project.dirs.ops.unshift(opDir);
-        }
-        else
-        {
-            project.dirs.ops.push(opDir);
-        }
-        project.dirs.ops = helper.uniqueArray(project.dirs.ops);
-        this.invalidateProjectCaches(opDir, atTop);
-        return project;
-    }
-
-    removeOpDir(project, opDir)
-    {
-        if (!project.dirs) project.dirs = {};
-        if (!project.dirs.ops) project.dirs.ops = [];
-        project.dirs.ops = project.dirs.ops.filter((dirName) =>
-        {
-            return dirName !== opDir;
-        });
-        project.dirs.ops = helper.uniqueArray(project.dirs.ops);
-        this.invalidateProjectCaches(opDir);
-        return project;
-    }
-
     getSummary(project)
     {
         if (!project) return {};
@@ -245,11 +203,25 @@ class ProjectsUtil extends SharedProjectsUtil
         const dirs = this.getProjectOpDirs(currentProject, true);
         const dirInfos = [];
 
+        // unsaved patches have no project dir
+        const currentProjectDir = settings.getCurrentProjectDir();
+        const projectDir = currentProjectDir ? path.join(currentProjectDir, "ops") : null;
+        const osDir = cables.getOsOpsDir();
+        const extDir = cables.getExtensionOpsPath();
+        const coreDir = cables.getCoreOpsPath();
+
         dirs.forEach((dir) =>
         {
+            let type = "user";
+            if (dir === projectDir) type = "patch";
+            if (dir === osDir) type = "os";
+            if (dir === extDir) type = "dev";
+            if (dir === coreDir) type = "dev";
+
             const dirInfo = {
                 "dir": dir,
-                "fixedPlace": this.isFixedPositionOpDir(dir)
+                "removeable": !settings.isFixedOpDir(dir),
+                "type": type
             };
             if (includeOps)
             {
@@ -270,23 +242,6 @@ class ProjectsUtil extends SharedProjectsUtil
             dirInfos.push(dirInfo);
         });
         return dirInfos;
-    }
-
-    reorderOpDirs(currentProject, order)
-    {
-        const currentProjectFile = settings.getCurrentProjectFile();
-        const newOrder = [];
-        order.forEach((opDir) =>
-        {
-            if (fs.existsSync(opDir)) newOrder.push(opDir);
-        });
-        if (!currentProject.dirs) currentProject.dirs = {};
-        if (!currentProject.dirs.ops) currentProject.dirs.ops = [];
-        currentProject.dirs.ops = newOrder.filter((dir) => { return !this.isFixedPositionOpDir(dir); });
-        currentProject.dirs.ops = helper.uniqueArray(currentProject.dirs.ops);
-        this.writeProjectToFile(currentProjectFile, currentProject);
-        this.invalidateProjectCaches();
-        return currentProject;
     }
 
     getAbsoluteOpDirFromHierarchy(opName)

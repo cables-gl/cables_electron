@@ -29,6 +29,9 @@ import PatchExportElectron from "../export/export_patch_electron.js";
 
 class ElectronApi
 {
+    // stored values of user settings that are only overridden for presentation mode
+    #presentationModeUserSettings = null;
+
     constructor()
     {
         this._log = logger;
@@ -50,18 +53,29 @@ class ElectronApi
 
         ipcMain.on("platformSettings", (event, _cmd, _data) =>
         {
-            settings.data.buildInfo = settings.getBuildInfo();
-            settings.data.openFullscreen = electronApp.openFullscreen();
-            settings.data.maximizeRenderer = electronApp.maximizeRenderer();
-            if (settings.data.openFullscreen || settings.data.maximizeRenderer)
+            settings.set("buildInfo", settings.getBuildInfo(), true);
+            settings.set("openFullscreen", electronApp.openFullscreen(), true);
+            settings.set("maximizeRenderer", electronApp.maximizeRenderer(), true);
+
+            if (settings.get("openFullscreen") || settings.get("maximizeRenderer"))
             {
                 this._log.info("skipping tour/hints in presentation mode");
-                settings.data.userSettings = settings.data.userSettings || {};
-                settings.data.userSettings.introCompleted = true;
-                settings.data.userSettings.showTipps = false;
-                settings.data.presentationMode = true;
+
+                // stored settings must not be changed by presentation mode
+                const userSettings = { ...settings.getUserSettings() };
+                if (!this.#presentationModeUserSettings)
+                {
+                    this.#presentationModeUserSettings = {
+                        "introCompleted": userSettings.introCompleted,
+                        "showTipps": userSettings.showTipps
+                    };
+                }
+                userSettings.introCompleted = true;
+                userSettings.showTipps = false;
+                settings.set("userSettings", userSettings, true);
+                settings.set("presentationMode", true, true);
             }
-            event.returnValue = settings.data;
+            event.returnValue = settings.getAll();
         });
 
         ipcMain.on("cablesConfig", (event, _cmd, _data) =>
@@ -891,7 +905,19 @@ class ElectronApi
     {
         if (data && data.settings)
         {
-            settings.setUserSettings(data.settings);
+            let userSettings = data.settings;
+            if (this.#presentationModeUserSettings)
+            {
+                // the editor got the presentation mode values, store the original ones instead
+                userSettings = { ...userSettings };
+                Object.keys(this.#presentationModeUserSettings).forEach((key) =>
+                {
+                    const storedValue = this.#presentationModeUserSettings[key];
+                    if (storedValue === undefined) delete userSettings[key];
+                    else userSettings[key] = storedValue;
+                });
+            }
+            settings.setUserSettings(userSettings);
         }
     }
 
@@ -1554,16 +1580,7 @@ class ElectronApi
         let selectedDir = "";
         if (opName) selectedDir = opsUtil.getOpAbsolutePath(opName);
         const currentProject = settings.getCurrentProject();
-        const dirInfos = projectsUtil.getOpDirs(currentProject);
-
-        dirInfos.forEach((dirInfo) =>
-        {
-            if (dirInfo.dir && selectedDir.startsWith(dirInfo.dir))
-            {
-                dirInfo.selected = true;
-                return;
-            }
-        });
+        const dirInfos = projectsUtil.getOpDirs(currentProject, true);
 
         const opDirs = {};
         if (currentProject && currentProject.ops)
@@ -1580,8 +1597,15 @@ class ElectronApi
             });
         }
 
+        let hasSelected = false;
         dirInfos.forEach((dirInfo) =>
         {
+            if (!hasSelected && dirInfo.dir && selectedDir.startsWith(dirInfo.dir))
+            {
+                dirInfo.selected = true;
+                hasSelected = true;
+            }
+
             if (!dirInfo.hasOwnProperty("numUsedOps")) dirInfo.numUsedOps = 0;
             for (const opDir in opDirs)
             {
@@ -1596,10 +1620,8 @@ class ElectronApi
         return this.success("OK", dirInfos);
     }
 
-    async addProjectOpDir()
+    async addOpDir()
     {
-        let currentProject = settings.getCurrentProject();
-        if (!currentProject) return this.error("Please save your project before adding op directories", null, "warn");
         const opDir = await electronApp.pickOpDirDialog();
         const response = [];
         if (opDir && fs.existsSync(opDir))
@@ -1612,8 +1634,8 @@ class ElectronApi
                 {
                     return this.error("Directory too large, more than " + maxFiles + " possible ops found.", null, "warn");
                 }
-                currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
-                projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
+                settings.addOpDir(opDir, true);
+                const currentProject = settings.getCurrentProject();
                 const opDirs = projectsUtil.getProjectOpDirs(currentProject, true);
                 opDirs.forEach((dir) =>
                 {
@@ -1632,22 +1654,17 @@ class ElectronApi
         return this.success("OK", response);
     }
 
-    async removeProjectOpDir(dirName)
+    async removeOpDir(dirName)
     {
+        if (dirName) settings.removeOpDir(path.resolve(dirName));
         let currentProject = settings.getCurrentProject();
-        if (!currentProject || !dirName) return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
-        dirName = path.resolve(dirName);
-        currentProject = projectsUtil.removeOpDir(currentProject, dirName);
-
-        projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 
-    saveProjectOpDirOrder(order)
+    saveOpDirOrder(order)
     {
+        settings.reorderOpDirs(order);
         let currentProject = settings.getCurrentProject();
-        if (!currentProject || !order) return this.error("NO_PROJECT", null, "warn");
-        currentProject = projectsUtil.reorderOpDirs(currentProject, order);
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
     }
 

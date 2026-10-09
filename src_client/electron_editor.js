@@ -303,11 +303,11 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_SELECT_DIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_COLLECT_ASSETS] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_COLLECT_OPS] = { "needsProjectFile": true };
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SAVE_PROJECT_OPDIRS_ORDER] = { "needsProjectFile": true };
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_REMOVE_PROJECT_OPDIR] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SAVE_OPDIRS_ORDER] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_REMOVE_OPDIR] = { };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH_HTML] = { "needsProjectFile": true };
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_PROJECT_OPDIR] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_OPDIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_GET_DESKTOP_CAPTURE_SOURCES] = {};
 
         Object.keys(this._talkerTopics).forEach((talkerTopic) =>
