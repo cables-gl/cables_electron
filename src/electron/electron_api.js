@@ -867,30 +867,9 @@ class ElectronApi
         const code = data.code;
         if (code)
         {
-            // const format = opsUtil.validateAndFormatOpCode(code);
-            // if (format.error)
-            // {
-            //     const {
-            //         line,
-            //         message
-            //     } = format.message;
-            //     return {
-            //         "error": {
-            //             line,
-            //             message
-            //         }
-            //     };
-            // }
-            // else
-            // {
-            //     return {
-            //         "opFullCode": format.formatedCode,
-            //         "success": true
-            //     };
-            // }
-
+            const format = opsUtil.validateAndFormatOpCode(code);
             return this.success("OK", {
-                "opFullCode": code
+                "opFullCode": format.formatedCode
             }, true);
         }
         else

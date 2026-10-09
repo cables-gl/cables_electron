@@ -2,16 +2,58 @@ import { utilProvider, SharedOpsUtil } from "cables-shared-api";
 import path from "path";
 import mkdirp from "mkdirp";
 import fs from "fs";
+import beautify from "js-beautify";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
+
+/**
+ * @typedef OpCodeFormatResult
+ * @param {String} formatedCode
+ * @param {Boolean} error
+ * @param {String} message
+*/
 
 class OpsUtil extends SharedOpsUtil
 {
 
+    /**
+     *
+     * @param {String} code
+     * @return {OpCodeFormatResult}
+     */
     validateAndFormatOpCode(code)
     {
+        let formatedCode = code;
+        try
+        {
+            formatedCode = beautify(code, {
+                "indent_size": "4",
+                "indent_char": " ",
+                "max_preserve_newlines": "2",
+                "preserve_newlines": true,
+                "keep_array_indentation": true,
+                "break_chained_methods": false,
+                "indent_scripts": "normal",
+                "brace_style": "expand,preserve-inline",
+                "space_before_conditional": true,
+                "unescape_strings": false,
+                "jslint_happy": false,
+                "end_with_newline": true,
+                "wrap_line_length": "0",
+                "indent_inner_html": false,
+                "comma_first": false,
+                "e4x": false,
+                "indent_empty_lines": true,
+                "space_after_anon_function": true,
+                "space_after_named_function": false
+            });
+        }
+        catch (e)
+        {
+            this._log.warn("failed to format op code, keeping original", e.message);
+        }
         return {
-            "formatedCode": this._helperUtil.removeTrailingSpaces(code),
+            "formatedCode": this._helperUtil.removeTrailingSpaces(formatedCode),
             "error": false,
             "message": null
         };
