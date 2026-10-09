@@ -1600,7 +1600,7 @@ class ElectronApi
                 const maxFiles = 200;
                 if (files && files.length > maxFiles)
                 {
-                    return this.error("Directory too large, more than " + maxFiles + " possible ops found.", null, "error");
+                    return this.error("Directory too large, more than " + maxFiles + " possible ops found.", null, "warn");
                 }
                 currentProject = projectsUtil.addOpDir(currentProject, opDir, true);
                 projectsUtil.writeProjectToFile(settings.getCurrentProjectFile(), currentProject);
@@ -1615,7 +1615,7 @@ class ElectronApi
             }
             catch (e)
             {
-                return this.error(e.message, null, "error");
+                return this.error(e.message, null, "warn");
             }
         }
 
