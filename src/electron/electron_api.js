@@ -867,30 +867,9 @@ class ElectronApi
         const code = data.code;
         if (code)
         {
-            // const format = opsUtil.validateAndFormatOpCode(code);
-            // if (format.error)
-            // {
-            //     const {
-            //         line,
-            //         message
-            //     } = format.message;
-            //     return {
-            //         "error": {
-            //             line,
-            //             message
-            //         }
-            //     };
-            // }
-            // else
-            // {
-            //     return {
-            //         "opFullCode": format.formatedCode,
-            //         "success": true
-            //     };
-            // }
-
+            const format = opsUtil.validateAndFormatOpCode(code);
             return this.success("OK", {
-                "opFullCode": code
+                "opFullCode": format.formatedCode
             }, true);
         }
         else
@@ -1099,7 +1078,8 @@ class ElectronApi
             if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
             targetDir = path.join(targetDir, opNamespace);
         }
-        const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir);
+        const license = settings.getUserSetting("opLicense", "MIT");
+        const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir, license);
         filesUtil.registerOpChangeListeners([opName]);
         projectsUtil.invalidateProjectCaches();
 
