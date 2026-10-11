@@ -644,7 +644,7 @@ class ElectronApi
 
     getOpCode(data)
     {
-        const opName = opsUtil.getOpNameById(data.opId || data.opname);
+        const opName = opsUtil.getOpNameById(data.opId || data.opname) || data.opname;
         if (opsUtil.opExists(opName))
         {
             filesUtil.registerOpChangeListeners([opName]);
