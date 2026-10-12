@@ -393,7 +393,8 @@ class ProjectsUtil extends SharedProjectsUtil
                                     {
                                         const opDoc = jsonfile.readFileSync(path.join(opDir, jsonPath));
                                         opDoc.name = opName;
-                                        ops[opName] = this._docsUtil.buildOpDocs(opName);
+                                        const builtOpDoc = this._docsUtil.buildOpDocs(opName);
+                                        if (builtOpDoc) ops[opName] = builtOpDoc;
                                     }
                                     catch (e)
                                     {
