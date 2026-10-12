@@ -1637,7 +1637,7 @@ class ElectronApi
                 }
                 settings.addOpDir(opDir, true);
                 const currentProject = settings.getCurrentProject();
-                const opDirs = projectsUtil.getProjectOpDirs(currentProject, true);
+                const opDirs = projectsUtil.getProjectOpDirs(currentProject);
                 opDirs.forEach((dir) =>
                 {
                     response.push({
@@ -1659,14 +1659,14 @@ class ElectronApi
     {
         if (dirName) settings.removeOpDir(path.resolve(dirName));
         let currentProject = settings.getCurrentProject();
-        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
+        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject));
     }
 
     saveOpDirOrder(order)
     {
         settings.reorderOpDirs(order);
         let currentProject = settings.getCurrentProject();
-        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject, true));
+        return this.success("OK", projectsUtil.getProjectOpDirs(currentProject));
     }
 
     setProjectName(options)

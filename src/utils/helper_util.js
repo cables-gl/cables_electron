@@ -85,7 +85,7 @@ class HelperUtil extends SharedHelperUtil
         };
 
         const currentProject = settings.getCurrentProject();
-        const projectOpDirs = projectsUtil.getProjectOpDirs(currentProject, true);
+        const projectOpDirs = projectsUtil.getProjectOpDirs(currentProject);
         projectOpDirs.forEach((projectOpDir) =>
         {
             const link = "<a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + projectOpDir + "'});\"><span class=\"icon icon-folder\"></span> " + projectOpDir + "</a>";

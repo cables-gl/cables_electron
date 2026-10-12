@@ -83,29 +83,24 @@ class ProjectsUtil extends SharedProjectsUtil
         return "untitled";
     }
 
-    getProjectOpDirs(project, includeOsDir = true, reverse = false, addLocalCoreIfPackaged = true)
+    getProjectOpDirs(project, reverse = false, addLocalCoreIfPackaged = true)
     {
         let opsDirs = [];
 
         const projectDir = settings.getCurrentProjectDir();
+
+        const settingsDirs = settings.getOpDirs();
+        settingsDirs.forEach((dir) =>
+        {
+            opsDirs.push(dir);
+        });
+
         if (projectDir)
         {
             const currentDir = path.join(projectDir, "ops");
             opsDirs.push(currentDir);
         }
 
-        const settingsDirs = settings.getOpDirs();
-        settingsDirs.forEach((dir) =>
-        {
-            if (projectDir && !path.isAbsolute(dir)) dir = path.join(projectDir, dir);
-            opsDirs.push(dir);
-        });
-
-        if (includeOsDir)
-        {
-            const osOpsDir = cables.getOsOpsDir();
-            if (osOpsDir) opsDirs.push(osOpsDir);
-        }
         if (addLocalCoreIfPackaged && !cables.isPackaged())
         {
             opsDirs.push(cables.getExtensionOpsPath());
@@ -200,13 +195,12 @@ class ProjectsUtil extends SharedProjectsUtil
 
     getOpDirs(currentProject, includeOps = false)
     {
-        const dirs = this.getProjectOpDirs(currentProject, true);
+        const dirs = this.getProjectOpDirs(currentProject);
         const dirInfos = [];
 
         // unsaved patches have no project dir
         const currentProjectDir = settings.getCurrentProjectDir();
         const projectDir = currentProjectDir ? path.join(currentProjectDir, "ops") : null;
-        const osDir = cables.getOsOpsDir();
         const extDir = cables.getExtensionOpsPath();
         const coreDir = cables.getCoreOpsPath();
 
@@ -214,7 +208,6 @@ class ProjectsUtil extends SharedProjectsUtil
         {
             let type = "user";
             if (dir === projectDir) type = "patch";
-            if (dir === osDir) type = "os";
             if (dir === extDir) type = "dev";
             if (dir === coreDir) type = "dev";
 

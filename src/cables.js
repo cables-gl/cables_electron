@@ -125,11 +125,6 @@ class CablesElectron extends Cables
         return opsPath;
     }
 
-    getOsOpsDir()
-    {
-        return path.join(app.getPath("userData"), "ops/");
-    }
-
     _createDirectories()
     {
         if (!fs.existsSync(this.getGenPath())) mkdirp.sync(this.getGenPath());

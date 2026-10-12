@@ -514,7 +514,7 @@ class ElectronSettings
      */
     getOpDirs()
     {
-        return this.get(this.#OP_DIRS_FIELD, []);
+        return this.get(this.#OP_DIRS_FIELD, []).filter((dir) => { return path.isAbsolute(dir) && !this.isFixedOpDir(dir); });
     }
 
     /**
@@ -525,6 +525,7 @@ class ElectronSettings
      */
     addOpDir(opDir, atTop = false)
     {
+        if (!opDir || !path.isAbsolute(opDir)) return this.getOpDirs();
         let dirs = this.get(this.#OP_DIRS_FIELD, []);
         if (atTop)
         {
@@ -568,11 +569,15 @@ class ElectronSettings
         let newOrder = [];
         orderedOpDirs.forEach((opDir) =>
         {
-            if (fs.existsSync(opDir)) newOrder.push(opDir);
+            if (path.isAbsolute(opDir) && fs.existsSync(opDir)) newOrder.push(opDir);
         });
 
-        // fixed dirs (patch, os, core) are not stored in the settings
         let dirs = newOrder.filter((dir) => { return !this.isFixedOpDir(dir); });
+        const storedDirs = this.get(this.#OP_DIRS_FIELD, []);
+        storedDirs.forEach((dir, i) =>
+        {
+            if (path.isAbsolute(dir) && this.isFixedOpDir(dir)) dirs.splice(i, 0, dir);
+        });
         dirs = helper.uniqueArray(dirs);
         this.set(this.#OP_DIRS_FIELD, dirs);
         projectsUtil.invalidateProjectCaches();
@@ -589,7 +594,6 @@ class ElectronSettings
         const projectDir = this.getCurrentProjectDir();
         if (projectDir) if (dir === path.join(projectDir, "ops")) return true;
         if (dir === "./ops") return true;
-        if (dir === cables.getOsOpsDir()) return true;
         if (cables.isPackaged()) return false;
         if (dir === cables.getExtensionOpsPath()) return true;
         return dir === cables.getCoreOpsPath();
