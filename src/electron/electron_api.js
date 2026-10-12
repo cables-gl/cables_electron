@@ -1155,12 +1155,19 @@ class ElectronApi
         return this.success("OK", cloned, true);
     }
 
+    /**
+     *
+     * @param {Object} data
+     * @param {String} data.opname oldName
+     * @param {String} data.name newName
+     * @returns
+     */
     opRename(data)
     {
         projectsUtil.invalidateProjectCaches();
 
-        const oldId = data.opname;
-        const newName = data.name;
+        const oldId = data.oldId;
+        const newName = data.newName;
         const oldName = opsUtil.getOpNameById(oldId);
 
         const currentUser = settings.getCurrentUser();
@@ -1191,7 +1198,7 @@ class ElectronApi
         if (Object.keys(renameResults.problems).length > 0)
         {
             result.problems = Object.values(renameResults.problems);
-            return this.success("PROBLEMS", result);
+            return this.error("PROBLEMS", result, "info");
         }
 
         const start = Date.now();
@@ -1234,11 +1241,18 @@ class ElectronApi
         }
     }
 
+    /**
+     *
+     * @param {Object} data
+     * @param {String} data.opId
+     * @returns {ApiResponse<OpDoc>}
+     */
     opDelete(data)
     {
-        const opName = opsUtil.getOpNameById(data.opId) || data.opName;
+        const opName = opsUtil.getOpNameById(data.opId);
+        const opDocs = doc.getDocForOp(opName);
         opsUtil.deleteOp(opName);
-        return this.success("OP_DELETED", { "opNames": [opName] });
+        return this.success("OP_DELETED", opDocs);
     }
 
     async _installOpDependencies(opName)
@@ -2036,7 +2050,7 @@ class ElectronApi
      * @param {String} msg
      * @param {Any} [data]
      * @param {Boolean} [raw]
-     * @returns {import("cables-shared-client").ApiResponse}
+     * @returns {ApiResponse}
      */
     success(msg, data = null, raw = false)
     {
