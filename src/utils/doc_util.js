@@ -331,21 +331,15 @@ class DocUtil extends SharedDocUtil
         return opDocs;
     }
 
-    makeReadable(opDocs)
+    /**
+     *
+     * @param {OpDoc[]} opDocs
+     * @param {Boolean} [includeOpDir=false]
+     * @returns {OpDoc[]}
+     */
+    makeReadable(opDocs, includeOpDir = false)
     {
-        const readables = super.makeReadable(opDocs);
-        readables.forEach((opDoc) =>
-        {
-            const relativeDir = opsUtil.getOpSourceDir(opDoc.name, true);
-            const absolute = opsUtil.getOpSourceDir(opDoc.name);
-            const opDir = absolute.replace(relativeDir, "");
-            if (opDir !== cables.getOpsPath())
-            {
-                opDoc.opDir = opDir;
-            }
-            opDoc.opDirFull = absolute;
-        });
-        return readables;
+        return super.makeReadable(opDocs, true);
     }
 
     updateOpDocs(opName)
