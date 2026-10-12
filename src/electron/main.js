@@ -60,6 +60,7 @@ class ElectronApp
         _cliHelpText += "  --force-igpu                           Force using integrated GPU when there are multiple GPUs available.\n";
         _cliHelpText += "  --dont-force-dgpu                      DO NOT force using discrete GPU when there are multiple GPUs available.\n";
         _cliHelpText += "  --patch=<path to .cables-file>         Open patch from .cables file on startup.\n";
+        _cliHelpText += "  --no-patch                             Start with an empty patch, even if 'open last saved patch' is enabled in preferences.\n";
         _cliHelpText += "  --screen=<name|\"external\"|number|x,y>  Open app on display by name, first external display, specified display number or xy-offset";
         _cliHelpText += "\n";
 
@@ -92,6 +93,8 @@ class ElectronApp
                 process.exit(1);
             }
         }
+
+        this._noPatch = app.commandLine.hasSwitch("no-patch");
 
         this.editorWindow = null;
 
@@ -306,16 +309,20 @@ class ElectronApp
     _createWindow()
     {
         let patchFile = null;
-        const openLast = settings.getUserSetting("openlastproject", false) || this._initialPatchFile;
         if (this._commandLinePatch)
         {
             patchFile = this._commandLinePatch;
         }
-        else if (openLast)
+        else if (this._initialPatchFile)
         {
-            const projectFile = this._initialPatchFile || settings.getCurrentProjectFile();
-            if (fs.existsSync(projectFile)) patchFile = projectFile;
+            // opened by double-clicking a patch file
+            if (fs.existsSync(this._initialPatchFile)) patchFile = this._initialPatchFile;
             this._initialPatchFile = null;
+        }
+        else if (!this._noPatch && settings.getUserSetting("openlastproject", false))
+        {
+            const projectFile = settings.getCurrentProjectFile();
+            if (projectFile && fs.existsSync(projectFile)) patchFile = projectFile;
         }
 
         const defaultWindowOptions = {
