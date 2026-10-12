@@ -1129,8 +1129,15 @@ class ElectronApi
         const oldName = opsUtil.getOpNameById(data.opname) || data.opname;
         const currentUser = settings.getCurrentUser();
         let targetDir = data.opTargetDir;
+        if (!targetDir && !cables.isPackaged())
+        {
+            // e.g. creating a new version: put the new op next to the old one
+            const oldOpDir = opsUtil.getOpSourceDir(oldName);
+            if (oldOpDir) targetDir = path.dirname(oldOpDir);
+        }
         if (!targetDir)
         {
+            // packaged app: core and extension ops are not writable, use the first op dir
             const projectOpDirs = projectsUtil.getOpDirs(settings.getCurrentProject());
             if (projectOpDirs && projectOpDirs.length > 0)
             {
