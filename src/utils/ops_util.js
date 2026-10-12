@@ -59,6 +59,18 @@ class OpsUtil extends SharedOpsUtil
         };
     }
 
+    /**
+     * @param {String} opName
+     * @param {Array} changes
+     * @param {Boolean} [update]
+     */
+    _writeOpChangelog(opName, changes, update = false)
+    {
+        // invalidate caches to be sure to write to newest ops
+        projectsUtil.invalidateProjectCaches();
+        super._writeOpChangelog(opName, changes, update);
+    }
+
     isCoreOp(opName)
     {
         if (!opName || this.isLocalOp(opName)) return false;
