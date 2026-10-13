@@ -120,7 +120,6 @@ class ElectronApi
                 }
                 catch (e)
                 {
-                    this._log.error(data.moduleName + " " + moduleDir);
                     event.returnValue = null;
                 }
             }
@@ -1158,8 +1157,8 @@ class ElectronApi
     /**
      *
      * @param {Object} data
-     * @param {String} data.opname oldName
-     * @param {String} data.name newName
+     * @param {String} data.oldId oldId
+     * @param {String} data.newName newName
      * @returns
      */
     opRename(data)
