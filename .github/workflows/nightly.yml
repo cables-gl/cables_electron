@@ -52,7 +52,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     needs: draft_release
     with:
-      runner: macos-14
+      runner: macos-15
       target: mac
       branch: develop
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
