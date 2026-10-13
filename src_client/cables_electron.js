@@ -111,16 +111,7 @@ export default class CablesElectron
                             }
                         };
                         cb();
-                        if (this.gui)
-                        {
-                            this.gui.on("uiloaded", () =>
-                            {
-                                if (this.editor && this.editor.config && !this.editor.config.patchFile) this.gui.setStateUnsaved();
-                            });
-
-                            this._registerCommands();
-
-                        }
+                        if (this.gui) this._registerCommands();
 
                         if (npmResult.error && npmResult.data && npmResult.msg !== "UNSAVED_PROJECT")
                         {
