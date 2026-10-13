@@ -92,35 +92,6 @@ class HelperUtil extends SharedHelperUtil
             reasons.push(link);
         });
 
-        if (net.isOnline())
-        {
-            const getOpEnvironmentDocs = promisify(opsUtil.getOpEnvironmentDocs.bind(opsUtil));
-            try
-            {
-                const envDocs = await getOpEnvironmentDocs(opIdentifier);
-                if (envDocs && envDocs.environments && envDocs.environments.length > 0)
-                {
-                    const otherEnvName = envDocs.environments[0];
-                    errorVars.editorLink = "https://" + otherEnvName + "/op/" + envDocs.name;
-                    errorVars.otherEnvButton = "Visit " + otherEnvName;
-
-                    text = "Could not find <a href=\"" + errorVars.editorLink + "\" target=\"_blank\">" + envDocs.name + "</a> in:";
-
-                    envDocs.environments.forEach((envName) =>
-                    {
-                        const opLink = "https://" + envName + "/op/" + envDocs.name;
-                        reasons.push("Found <a href=\"" + opLink + "\" target=\"_blank\">" + envDocs.name + "</a> on " + envName);
-                    });
-                }
-                errorVars.text = text;
-                errorVars.reasons = reasons;
-                errorVars.hideEnvButton = true;
-            }
-            catch (e)
-            {
-                // something went wrong, no internet or something, this is informational anyhow
-            }
-        }
         return errorVars;
     }
 }
