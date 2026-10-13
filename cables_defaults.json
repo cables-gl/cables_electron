@@ -18,6 +18,9 @@
         "corelibs": "../../cables/build/corelibs/",
         "js": "../dist/public/js/"
     },
+    "externalOps": [
+        { "repo": "pandrr/cables-mcp", "ref": "main" }
+    ],
     "logger": {
         "level": "info"
     },

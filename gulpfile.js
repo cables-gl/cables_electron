@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import jsonfile from "jsonfile";
 import webpackElectronConfig from "./webpack.electron.config.js";
 import helper from "./src/utils/buildhelper_util.js";
+import logger from "./src/utils/buildlogger_util.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 let config = helper.rebuildCablesJson(__dirname, process.env.npm_config_apiconfig, "../gen/electron/");
@@ -33,7 +34,7 @@ function _watch(done)
 
 function electronChanges(done)
 {
-    console.log("\x1b[33m Registered changes that require a restart of electron! \x1b[0m");
+    logger.info("\x1b[33mRegistered changes that require a restart of electron! \x1b[0m");
     done();
 }
 
@@ -94,12 +95,12 @@ function _libs_copy(done)
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
-        console.info("copying libs from", source, "to", target);
+        logger.info("Copying libs from", source, "to", target);
         return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
     }
     else
     {
-        console.error("FAILED to copy libs from", source, "to", target);
+        logger.error("FAILED to copy libs from", source, "to", target);
         done();
     }
 }
@@ -111,12 +112,12 @@ function _corelibs_copy(done)
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
-        console.info("copying corelibs from", source, "to", target);
+        logger.info("Copying corelibs from", source, "to", target);
         return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
     }
     else
     {
-        console.error("FAILED to copy corelibs from", source, "to", target);
+        logger.error("FAILED to copy corelibs from", source, "to", target);
         done();
     }
 }
@@ -128,12 +129,12 @@ function _core_ops_copy(done)
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
-        console.info("copying ops from", source, "to", target);
+        logger.info("Copying ops from", source, "to", target);
         return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
     }
     else
     {
-        console.error("FAILED to copy ops from", source, "to", target);
+        logger.error("FAILED to copy ops from", source, "to", target);
         done();
     }
 }
@@ -164,7 +165,7 @@ function _extension_ops_copy(done)
                     }
                     catch (e)
                     {
-                        console.warn("FAILED to parse extension config", configFile, "treating as public extension");
+                        logger.warn("FAILED to parse extension config", configFile, "treating as public extension");
                         extensionGlobs.push(path.join(source, extension, "**"));
                     }
                 }
@@ -174,14 +175,44 @@ function _extension_ops_copy(done)
                 }
             }
         });
-        console.info("copying public/unlisted extensions from", source, "to", target);
+        logger.info("Copying public/unlisted extensions from", source, "to", target);
         return gulp.src(extensionGlobs, { "encoding": false, "base": source }).pipe(gulp.dest(target));
     }
     else
     {
-        console.warn("FAILED to copy extensions from", source, "to", target);
+        logger.warn("FAILED to copy extensions from", source, "to", target);
         done();
     }
+}
+
+function _additional_ops_copy(done)
+{
+    // ops from other repos (externalOps in cables_defaults.json), checked out to ../gen/electron/external_ops/
+    const repos = distConfig.externalOps || [];
+    const opsPath = path.join("./src", distConfig.path.ops);
+    repos.forEach((repo) =>
+    {
+        const source = path.join("../gen/electron/external_ops/", path.basename(repo.repo));
+        if (!fs.existsSync(source))
+        {
+            logger.info("\x1b[33m" + repo.repo, "not found at", source, "skipping its ops\x1b[0m");
+            return;
+        }
+        fs.readdirSync(source).forEach((name) =>
+        {
+            if (!name.startsWith("Ops.") || !fs.statSync(path.join(source, name)).isDirectory()) return;
+            // copy ops into proper places
+            let target = path.join(opsPath, "base", name);
+            if (name.startsWith("Ops.Extension."))
+            {
+                const extension = name.split(".").slice(0, 3).join(".");
+                target = path.join(opsPath, "extensions", extension, name);
+            }
+            logger.info("Copying", name, "from", repo.repo, "to", target);
+            fs.cpSync(path.join(source, name), target, { "recursive": true, "filter": (src) => { return path.basename(src) !== "node_modules"; } });
+        });
+    });
+    done();
 }
 
 function _ui_copy(done)
@@ -191,12 +222,12 @@ function _ui_copy(done)
     mkdirp.sync(target);
     if (fs.existsSync(source))
     {
-        console.info("copying ui from", source, "to", target);
+        logger.info("Copying ui from", source, "to", target);
         return gulp.src(source + "**", { "encoding": false }).pipe(gulp.dest(target));
     }
     else
     {
-        console.error("FAILED to copy ui from", source, "to", target);
+        logger.error("FAILED to copy ui from", source, "to", target);
         done();
     }
 }
@@ -283,7 +314,9 @@ gulp.task("build", gulp.series(
         _extension_ops_copy,
         _libs_copy,
         _ui_copy
-    )
+    ),
+    // after all other ops
+    _additional_ops_copy
 ));
 
 gulp.task("analyze", gulp.series(_analyze, defaultSeries));
