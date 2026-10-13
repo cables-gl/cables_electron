@@ -338,18 +338,35 @@ class ElectronSettings
     replaceInRecentProjects(oldFile, newFile, newProject)
     {
         const recents = this.get(this.#RECENT_PROJECTS_FIELD) || {};
-        recents[newFile] = this._toRecentProjectInfo(newProject);
         delete recents[oldFile];
-        this._updateRecentProjects();
+        this._updateRecentProjects(newFile, newProject);
         return this.getRecentProjects();
     }
 
-    _updateRecentProjects()
+    /**
+     * @param {String} [projectFile] patch file to add or update
+     * @param {Object} [project] the patch in that file
+     */
+    _updateRecentProjects(projectFile = null, project = null)
     {
         const recents = this.get(this.#RECENT_PROJECTS_FIELD) || {};
+        if (projectFile && project) recents[projectFile] = this._toRecentProjectInfo(project);
 
+        const mtimes = {};
         let files = Object.keys(recents);
-        files = files.filter((f) => { return fs.existsSync(f); });
+        files = files.filter((f) =>
+        {
+            try
+            {
+                mtimes[f] = fs.statSync(f).mtimeMs;
+                return true;
+            }
+            catch (e)
+            {
+                return false;
+            }
+        });
+        if (recents[projectFile]) recents[projectFile].fileMtime = mtimes[projectFile];
         files = files.sort((f1, f2) =>
         {
             const p1 = recents[f1];
@@ -366,10 +383,15 @@ class ElectronSettings
             const key = files[i];
             if (key)
             {
+                if (recents[key] && recents[key].fileMtime === mtimes[key])
+                {
+                    newRecents[key] = recents[key];
+                    continue;
+                }
                 try
                 {
-                    const project = jsonfile.readFileSync(key);
-                    newRecents[key] = this._toRecentProjectInfo(project);
+                    const recentProject = jsonfile.readFileSync(key);
+                    newRecents[key] = this._toRecentProjectInfo(recentProject, mtimes[key]);
                 }
                 catch (e)
                 {
@@ -385,7 +407,12 @@ class ElectronSettings
         this.set(this.#PROJECTFILE_FIELD, value);
     }
 
-    _toRecentProjectInfo(project)
+    /**
+     * @param {Object} project
+     * @param {Number|null} [fileMtime]
+     * @returns {Object|null}
+     */
+    _toRecentProjectInfo(project, fileMtime = null)
     {
         if (!project) return null;
         return {
@@ -394,9 +421,11 @@ class ElectronSettings
             "name": project.name,
             "screenshot": project.screenshot,
             "created": project.created,
-            "updated": project.updated
+            "updated": project.updated,
+            "fileMtime": fileMtime
         };
     }
+
 
     _setCurrentProjectDir(value)
     {
@@ -431,11 +460,7 @@ class ElectronSettings
     {
         if (!projectFile || !project) return;
         app.addRecentDocument(projectFile);
-        const recentProjects = this.get(this.#RECENT_PROJECTS_FIELD) || {};
-        const recent = this._toRecentProjectInfo(project);
-        if (recent) recentProjects[projectFile] = recent;
-        this.setRecentProjects(recentProjects);
-        this._updateRecentProjects();
+        this._updateRecentProjects(projectFile, project);
     }
 
     getProjectFromFile(projectFile)

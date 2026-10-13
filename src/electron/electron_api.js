@@ -603,7 +603,7 @@ class ElectronApi
         {
             const errorVars = await helper.getOpNotFoundErrorVars(opIdentifier);
             doc.removeOpNameFromLookup(opName);
-            return this.error("OP_NOT_FOUND", errorVars, "warn");
+            return this.error("Could not find op: " + opName, errorVars, "warn");
         }
     }
 
@@ -1858,12 +1858,12 @@ class ElectronApi
             }
             else
             {
-                return this.error("OP_NOT_FOUND");
+                return this.error("Could not find op: " + opName);
             }
         }
         else
         {
-            return this.error("OP_NOT_FOUND");
+            return this.error("Could not find op: " + opName);
         }
     }
 
