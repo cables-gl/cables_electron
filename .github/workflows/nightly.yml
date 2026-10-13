@@ -7,7 +7,6 @@ jobs:
   draft_release:
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
       date: ${{ steps.date.outputs.date }}
     steps:
       - name: Get current date
@@ -31,8 +30,7 @@ jobs:
       branch: develop
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
-      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-      upload_url: ${{ needs.draft_release.outputs.upload_url }}
+      tag_name: v${{ needs.draft_release.outputs.date }}-nightly
       release_type: "prerelease"
     secrets: inherit
   win:
@@ -44,8 +42,7 @@ jobs:
       branch: develop
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
-      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-      upload_url: ${{ needs.draft_release.outputs.upload_url }}
+      tag_name: v${{ needs.draft_release.outputs.date }}-nightly
       release_type: "prerelease"
     secrets: inherit
   mac:
@@ -57,8 +54,7 @@ jobs:
       branch: develop
       build_version: ${{ needs.draft_release.outputs.date }}-nightly
       exe_name: cables-${{ needs.draft_release.outputs.date }}-nightly
-      tag_name: ${{ needs.draft_release.outputs.date }}-nightly
-      upload_url: ${{ needs.draft_release.outputs.upload_url }}
+      tag_name: v${{ needs.draft_release.outputs.date }}-nightly
       release_type: "prerelease"
       sign: true
       notarize: true

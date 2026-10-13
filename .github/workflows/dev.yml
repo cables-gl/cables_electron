@@ -26,8 +26,6 @@ on:
 jobs:
   draft_release:
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: create release
         id: create_release
@@ -49,7 +47,6 @@ jobs:
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: v${{ inputs.version }}
-      upload_url: ${{ needs.draft_release.outputs.upload_url }}
     secrets: inherit
   win:
     if: ${{ inputs.win == true || inputs.win == 'true' }}
@@ -62,7 +59,6 @@ jobs:
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
       tag_name: v${{ inputs.version }}
-      upload_url: ${{ needs.draft_release.outputs.upload_url }}
     secrets: inherit
   mac:
     if: ${{ inputs.mac == true || inputs.mac == 'true' }}
@@ -74,8 +70,7 @@ jobs:
       branch: ${{ github.ref_name }}
       build_version: ${{ inputs.version }}
       exe_name: cables-${{ inputs.version }}
-      tag_name: ${{ inputs.version }}
-      upload_url: ${{ needs.draft_release.outputs.upload_url }}
+      tag_name: v${{ inputs.version }}
       sign: true
       notarize: true
     secrets: inherit

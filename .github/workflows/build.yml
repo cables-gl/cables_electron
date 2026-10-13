@@ -19,12 +19,8 @@ on:
         description: "basename of the final executable"
         required: true
         type: string
-      upload_url:
-        description: "upload url for release assets"
-        required: false
-        type: string
       tag_name:
-        description: "the tag of the current release"
+        description: "the tag of the current release, e.g. v1.2.3"
         required: true
         type: string
       build_version:
@@ -50,27 +46,27 @@ jobs:
     runs-on: ${{ inputs.runner }}
     steps:
       - name: checkout cables_dev
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: "cables-gl/cables_dev"
           ref: ${{ inputs.branch }}
           token: ${{ secrets.standalone_token }}
       - name: checkout cables
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: "cables-gl/cables"
           ref: ${{ inputs.branch }}
           token: ${{ secrets.standalone_token }}
           path: "cables/"
       - name: checkout cables ui
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: "cables-gl/cables_ui"
           ref: ${{ inputs.branch }}
           token: ${{ secrets.standalone_token }}
           path: "cables_ui/"
       - name: checkout cables electron
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: "cables_electron/"
           ref: ${{ inputs.branch }}
@@ -86,7 +82,7 @@ jobs:
         env:
           TOKEN: ${{ secrets.standalone_token }}
       - name: install nodejs
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
           check-latest: false
@@ -124,17 +120,6 @@ jobs:
           NODE_EXE: ${{ steps.local_node.outputs.NODE_EXE }}
           NPM_EXE: ${{ steps.local_node.outputs.NPM_EXE }}
           RELEASE_TYPE: ${{ inputs.release_type }}
-      - name: delete non-static runtime linux AppImage
-        if: inputs.target == 'linux'
-        uses: mknejp/delete-release-assets@v1
-        continue-on-error: true
-        with:
-          token: ${{ github.token }}
-          tag: ${{ inputs.tag_name }}
-          fail-if-no-assets: false
-          fail-if-no-release: false
-          assets: |
-            ${{ inputs.exe_name }}-linux-x64.AppImage
       - name: convert x64 AppImage to static runtime
         if: inputs.target == 'linux'
         run: |
@@ -149,25 +134,25 @@ jobs:
           rm -rf ./squashfs-root ./appimagetool.AppImage
       - name: upload static runtime AppImage
         if: inputs.target == 'linux'
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+        shell: bash
+        run: gh release upload "$TAG" "${{ runner.temp }}/${{ inputs.exe_name }}-linux-x64.AppImage" --clobber --repo "$REPO"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ inputs.upload_url }}
-          asset_path: ${{ runner.temp }}/${{ inputs.exe_name }}-linux-x64.AppImage
-          asset_name: ${{ inputs.exe_name }}-linux-x64.AppImage
-          asset_content_type: application/octet-stream
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag_name }}
+          REPO: ${{ github.repository }}
       - name: delete auto-update files
-        uses: mknejp/delete-release-assets@v1
         continue-on-error: true
-        with:
-          token: ${{ github.token }}
-          tag: v${{ inputs.tag_name }}
-          fail-if-no-assets: false
-          fail-if-no-release: false
-          assets: |
-            *.yml
-            *.blockmap
-            v${{ inputs.tag_name }}.zip
-            v${{ inputs.tag_name }}.tar.gz
+        shell: bash
+        run: |
+          gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' | while read -r name; do
+            case "$name" in
+              *.yml|*.blockmap|"$TAG.zip"|"$TAG.tar.gz")
+                echo "deleting $name"
+                gh release delete-asset "$TAG" "$name" --yes --repo "$REPO"
+                ;;
+            esac
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag_name }}
+          REPO: ${{ github.repository }}
