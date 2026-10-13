@@ -65,14 +65,21 @@ class DocUtil extends SharedDocUtil
         this._validatingOpCaches = true;
         try
         {
+            // timings to find out what takes long when rebuilding the caches, see main.log
+            const timeStart = performance.now();
             // get this before reading any ops, changes during the rebuild will then be picked up by the next check
             const signature = this.getOpDocsSignature();
+            const timeSignature = performance.now();
             const cachedSignature = (cachedOpDocs && cachedOpDocs.signature) || {};
             const buildChanged = cachedSignature.build !== signature.build;
 
             const changedCoreOps = this._getChangedOpNames(buildChanged ? null : cachedSignature.core, signature.core);
             const changedExtensionOps = this._getChangedOpNames(buildChanged ? null : cachedSignature.extensions, signature.extensions);
-            if (!pendingRebuild && changedCoreOps.length === 0 && changedExtensionOps.length === 0) return false;
+            if (!pendingRebuild && changedCoreOps.length === 0 && changedExtensionOps.length === 0)
+            {
+                if (force) this._log.info("op caches up to date, signature took", Math.round(timeSignature - timeStart), "ms");
+                return false;
+            }
 
             const changedOps = changedCoreOps.concat(changedExtensionOps);
             if (changedOps.length > 0) this._log.info("rebuilding caches for", changedOps.length, "ops that changed on disk");
@@ -103,8 +110,11 @@ class DocUtil extends SharedDocUtil
                 }
             }
 
+            const timeCore = performance.now();
             const collections = helper.uniqueArray(changedExtensionOps.map((opName) => { return opsUtil.getCollectionName(opName); }));
             collections.forEach((collectionName) => { opsUtil.buildOpDocsForCollection(collectionName); });
+            const timeExtensions = performance.now();
+            this._log.info("op cache timings: signature", Math.round(timeSignature - timeStart), "ms, core", Math.round(timeCore - timeSignature), "ms (" + changedCoreOps.length + " ops), extensions", Math.round(timeExtensions - timeCore), "ms (" + collections.length + " collections, " + changedExtensionOps.length + " ops)");
 
             // rebuilding core already stored the new signature
             if (!rebuildCore && cachedOpDocs) this._writeCache(this.OP_DOCS_CACHE, cachedOpDocs);

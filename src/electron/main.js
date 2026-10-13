@@ -100,6 +100,8 @@ class ElectronApp
 
         settings.set("uiLoadStart", this.#log.loadStart, true);
         this.#log.logStartup("started electron");
+        // performance.now() counts from the start of the process, includes starting electron and loading all modules
+        this.#log.info("startup timings: logger loaded after", Math.round(this.#log.loadStart), "ms, main process ready after", Math.round(performance.now()), "ms");
 
         process.on("uncaughtException", (error) =>
         {
@@ -448,8 +450,14 @@ class ElectronApp
 
         this.editorWindow.setBounds(windowBounds);
 
+        this.#log.info("startup timings: window created after", Math.round(performance.now()), "ms");
+        this.editorWindow.once("ready-to-show", () => { this.#log.info("startup timings: window ready to show after", Math.round(performance.now()), "ms"); });
+        this.editorWindow.webContents.once("did-finish-load", () => { this.#log.info("startup timings: index.html loaded after", Math.round(performance.now()), "ms"); });
+
+        const timeCaches = performance.now();
         this._initCaches(() =>
         {
+            this.#log.info("startup timings: op caches took", Math.round(performance.now() - timeCaches), "ms, done after", Math.round(performance.now()), "ms");
             this._registerListeners();
             this._registerShortcuts();
             this.openPatch(patchFile, false).then(() =>
@@ -1251,9 +1259,11 @@ class ElectronApp
     rebuildOpDocCache(cb)
     {
         this.#log.logStartup("rebuilding op caches");
+        const timeStart = performance.now();
 
         doc.rebuildOpCaches((docs) =>
         {
+            this.#log.info("op cache timings: full rebuild of core and extensions", Math.round(performance.now() - timeStart), "ms");
             try
             {
                 this.rebuildProjectCaches();
