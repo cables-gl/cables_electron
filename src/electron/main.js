@@ -193,12 +193,55 @@ class ElectronApp
             "packages": []
         };
 
+        if (!this._hasMissingNpmPackages(targetDir, packageNames))
+        {
+            const installed = {
+                "stdout": "already installed",
+                "packages": [],
+                "targetDir": targetDir
+            };
+            if (opName) installed.opName = opName;
+            return installed;
+        }
+
         const result = await this._installNpmPackages(packageNames, targetDir, opName);
         if (opName) result.opName = opName;
 
         if (fs.existsSync(path.join(targetDir, "package.json"))) fs.rmSync(path.join(targetDir, "package.json"));
         if (fs.existsSync(path.join(targetDir, "package-lock.json"))) fs.rmSync(path.join(targetDir, "package-lock.json"));
         return result;
+    }
+
+    /**
+     * @param {String} targetDir
+     * @param {String[]} packageNames
+     * @returns {Boolean}
+     */
+    _hasMissingNpmPackages(targetDir, packageNames)
+    {
+        return packageNames.some((packageName) =>
+        {
+            // urls, git repos and local paths can not be checked, always install these
+            if (packageName.includes(":") || packageName.startsWith(".") || packageName.startsWith("/")) return true;
+            const versionIndex = packageName.indexOf("@", 1);
+            const name = versionIndex > 0 ? packageName.substring(0, versionIndex) : packageName;
+            const version = versionIndex > 0 ? packageName.substring(versionIndex + 1) : null;
+            const packageJson = path.join(targetDir, "node_modules", name, "package.json");
+            if (!fs.existsSync(packageJson)) return true;
+            // exact versions have to match, ranges and tags are fine with any installed version
+            if (version && /^\d+\.\d+\.\d+$/.test(version))
+            {
+                try
+                {
+                    return jsonfile.readFileSync(packageJson).version !== version;
+                }
+                catch (e)
+                {
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     async addOpPackage(targetDir, opPackageLocation)
@@ -734,7 +777,6 @@ class ElectronApp
                 this._resetZoom();
                 // rebuilds the caches of all ops that changed on disk, needs to be done before the editor loads
                 if (rebuildCache) doc.validateOpCaches(true);
-                this.rebuildProjectCaches();
                 this.updateTitle();
                 await this.editorWindow.loadFile("index.html");
             }
