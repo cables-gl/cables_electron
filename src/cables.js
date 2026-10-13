@@ -87,7 +87,8 @@ class CablesElectron extends Cables
 
     getGenPath()
     {
-        const genPath = path.join(this._writeableDirName, "gen/");
+        // keep seperate caches for packaged and local
+        const genPath = path.join(this._writeableDirName, app.isPackaged ? "gen/" : "gen_dev/");
         if (!fs.existsSync(genPath)) mkdirp.sync(genPath);
         return genPath;
     }
