@@ -45,7 +45,7 @@ class ElectronEndpoint
         const partition = settings.SESSION_PARTITION;
         const ses = session.fromPartition(partition, { "cache": false });
 
-        ses.protocol.handle("file", async (request) =>
+        this._handleProtocol(ses, "file", async (request) =>
         {
             let urlFile = request.url;
             let absoluteFile = helper.fileURLToPath(urlFile, false);
@@ -133,7 +133,7 @@ class ElectronEndpoint
             }
         });
 
-        ses.protocol.handle("cables", async (request) =>
+        this._handleProtocol(ses, "cables", async (request) =>
         {
             const url = new URL(request.url);
             const urlPath = url.pathname;
@@ -392,6 +392,44 @@ class ElectronEndpoint
         });
     }
 
+    /**
+     *
+     * @param {Electron.Session} ses
+     * @param {String} scheme
+     * @param {Function} handler
+     */
+    _handleProtocol(ses, scheme, handler)
+    {
+        ses.protocol.handle(scheme, async (request) =>
+        {
+            let response = null;
+            try
+            {
+                response = await handler(request);
+            }
+            catch (e)
+            {
+                // e.g. net::ERR_FILE_NOT_FOUND from net.fetch, log which file was requested
+                this._log.warn("failed to load", request.url, e.message);
+                response = new Response(null, { "status": 404 });
+            }
+            if (!response || !response.headers) return response;
+            const noCache = "no-cache, no-store, must-revalidate";
+            try
+            {
+                response.headers.set("Cache-Control", noCache);
+                return response;
+            }
+            catch (e)
+            {
+                // headers of fetched responses can be immutable, copy them
+                const headers = new Headers(response.headers);
+                headers.set("Cache-Control", noCache);
+                return new Response(response.body, { "status": response.status, "statusText": response.statusText, "headers": headers });
+            }
+        });
+    }
+
     apiGetCoreOpsCode(req)
     {
         const preview = req.query.preview;
@@ -576,7 +614,7 @@ class ElectronEndpoint
 
                 // large mp4 and range headers cause problems somehow...
                 // https://github.com/laurent22/joplin/blob/e607a7376f8403082e87087a3e07f37cb2e1ce76/packages/app-desktop/utils/customProtocols/handleCustomProtocols.ts#L106
-                const rangeHeader = request.headers.get("Range");
+                const rangeHeader = request.headers.get("Range") || "";
                 const startByte = Number(rangeHeader.match(/(\d+)-/)?.[1] || "0");
                 const endByte = Number(rangeHeader.match(/-(\d+)/)?.[1] || stats.size - 1);
                 response.headers.append("Content-Range", "bytes 0-" + stats.size + "/" + (stats.size + 1));

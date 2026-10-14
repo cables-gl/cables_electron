@@ -296,7 +296,7 @@ class ProjectsUtil extends SharedProjectsUtil
     _getProjectOpDirsSignature()
     {
         // core and extensions are taken care of by docsutil
-        const opDirs = this.getProjectOpDirs(settings.getCurrentProject(), true, false, false);
+        const opDirs = this.getProjectOpDirs(settings.getCurrentProject(), false, false);
         const signature = [];
         opDirs.forEach((opDir) => { this._addDirToSignature(opDir, signature); });
         return crypto
@@ -361,7 +361,7 @@ class ProjectsUtil extends SharedProjectsUtil
             const coreOpDocs = this._docsUtil.getOpDocs();
             this._signProjectCaches();
             const ops = {};
-            const opDirs = this.getProjectOpDirs(project, true, false, false);
+            const opDirs = this.getProjectOpDirs(project, false, false);
 
             opDirs.forEach((opDir) =>
             {

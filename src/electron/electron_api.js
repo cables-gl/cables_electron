@@ -1926,8 +1926,7 @@ class ElectronApi
 
         if (fileName && opId && dataUrl && opName)
         {
-            let data = atob(dataUrl.split(",")[1]);
-            let buffer = Buffer.from(data);
+            const buffer = Buffer.from(dataUrl.split(",")[1], "base64");
 
             const newFileName = opsUtil.addOpDependencyFile(opName, fileName, buffer);
             if (newFileName)
