@@ -41,6 +41,13 @@ export default class HtmlExportElectron extends SharedExportService
         };
     }
 
+    _isOpCodeIncluded(opName)
+    {
+        const opDir = this._opsUtil.getOpSourceDir(opName);
+        if (!opDir) return false;
+        return !opDir.startsWith(this._cables.getCoreOpsPath()) && !opDir.startsWith(this._cables.getExtensionOpsPath());
+    }
+
     doExport(project, cb)
     {
         this.collectFiles(
