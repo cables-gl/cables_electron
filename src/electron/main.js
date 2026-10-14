@@ -487,7 +487,7 @@ class ElectronApp
         properties = properties || ["createDirectory"];
         return dialog.showSaveDialog(this.editorWindow, {
             "title": title,
-            "defaultPath": defaultPath,
+            "defaultPath": this._getDialogDefaultPath(defaultPath),
             "properties": properties,
             "filters": filters
         }).then((result) =>
@@ -519,7 +519,7 @@ class ElectronApp
         let properties = ["createDirectory"];
         return dialog.showSaveDialog(this.editorWindow, {
             "title": title,
-            "defaultPath": exportName,
+            "defaultPath": this._getDialogDefaultPath(exportName),
             "properties": properties,
             "filters": [{
                 "name": "cables project",
@@ -548,7 +548,7 @@ class ElectronApp
         return dialog.showSaveDialog(this.editorWindow, {
             "title": title,
             "properties": properties,
-            "defaultPath": defaultPath,
+            "defaultPath": this._getDialogDefaultPath(defaultPath),
             "filters": [{
                 "name": "cables project",
                 "extensions": extensions
@@ -851,13 +851,27 @@ class ElectronApp
         this.editorWindow.setTitle(title);
     }
 
+    /**
+     *
+     * @param {String} [defaultPath]
+     * @returns {String}
+     */
+    _getDialogDefaultPath(defaultPath = null)
+    {
+        const patchDir = settings.getCurrentProjectDir();
+        if (!defaultPath) return patchDir;
+        if (path.isAbsolute(defaultPath) || !patchDir) return defaultPath;
+        return path.join(patchDir, defaultPath);
+    }
+
     _dirDialog(title, properties, defaultPath = null)
     {
         const options = {
             "title": title,
             "properties": properties
         };
-        if (defaultPath) options.defaultPath = defaultPath;
+        const dialogPath = this._getDialogDefaultPath(defaultPath);
+        if (dialogPath) options.defaultPath = dialogPath;
         return dialog.showOpenDialog(this.editorWindow, options).then((result) =>
         {
             if (!result.canceled)
@@ -888,7 +902,8 @@ class ElectronApp
             "properties": properties,
             "filters": filters || []
         };
-        if (filePath) options.defaultPath = filePath;
+        const dialogPath = this._getDialogDefaultPath(filePath);
+        if (dialogPath) options.defaultPath = dialogPath;
         return dialog.showOpenDialog(this.editorWindow, options).then((result) =>
         {
             if (!result.canceled)
@@ -911,6 +926,7 @@ class ElectronApp
         return dialog.showOpenDialog(this.editorWindow, {
             "title": title,
             "properties": properties,
+            "defaultPath": this._getDialogDefaultPath(),
             "filters": [{
                 "name": "cables project",
                 "extensions": extensions
