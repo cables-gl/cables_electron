@@ -854,12 +854,12 @@ class ElectronApp
     /**
      *
      * @param {String} [defaultPath]
-     * @returns {String}
+     * @returns {String|undefined}
      */
     _getDialogDefaultPath(defaultPath = null)
     {
         const patchDir = settings.getCurrentProjectDir();
-        if (!defaultPath) return patchDir;
+        if (!defaultPath) return patchDir || undefined;
         if (path.isAbsolute(defaultPath) || !patchDir) return defaultPath;
         return path.join(patchDir, defaultPath);
     }
