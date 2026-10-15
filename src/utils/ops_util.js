@@ -8,9 +8,9 @@ import filesUtil from "./files_util.js";
 
 /**
  * @typedef OpCodeFormatResult
- * @param {String} formatedCode
- * @param {Boolean} error
- * @param {String} message
+ * @property {String} formatedCode
+ * @property {Boolean} error
+ * @property {String} message
 */
 
 class OpsUtil extends SharedOpsUtil

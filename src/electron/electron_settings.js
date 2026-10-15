@@ -14,8 +14,8 @@ import electronApp from "./main.js";
 
 /**
  * @typedef ElectronSettings
- * @param {any} defaults
- * @param {string} configName
+ * @property {any} defaults
+ * @property {string} configName
  *
  */
 class ElectronSettings
