@@ -73,14 +73,12 @@ class HelperUtil extends SharedHelperUtil
 
     async getOpNotFoundErrorVars(opIdentifier)
     {
-        let text = "Could not find op with id " + opIdentifier + " in:";
+        let text = "Could not find op with id " + opIdentifier;
         const footer = "Try adding other directories via 'Manage Op Directories' after loading the patch.";
-        const reasons = [];
+        const ops = [];
 
         const errorVars = {
-            "text": text,
             "footer": footer,
-            "reasons": reasons,
             "hideEnvButton": true
         };
 
@@ -88,10 +86,22 @@ class HelperUtil extends SharedHelperUtil
         const projectOpDirs = projectsUtil.getProjectOpDirs(currentProject);
         projectOpDirs.forEach((projectOpDir) =>
         {
-            const link = "<a onclick=\"CABLESUILOADER.talkerAPI.send('openDir', { 'dir': '" + projectOpDir + "'});\"><span class=\"icon icon-folder\"></span> " + projectOpDir + "</a>";
-            reasons.push(link);
+            ops.push({
+                "env": "electron",
+                "name": opIdentifier,
+                "opDir": projectOpDir
+            });
         });
-
+        if (ops.length)
+        {
+            text += " in:";
+        }
+        else
+        {
+            text += ".";
+        }
+        errorVars.text = text;
+        errorVars.ops = ops;
         return errorVars;
     }
 }
