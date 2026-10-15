@@ -299,6 +299,29 @@ class DocUtil extends SharedDocUtil
         Object.keys(pendingWrites).forEach((cache) => { super._writeCache(cache, pendingWrites[cache]); });
     }
 
+    /**
+     *
+     * @param {String} opName
+     * @returns {OpDoc}
+     */
+    buildOpDocs(opName)
+    {
+        const docObj = super.buildOpDocs(opName);
+        if (docObj && docObj.hasPublicRepo)
+        {
+            const opDir = this._opsUtil.getOpAbsolutePath(opName);
+            let isPublicRepoOp = false;
+            if (opDir)
+            {
+                const opDirPrefix = path.join(opDir, path.sep);
+                if (opDirPrefix.startsWith(path.join(cables.getCoreOpsPath(), path.sep))) isPublicRepoOp = true;
+                if (opDirPrefix.startsWith(path.join(cables.getExtensionOpsPath(), path.sep))) isPublicRepoOp = true;
+            }
+            if (!isPublicRepoOp) delete docObj.hasPublicRepo;
+        }
+        return docObj;
+    }
+
     getDocForOp(opName, docs = null)
     {
         if (!opName) return null;
