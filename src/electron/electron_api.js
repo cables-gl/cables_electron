@@ -1601,14 +1601,14 @@ class ElectronApi
         let hasSelected = false;
         dirInfos.forEach((dirInfo) =>
         {
-            if (!hasSelected && dirInfo.dir && selectedDir.startsWith(dirInfo.dir))
+            const dirPrefix = path.join(dirInfo.dir, path.sep);
+            if (!hasSelected && selectedDir && path.join(selectedDir, path.sep).startsWith(dirPrefix))
             {
                 dirInfo.selected = true;
                 hasSelected = true;
             }
 
             if (!dirInfo.hasOwnProperty("numUsedOps")) dirInfo.numUsedOps = 0;
-            const dirPrefix = path.join(dirInfo.dir, path.sep);
             for (const opDir in opDirs)
             {
                 if (path.join(opDir, path.sep).startsWith(dirPrefix))
