@@ -130,9 +130,20 @@ export default class CablesElectron
                             });
                         }
 
-                        if (this.gui)
+                        if (this.gui && this._settings.maximizeRenderer)
                         {
-                            if (this._settings.maximizeRenderer) this.gui.toggleMaximized();
+                            const gui = this.gui;
+                            if (gui.finishedLoading())
+                            {
+                                gui.cycleCanvasSize(gui.canvasManager.CANVASMODE_MAXIMIZED);
+                            }
+                            else
+                            {
+                                gui.on("uiloaded", () =>
+                                {
+                                    gui.cycleCanvasSize(gui.canvasManager.CANVASMODE_MAXIMIZED);
+                                });
+                            }
                         }
                     });
                 };
