@@ -797,7 +797,6 @@ class ElectronApp
      */
     async openPatch(patchFile, rebuildCache = true)
     {
-        this._unsavedContentLeave = false;
         const open = async () =>
         {
             try
@@ -812,6 +811,7 @@ class ElectronApp
             }
             catch (e)
             {
+                this._unsavedContentLeave = false;
                 let message = "Failed to load patch!";
                 if (e.name === "OpDirsError") message = "Failed to load op directory!";
                 this._handleError(message, e);
