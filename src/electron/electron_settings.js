@@ -591,17 +591,16 @@ class ElectronSettings
      */
     reorderOpDirs(orderedOpDirs)
     {
-        let newOrder = [];
+        let dirs = [];
         orderedOpDirs.forEach((opDir) =>
         {
-            if (path.isAbsolute(opDir) && fs.existsSync(opDir)) newOrder.push(opDir);
+            if (path.isAbsolute(opDir) && !this.isFixedOpDir(opDir)) dirs.push(opDir);
         });
 
-        let dirs = newOrder.filter((dir) => { return !this.isFixedOpDir(dir); });
-        const storedDirs = this.get(this.#OP_DIRS_FIELD, []);
-        storedDirs.forEach((dir, i) =>
+        const storedDirs = this.getOpDirs();
+        storedDirs.forEach((dir) =>
         {
-            if (path.isAbsolute(dir) && this.isFixedOpDir(dir)) dirs.splice(i, 0, dir);
+            if (!dirs.includes(dir)) dirs.push(dir);
         });
         dirs = helper.uniqueArray(dirs);
         this.set(this.#OP_DIRS_FIELD, dirs);

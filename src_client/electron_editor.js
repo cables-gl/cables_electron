@@ -248,7 +248,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_GET_OP_INFO] = {};
         this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_GET_PATCH] = {};
-        this._talkerTopics[TalkerAPI.CMD_CREATE_NEW_PATCH] = { };
+        this._talkerTopics[TalkerAPI.CMD_CREATE_NEW_PATCH] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_PROJECT_OPS] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_ALL_OPDOCS] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_OP_DOCS] = {};
@@ -268,7 +268,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_SAVE_OP_ATTACHMENT] = {};
         this._talkerTopics[TalkerAPI.CMD_SET_ICON_SAVED] = {};
         this._talkerTopics[TalkerAPI.CMD_SET_ICON_UNSAVED] = {};
-        this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH_SCREENSHOT] = { };
+        this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH_SCREENSHOT] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_FILE_LIST] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_FILE_DETAILS] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_LIBRARYFILE_DETAILS] = {};
@@ -276,10 +276,10 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_GET_RECENT_PATCHES] = {};
         this._talkerTopics[TalkerAPI.CMD_CREATE_OP] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_UPDATE_OP] = {};
-        this._talkerTopics[TalkerAPI.CMD_CLONE_OP] = { };
-        this._talkerTopics[TalkerAPI.CMD_SAVE_OP_LAYOUT] = { };
+        this._talkerTopics[TalkerAPI.CMD_CLONE_OP] = {};
+        this._talkerTopics[TalkerAPI.CMD_SAVE_OP_LAYOUT] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_ASSET_USAGE_COUNT] = {};
-        this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH_AS] = { };
+        this._talkerTopics[TalkerAPI.CMD_SAVE_PATCH_AS] = {};
         this._talkerTopics[TalkerAPI.CMD_GOTO_PATCH] = {};
         this._talkerTopics[TalkerAPI.CMD_SET_PATCH_NAME] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_GET_COLLECTION_OPDOCS] = {};
@@ -293,9 +293,9 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_SEND_ERROR_REPORT] = {};
         this._talkerTopics[TalkerAPI.CMD_ADD_OP_CREDITS] = {};
         this._talkerTopics[TalkerAPI.CMD_REMOVE_OP_CREDITS] = {};
-        this._talkerTopics[TalkerAPI.CMD_SET_OP_SUMMARY] = { };
+        this._talkerTopics[TalkerAPI.CMD_SET_OP_SUMMARY] = {};
 
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_RENAME_OP] = { };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_RENAME_OP] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_DELETE_OP] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_GET_PROJECT_OPDIRS] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_OPEN_DIR] = {};
@@ -303,8 +303,8 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_SELECT_DIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_COLLECT_ASSETS] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_COLLECT_OPS] = { "needsProjectFile": true };
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SAVE_OPDIRS_ORDER] = { "needsProjectFile": true };
-        this._talkerTopics[TalkerAPI.CMD_ELECTRON_REMOVE_OPDIR] = { };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SAVE_OPDIRS_ORDER] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_REMOVE_OPDIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH_HTML] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_OPDIR] = {};
