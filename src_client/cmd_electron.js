@@ -22,7 +22,7 @@ class CmdElectron
                 "icon": "file"
             },
             {
-                "cmd": "collect ops into patch dir",
+                "cmd": "Collect ops into patch dir",
                 "category": "ops",
                 "func": CmdElectron.collectOps,
                 "icon": "op"
@@ -34,7 +34,7 @@ class CmdElectron
                 "icon": "folder"
             },
             {
-                "cmd": "copy op dir to clipboard",
+                "cmd": "Copy op dir to clipboard",
                 "category": "ops",
                 "func": CmdElectron.copyOpDirToClipboard,
                 "icon": "op"
@@ -66,6 +66,11 @@ class CmdElectron
         let closeTimeout = 2000;
         cablesElectron.editor.api("collectAssets", {}, (_err, r) =>
         {
+            if (_err && _err.msg === "CANCELLED")
+            {
+                cablesElectron.gui.endModalLoading();
+                return;
+            }
             if (!_err)
             {
                 const ops = cablesElectron.gui.corePatch().ops;
@@ -116,7 +121,7 @@ class CmdElectron
             {
                 loadingModal.setTask("failed to copy assets");
                 loadingModal.setTask("---");
-                loadingModal.setTask(_err);
+                loadingModal.setTask(_err.msg || _err);
                 closeTimeout = 5000;
             }
             setTimeout(() => { cablesElectron.gui.endModalLoading(); }, closeTimeout);
@@ -129,6 +134,11 @@ class CmdElectron
         let closeTimeout = 2000;
         cablesElectron.editor.api("collectOps", { }, (_err, r) =>
         {
+            if (_err && _err.msg === "CANCELLED")
+            {
+                cablesElectron.gui.endModalLoading();
+                return;
+            }
             if (!_err && r && r.data)
             {
                 const oldNames = Object.keys(r.data);
@@ -150,7 +160,7 @@ class CmdElectron
             {
                 loadingModal.setTask("failed to copy ops");
                 loadingModal.setTask("---");
-                loadingModal.setTask(_err);
+                loadingModal.setTask((_err && _err.msg) || _err || "no response");
                 closeTimeout = 5000;
                 setTimeout(() => { cablesElectron.gui.endModalLoading(); }, closeTimeout);
             }
