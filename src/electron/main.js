@@ -41,6 +41,9 @@ class ElectronApp
     #log = logger;
     #selectedSerialPort = null;
     #listSerialPortsOnly = false;
+    #lastDialogDir = null;
+    #lastDialogProjectDir = null;
+    #lastOpDirParent = null;
 
     #defaultWindowBounds = {
         "width": 1920,
@@ -494,6 +497,7 @@ class ElectronApp
         {
             if (!result.canceled)
             {
+                this._rememberDialogPath(result.filePath);
                 return result.filePath;
             }
             else
@@ -529,6 +533,7 @@ class ElectronApp
         {
             if (!result.canceled)
             {
+                this._rememberDialogPath(result.filePath);
                 return result.filePath;
             }
             else
@@ -548,7 +553,7 @@ class ElectronApp
         return dialog.showSaveDialog(this.editorWindow, {
             "title": title,
             "properties": properties,
-            "defaultPath": this._getDialogDefaultPath(defaultPath),
+            "defaultPath": this._getDialogDefaultPath(defaultPath, false),
             "filters": [{
                 "name": "cables project",
                 "extensions": extensions
@@ -581,9 +586,26 @@ class ElectronApp
 
     async pickOpDirDialog()
     {
-        const title = "select op directory";
-        const properties = ["openDirectory", "createDirectory"];
-        return this._dirDialog(title, properties);
+        const options = {
+            "title": "select op directory",
+            "properties": ["openDirectory", "createDirectory"]
+        };
+        // use last op dir, otherwise patch folder
+        let dialogPath = this._getDialogDefaultPath(null, false);
+        if (this.#lastOpDirParent && fs.existsSync(this.#lastOpDirParent)) dialogPath = this.#lastOpDirParent;
+        if (dialogPath) options.defaultPath = dialogPath;
+        return dialog.showOpenDialog(this.editorWindow, options).then((result) =>
+        {
+            if (!result.canceled)
+            {
+                this.#lastOpDirParent = path.dirname(result.filePaths[0]);
+                return result.filePaths[0];
+            }
+            else
+            {
+                return null;
+            }
+        });
     }
 
     _createMenu()
@@ -854,14 +876,42 @@ class ElectronApp
     /**
      *
      * @param {String} [defaultPath]
+     * @param {Boolean} [useLastDir=true]
      * @returns {String|undefined}
      */
-    _getDialogDefaultPath(defaultPath = null)
+    _getDialogDefaultPath(defaultPath = null, useLastDir = true)
     {
         const patchDir = settings.getCurrentProjectDir();
-        if (!defaultPath) return patchDir || undefined;
-        if (path.isAbsolute(defaultPath) || !patchDir) return defaultPath;
-        return path.join(patchDir, defaultPath);
+
+        if (defaultPath && path.isAbsolute(defaultPath))
+        {
+            if (fs.existsSync(defaultPath)) return defaultPath;
+            if (fs.existsSync(path.dirname(defaultPath))) return defaultPath;
+            defaultPath = path.basename(defaultPath);
+        }
+        else if (defaultPath && patchDir && fs.existsSync(path.join(patchDir, defaultPath)))
+        {
+            return path.join(patchDir, defaultPath);
+        }
+
+        let dir = patchDir;
+        if (useLastDir && this.#lastDialogDir && this.#lastDialogProjectDir === patchDir && fs.existsSync(this.#lastDialogDir)) dir = this.#lastDialogDir;
+
+        if (!dir) return defaultPath || undefined;
+        if (!defaultPath) return dir;
+        return path.join(dir, defaultPath);
+    }
+
+    /**
+     *
+     * @param {String} pickedPath
+     * @param {Boolean} [isDir]
+     */
+    _rememberDialogPath(pickedPath, isDir = false)
+    {
+        if (!pickedPath) return;
+        this.#lastDialogDir = isDir ? pickedPath : path.dirname(pickedPath);
+        this.#lastDialogProjectDir = settings.getCurrentProjectDir();
     }
 
     _dirDialog(title, properties, defaultPath = null)
@@ -876,6 +926,7 @@ class ElectronApp
         {
             if (!result.canceled)
             {
+                this._rememberDialogPath(result.filePaths[0], true);
                 return result.filePaths[0];
             }
             else
@@ -908,6 +959,7 @@ class ElectronApp
         {
             if (!result.canceled)
             {
+                this._rememberDialogPath(result.filePaths[0]);
                 if (!asUrl) return result.filePaths[0];
                 return helper.pathToFileURL(result.filePaths[0]);
             }
@@ -926,7 +978,7 @@ class ElectronApp
         return dialog.showOpenDialog(this.editorWindow, {
             "title": title,
             "properties": properties,
-            "defaultPath": this._getDialogDefaultPath(),
+            "defaultPath": this._getDialogDefaultPath(null, false),
             "filters": [{
                 "name": "cables project",
                 "extensions": extensions
