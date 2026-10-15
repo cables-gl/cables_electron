@@ -1573,7 +1573,7 @@ class ElectronApi
      *
      * @param {Object} data
      * @param {String} data.opName
-     * @returns
+     * @returns {ApiResponse<import("cables-shared-client").OpDirInfo[]>}
      */
     getProjectOpDirs(data)
     {
@@ -1608,12 +1608,12 @@ class ElectronApi
             }
 
             if (!dirInfo.hasOwnProperty("numUsedOps")) dirInfo.numUsedOps = 0;
+            const dirPrefix = path.join(dirInfo.dir, path.sep);
             for (const opDir in opDirs)
             {
-                const count = opDirs[opDir];
-                if (opDir.startsWith(dirInfo.dir))
+                if (path.join(opDir, path.sep).startsWith(dirPrefix))
                 {
-                    dirInfo.numUsedOps += count;
+                    dirInfo.numUsedOps++;
                 }
             }
         });

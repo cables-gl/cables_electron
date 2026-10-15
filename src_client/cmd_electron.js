@@ -16,7 +16,7 @@ class CmdElectron
                 "icon": "command"
             },
             {
-                "cmd": "collect assets into patch dir",
+                "cmd": "Collect assets into patch dir",
                 "category": "patch",
                 "func": CmdElectron.collectAssets,
                 "icon": "file"
@@ -28,7 +28,7 @@ class CmdElectron
                 "icon": "op"
             },
             {
-                "cmd": "manage op directories",
+                "cmd": "Manage op directories",
                 "category": "ops",
                 "func": CmdElectron.manageOpDirs,
                 "icon": "folder"
@@ -40,19 +40,19 @@ class CmdElectron
                 "icon": "op"
             },
             {
-                "cmd": "open op directory",
+                "cmd": "Open op directory",
                 "category": "ops",
                 "func": CmdElectron.openOpDir,
                 "icon": "folder"
             },
             {
-                "cmd": "open project directory",
+                "cmd": "Open project directory",
                 "category": "patch",
                 "func": CmdElectron.openProjectDir,
                 "icon": "folder"
             },
             {
-                "cmd": "open os file manager",
+                "cmd": "Open os file manager",
                 "category": "cables",
                 "func": CmdElectron.openFileManager,
                 "icon": "folder"

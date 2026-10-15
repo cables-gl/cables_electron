@@ -193,6 +193,12 @@ class ProjectsUtil extends SharedProjectsUtil
         };
     }
 
+    /**
+     *
+     * @param {Project} currentProject
+     * @param {Boolean} [includeOps=false]
+     * @returns {import("cables-shared-client").OpDirInfo[]}
+     */
     getOpDirs(currentProject, includeOps = false)
     {
         const dirs = this.getProjectOpDirs(currentProject);
@@ -213,7 +219,7 @@ class ProjectsUtil extends SharedProjectsUtil
 
             const dirInfo = {
                 "dir": dir,
-                "removeable": !settings.isFixedOpDir(dir),
+                "removable": !settings.isFixedOpDir(dir),
                 "type": type
             };
             if (includeOps)
@@ -229,6 +235,7 @@ class ProjectsUtil extends SharedProjectsUtil
                     }
                 });
                 const opNames = Object.keys(opLocations);
+                dirInfo.opNames = opNames;
                 dirInfo.opLocations = opLocations;
                 dirInfo.numOps = opNames.length;
             }
