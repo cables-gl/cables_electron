@@ -170,7 +170,7 @@ class OpsUtil extends SharedOpsUtil
                 }
                 else
                 {
-                    if (opDoc.oldVersion) opDoc.hidden = true;
+                    opDoc.hidden = !!opDoc.oldVersion || this.isDeprecated(opDoc.name);
                 }
 
                 if (forceUpdate || !opDoc.hasOwnProperty("versions")) opDoc.versions = this.getOpVersionNumbers(opDoc.name, versionDocs);
