@@ -88,6 +88,11 @@ class ElectronApi
             event.returnValue = this._log.startUpLog || [];
         });
 
+        ipcMain.on("getOpProblems", (event, _cmd, _data) =>
+        {
+            event.returnValue = doc.opProblems || [];
+        });
+
         ipcMain.on("getOpDir", (event, data) =>
         {
             let opName = opsUtil.getOpNameById(data.opId);

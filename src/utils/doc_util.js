@@ -23,6 +23,8 @@ class DocUtil extends SharedDocUtil
         this._pendingCacheWrites = null;
         this.OP_HISTORY_CACHE = "op-history";
         this._opHistory = null;
+        this.opProblems = [];
+        this.onOpProblem = null;
 
         // do not lose cache changes that are still waiting to be written
         app.on("will-quit", () => { this.flushCaches(); });
@@ -428,7 +430,7 @@ class DocUtil extends SharedDocUtil
      */
     markOpDeletedInHistory(opName)
     {
-        const cachedLookup = this.getCachedOpLookup(false);
+        const cachedLookup = this.getCachedLookup();
         const opId = cachedLookup && cachedLookup.names ? cachedLookup.names[opName] : null;
         if (!opId) return;
         this._addToOpHistory(opId, opName, true);
@@ -440,9 +442,41 @@ class DocUtil extends SharedDocUtil
 
     addOpsToLookup(ops, clearFiles = false, haltOnError = false)
     {
-        super.addOpsToLookup(ops, clearFiles, haltOnError);
-        if (!ops) return;
-        ops.forEach((op) =>
+        // duplicate ids can come from old exports or ops that were moved to core, the shared code keeps the op that is already in the lookup
+        const cachedLookup = this.getCachedLookup();
+        if (ops && !clearFiles && cachedLookup && cachedLookup.ids)
+        {
+            ops.forEach((op) =>
+            {
+                if (!op || !op.id || !op.name) return;
+                const usedName = cachedLookup.ids[op.id];
+                if (!usedName || usedName === op.name) return;
+                if (this.opProblems.some((problem) => { return problem.id === op.id; })) return;
+                const usedOpDocs = this.getOpDocsFromFile(usedName);
+                if (!usedOpDocs || usedOpDocs.id !== op.id) return;
+
+                const problem = {
+                    "id": op.id,
+                    "name": op.name,
+                    "dir": opsUtil.getOpAbsolutePath(op.name),
+                    "usedName": usedName,
+                    "usedDir": opsUtil.getOpAbsolutePath(usedName)
+                };
+                problem.message = "DUPLICATE OP ID: " + op.id + ": \n - ignoring " + op.name + " from " + problem.dir + "\n - using " + usedName + " from " + problem.usedDir;
+                this.opProblems.push(problem);
+                this._log.warn(problem.message);
+                if (this.onOpProblem) this.onOpProblem(problem);
+            });
+        }
+        // the shared code ignores these anyway, but logs an error every time
+        let lookupOps = ops;
+        if (ops && this.opProblems.length > 0)
+        {
+            lookupOps = ops.filter((op) => { return !op || !this.opProblems.some((problem) => { return problem.id === op.id && problem.name === op.name; }); });
+        }
+        super.addOpsToLookup(lookupOps, clearFiles, haltOnError);
+        if (!lookupOps) return;
+        lookupOps.forEach((op) =>
         {
             if (op) this._addToOpHistory(op.id, op.name);
         });
@@ -450,7 +484,7 @@ class DocUtil extends SharedDocUtil
 
     replaceOpNameInLookup(oldName, newName)
     {
-        const cachedLookup = this.getCachedOpLookup(false);
+        const cachedLookup = this.getCachedLookup();
         const opId = cachedLookup && cachedLookup.names ? cachedLookup.names[oldName] : null;
         super.replaceOpNameInLookup(oldName, newName);
         this._addToOpHistory(opId, newName);
@@ -458,7 +492,7 @@ class DocUtil extends SharedDocUtil
 
     removeOpNamesFromLookup(opNames)
     {
-        const cachedLookup = this.getCachedOpLookup(false);
+        const cachedLookup = this.getCachedLookup();
         if (opNames && cachedLookup && cachedLookup.names && cachedLookup.ids)
         {
             opNames.forEach((opName) =>

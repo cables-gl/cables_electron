@@ -49,7 +49,9 @@ class Logger extends SharedLogger
     {
         const level = "error";
         if (this._logLevelFiltered(level)) return;
-        log.error("[" + this._initiator + "]", "ERROR", args.join(" "), this._getContext(args));
+        const context = this._getContext(args);
+        const hasError = args.some((arg) => { return arg && typeof arg === "object" && arg.hasOwnProperty("stack"); });
+        log.error("[" + this._initiator + "]", "ERROR", args.join(" "), hasError ? context : (context && context.clean) || "");
     }
 
     endTime(...args)

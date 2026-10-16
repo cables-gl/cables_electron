@@ -1,4 +1,4 @@
-import { Logger } from "cables-shared-client";
+import { Logger, TalkerAPI } from "cables-shared-client";
 import ElectronEditor from "./electron_editor.js";
 import { CmdElectron } from "./cmd_electron.js";
 import { CmdElectronOverridesPatch } from "./cmd_electron_overrides_patch.js";
@@ -145,6 +145,24 @@ export default class CablesElectron
                                 });
                             }
                         }
+
+                        if (this.gui)
+                        {
+                            const gui = this.gui;
+                            if (gui.finishedLoading())
+                            {
+                                const opProblems = this._electron.ipcRenderer.sendSync("getOpProblems") || [];
+                                opProblems.forEach((problem) => { this._showOpProblem(problem); });
+                            }
+                            else
+                            {
+                                gui.on("uiloaded", () =>
+                                {
+                                    const opProblems = this._electron.ipcRenderer.sendSync("getOpProblems") || [];
+                                    opProblems.forEach((problem) => { this._showOpProblem(problem); });
+                                });
+                            }
+                        }
                     });
                 };
                 if (this._settings.uiLoadStart) this.editorWindow.CABLESUILOADER.uiLoadStart -= this._settings.uiLoadStart;
@@ -158,6 +176,11 @@ export default class CablesElectron
                 }
             }
         };
+
+        this._electron.ipcRenderer.on("opProblem", (_event, problem) =>
+        {
+            if (this.gui && this.gui.finishedLoading()) this._showOpProblem(problem);
+        });
 
         window.addEventListener("message", (event) =>
         {
@@ -286,6 +309,13 @@ export default class CablesElectron
                 }
             }
         }
+    }
+
+    _showOpProblem(problem)
+    {
+        if (!problem || !this.editor) return;
+        this.editor.editor(TalkerAPI.CMD_UI_LOG_ERROR, { "level": "warn", "message": problem.message });
+        this.editor.editor(TalkerAPI.CMD_UI_NOTIFY_ERROR, { "msg": "Duplicate op id:", "text": problem.usedName + ", see log for details", "options": { "timeout": 0, "closeable": true } });
     }
 
     _logStartup(title)

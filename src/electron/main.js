@@ -1111,6 +1111,11 @@ class ElectronApp
 
     _registerListeners()
     {
+        doc.onOpProblem = (problem) =>
+        {
+            if (this.editorWindow) this.editorWindow.webContents.send("opProblem", problem);
+        };
+
         app.on("browser-window-created", (e, win) =>
         {
             win.setMenuBarVisibility(false);
