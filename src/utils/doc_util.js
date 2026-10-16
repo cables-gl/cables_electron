@@ -304,7 +304,34 @@ class DocUtil extends SharedDocUtil
             {
                 try
                 {
-                    jsonfile.writeFileSync(cables.getOpHistoryFile(), pendingWrites[cache]);
+                    // dev and packaged app share the file and might run at the same time, keep entries the other one added
+                    const history = pendingWrites[cache];
+                    let fileHistory = {};
+                    try
+                    {
+                        fileHistory = jsonfile.readFileSync(cables.getOpHistoryFile());
+                    }
+                    catch (e) {}
+                    Object.keys(fileHistory).forEach((opId) =>
+                    {
+                        const fileEntry = fileHistory[opId];
+                        const entry = history[opId];
+                        if (!entry)
+                        {
+                            history[opId] = fileEntry;
+                            return;
+                        }
+                        const fileNames = [fileEntry.name].concat(fileEntry.oldNames || []);
+                        fileNames.forEach((fileName) =>
+                        {
+                            if (!fileName || fileName === entry.name) return;
+                            entry.oldNames = entry.oldNames || [];
+                            if (!entry.oldNames.includes(fileName)) entry.oldNames.push(fileName);
+                        });
+                        if (!entry.dir && fileEntry.dir) entry.dir = fileEntry.dir;
+                    });
+                    this._opHistory = history;
+                    jsonfile.writeFileSync(cables.getOpHistoryFile(), history);
                 }
                 catch (e)
                 {
@@ -362,7 +389,7 @@ class DocUtil extends SharedDocUtil
 
         if (removed)
         {
-            if (!entry.removed)
+            if (entry.dir && !entry.removed)
             {
                 entry.removed = Date.now();
                 changed = true;
@@ -371,7 +398,11 @@ class DocUtil extends SharedDocUtil
         else
         {
             const opDir = opsUtil.getOpAbsolutePath(opName);
-            if (opDir && entry.dir !== opDir && fs.existsSync(opDir))
+            const opDirPrefix = opDir ? path.join(opDir, path.sep) : "";
+            let isCoreOrExtension = false;
+            if (opDirPrefix.startsWith(path.join(cables.getCoreOpsPath(), path.sep))) isCoreOrExtension = true;
+            if (opDirPrefix.startsWith(path.join(cables.getExtensionOpsPath(), path.sep))) isCoreOrExtension = true;
+            if (opDir && !isCoreOrExtension && entry.dir !== opDir && fs.existsSync(opDir))
             {
                 entry.dir = opDir;
                 changed = true;
@@ -401,7 +432,9 @@ class DocUtil extends SharedDocUtil
         const opId = cachedLookup && cachedLookup.names ? cachedLookup.names[opName] : null;
         if (!opId) return;
         this._addToOpHistory(opId, opName, true);
-        this._getOpHistory()[opId].deleted = Date.now();
+        const entry = this._getOpHistory()[opId];
+        if (!entry || !entry.dir) return;
+        entry.deleted = Date.now();
         this._writeCache(this.OP_HISTORY_CACHE, this._getOpHistory());
     }
 
@@ -484,7 +517,7 @@ class DocUtil extends SharedDocUtil
             for (let jsonPath in opJsons)
             {
                 const opName = path.basename(jsonPath, ".json");
-                if (opsUtil.isOpNameValid(opName))
+                if (opsUtil.isOpNameValid(opName) && fs.existsSync(path.join(opDir, path.dirname(jsonPath), opsUtil.getOpFileName(opName))))
                 {
                     try
                     {

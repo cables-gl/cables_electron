@@ -601,8 +601,9 @@ class ElectronApi
         }
         else
         {
-            const errorVars = await helper.getOpNotFoundErrorVars(opIdentifier);
+            const opId = opsUtil.isOpId(opIdentifier) ? opIdentifier : opsUtil.getOpIdByObjName(opName);
             doc.removeOpNameFromLookup(opName);
+            const errorVars = await helper.getOpNotFoundErrorVars(opIdentifier, doc.getOpHistoryEntry(opId));
             return this.error("Could not find op: " + opName, errorVars, "warn");
         }
     }
@@ -1251,6 +1252,7 @@ class ElectronApi
     {
         const opName = opsUtil.getOpNameById(data.opId);
         const opDocs = doc.getDocForOp(opName);
+        doc.markOpDeletedInHistory(opName);
         opsUtil.deleteOp(opName);
         return this.success("OP_DELETED", opDocs);
     }

@@ -31,6 +31,7 @@ app.commandLine.appendSwitch("no-user-gesture-required", "true");
 app.commandLine.appendSwitch("disable-hid-blocklist", "true");
 app.commandLine.appendSwitch("enable-web-bluetooth");
 app.commandLine.appendSwitch("enable-blink-features", "CanvasDrawElement");
+if (!app.isPackaged) app.commandLine.appendSwitch("unsafely-disable-devtools-self-xss-warnings");
 app.disableDomainBlockingFor3DAPIs();
 
 logger.info("--- starting");

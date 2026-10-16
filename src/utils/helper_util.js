@@ -71,7 +71,11 @@ class HelperUtil extends SharedHelperUtil
         return (currentProjectDir && thePath.startsWith(currentProjectDir));
     }
 
-    async getOpNotFoundErrorVars(opIdentifier)
+    /**
+     * @param {String} opIdentifier
+     * @param {{name: String, dir?: String}} [historyEntry]
+     */
+    async getOpNotFoundErrorVars(opIdentifier, historyEntry = null)
     {
         let text = "Could not find op with id " + opIdentifier;
         const footer = "Try adding other directories via 'Manage Op Directories' after loading the patch.";
@@ -81,6 +85,8 @@ class HelperUtil extends SharedHelperUtil
             "footer": footer,
             "hideEnvButton": true
         };
+
+        if (historyEntry && historyEntry.name) text += " - " + historyEntry.name;
 
         const currentProject = settings.getCurrentProject();
         const projectOpDirs = projectsUtil.getProjectOpDirs(currentProject);
@@ -100,8 +106,10 @@ class HelperUtil extends SharedHelperUtil
         {
             text += ".";
         }
+        if (historyEntry && historyEntry.name) text = "Could not find op " + historyEntry.name + " (id " + opIdentifier + ")";
         errorVars.text = text;
         errorVars.ops = ops;
+
         return errorVars;
     }
 }

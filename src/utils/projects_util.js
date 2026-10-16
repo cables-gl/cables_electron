@@ -226,15 +226,18 @@ class ProjectsUtil extends SharedProjectsUtil
             {
                 const opJsons = helper.getFileNamesRecursive(dir, ".json");
                 const opLocations = {};
+                const opNames = [];
                 opJsons.forEach((jsonLocation) =>
                 {
                     const jsonName = path.basename(jsonLocation, ".json");
                     if (opsUtil.isOpNameValid(jsonName) && !opLocations.hasOwnProperty(jsonName))
                     {
-                        opLocations[jsonName] = path.dirname(path.join(dir, jsonLocation));
+                        const opLocation = path.dirname(path.join(dir, jsonLocation));
+                        opLocations[jsonName] = opLocation;
+                        if (fs.existsSync(path.join(opLocation, opsUtil.getOpFileName(jsonName)))) opNames.push(jsonName);
                     }
                 });
-                const opNames = Object.keys(opLocations);
+                opNames.sort();
                 dirInfo.opNames = opNames;
                 dirInfo.opLocations = opLocations;
                 dirInfo.numOps = opNames.length;

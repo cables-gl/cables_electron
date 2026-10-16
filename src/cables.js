@@ -93,6 +93,11 @@ class CablesElectron extends Cables
         return genPath;
     }
 
+    getOpHistoryFile()
+    {
+        return path.join(this._writeableDirName, "ophistory.json");
+    }
+
     getOpDocsCachePath()
     {
         const cachePath = path.join(this.getGenPath(), "opdocs_collections/");
