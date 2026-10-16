@@ -689,14 +689,14 @@ class ElectronApi
     async opAddCoreLib(data)
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
         const libName = sanitizeFileName(data.name);
-        const opFilename = opsUtil.getOpJsonPath(data.opname);
+        const opFilename = opsUtil.getOpJsonPath(opName);
         const libFilename = cables.getCoreLibsPath() + libName;
         const existsLib = fs.existsSync(libFilename + ".js");
         if (!existsLib)
         {
-            this.error("LIB_NOT_FOUND");
-            return;
+            return this.error("LIB_NOT_FOUND");
         }
 
         try
@@ -713,22 +713,23 @@ class ElectronApi
                     "spaces": 4
                 });
                 doc.updateOpDocs(opName);
-                this.success("OK", {});
+                return this.success("OK", {});
             }
             catch (writeErr)
             {
-                this.error("WRITE_ERROR");
+                return this.error("WRITE_ERROR");
             }
         }
         catch (err)
         {
-            this.error("UNKNOWN_ERROR");
+            return this.error("UNKNOWN_ERROR");
         }
     }
 
     async opAddLib(data)
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
         const libName = sanitizeFileName(data.name);
 
         const filename = opsUtil.getOpJsonPath(opName);
@@ -736,8 +737,7 @@ class ElectronApi
         const libExists = libsUtil.libExists(libName);
         if (!libExists)
         {
-            this.error("LIB_NOT_FOUND", 400);
-            return;
+            return this.error("LIB_NOT_FOUND");
         }
 
         try
@@ -754,22 +754,23 @@ class ElectronApi
                     "spaces": 4
                 });
                 doc.updateOpDocs(opName);
-                this.success("OK");
+                return this.success("OK");
             }
             catch (writeErr)
             {
-                this.error("WRITE_ERROR", 500);
+                return this.error("WRITE_ERROR");
             }
         }
         catch (err)
         {
-            this.error("UNKNOWN_ERROR", 500);
+            return this.error("UNKNOWN_ERROR");
         }
     }
 
     async opRemoveLib(data)
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
         const libName = sanitizeFileName(data.name);
 
         const filename = opsUtil.getOpJsonPath(opName);
@@ -788,22 +789,23 @@ class ElectronApi
                     "spaces": 4
                 });
                 doc.updateOpDocs(opName);
-                this.success("OK");
+                return this.success("OK");
             }
             catch (writeErr)
             {
-                this.error("WRITE_ERROR", 500);
+                return this.error("WRITE_ERROR");
             }
         }
         catch (err)
         {
-            this.error("UNKNOWN_ERROR", 500);
+            return this.error("UNKNOWN_ERROR");
         }
     }
 
     async opRemoveCoreLib(data)
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
         const libName = sanitizeFileName(data.name);
         const opFilename = opsUtil.getOpJsonPath(opName);
 
@@ -821,16 +823,16 @@ class ElectronApi
                     "spaces": 4
                 });
                 doc.updateOpDocs(opName);
-                this.success("OK");
+                return this.success("OK");
             }
             catch (writeErr)
             {
-                this.error("WRITE_ERROR", 500);
+                return this.error("WRITE_ERROR");
             }
         }
         catch (err)
         {
-            this.error("UNKNOWN_ERROR", 500);
+            return this.error("UNKNOWN_ERROR");
         }
     }
 
@@ -1808,6 +1810,7 @@ class ElectronApi
     async getOpDependency(data)
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
+        if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
         const depName = data.name;
         const content = opsUtil.getOpDependencyCode(opName, depName);
         return this.success("OK", { "content": content });
@@ -1818,6 +1821,7 @@ class ElectronApi
         let opName = options.opName;
         if (opsUtil.isOpId(opName)) opName = opsUtil.getOpNameById(opName);
         if (!options.opName || !options.type) return this.error("INVALID_DATA");
+        if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
 
         const dep = this._getOpDepFromRequest({ "body": options });
         const added = opsUtil.addOpDependency(opName, dep);
@@ -1838,6 +1842,7 @@ class ElectronApi
         if (!options.opName || !options.type) return this.error("INVALID_DATA");
         let opName = options.opName;
         if (opsUtil.isOpId(opName)) opName = opsUtil.getOpNameById(opName);
+        if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
         const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
         if (fs.existsSync(opDocFile))
         {
