@@ -472,7 +472,12 @@ class DocUtil extends SharedDocUtil
         let lookupOps = ops;
         if (ops && this.opProblems.length > 0)
         {
-            lookupOps = ops.filter((op) => { return !op || !this.opProblems.some((problem) => { return problem.id === op.id && problem.name === op.name; }); });
+            lookupOps = ops.filter((op) =>
+            {
+                if (!op) return true;
+                // only while the other op still owns the id, otherwise this one has to be found again
+                return !this.opProblems.some((problem) => { return problem.id === op.id && problem.name === op.name && cachedLookup && cachedLookup.ids && cachedLookup.ids[op.id] === problem.usedName; });
+            });
         }
         super.addOpsToLookup(lookupOps, clearFiles, haltOnError);
         if (!lookupOps) return;

@@ -1763,6 +1763,8 @@ class ElectronApi
 
     loadProject(projectFile, newProject = null, rebuildCache = true)
     {
+        // duplicate ids depend on the op dirs of the project, find them again
+        doc.opProblems = [];
         let project = newProject;
         if (projectFile)
         {

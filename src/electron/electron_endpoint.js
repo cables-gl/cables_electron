@@ -50,9 +50,11 @@ class ElectronEndpoint
             let urlFile = request.url;
             let absoluteFile = helper.fileURLToPath(urlFile, false);
             let projectFile = helper.fileURLToPath(urlFile, true);
+            if (projectFile && projectFile.includes("?")) projectFile = projectFile.split("?")[0];
+
+            if (!absoluteFile && !projectFile) return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
 
             let absoluteReadable = false;
-            let projectReadable = false;
             try
             {
                 const statsAbs = fs.statSync(absoluteFile);
@@ -62,25 +64,7 @@ class ElectronEndpoint
                     absoluteReadable = true;
                 }
             }
-            catch (e)
-            {
-                this._log.info("failed to read absoluteFile", absoluteFile, e);
-                try
-                {
-                    const statsProj = fs.statSync(projectFile);
-                    if (statsProj && statsProj.isFile())
-                    {
-                        fs.accessSync(projectFile, fs.constants.R_OK);
-                        projectReadable = true;
-                    }
-                }
-                catch (eproj)
-                {
-                    // handle in next steps
-                    this._log.info("failed to read projectFile", projectFile, eproj);
-                }
-
-            }
+            catch (e) {}
 
             if (absoluteReadable)
             {
@@ -89,48 +73,29 @@ class ElectronEndpoint
                 this._addDefaultHeaders(request, response, absoluteFile);
                 return response;
             }
-            else if (projectReadable)
+
+            let projectReadable = false;
+            try
             {
-                Object.defineProperty(request, "url", { "value": helper.pathToFileURL(projectFile) });
-                const response = await net.fetch(request, { "bypassCustomProtocolHandlers": true });
+                const statsProj = fs.statSync(projectFile);
+                if (statsProj && statsProj.isFile())
+                {
+                    fs.accessSync(projectFile, fs.constants.R_OK);
+                    projectReadable = true;
+                }
+            }
+            catch (e) {}
+
+            if (projectReadable)
+            {
+                // fetching the request itself would still load its original url
+                const response = await net.fetch(helper.pathToFileURL(projectFile), { "method": request.method, "headers": request.headers, "bypassCustomProtocolHandlers": true });
                 this._addDefaultHeaders(request, response, projectFile);
                 return response;
             }
-            else
-            {
-                try
-                {
-                    if (projectFile.includes("?"))
-                    {
-                        projectFile = projectFile.split("?")[0];
-                    }
-                    try
-                    {
-                        const statsProj = fs.statSync(projectFile);
-                        if (statsProj && statsProj.isFile())
-                        {
-                            fs.accessSync(projectFile, fs.constants.R_OK);
 
-                            const response = await net.fetch(helper.pathToFileURL(projectFile), { "bypassCustomProtocolHandlers": true });
-                            this._addDefaultHeaders(request, response, projectFile);
-                            return response;
-                        }
-                        else
-                        {
-                            return new Response(null, { "headers": { "status": 404 } });
-                        }
-                    }
-                    catch (e)
-                    {
-                        return new Response(null, { "headers": { "status": 404 } });
-                    }
-
-                }
-                catch (e)
-                {
-                    return net.fetch(request.url, { "bypassCustomProtocolHandlers": true });
-                }
-            }
+            this._log.warn("file not found", urlFile, "(looked in " + absoluteFile + " and " + projectFile + ")");
+            return new Response(null, { "status": 404, "statusText": "Not Found" });
         });
 
         this._handleProtocol(ses, "cables", async (request) =>
