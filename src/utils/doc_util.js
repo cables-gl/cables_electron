@@ -21,6 +21,8 @@ class DocUtil extends SharedDocUtil
         this._opDocsSignature = null;
         this._buildSignature = null;
         this._pendingCacheWrites = null;
+        this.OP_HISTORY_CACHE = "op-history";
+        this._opHistory = null;
 
         // do not lose cache changes that are still waiting to be written
         app.on("will-quit", () => { this.flushCaches(); });
@@ -296,7 +298,143 @@ class DocUtil extends SharedDocUtil
         const pendingWrites = this._pendingCacheWrites;
         this._pendingCacheWrites = null;
         if (!pendingWrites) return;
-        Object.keys(pendingWrites).forEach((cache) => { super._writeCache(cache, pendingWrites[cache]); });
+        Object.keys(pendingWrites).forEach((cache) =>
+        {
+            if (cache === this.OP_HISTORY_CACHE)
+            {
+                try
+                {
+                    jsonfile.writeFileSync(cables.getOpHistoryFile(), pendingWrites[cache]);
+                }
+                catch (e)
+                {
+                    this._log.warn("failed to write op history", e.message);
+                }
+            }
+            else
+            {
+                super._writeCache(cache, pendingWrites[cache]);
+            }
+        });
+    }
+
+    /**
+     *
+     * @param {String} opId
+     * @returns {{name: String, oldNames?: String[], dir?: String, removed?: Number, deleted?: Number}|null}
+     */
+    getOpHistoryEntry(opId)
+    {
+        if (!opId) return null;
+        return this._getOpHistory()[opId] || null;
+    }
+
+    _getOpHistory()
+    {
+        if (!this._opHistory)
+        {
+            try
+            {
+                this._opHistory = jsonfile.readFileSync(cables.getOpHistoryFile());
+            }
+            catch (e)
+            {
+                this._opHistory = {};
+            }
+        }
+        return this._opHistory;
+    }
+
+    _addToOpHistory(opId, opName, removed = false)
+    {
+        if (!opId || !opName) return;
+        const history = this._getOpHistory();
+        const entry = history[opId] || { "name": opName };
+        let changed = !history[opId];
+
+        if (entry.name !== opName)
+        {
+            entry.oldNames = entry.oldNames || [];
+            if (!entry.oldNames.includes(entry.name)) entry.oldNames.push(entry.name);
+            entry.name = opName;
+            changed = true;
+        }
+
+        if (removed)
+        {
+            if (!entry.removed)
+            {
+                entry.removed = Date.now();
+                changed = true;
+            }
+        }
+        else
+        {
+            const opDir = opsUtil.getOpAbsolutePath(opName);
+            if (opDir && entry.dir !== opDir && fs.existsSync(opDir))
+            {
+                entry.dir = opDir;
+                changed = true;
+            }
+            if (entry.removed)
+            {
+                delete entry.removed;
+                changed = true;
+            }
+            if (entry.deleted)
+            {
+                delete entry.deleted;
+                changed = true;
+            }
+        }
+
+        history[opId] = entry;
+        if (changed) this._writeCache(this.OP_HISTORY_CACHE, history);
+    }
+
+    /**
+     * @param {String} opName
+     */
+    markOpDeletedInHistory(opName)
+    {
+        const cachedLookup = this.getCachedOpLookup(false);
+        const opId = cachedLookup && cachedLookup.names ? cachedLookup.names[opName] : null;
+        if (!opId) return;
+        this._addToOpHistory(opId, opName, true);
+        this._getOpHistory()[opId].deleted = Date.now();
+        this._writeCache(this.OP_HISTORY_CACHE, this._getOpHistory());
+    }
+
+    addOpsToLookup(ops, clearFiles = false, haltOnError = false)
+    {
+        super.addOpsToLookup(ops, clearFiles, haltOnError);
+        if (!ops) return;
+        ops.forEach((op) =>
+        {
+            if (op) this._addToOpHistory(op.id, op.name);
+        });
+    }
+
+    replaceOpNameInLookup(oldName, newName)
+    {
+        const cachedLookup = this.getCachedOpLookup(false);
+        const opId = cachedLookup && cachedLookup.names ? cachedLookup.names[oldName] : null;
+        super.replaceOpNameInLookup(oldName, newName);
+        this._addToOpHistory(opId, newName);
+    }
+
+    removeOpNamesFromLookup(opNames)
+    {
+        const cachedLookup = this.getCachedOpLookup(false);
+        if (opNames && cachedLookup && cachedLookup.names && cachedLookup.ids)
+        {
+            opNames.forEach((opName) =>
+            {
+                const opId = cachedLookup.names[opName];
+                if (opId && cachedLookup.ids[opId] === opName) this._addToOpHistory(opId, opName, true);
+            });
+        }
+        super.removeOpNamesFromLookup(opNames);
     }
 
     /**
@@ -372,7 +510,26 @@ class DocUtil extends SharedDocUtil
      */
     makeReadable(opDocs, includeOpDir = false)
     {
-        return super.makeReadable(opDocs, true);
+        const readableDocs = super.makeReadable(opDocs, true);
+        if (!readableDocs) return readableDocs;
+
+        const dirInfos = this._projectsUtil.getOpDirs(settings.getCurrentProject());
+        readableDocs.forEach((opDoc) =>
+        {
+            if (!opDoc.opDir || !opDoc.opDir.dir) return;
+            const opDirPrefix = path.join(opDoc.opDir.dir, path.sep);
+            const dirInfo = dirInfos.find((info) => { return opDirPrefix.startsWith(path.join(info.dir, path.sep)); });
+            if (dirInfo)
+            {
+                opDoc.opDir.type = dirInfo.type;
+            }
+            else if (cables.isPackaged())
+            {
+                // core and extension ops of the app package
+                delete opDoc.opDir;
+            }
+        });
+        return readableDocs;
     }
 
     updateOpDocs(opName)
