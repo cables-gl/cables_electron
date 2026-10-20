@@ -1,3 +1,4 @@
+import { TalkerAPI } from "cables-shared-client";
 import cablesElectron from "./renderer.js";
 
 export { CmdElectron };
@@ -26,6 +27,12 @@ class CmdElectron
                 "category": "ops",
                 "func": CmdElectron.collectOps,
                 "icon": "op"
+            },
+            {
+                "cmd": "Upload patch to cables.gl",
+                "category": "patch",
+                "func": CmdElectron.uploadPatchToServer,
+                "icon": "upload"
             },
             {
                 "cmd": "Manage op directories",
@@ -164,6 +171,43 @@ class CmdElectron
                 closeTimeout = 5000;
                 setTimeout(() => { cablesElectron.gui.endModalLoading(); }, closeTimeout);
             }
+        });
+    }
+
+    static uploadPatchToServer()
+    {
+        if (!cablesElectron.gui.savedState.isSaved)
+        {
+            cablesElectron.editor.notify("Save the patch before uploading it");
+            return;
+        }
+
+        const loadingModal = cablesElectron.gui.startModalLoading("Uploading patch...");
+        cablesElectron.editor.api(TalkerAPI.CMD_ELECTRON_UPLOAD_PATCH, {}, (_err, r) =>
+        {
+            if (!_err && r && r.data)
+            {
+                cablesElectron.gui.endModalLoading();
+                new cablesElectron.CABLES.UI.ModalDialog({
+                    "title": "Patch uploaded",
+                    "text": "<a href=\"" + r.data.url + "\" target=\"_blank\">" + r.data.url + "</a>"
+                });
+                return;
+            }
+
+            loadingModal.setTask("failed to upload patch");
+            loadingModal.setTask("---");
+            if (_err && _err.msg === "LOCAL_OPS")
+            {
+                loadingModal.setTask("the patch uses local ops, they do not exist on cables.gl:");
+                const localOps = _err.data.localOps;
+                for (let i = 0; i < localOps.length; i++) loadingModal.setTask(localOps[i]);
+            }
+            else
+            {
+                loadingModal.setTask((_err && (_err.data || _err.msg)) || "no response");
+            }
+            setTimeout(() => { cablesElectron.gui.endModalLoading(); }, 5000);
         });
     }
 

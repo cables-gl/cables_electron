@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import mkdirp from "mkdirp";
 import { promisify } from "util";
+import zlib from "zlib";
 
 import jsonfile from "jsonfile";
 import sanitizeFileName from "sanitize-filename";
@@ -1928,6 +1929,76 @@ class ElectronApi
         {
             return this.error("ERROR", e);
         }
+    }
+
+    /**
+     * @param {Object} [data]
+     * @param {String} [data.projectId] patch on the server to save to, a new patch is created without it
+     * @param {String} [data.server] cables server url, default the configured communityUrl
+     */
+    async uploadPatchToServer(data = {})
+    {
+        const apiKey = settings.getUserSetting("apiKey", "");
+        if (!apiKey) return this.error("NO_APIKEY", "no cables.gl api key set in preferences");
+
+        const project = settings.getCurrentProject();
+        if (!project) return this.error("NO_PROJECT", "no patch loaded");
+
+        const ops = project.ops || [];
+        const localOps = [];
+        for (let i = 0; i < ops.length; i++)
+        {
+            const opName = opsUtil.getOpNameById(ops[i].opId) || ops[i].objName;
+            if (opsUtil.isLocalOp(opName) && !localOps.includes(opName)) localOps.push(opName);
+        }
+        if (localOps.length > 0) return this.error("LOCAL_OPS", { "localOps": localOps });
+
+        const communityUrl = data.server || cables.getCommunityUrl();
+        const headers = { "x-apikey": apiKey, "content-type": "application/json" };
+
+        try
+        {
+            let projectId = data.projectId;
+            if (!projectId)
+            {
+                const created = await this._cablesApiRequest(new URL("/api/project", communityUrl), "POST", headers, { "name": project.name });
+                if (created.error) return created;
+                projectId = created.shortId || created._id;
+                if (!projectId) return this.error("UPLOAD_FAILED", "server did not return a patch id");
+            }
+
+            const patchData = zlib.deflateSync(JSON.stringify({ "ops": ops, "ui": project.ui }));
+            const saved = await this._cablesApiRequest(new URL("/api/project/" + projectId, communityUrl), "PUT", headers, { "dataB64": patchData.toString("base64") });
+            if (saved.error) return saved;
+
+            return this.success("OK", {
+                "projectId": projectId,
+                "created": !data.projectId,
+                "url": new URL("/edit/" + projectId, communityUrl).href
+            });
+        }
+        catch (e)
+        {
+            return this.error("UPLOAD_FAILED", e.message);
+        }
+    }
+
+    async _cablesApiRequest(url, method, headers, body)
+    {
+        const response = await fetch(url, { "method": method, "headers": headers, "body": JSON.stringify(body) });
+
+        let json = null;
+        try
+        {
+            json = await response.json();
+        }
+        catch (e)
+        {
+            return this.error("UPLOAD_FAILED", method + " " + url.pathname + ": server answered " + response.status + " " + response.statusText);
+        }
+
+        if (!response.ok || json.error) return this.error("UPLOAD_FAILED", method + " " + url.pathname + ": " + (json.msg || json.message || response.status));
+        return json;
     }
 
     async uploadFileToOp(params)

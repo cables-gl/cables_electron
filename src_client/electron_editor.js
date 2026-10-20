@@ -307,6 +307,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_REMOVE_OPDIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH_HTML] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_UPLOAD_PATCH] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_OPDIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_GET_DESKTOP_CAPTURE_SOURCES] = {};
 
