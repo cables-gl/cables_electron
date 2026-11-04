@@ -45,10 +45,12 @@
         "appId": "gl.cables.standalone",
         "nodeVersion": "24.22.1",
         "asar": true,
-        "includeSubNodeModules": true,
         "electronLanguages": [
             "en-US"
         ],
+        "toolsets": {
+            "appimage": "1.0.3"
+        },
         "files": [
             "src/**/*",
             "src_client/**/*",
@@ -187,7 +189,7 @@
         "@k88/module-scope-plugin": "1.1.0",
         "copy-webpack-plugin": "12.0.2",
         "electron": "43.2.0",
-        "electron-builder": "25.1.8",
+        "electron-builder": "26.18.0",
         "git-last-commit": "1.0.1",
         "gulp": "5.0.0",
         "gulp-rename": "2.0.0",
