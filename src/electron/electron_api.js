@@ -23,6 +23,7 @@ import filesUtil from "../utils/files_util.js";
 import libsUtil from "../utils/libs_util.js";
 import HtmlExportElectron from "../export/export_html_electron.js";
 import PatchExportElectron from "../export/export_patch_electron.js";
+import storageUtil from "../utils/storage_util.js";
 
 /**
  * @typedef {import("cables-shared-client").ApiResponse} ApiResponse
@@ -724,10 +725,7 @@ class ElectronApi
 
             try
             {
-                jsonfile.writeFileSync(opFilename, obj, {
-                    "encoding": "utf-8",
-                    "spaces": 4
-                });
+                storageUtil.writeJsonFileSync(opFilename, obj);
                 doc.updateOpDocs(opName);
                 return this.success("OK", {});
             }
@@ -765,10 +763,7 @@ class ElectronApi
 
             try
             {
-                jsonfile.writeFileSync(filename, obj, {
-                    "encoding": "utf-8",
-                    "spaces": 4
-                });
+                storageUtil.writeJsonFileSync(filename, obj);
                 doc.updateOpDocs(opName);
                 return this.success("OK");
             }
@@ -800,10 +795,7 @@ class ElectronApi
 
             try
             {
-                jsonfile.writeFileSync(filename, obj, {
-                    "encoding": "utf-8",
-                    "spaces": 4
-                });
+                storageUtil.writeJsonFileSync(filename, obj);
                 doc.updateOpDocs(opName);
                 return this.success("OK");
             }
@@ -834,10 +826,7 @@ class ElectronApi
 
             try
             {
-                jsonfile.writeFileSync(opFilename, obj, {
-                    "encoding": "utf-8",
-                    "spaces": 4
-                });
+                storageUtil.writeJsonFileSync(opFilename, obj);
                 doc.updateOpDocs(opName);
                 return this.success("OK");
             }
@@ -1918,7 +1907,7 @@ class ElectronApi
                 opDoc.dependencies = newDeps;
                 const libPath = path.join(opsUtil.getOpAbsolutePath(opName), options.src);
                 if (fs.existsSync(libPath)) fs.unlinkSync(libPath);
-                if (opDoc.dependencies) jsonfile.writeFileSync(opDocFile, opDoc, opsUtil.OPJSON_FORMAT);
+                if (opDoc.dependencies) storageUtil.writeJsonFileSync(opDocFile, opDoc);
                 doc.updateOpDocs(opName);
                 await this._installOpDependencies(opName);
                 return this.success("OK");

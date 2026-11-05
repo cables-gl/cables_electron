@@ -8,6 +8,7 @@ import opsUtil from "./ops_util.js";
 import helper from "./helper_util.js";
 import cables from "../cables.js";
 import settings from "../electron/electron_settings.js";
+import storageUtil from "./storage_util.js";
 
 class DocUtil extends SharedDocUtil
 {
@@ -333,7 +334,7 @@ class DocUtil extends SharedDocUtil
                         if (!entry.dir && fileEntry.dir) entry.dir = fileEntry.dir;
                     });
                     this._opHistory = history;
-                    jsonfile.writeFileSync(cables.getOpHistoryFile(), history);
+                    storageUtil.writeJsonFileSync(cables.getOpHistoryFile(), history);
                 }
                 catch (e)
                 {
