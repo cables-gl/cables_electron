@@ -182,6 +182,11 @@ export default class CablesElectron
             if (this.gui && this.gui.finishedLoading()) this._showOpProblem(problem);
         });
 
+        this._electron.ipcRenderer.on("uiBuildStarted", () =>
+        {
+            if (this.gui && this.gui.restriction) this.gui.restriction.setMessage("cablesbuild", "Waiting while building ui...");
+        });
+
         window.addEventListener("message", (event) =>
         {
             if (event.data && event.data.type === "hashchange")

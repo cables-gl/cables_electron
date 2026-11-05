@@ -36,6 +36,7 @@ class ElectronApi
     constructor()
     {
         this._log = logger;
+        this._removedOpDocs = [];
     }
 
     init()
@@ -545,6 +546,15 @@ class ElectronApi
         let cleanDocs = opsUtil.addVersionInfoToOps(versionedDocs.concat([...standaloneDocs]), true);
         cleanDocs = cleanDocs.filter((opDoc) => { return standaloneDocs.has(opDoc) || (!opDoc.oldVersion && !opsUtil.isDeprecated(opDoc.name)); });
         cleanDocs = opsUtil.addPermissionsToOps(cleanDocs, null);
+        const removedDocs = [];
+        for (let i = 0; i < this._removedOpDocs.length; i++)
+        {
+            const removedDoc = this._removedOpDocs[i];
+            const addedAgain = cleanDocs.some((opDoc) => { return opDoc.id === removedDoc.id; });
+            if (!addedAgain) removedDocs.push(removedDoc);
+        }
+        this._removedOpDocs = [];
+        cleanDocs = cleanDocs.concat(removedDocs);
         const publicOnly = cables.isPackaged();
         const extensions = await doc.getAllExtensionDocs(true, true, publicOnly);
         const libs = projectsUtil.getAvailableLibs(currentProject);
@@ -1690,8 +1700,27 @@ class ElectronApi
 
     async removeOpDir(dirName)
     {
-        if (dirName) settings.removeOpDir(path.resolve(dirName));
         let currentProject = settings.getCurrentProject();
+        if (dirName)
+        {
+            const oldDocs = projectsUtil.getOpDocsInProjectDirs(currentProject);
+            settings.removeOpDir(path.resolve(dirName));
+            const newDocs = projectsUtil.getOpDocsInProjectDirs(currentProject);
+            const removedDocs = [];
+            oldDocs.forEach((oldDoc) =>
+            {
+                if (!oldDoc.id) return;
+                const stillExists = newDocs.some((newDoc) => { return newDoc.id === oldDoc.id; });
+                if (!stillExists) removedDocs.push(oldDoc);
+            });
+
+            const readableDocs = doc.makeReadable(removedDocs);
+            readableDocs.forEach((readableDoc) =>
+            {
+                readableDoc.hidden = true;
+                this._removedOpDocs.push(readableDoc);
+            });
+        }
         return this.success("OK", projectsUtil.getProjectOpDirs(currentProject));
     }
 

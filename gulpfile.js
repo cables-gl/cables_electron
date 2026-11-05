@@ -5,6 +5,7 @@ import mkdirp from "mkdirp";
 import webpack from "webpack";
 import git from "git-last-commit";
 import { execa } from "execa";
+import electron from "electron";
 import { fileURLToPath } from "url";
 import jsonfile from "jsonfile";
 import webpackElectronConfig from "./webpack.electron.config.js";
@@ -20,6 +21,7 @@ const isLiveBuild = config.env === "electron";
 const minify = config.hasOwnProperty("minifyJs") ? config.minifyJs : false;
 
 const watchers = [];
+let electronProcess = null;
 function _watch(done)
 {
     const watchOptions = { "ignored": (file) =>
@@ -27,8 +29,18 @@ function _watch(done)
         const basename = path.basename(file);
         return file.includes("/node_modules/") || basename.startsWith(".");
     } };
-    watchers.push(gulp.watch(["src_client/**/*.js", "../shared/shared_constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(defaultSeries)));
+    const uiDist = path.join("./src", config.path.uiDist);
+    watchers.push(gulp.watch(["src_client/**/*.js", "../shared/shared_constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(_uiBuildStarted, defaultSeries, _reloadUi)));
     watchers.push(gulp.watch(["src/**/*.js", "../shared/api/**/*.js"], watchOptions, gulp.series(electronChanges)));
+    // cables_ui writes buildinfo.json before every build
+    watchers.push(gulp.watch([uiDist + "buildinfo.json"], watchOptions, _uiBuildStarted));
+    watchers.push(gulp.watch([uiDist + "js/*.js", uiDist + "css/*.css", uiDist + "index.html"], { ...watchOptions, "delay": 1000 }, _reloadUi));
+    done();
+}
+
+function _uiBuildStarted(done)
+{
+    if (electronProcess && electronProcess.connected) electronProcess.send({ "cmd": "uiBuildStarted" });
     done();
 }
 
@@ -36,6 +48,29 @@ function electronChanges(done)
 {
     logger.info("\x1b[33mRegistered changes that require a restart of electron! \x1b[0m");
     done();
+}
+
+function _reloadUi(done)
+{
+    if (electronProcess && electronProcess.connected)
+    {
+        logger.info("ui changed, reloading electron window");
+        electronProcess.send({ "cmd": "reloadUi" });
+    }
+    done();
+}
+
+function _startElectron(args)
+{
+    // run electron directly, so we can send messages
+    electronProcess = execa(electron, args, { "stdio": ["pipe", "inherit", "inherit", "ipc"] });
+    electronProcess.then(() =>
+    {
+        watchers.forEach((watcher) =>
+        {
+            watcher.close();
+        });
+    });
 }
 
 function _analyze(done)
@@ -47,32 +82,14 @@ function _analyze(done)
 function _serve(done)
 {
     let args = process.argv.slice(3);
-    execa(
-        "electron",
-        [".", ...args],
-        { "preferLocal": true, "stdout": "inherit", "stderr": "inherit" }).then((o, te, thr) =>
-    {
-        watchers.forEach((watcher) =>
-        {
-            watcher.close();
-        });
-    });
+    _startElectron([".", ...args]);
     done();
 }
 
 function _debug(done)
 {
     let args = process.argv.slice(3);
-    execa(
-        "electron",
-        [".", "--inspect=9229", ...args],
-        { "preferLocal": true, "stdout": "inherit", "stderr": "inherit" }).then((o, te, thr) =>
-    {
-        watchers.forEach((watcher) =>
-        {
-            watcher.close();
-        });
-    });
+    _startElectron([".", "--inspect=9229", ...args]);
     done();
 }
 

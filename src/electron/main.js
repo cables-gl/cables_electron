@@ -1116,6 +1116,14 @@ class ElectronApp
             if (this.editorWindow) this.editorWindow.webContents.send("opProblem", problem);
         };
 
+        // sent by "gulp watch" when cables_ui has been rebuilt
+        process.on("message", (message) =>
+        {
+            if (!message || !this.editorWindow) return;
+            if (message.cmd === "uiBuildStarted") this.editorWindow.webContents.send("uiBuildStarted");
+            if (message.cmd === "reloadUi") this._reloadWindow();
+        });
+
         app.on("browser-window-created", (e, win) =>
         {
             win.setMenuBarVisibility(false);
