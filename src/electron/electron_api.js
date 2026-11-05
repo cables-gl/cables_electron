@@ -1043,6 +1043,29 @@ class ElectronApi
         return this.success("OK", result, true);
     }
 
+    /**
+     * get the patches of a public/unlisted patchlist, op test patchlists are always loaded from the dev server (no api key needed)
+     * @param {Object} data
+     * @param {String} data.listId
+     * @returns {Promise<ApiResponse>}
+     */
+    async getPatchlistPatches(data)
+    {
+        if (!data || !data.listId) return this.error("INVALID_DATA", "missing listId");
+        const url = new URL("/api/patchlists/patches/" + encodeURIComponent(data.listId), "https://dev.cables.gl");
+        try
+        {
+            const response = await fetch(url);
+            if (!response.ok) return this.error("PATCHLIST_FAILED", "could not load patchlist " + data.listId + ": " + response.status);
+            const json = await response.json();
+            return this.success("OK", json.data || []);
+        }
+        catch (e)
+        {
+            return this.error("PATCHLIST_FAILED", "could not load patchlist " + data.listId + ": " + e.message);
+        }
+    }
+
     getRecentPatches()
     {
         const recents = settings.getRecentProjects();
@@ -1935,6 +1958,8 @@ class ElectronApi
      * @param {Object} [data]
      * @param {String} [data.projectId] patch on the server to save to, a new patch is created without it
      * @param {String} [data.server] cables server url, default the configured communityUrl
+     * @param {Object} [data.settings] patch settings to set after saving: description, tags (comma separated), licence, visibility
+     * @param {String[]} [data.excludeOpIds] ids of ops to leave out of the uploaded patch, links to them are removed too
      */
     async uploadPatchToServer(data = {})
     {
@@ -1944,7 +1969,24 @@ class ElectronApi
         const project = settings.getCurrentProject();
         if (!project) return this.error("NO_PROJECT", "no patch loaded");
 
-        const ops = project.ops || [];
+        const excludeOpIds = data.excludeOpIds || [];
+        const ops = [];
+        const projectOps = project.ops || [];
+        for (let i = 0; i < projectOps.length; i++)
+        {
+            if (excludeOpIds.includes(projectOps[i].id)) continue;
+            const projectOp = { ...projectOps[i] };
+            if (projectOp.portsOut)
+            {
+                projectOp.portsOut = projectOp.portsOut.map((port) =>
+                {
+                    if (!port.links) return port;
+                    return { ...port, "links": port.links.filter((link) => { return !excludeOpIds.includes(link.objIn) && !excludeOpIds.includes(link.objOut); }) };
+                });
+            }
+            ops.push(projectOp);
+        }
+
         const localOps = [];
         for (let i = 0; i < ops.length; i++)
         {
@@ -1971,6 +2013,12 @@ class ElectronApi
             const saved = await this._cablesApiRequest(new URL("/api/project/" + projectId, communityUrl), "PUT", headers, { "dataB64": patchData.toString("base64") });
             if (saved.error) return saved;
 
+            if (data.settings && Object.keys(data.settings).length > 0)
+            {
+                const savedSettings = await this._cablesApiRequest(new URL("/api/patch/settings/" + projectId, communityUrl), "PUT", headers, { "data": data.settings });
+                if (savedSettings.error) return savedSettings;
+            }
+
             return this.success("OK", {
                 "projectId": projectId,
                 "created": !data.projectId,
@@ -1979,8 +2027,114 @@ class ElectronApi
         }
         catch (e)
         {
-            return this.error("UPLOAD_FAILED", e.message);
+            let msg = e.message;
+            if (e.cause) msg += " (" + (e.cause.code || e.cause.message) + ")";
+            return this.error("UPLOAD_FAILED", msg + ", server " + (data.server || cables.getCommunityUrl()));
         }
+    }
+
+    /**
+     * @param {Object} data
+     * @param {String} data.opName full name of the op
+     * @param {String} data.message what changed
+     * @param {String} [data.type] e.g. bugfix, improvement, feature
+     */
+    addOpChangelog(data)
+    {
+        if (!data.opName || !opsUtil.getOpIdByObjName(data.opName)) return this.error("UNKNOWN_OP", data.opName);
+        if (!data.message) return this.error("NO_MESSAGE", "changelog message is empty");
+
+        opsUtil.addOpChangelog(settings.getCurrentUser().username, data.opName, { "message": data.message, "type": data.type });
+        doc.updateOpDocs(data.opName);
+        return this.success("OK", { "opName": data.opName });
+    }
+
+    /**
+     * @param {Object} data
+     * @param {String} data.listId patchlist on the server
+     * @param {String} data.projectId patch on the server to add to the list
+     * @param {String} [data.server] cables server url, default the configured communityUrl
+     */
+    async addPatchToPatchList(data = {})
+    {
+        const apiKey = settings.getUserSetting("apiKey", "");
+        if (!apiKey) return this.error("NO_APIKEY", "no cables.gl api key set in preferences");
+        if (!data.listId || !data.projectId) return this.error("MISSING_PARAMS", "listId and projectId are needed");
+
+        const communityUrl = data.server || cables.getCommunityUrl();
+        const headers = { "x-apikey": apiKey, "content-type": "application/json" };
+        const url = new URL("/api/patchlists/" + encodeURIComponent(data.listId) + "/projects/" + encodeURIComponent(data.projectId), communityUrl);
+
+        try
+        {
+            const added = await this._cablesApiRequest(url, "POST", headers, {});
+            if (added.error) return added;
+            return this.success("OK", { "listId": data.listId, "projectId": data.projectId, "url": new URL("/patchlist/" + data.listId, communityUrl).href });
+        }
+        catch (e)
+        {
+            let msg = e.message;
+            if (e.cause) msg += " (" + (e.cause.code || e.cause.message) + ")";
+            return this.error("PATCHLIST_ADD_FAILED", msg + ", server " + communityUrl);
+        }
+    }
+
+    /**
+     * @param {Object} data
+     * @param {String} data.projectId patch on the server to upload the files to
+     * @param {String[]} data.files file names in the current patch directory
+     * @param {String} [data.server] cables server url, default the configured communityUrl
+     * @param {String} [data.assetServer] url the server's assets are served from, default the configured communitySandboxUrl
+     */
+    async uploadPatchAssetsToServer(data = {})
+    {
+        const apiKey = settings.getUserSetting("apiKey", "");
+        if (!apiKey) return this.error("NO_APIKEY", "no cables.gl api key set in preferences");
+        if (!data.projectId || !data.files || !data.files.length) return this.error("MISSING_PARAMS", "projectId and files are needed");
+
+        const assetDir = cables.getAssetPath();
+        const communityUrl = data.server || cables.getCommunityUrl();
+        const headers = { "x-apikey": apiKey, "content-type": "application/json" };
+        const assetServer = data.assetServer || cables.getCommunitySandboxUrl();
+        const url = new URL("/api/project/" + encodeURIComponent(data.projectId) + "/file", communityUrl);
+        const uploaded = [];
+
+        let project = null;
+        try
+        {
+            project = await this._cablesApiRequest(new URL("/api/project/" + encodeURIComponent(data.projectId), communityUrl), "GET", headers);
+        }
+        catch (e)
+        {
+            return this.error("UPLOAD_FAILED", "could not get patch " + data.projectId + ": " + e.message);
+        }
+        if (project.error) return project;
+        const projectLongId = (project.data || project)._id;
+        if (!projectLongId) return this.error("UPLOAD_FAILED", "server did not return the id of patch " + data.projectId);
+
+        for (let i = 0; i < data.files.length; i++)
+        {
+            const filename = path.basename(data.files[i]);
+            const filePath = path.join(assetDir, filename);
+            if (!fs.existsSync(filePath)) return this.error("FILE_NOT_FOUND", filePath);
+
+            try
+            {
+                const base64 = fs.readFileSync(filePath).toString("base64");
+                // eslint-disable-next-line no-await-in-loop
+                const result = await this._cablesApiRequest(url, "POST", headers, { "filename": filename, "base64": base64 });
+                if (result.error) return result;
+                const savedName = result.filename || filename;
+                uploaded.push({ "filename": savedName, "url": new URL("/assets/" + projectLongId + "/" + savedName, assetServer).href });
+            }
+            catch (e)
+            {
+                let msg = e.message;
+                if (e.cause) msg += " (" + (e.cause.code || e.cause.message) + ")";
+                return this.error("UPLOAD_FAILED", filename + ": " + msg + ", server " + communityUrl);
+            }
+        }
+        return this.success("OK", { "projectId": data.projectId, "files": uploaded });
     }
 
     async _cablesApiRequest(url, method, headers, body)
@@ -1997,7 +2151,9 @@ class ElectronApi
             return this.error("UPLOAD_FAILED", method + " " + url.pathname + ": server answered " + response.status + " " + response.statusText);
         }
 
-        if (!response.ok || json.error) return this.error("UPLOAD_FAILED", method + " " + url.pathname + ": " + (json.msg || json.message || response.status));
+        let details = "";
+        if (json.data && json.data.errors) details = " " + json.data.errors.join(" ");
+        if (!response.ok || json.error) return this.error("UPLOAD_FAILED", method + " " + url.pathname + ": " + (json.msg || json.message || response.status) + details);
         return json;
     }
 

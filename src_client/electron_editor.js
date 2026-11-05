@@ -274,6 +274,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_GET_LIBRARYFILE_DETAILS] = {};
         this._talkerTopics[TalkerAPI.CMD_CHECK_OP_NAME] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_RECENT_PATCHES] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_PATCHLIST_PATCHES] = {};
         this._talkerTopics[TalkerAPI.CMD_CREATE_OP] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_UPDATE_OP] = {};
         this._talkerTopics[TalkerAPI.CMD_CLONE_OP] = {};
@@ -308,6 +309,9 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_EXPORT_PATCH_HTML] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_UPLOAD_PATCH] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_PATCH_TO_PATCHLIST] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_UPLOAD_PATCH_ASSETS] = { "needsProjectFile": true };
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_OP_CHANGELOG] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_OPDIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_GET_DESKTOP_CAPTURE_SOURCES] = {};
 

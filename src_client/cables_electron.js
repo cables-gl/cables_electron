@@ -206,6 +206,7 @@ export default class CablesElectron
                 "urlCables": "cables://",
                 "urlSandbox": "cables://",
                 "communityUrl": this._config.communityUrl,
+                "communitySandboxUrl": this._config.communitySandboxUrl,
                 "user": this._settings.currentUser,
                 "usersettings": { "settings": this._usersettings },
                 "isDevEnv": !this._config.isPackaged,

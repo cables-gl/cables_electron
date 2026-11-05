@@ -27,6 +27,11 @@ class CablesElectron extends Cables
         return this._config.communityUrl;
     }
 
+    getCommunitySandboxUrl()
+    {
+        return this._config.communitySandboxUrl;
+    }
+
     isPackaged()
     {
         return this._config.isPackaged;
