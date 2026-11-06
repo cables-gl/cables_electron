@@ -443,7 +443,7 @@ class DocUtil extends SharedDocUtil
 
     addOpsToLookup(ops, clearFiles = false, haltOnError = false)
     {
-        // duplicate ids can come from old exports or ops that were moved to core, the shared code keeps the op that is already in the lookup
+        // duplicate ids can come from old exports or ops that were moved to core, the op higher in the op dir hierarchy wins
         const cachedLookup = this.getCachedLookup();
         if (ops && !clearFiles && cachedLookup && cachedLookup.ids)
         {
@@ -456,17 +456,29 @@ class DocUtil extends SharedDocUtil
                 const usedOpDocs = this.getOpDocsFromFile(usedName);
                 if (!usedOpDocs || usedOpDocs.id !== op.id) return;
 
+                const opDirs = this._projectsUtil.getProjectOpDirs(settings.getCurrentProject());
+                const usedDir = opsUtil.getOpAbsolutePath(usedName);
+                const opDir = opsUtil.getOpAbsolutePath(op.name);
+                let usedIndex = opDirs.findIndex((dir) => { return usedDir.startsWith(path.join(dir, path.sep)); });
+                let opIndex = opDirs.findIndex((dir) => { return opDir.startsWith(path.join(dir, path.sep)); });
+                if (usedIndex === -1) usedIndex = opDirs.length;
+                if (opIndex === -1) opIndex = opDirs.length;
+                const opWins = opIndex < usedIndex;
+                const ignoredName = opWins ? usedName : op.name;
+                const keptName = opWins ? op.name : usedName;
+
                 const problem = {
                     "id": op.id,
-                    "name": op.name,
-                    "dir": opsUtil.getOpAbsolutePath(op.name),
-                    "usedName": usedName,
-                    "usedDir": opsUtil.getOpAbsolutePath(usedName)
+                    "name": ignoredName,
+                    "dir": opWins ? usedDir : opDir,
+                    "usedName": keptName,
+                    "usedDir": opWins ? opDir : usedDir
                 };
-                problem.message = "DUPLICATE OP ID: " + op.id + ": \n - ignoring " + op.name + " from " + problem.dir + "\n - using " + usedName + " from " + problem.usedDir;
+                problem.message = "DUPLICATE OP ID: " + op.id + ": \n - ignoring " + problem.name + " from " + problem.dir + "\n - using " + problem.usedName + " from " + problem.usedDir;
                 this.opProblems.push(problem);
                 this._log.warn(problem.message);
                 if (this.onOpProblem) this.onOpProblem(problem);
+                if (opWins) super.removeOpNamesFromLookup([usedName]);
             });
         }
         // the shared code ignores these anyway, but logs an error every time
