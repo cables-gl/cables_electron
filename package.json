@@ -11,7 +11,7 @@
     "main": "src/electron/main.js",
     "type": "module",
     "engines": {
-        "node": "20.13.1"
+        "node": "24.22.1"
     },
     "scripts": {
         "start": "gulp watch",
@@ -42,7 +42,7 @@
     "build": {
         "productName": "cables",
         "appId": "gl.cables.standalone",
-        "nodeVersion": "20.13.1",
+        "nodeVersion": "24.22.1",
         "asar": true,
         "includeSubNodeModules": true,
         "electronLanguages": [
