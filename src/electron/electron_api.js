@@ -1534,7 +1534,7 @@ class ElectronApi
         const currentUser = settings.getCurrentUser();
         const origProject = settings.getCurrentProject() || projectsUtil.generateNewProject(currentUser);
         origProject._id = helper.generateRandomId();
-        origProject.name = path.basename(projectFile);
+        origProject.name = path.basename(projectFile, "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
         origProject.summary = origProject.summary || {};
         origProject.summary.title = origProject.name;
         origProject.userId = currentUser._id;
@@ -1724,15 +1724,10 @@ class ElectronApi
     {
         const oldFile = settings.getCurrentProjectFile();
         let project = settings.getCurrentProject();
-        project.name = options.name;
-        const newFile = path.join(settings.getCurrentProjectDir(), projectsUtil.getProjectFileName(project));
-        project.name = path.basename(newFile);
+        // patch title is always the filename in electron, renaming is done by renaming the file
+        project.name = path.basename(oldFile, "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
         project.summary = project.summary || {};
         project.summary.title = project.name;
-        fs.renameSync(oldFile, newFile);
-        settings.replaceInRecentProjects(oldFile, newFile);
-        projectsUtil.writeProjectToFile(newFile, project);
-        this.loadProject(newFile);
         const summary = projectsUtil.getSummary(settings.getCurrentProject());
         electronApp.updateTitle();
         return this.success("OK", {

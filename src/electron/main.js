@@ -571,7 +571,7 @@ class ElectronApp
                 const currentProject = settings.getCurrentProject();
                 if (currentProject)
                 {
-                    currentProject.name = path.basename(patchFile);
+                    currentProject.name = path.basename(patchFile, "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
                     currentProject.summary = currentProject.summary || {};
                     currentProject.summary.title = currentProject.name;
                     projectsUtil.writeProjectToFile(patchFile, currentProject);
@@ -857,7 +857,7 @@ class ElectronApp
         const projectFile = settings.getCurrentProjectFile();
         if (projectFile)
         {
-            title = title + " - " + projectFile;
+            title = title + " - " + path.basename(projectFile, "." + projectsUtil.CABLES_PROJECT_FILE_EXTENSION);
         }
 
         if (unsaved)
