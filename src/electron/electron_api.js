@@ -1550,6 +1550,8 @@ class ElectronApi
         if (data.dataB64) patch.dataB64 = data.dataB64;
         projectsUtil.writeProjectToFile(projectFile, origProject, patch);
         this.loadProject(projectFile);
+        electronApp.setDocumentEdited(false);
+        electronApp._unsavedContentLeave = true;
         electronApp.reload();
         return this.success("OK", origProject, true);
     }
