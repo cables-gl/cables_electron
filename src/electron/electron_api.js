@@ -2064,6 +2064,34 @@ class ElectronApi
 
     /**
      * @param {Object} data
+     * @param {String} data.msg message text, always sent to the info channel
+     * @param {String} [data.server] cables server url, default the configured communityUrl
+     */
+    async sendDiscordMessage(data = {})
+    {
+        const apiKey = settings.getUserSetting("apiKey", "");
+        if (!apiKey) return this.error("NO_APIKEY", "no cables.gl api key set in preferences");
+        if (!data.msg) return this.error("MISSING_PARAMS", "msg is needed");
+
+        const communityUrl = data.server || cables.getCommunityUrl();
+        const headers = { "x-apikey": apiKey, "content-type": "application/json" };
+
+        try
+        {
+            const sent = await this._cablesApiRequest(new URL("/api/webhooks/discord", communityUrl), "POST", headers, { "channel": "info", "msg": data.msg });
+            if (sent.error) return sent;
+            return this.success("OK", sent.data);
+        }
+        catch (e)
+        {
+            let msg = e.message;
+            if (e.cause) msg += " (" + (e.cause.code || e.cause.message) + ")";
+            return this.error("DISCORD_FAILED", msg + ", server " + communityUrl);
+        }
+    }
+
+    /**
+     * @param {Object} data
      * @param {String} data.listId patchlist on the server
      * @param {String} data.projectId patch on the server to add to the list
      * @param {String} [data.server] cables server url, default the configured communityUrl

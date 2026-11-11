@@ -312,6 +312,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_PATCH_TO_PATCHLIST] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_UPLOAD_PATCH_ASSETS] = { "needsProjectFile": true };
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_OP_CHANGELOG] = {};
+        this._talkerTopics[TalkerAPI.CMD_ELECTRON_SEND_DISCORD] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_ADD_OPDIR] = {};
         this._talkerTopics[TalkerAPI.CMD_ELECTRON_GET_DESKTOP_CAPTURE_SOURCES] = {};
 
