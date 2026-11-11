@@ -542,10 +542,24 @@ class ElectronApi
         doc.validateOpCaches(true);
         projectsUtil.validateProjectCaches(true);
         // ops in core and project dirs can be versions of each other, get the version info from all of them
-        const versionedDocs = doc.makeReadable(doc.getOpDocs().concat(projectsUtil.getOpDocsInProjectDirs(currentProject)));
-        const standaloneDocs = new Set(doc.makeReadable(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser)));
-        let cleanDocs = opsUtil.addVersionInfoToOps(versionedDocs.concat([...standaloneDocs]), true);
-        cleanDocs = cleanDocs.filter((opDoc) => { return standaloneDocs.has(opDoc) || (!opDoc.oldVersion && !opsUtil.isDeprecated(opDoc.name)); });
+        const projectDirDocs = projectsUtil.getOpDocsInProjectDirs(currentProject);
+        const versionedDocs = doc.makeReadable(doc.getOpDocs().concat(projectDirDocs));
+        const standaloneDocs = doc.makeReadable(doc.getCollectionOpDocs("Ops.Extension.Standalone", currentUser));
+        let cleanDocs = opsUtil.addVersionInfoToOps(versionedDocs.concat(standaloneDocs), true);
+        cleanDocs = cleanDocs.filter((opDoc) => { return standaloneDocs.includes(opDoc) || (!opDoc.oldVersion && !opsUtil.isDeprecated(opDoc.name)); });
+
+        const unusedCollections = projectsUtil.getUnusedCollectionsInProjectDirs(currentProject);
+        const projectDirOpNames = projectDirDocs.map((opDoc) => { return opDoc.name; });
+        const collapsedCollections = {};
+        cleanDocs = cleanDocs.filter((opDoc) =>
+        {
+            if (standaloneDocs.includes(opDoc) || !projectDirOpNames.includes(opDoc.name)) return true;
+            const collectionName = opsUtil.getCollectionName(opDoc.name);
+            if (!unusedCollections.includes(collectionName)) return true;
+            if (!collapsedCollections[collectionName]) collapsedCollections[collectionName] = [];
+            collapsedCollections[collectionName].push(opDoc.name);
+            return false;
+        });
         cleanDocs = opsUtil.addPermissionsToOps(cleanDocs, null);
         const removedDocs = [];
         for (let i = 0; i < this._removedOpDocs.length; i++)
@@ -558,13 +572,40 @@ class ElectronApi
         cleanDocs = cleanDocs.concat(removedDocs);
         const publicOnly = cables.isPackaged();
         const extensions = await doc.getAllExtensionDocs(true, true, publicOnly);
+        const teamNamespaces = [];
+        Object.keys(collapsedCollections).forEach((collectionName) =>
+        {
+            const opNames = collapsedCollections[collectionName];
+            const coreExtension = extensions.find((extension) => { return extension.name === collectionName; });
+            if (coreExtension)
+            {
+                coreExtension.ops = helper.uniqueArray(coreExtension.ops.concat(opNames));
+                coreExtension.numOps = coreExtension.ops.length;
+                return;
+            }
+
+            const isTeam = opsUtil.isTeamNamespace(collectionName);
+            let shortName = opsUtil.getExtensionShortName(collectionName);
+            if (isTeam) shortName = opsUtil.getTeamNamespaceShortName(collectionName);
+            const collectionDoc = {
+                "name": collectionName,
+                "summary": "",
+                "shortName": shortName,
+                "nameSpace": collectionName,
+                "shortNameDisplay": shortName,
+                "numOps": opNames.length,
+                "ops": opNames
+            };
+            if (isTeam) teamNamespaces.push(collectionDoc);
+            else extensions.push(collectionDoc);
+        });
         const libs = projectsUtil.getAvailableLibs(currentProject);
         const coreLibs = projectsUtil.getCoreLibs();
 
         return this.success("OK", {
             "opDocs": cleanDocs,
             "extensions": extensions,
-            "teamNamespaces": [],
+            "teamNamespaces": teamNamespaces,
             "libs": libs,
             "coreLibs": coreLibs
         }, true);
@@ -858,6 +899,10 @@ class ElectronApi
         {
             const opNames = opsUtil.getCollectionOpNames(collectionName, true);
             opDocs = opsUtil.addOpDocsForCollections(opNames, opDocs);
+            const projectDirDocs = projectsUtil.getCollectionOpDocsInProjectDirs(settings.getCurrentProject(), collectionName);
+            const projectDirOpNames = projectDirDocs.map((opDoc) => { return opDoc.name; });
+            opDocs = opDocs.filter((opDoc) => { return !projectDirOpNames.includes(opDoc.name); });
+            opDocs = opDocs.concat(projectDirDocs.map((opDoc) => { return { ...opDoc }; }));
             opDocs = opsUtil.addVersionInfoToOps(opDocs);
             opDocs = opsUtil.addPermissionsToOps(opDocs, currentUser);
         }
@@ -1102,12 +1147,6 @@ class ElectronApi
                 targetDir = projectOpDirs[0].dir;
             }
         }
-        if (targetDir === cables.getExtensionOpsPath())
-        {
-            let opNamespace = opsUtil.getNamespace(opName, true);
-            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
-            targetDir = path.join(targetDir, opNamespace);
-        }
         const license = settings.getUserSetting("opLicense", "MIT");
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir, license);
         filesUtil.registerOpChangeListeners([opName]);
@@ -1164,7 +1203,13 @@ class ElectronApi
             // new version: put the new op next to the old one, if that is in one of the op dirs
             const oldOpDir = opsUtil.getOpSourceDir(oldName);
             const opDirs = projectsUtil.getProjectOpDirs(settings.getCurrentProject());
-            if (oldOpDir && opDirs.some((opDir) => { return oldOpDir.startsWith(path.join(opDir, "/")); })) targetDir = path.dirname(oldOpDir);
+            if (oldOpDir && opDirs.some((opDir) => { return oldOpDir.startsWith(path.join(opDir, "/")); }))
+            {
+                const oldDir = path.join(oldOpDir, "/");
+                const oldRelativeDir = opsUtil.getOpTargetDir(oldName, true);
+                if (oldDir.endsWith(path.join("/", oldRelativeDir))) targetDir = oldDir.substring(0, oldDir.length - oldRelativeDir.length);
+                else targetDir = path.dirname(oldOpDir);
+            }
         }
         if (!targetDir)
         {
@@ -1174,12 +1219,6 @@ class ElectronApi
             {
                 targetDir = projectOpDirs[0].dir;
             }
-        }
-        if (targetDir === cables.getExtensionOpsPath())
-        {
-            let opNamespace = opsUtil.getNamespace(newName, true);
-            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
-            targetDir = path.join(targetDir, opNamespace);
         }
         const cloned = opsUtil.cloneOp(oldName, newName, currentUser, targetDir);
         projectsUtil.invalidateProjectCaches();
@@ -1550,6 +1589,8 @@ class ElectronApi
         if (data.dataB64) patch.dataB64 = data.dataB64;
         projectsUtil.writeProjectToFile(projectFile, origProject, patch);
         this.loadProject(projectFile);
+        electronApp.setDocumentEdited(false);
+        electronApp._unsavedContentLeave = true;
         electronApp.reload();
         return this.success("OK", origProject, true);
     }

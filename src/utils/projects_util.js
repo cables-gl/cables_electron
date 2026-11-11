@@ -447,6 +447,48 @@ class ProjectsUtil extends SharedProjectsUtil
         return filteredOpDocs;
     }
 
+    /**
+     * @param {Object} project
+     * @param {String} collectionName
+     * @returns {Object[]}
+     */
+    getCollectionOpDocsInProjectDirs(project, collectionName)
+    {
+        const name = this._opsUtil.getCollectionName(collectionName);
+        return this.getOpDocsInProjectDirs(project).filter((opDoc) => { return this._opsUtil.getCollectionName(opDoc.name) === name; });
+    }
+
+    /**
+     * extension and team collections in the op dirs that the project uses no op of,
+     * like on web these are only offered as a loadable collection
+     *
+     * @param {Object} project
+     * @returns {String[]}
+     */
+    getUnusedCollectionsInProjectDirs(project)
+    {
+        const usedCollections = [];
+        if (project && project.ops)
+        {
+            const usedOps = project.ops.concat(this._subPatchOpUtil.getOpsUsedInSubPatches(project));
+            usedOps.forEach((op) =>
+            {
+                const opName = this._opsUtil.getOpNameById(op.opId) || op.objName;
+                if (opName) usedCollections.push(this._opsUtil.getCollectionName(opName));
+            });
+        }
+
+        const unusedCollections = [];
+        this.getOpDocsInProjectDirs(project).forEach((opDoc) =>
+        {
+            if (!this._opsUtil.isExtensionOp(opDoc.name) && !this._opsUtil.isTeamOp(opDoc.name)) return;
+            const collectionName = this._opsUtil.getCollectionName(opDoc.name);
+            if (usedCollections.includes(collectionName) || unusedCollections.includes(collectionName)) return;
+            unusedCollections.push(collectionName);
+        });
+        return unusedCollections;
+    }
+
     getExportTargetPath(project)
     {
         return settings.getDownloadPath();
