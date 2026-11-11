@@ -419,7 +419,8 @@ class ElectronEndpoint
         {
             let allOps = [];
             if (project.ops) allOps = project.ops.filter((op) => { return !opDocs.some((d) => { return d.id === op.opId; }); });
-            const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project);
+            const unusedCollections = projectsUtil.getUnusedCollectionsInProjectDirs(project);
+            const opsInProjectDir = projectsUtil.getOpDocsInProjectDirs(project).filter((opDoc) => { return !unusedCollections.includes(opsUtil.getCollectionName(opDoc.name)); });
             const opsInSubPatches = subPatchOpUtil.getOpsUsedInSubPatches(project);
             allOps = allOps.concat(opsInProjectDir);
             allOps = allOps.concat(opsInSubPatches);
@@ -495,6 +496,8 @@ class ElectronEndpoint
                 {
                     const collectionName = opsUtil.getCollectionNamespace(opName);
                     opNames = opNames.concat(opsUtil.getCollectionOpNames(collectionName));
+                    const projectDirDocs = projectsUtil.getCollectionOpDocsInProjectDirs(currentProject, collectionName);
+                    opNames = helper.uniqueArray(opNames.concat(projectDirDocs.map((opDoc) => { return opDoc.name; })));
                     opNames.push(opName);
                 }
                 else

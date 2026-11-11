@@ -209,6 +209,8 @@ class OpsUtil extends SharedOpsUtil
         if (relative)
         {
             if (opName.endsWith(".")) opName = opName.substring(0, opName.length - 1);
+            const collectionName = this.getCollectionName(opName);
+            if ((this.isExtensionOp(opName) || this.isTeamOp(opName)) && collectionName !== opName) return path.join(collectionName, opName, "/");
             return path.join(opName, "/");
         }
         else
