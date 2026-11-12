@@ -30,11 +30,11 @@ function _watch(done)
         return file.includes("/node_modules/") || basename.startsWith(".");
     } };
     const uiDist = path.join("./src", config.path.uiDist);
-    watchers.push(gulp.watch(["src_client/**/*.js", "../shared/shared_constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(_uiBuildStarted, defaultSeries, _reloadUi)));
+    watchers.push(gulp.watch(["src_client/**/*.js", "../shared/shared_constants.json", "../shared/client/**/*.js"], watchOptions, gulp.series(_uiBuildStarted, defaultSeries)));
     watchers.push(gulp.watch(["src/**/*.js", "../shared/api/**/*.js"], watchOptions, gulp.series(electronChanges)));
     // cables_ui writes buildinfo.json before every build
     watchers.push(gulp.watch([uiDist + "buildinfo.json"], watchOptions, _uiBuildStarted));
-    watchers.push(gulp.watch([uiDist + "js/*.js", uiDist + "css/*.css", uiDist + "index.html"], { ...watchOptions, "delay": 1000 }, _reloadUi));
+    watchers.push(gulp.watch([uiDist + "js/*.js", uiDist + "css/*.css", uiDist + "index.html", "dist/public/js/*.js"], { ...watchOptions, "delay": 1000 }, _reloadUi));
     done();
 }
 
