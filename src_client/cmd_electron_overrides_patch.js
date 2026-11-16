@@ -22,11 +22,12 @@ class CmdElectronOverridesPatch
         cablesElectron.editor.api("saveProjectAs", {
             "name": patchName,
             "dataB64": b64
-        }, (err) =>
+        }, (err, newProject) =>
         {
             if (!err && gui)
             {
                 gui.savedState.setSaved("save as end", 0);
+                cablesElectron.editor.api("gotoPatch", { "id": newProject.shortId }, () => {});
             }
         });
     }

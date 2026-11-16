@@ -1590,8 +1590,6 @@ class ElectronApi
         projectsUtil.writeProjectToFile(projectFile, origProject, patch);
         this.loadProject(projectFile);
         electronApp.setDocumentEdited(false);
-        electronApp._unsavedContentLeave = true;
-        electronApp.reload();
         return this.success("OK", origProject, true);
     }
 

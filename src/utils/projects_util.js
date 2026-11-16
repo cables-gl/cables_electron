@@ -459,8 +459,6 @@ class ProjectsUtil extends SharedProjectsUtil
     }
 
     /**
-     * extension and team collections in the op dirs that the project uses no op of,
-     * like on web these are only offered as a loadable collection
      *
      * @param {Object} project
      * @returns {String[]}

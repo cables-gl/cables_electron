@@ -392,38 +392,84 @@ class OpsUtil extends SharedOpsUtil
         return toInstall;
     }
 
+    /**
+     *
+     * @param {String} oldOpDir
+     * @param {String} oldName
+     * @param {String} newName
+     * @returns {String}
+     */
+    _getRenamedOpDir(oldOpDir, oldName, newName)
+    {
+        const oldDir = path.join(oldOpDir, "/");
+        const oldRelativeDir = this.getOpTargetDir(oldName, true);
+        let opDirRoot = path.join(path.dirname(oldDir), "/");
+        if (oldDir.endsWith(path.join("/", oldRelativeDir))) opDirRoot = oldDir.substring(0, oldDir.length - oldRelativeDir.length);
+        return path.join(opDirRoot, this.getOpTargetDir(newName, true));
+    }
+
+    deleteOp(opName)
+    {
+        const opDir = this.getOpAbsolutePath(opName);
+        const deleted = super.deleteOp(opName);
+        if (deleted && opDir) this._removeEmptyCollectionDir(opDir, opName);
+        return deleted;
+    }
+
+    _renameOp(oldName, newName, currentUser, formatCode, removeOld, newId, oldOpDir, newOpDir, cb = null)
+    {
+        const result = super._renameOp(oldName, newName, currentUser, formatCode, removeOld, newId, oldOpDir, newOpDir, cb);
+        if (removeOld) this._removeEmptyCollectionDir(oldOpDir, oldName);
+        return result;
+    }
+
+    /**
+     *
+     * @param {String} opDir
+     * @param {String} opName
+     */
+    _removeEmptyCollectionDir(opDir, opName)
+    {
+        if (!this.isExtensionOp(opName) && !this.isTeamOp(opName)) return;
+        const collectionDir = path.dirname(path.join(opDir, "/"));
+        if (path.basename(collectionDir) !== this.getCollectionName(opName)) return;
+        if (!fs.existsSync(collectionDir)) return;
+        if (fs.readdirSync(collectionDir).length > 0) return;
+        fs.rmSync(collectionDir, { "recursive": true, "force": true });
+    }
+
     renameToCoreOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, true, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToExtensionOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, true, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToTeamOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToUserOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToPatchOp(oldName, newName, currentUser, removeOld, newId, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
     }
 
