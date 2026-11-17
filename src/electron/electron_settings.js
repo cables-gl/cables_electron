@@ -30,6 +30,7 @@ class ElectronSettings
     #RECENT_PROJECTS_FIELD = "recentProjects";
     #OPEN_DEV_TOOLS_FIELD = "openDevTools";
     #DOWNLOAD_PATH = "downloadPath";
+    #LAST_PROJECT_DIR_FIELD = "lastPatchDir";
     #OP_DIRS_FIELD = "opDirectories";
     #WINDOW_BOUNDS = "windowBounds";
     #WINDOW_ZOOM_FACTOR = "windowZoomFactor";
@@ -62,6 +63,7 @@ class ElectronSettings
         this.#opts.defaults[this.#STORAGEDIR_FIELD] = storageDir;
         this.#opts.defaults[this.#RECENT_PROJECTS_FIELD] = {};
         this.#opts.defaults[this.#OP_DIRS_FIELD] = [];
+        this.#opts.defaults[this.#LAST_PROJECT_DIR_FIELD] = null;
 
         this.#opts.defaults[this.#OPEN_DEV_TOOLS_FIELD] = false;
         this.#opts.defaults[this.#DOWNLOAD_PATH] = app.getPath("downloads");
@@ -197,6 +199,17 @@ class ElectronSettings
         this._setCurrentProjectFile(projectFile);
         this._setCurrentProjectDir(projectDir);
         this._setCurrentProject(projectFile, newProject);
+        if (projectDir) this.set(this.#LAST_PROJECT_DIR_FIELD, projectDir);
+    }
+
+    /**
+     * @returns {String|null}
+     */
+    getLastProjectDir()
+    {
+        const dir = this.get(this.#LAST_PROJECT_DIR_FIELD);
+        if (dir && fs.existsSync(dir)) return dir;
+        return null;
     }
 
     getCurrentUser()

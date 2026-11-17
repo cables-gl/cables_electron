@@ -898,7 +898,7 @@ class ElectronApp
         let dir = patchDir;
         if (useLastDir && this.#lastDialogDir && this.#lastDialogProjectDir === patchDir && fs.existsSync(this.#lastDialogDir)) dir = this.#lastDialogDir;
 
-        if (!dir) return defaultPath || undefined;
+        if (!dir) dir = settings.getLastProjectDir() || app.getPath("documents");
         if (!defaultPath) return dir;
         return path.join(dir, defaultPath);
     }
