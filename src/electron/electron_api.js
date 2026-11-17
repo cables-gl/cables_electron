@@ -1147,6 +1147,12 @@ class ElectronApi
                 targetDir = projectOpDirs[0].dir;
             }
         }
+        if (targetDir === cables.getExtensionOpsPath())
+        {
+            let opNamespace = opsUtil.getNamespace(opName, true);
+            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
+            targetDir = path.join(targetDir, opNamespace);
+        }
         const license = settings.getUserSetting("opLicense", "MIT");
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir, license);
         filesUtil.registerOpChangeListeners([opName]);
@@ -1203,13 +1209,7 @@ class ElectronApi
             // new version: put the new op next to the old one, if that is in one of the op dirs
             const oldOpDir = opsUtil.getOpSourceDir(oldName);
             const opDirs = projectsUtil.getProjectOpDirs(settings.getCurrentProject());
-            if (oldOpDir && opDirs.some((opDir) => { return oldOpDir.startsWith(path.join(opDir, "/")); }))
-            {
-                const oldDir = path.join(oldOpDir, "/");
-                const oldRelativeDir = opsUtil.getOpTargetDir(oldName, true);
-                if (oldDir.endsWith(path.join("/", oldRelativeDir))) targetDir = oldDir.substring(0, oldDir.length - oldRelativeDir.length);
-                else targetDir = path.dirname(oldOpDir);
-            }
+            if (oldOpDir && opDirs.some((opDir) => { return oldOpDir.startsWith(path.join(opDir, "/")); })) targetDir = path.dirname(oldOpDir);
         }
         if (!targetDir)
         {
@@ -1219,6 +1219,12 @@ class ElectronApi
             {
                 targetDir = projectOpDirs[0].dir;
             }
+        }
+        if (targetDir === cables.getExtensionOpsPath())
+        {
+            let opNamespace = opsUtil.getNamespace(newName, true);
+            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
+            targetDir = path.join(targetDir, opNamespace);
         }
         const cloned = opsUtil.cloneOp(oldName, newName, currentUser, targetDir);
         projectsUtil.invalidateProjectCaches();
