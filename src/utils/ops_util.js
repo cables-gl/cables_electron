@@ -5,6 +5,7 @@ import fs from "fs";
 import beautify from "js-beautify";
 import projectsUtil from "./projects_util.js";
 import filesUtil from "./files_util.js";
+import settings from "../electron/electron_settings.js";
 
 /**
  * @typedef OpCodeFormatResult
@@ -390,38 +391,60 @@ class OpsUtil extends SharedOpsUtil
         return toInstall;
     }
 
+    /**
+     *
+     * @param {String} oldOpDir
+     * @param {String} oldName
+     * @param {String} newName
+     * @returns {String}
+     */
+    _getRenamedOpDir(oldOpDir, oldName, newName)
+    {
+        // renamed ops go next to their oldName, unless we rename core/extensions to teamops for example
+        // we then put them into the op dir hierarchy
+        const coreDir = path.join(this._cables.getCoreOpsPath(), "/");
+        const extDir = path.join(this._cables.getExtensionOpsPath(), "/");
+        if (!oldOpDir.startsWith(coreDir) && !oldOpDir.startsWith(extDir)) return oldOpDir.replace(oldName, newName);
+        if (this.isCoreOp(newName) && oldOpDir.startsWith(coreDir)) return oldOpDir.replace(oldName, newName);
+        if (this.isExtensionOp(newName)) return path.join(extDir, this.getCollectionName(newName), newName, "/");
+
+        const opDirs = projectsUtil.getProjectOpDirs(settings.getCurrentProject(), false, false);
+        if (opDirs.length === 0) return oldOpDir.replace(oldName, newName);
+        return path.join(opDirs[0], newName, "/");
+    }
+
     renameToCoreOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, true, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToExtensionOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, true, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToTeamOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToUserOp(oldName, newName, currentUser, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, true, false, oldOpDir, newOpDir, cb);
     }
 
     renameToPatchOp(oldName, newName, currentUser, removeOld, newId, cb = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = oldOpDir.replace(oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
         return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
     }
 
