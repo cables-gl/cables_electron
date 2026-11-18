@@ -579,7 +579,8 @@ class DocUtil extends SharedDocUtil
                     }
                     catch (e)
                     {
-                        this._log.warn("failed to parse opdocs for", opName, "from", jsonPath);
+                        this._log.error("invalid op json, ignoring op", opName, path.join(opDir, jsonPath), e.message);
+                        this.removeOpNameFromLookup(opName);
                     }
                 }
             }

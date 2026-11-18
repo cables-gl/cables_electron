@@ -1152,6 +1152,15 @@ class ElectronApp
             this._unsavedContentLeave = false;
         });
 
+        this.editorWindow.webContents.on("will-navigate", (event, url) =>
+        {
+            if (url && url.startsWith("http"))
+            {
+                event.preventDefault();
+                shell.openExternal(url);
+            }
+        });
+
         this.editorWindow.webContents.setWindowOpenHandler(({ url, frameName }) =>
         {
             if (url && url.startsWith("http"))

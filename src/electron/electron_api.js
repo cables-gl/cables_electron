@@ -748,6 +748,7 @@ class ElectronApi
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
         if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
+        if (!opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
         const libName = sanitizeFileName(data.name);
         const opFilename = opsUtil.getOpJsonPath(opName);
         const libFilename = cables.getCoreLibsPath() + libName;
@@ -785,6 +786,7 @@ class ElectronApi
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
         if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
+        if (!opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
         const libName = sanitizeFileName(data.name);
 
         const filename = opsUtil.getOpJsonPath(opName);
@@ -823,6 +825,7 @@ class ElectronApi
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
         if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
+        if (!opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
         const libName = sanitizeFileName(data.name);
 
         const filename = opsUtil.getOpJsonPath(opName);
@@ -855,6 +858,7 @@ class ElectronApi
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
         if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
+        if (!opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
         const libName = sanitizeFileName(data.name);
         const opFilename = opsUtil.getOpJsonPath(opName);
 
@@ -1165,6 +1169,7 @@ class ElectronApi
     {
         let opName = data.opname;
         if (opsUtil.isOpId(data.opname)) opName = opsUtil.getOpNameById(data.opname);
+        if (opsUtil.opExists(opName, true) && !opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
         const currentUser = settings.getCurrentUser();
         const result = opsUtil.updateOp(currentUser, opName, data.update, { "formatCode": data.formatCode });
         return this.success("OK", { "data": result }, true);
@@ -1900,6 +1905,7 @@ class ElectronApi
     {
         const opName = opsUtil.getOpNameById(data.opname) || data.opname;
         if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
+        if (!opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
         const depName = data.name;
         const content = opsUtil.getOpDependencyCode(opName, depName);
         return this.success("OK", { "content": content });
@@ -1911,6 +1917,7 @@ class ElectronApi
         if (opsUtil.isOpId(opName)) opName = opsUtil.getOpNameById(opName);
         if (!options.opName || !options.type) return this.error("INVALID_DATA");
         if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
+        if (!opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
 
         const dep = this._getOpDepFromRequest({ "body": options });
         const added = opsUtil.addOpDependency(opName, dep);
@@ -1932,6 +1939,7 @@ class ElectronApi
         let opName = options.opName;
         if (opsUtil.isOpId(opName)) opName = opsUtil.getOpNameById(opName);
         if (!opName || !opsUtil.opExists(opName, true)) return this.error("OP_NOT_FOUND");
+        if (!opsUtil.opJsonValid(opName)) return this.error("Op has invalid json-file", { "opName": opName }, "error");
         const opDocFile = opsUtil.getOpAbsoluteJsonFilename(opName);
         if (fs.existsSync(opDocFile))
         {
