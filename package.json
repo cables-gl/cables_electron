@@ -177,6 +177,7 @@
         "moment-mini": "2.29.4",
         "npm": "10.5.2",
         "pako": "2.1.0",
+        "path-to-regexp": "0.1.13",
         "project-name-generator": "2.1.9",
         "sanitize-filename": "1.6.3",
         "uuid-v4": "0.1.0",
@@ -200,6 +201,7 @@
     },
     "allowScripts": {
         "fsevents@2.3.3": true,
-        "electron@31.7.3": true
+        "electron@43.2.0": true,
+        "electron-winstaller@5.4.0": false
     }
 }

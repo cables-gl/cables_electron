@@ -3,6 +3,7 @@ import { net, protocol, session, shell } from "electron";
 import fs from "fs";
 import path from "path";
 import mime from "mime";
+import pathToRegexp from "path-to-regexp";
 
 import cables from "../cables.js";
 import logger from "../utils/logger.js";
@@ -38,6 +39,7 @@ class ElectronEndpoint
     constructor()
     {
         this._log = logger;
+        this._routes = [];
     }
 
     init()
@@ -98,270 +100,267 @@ class ElectronEndpoint
             return new Response(null, { "status": 404, "statusText": "Not Found" });
         });
 
+        this.get("/api/corelib/:name", this.apiGetCoreLib);
+        this.get("/api/lib/:name", this.apiGetLib);
+        this.get("/api/oplib/:opIdentifier/:name", this.apiGetOpLib);
+        this.get("/api/changelog.json", this.apiChangelog);
+        this.get("/api/avatar/", this.getAvatar);
+        this.get("/api/avatar/:userId", this.getAvatar);
+        this.get("/api/avatar//:size", this.getAvatar);
+        this.get("/api/avatar/:userId/:size", this.getAvatar);
+        this.get("/team/:teamId/avatar", this.imageAvatar);
+        this.get("/team/:teamId/avatar/:size", this.imageAvatar);
+        this.get("/api/ops/code/project/:projectId/ops.patch.js", this.apiGetProjectOpsCode);
+        this.get("/api/ops/code/team/:opIdentifier.js", this.apiGetCollectionOpsCode);
+        this.get("/api/ops/code/extension/:opIdentifier.js", this.apiGetCollectionOpsCode);
+        this.get("/api/ops/ops.core.js", this.apiGetBaseOpsCode);
+        this.get("/api/op/layout/:opIdentifier.svg", this.apiOpLayout);
+        this.get("/api/op/layout/:opIdentifier", this.apiOpLayout);
+        this.get("/api/op/:opIdentifier.js", this.apiGetOpCode);
+        this.get("/api/op/:opIdentifier", this.apiGetOpCode);
+        this.get("/op/screenshot/:name.png", this.viewOpScreenshot);
+        this.get("/edit/:projectId", this.viewEditProject);
+        this.get("/edit/", this.viewEditProject);
+        this.get("/openDir/*", this.openDir);
+        this.get("/", this.apiRoot);
+
         this._handleProtocol(ses, "cables", async (request) =>
         {
             const url = new URL(request.url);
-            const urlPath = url.pathname;
-            const queryParams = new URLSearchParams(url.search);
-            const params = {};
-            const req = request;
-            req.params = params;
-            req.query = {};
-            for (let key in queryParams)
+            request.query = Object.fromEntries(url.searchParams);
+            for (let i = 0; i < this._routes.length; i++)
             {
-                req.query[key] = queryParams.get(key);
-            }
-            if (urlPath.startsWith("/api/corelib/"))
-            {
-                req.params.name = urlPath.split("/", 4)[3];
-                req.params.name = path.basename(req.params.name, ".js");
-                const libCode = this.apiGetCoreLibs(req);
-                if (libCode)
+                const route = this._routes[i];
+                const result = route.regexp.exec(url.pathname);
+                if (!result) continue;
+                request.params = {};
+                route.keys.forEach((key, k) =>
                 {
-                    return new Response(libCode, {
-                        "headers": { "content-type": "application/javascript" }
-                    });
-                }
-                else
-                {
-                    return new Response(libCode, {
-                        "headers": { "content-type": "application/javascript" },
-                        "status": 500
-                    });
-                }
-            }
-            else if (urlPath.startsWith("/api/lib/"))
-            {
-                req.params.name = urlPath.split("/", 4)[3];
-                const libCode = this.apiGetLibs(req);
-                if (libCode)
-                {
-                    return new Response(libCode, {
-                        "headers": { "content-type": "application/javascript" }
-                    });
-                }
-                else
-                {
-                    return new Response(libCode, {
-                        "headers": { "content-type": "application/javascript" },
-                        "status": 500
-                    });
-                }
-            }
-            else if (urlPath.startsWith("/api/oplib/"))
-            {
-                const parts = urlPath.split("/", 5);
-                let opName = parts[3];
-                let libName = parts[4];
-                if (opsUtil.isOpId(opName))
-                {
-                    opName = opsUtil.getOpNameById(opName);
-                }
-                if (opName)
-                {
-                    const opPath = opsUtil.getOpAbsolutePath(opName);
-                    const libPath = path.join(opPath, libName);
-                    const libUrl = helper.pathToFileURL(libPath);
-                    const response = await net.fetch(libUrl, { "bypassCustomProtocolHandlers": true });
-                    this._addDefaultHeaders(request, response, libPath);
-                    return response;
-                }
-                else
-                {
-                    return new Response("", {
-                        "headers": { "content-type": "application/javascript" },
-                        "status": 404
-                    });
-                }
-            }
-            else if (urlPath === "/api/changelog.json")
-            {
-                return new Response(JSON.stringify(this.apiGetChangelog(req)), {
-                    "headers": { "content-type": "application/json" }
+                    const value = result[k + 1];
+                    if (value !== undefined) request.params[key.name] = decodeURIComponent(value);
                 });
+                return route.method(request);
             }
-            else if (urlPath.startsWith("/api/avatar/"))
-            {
-                const username = urlPath.split("/")[3];
-                const file = this._getAvatarPlaceHolderFilename("user", username);
-                const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
-                this._addDefaultHeaders(request, response, file);
-                return response;
-            }
-            else if (urlPath.startsWith("/api/ops/code/project/"))
-            {
-                const code = this.apiGetProjectOpsCode(req);
-                return new Response(code, {
-                    "headers": { "content-type": "application/json" }
-                });
-            }
-            else if (urlPath.startsWith("/api/ops/code/team/") || urlPath.startsWith("/api/ops/code/extension"))
-            {
-                let opIdentifier = path.basename(urlPath, ".js");
-                let opName = opIdentifier;
-                if (opsUtil.isOpId(opIdentifier))
-                {
-                    opName = opsUtil.getOpNameById(opName);
-                }
-                if (opName)
-                {
-                    req.params.opName = opName;
-                    const opCode = this.apiGetOpCode(opName, req.query.preview);
-                    if (opCode)
-                    {
-                        return new Response(opCode, {
-                            "headers": { "content-type": "application/javascript" }
-                        });
-                    }
-                    else
-                    {
-                        doc.removeOpNameFromLookup(opName);
-                        return new Response(opCode, {
-                            "headers": { "content-type": "application/javascript" },
-                            "status": 404
-                        });
-                    }
-                }
-                else
-                {
-                    return new Response("", {
-                        "headers": { "content-type": "application/javascript" },
-                        "status": 404
-                    });
-                }
-            }
-            else if (urlPath.startsWith("/api/ops/ops.core.js"))
-            {
-                const code = this.apiGetCoreOpsCode(req);
+            return new Response("", { "status": 404 });
+        });
+    }
 
-                if (code)
-                {
-                    return new Response(code, {
-                        "headers": { "content-type": "application/javascript" }
-                    });
-                }
-                else
-                {
-                    return new Response(code, {
-                        "headers": { "content-type": "application/javascript" },
-                        "status": 500
-                    });
-                }
-            }
-            else if (urlPath.startsWith("/api/op/layout/"))
-            {
-                let opName = path.basename(urlPath, ".svg");
-                if (opsUtil.isOpId(opName))
-                {
-                    opName = opsUtil.getOpNameById(opName);
-                }
-                req.params.opName = opName;
-                const layoutSvg = this.apiOpLayout(req);
-                if (layoutSvg)
-                {
-                    return new Response(layoutSvg, {
-                        "headers": { "content-type": "image/svg+xml" }
-                    });
-                }
-                else
-                {
-                    return new Response("", {
-                        "headers": { "content-type": "image/svg+xml" },
-                        "status": 500
-                    });
-                }
-            }
-            else if (urlPath.startsWith("/api/op/"))
-            {
-                let opIdentifier = path.basename(urlPath, ".js");
-                let opName = opIdentifier;
-                if (opsUtil.isOpId(opIdentifier))
-                {
-                    opName = opsUtil.getOpNameById(opName);
-                }
-                if (opName && opsUtil.opExists(opName, true))
-                {
-                    req.params.opName = opName;
-                    const opCode = this.apiGetOpCode(opName, req.query.preview);
-                    if (opCode)
-                    {
-                        return new Response(opCode, {
-                            "headers": { "content-type": "application/javascript" }
-                        });
-                    }
-                    else
-                    {
-                        doc.removeOpNameFromLookup(opName);
-                        return new Response(opCode, {
-                            "headers": { "content-type": "application/javascript" },
-                            "status": 404
-                        });
-                    }
-                }
-                else
-                {
-                    return new Response("", {
-                        "headers": { "content-type": "application/javascript" },
-                        "status": 404
-                    });
-                }
-            }
-            else if (urlPath.startsWith("/op/screenshot"))
-            {
-                let opName = path.basename(urlPath, ".png");
-                if (opName) opName = opName.replace(/.png$/, "");
-                const absolutePath = opsUtil.getOpAbsolutePath(opName);
-                let file = path.join(absolutePath, "screenshot.png");
-                let response = null;
-                try
-                {
-                    response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
-                }
-                catch (e)
-                {
-                    file = path.resolve(cables.getAssetLibraryPath(), "../op_screenshot_placeholder.png");
-                    response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
-                }
-                this._addDefaultHeaders(request, response, file);
-                return response;
-            }
-            else if (urlPath.startsWith("/edit/"))
-            {
-                let patchId = urlPath.split("/", 3)[2];
-                let projectFile = null;
-                if (patchId)
-                {
-                    projectFile = settings.getRecentProjectFile(patchId);
-                }
-                if (projectFile)
-                {
-                    await electronApp.openPatch(projectFile, true);
-                }
-                else
-                {
-                    await electronApp.pickProjectFileDialog();
-                }
-                return new Response(null, { "status": 302 });
-            }
-            else if (urlPath.startsWith("/openDir/"))
-            {
-                let dir = urlPath.replace("/openDir/", "");
-                await shell.showItemInFolder(dir);
-                return new Response(null, { "status": 404 });
-            }
-            else if (urlPath === "/")
-            {
-                return new Response(JSON.stringify({ "sandbox": true }), {
-                    "headers": { "content-type": "application/json" }
-                });
-            }
-            else
-            {
-                return new Response("", {
-                    "headers": { "content-type": "application/javascript" },
-                    "status": 404
-                });
-            }
+    /**
+     * same route syntax as expressjs in cables_api
+     *
+     * @param {String} urlPath
+     * @param {Function} method
+     */
+    get(urlPath, method)
+    {
+        const keys = [];
+        const regexp = pathToRegexp(urlPath, keys, { "end": true, "strict": false, "sensitive": false });
+        this._routes.push({ "regexp": regexp, "keys": keys, "method": method.bind(this) });
+    }
+
+    /**
+     * @param {String|Buffer} code
+     * @param {Number} [errorStatus=500]
+     * @returns {Response}
+     */
+    _jsResponse(code, errorStatus = 500)
+    {
+        if (code) return new Response(code, { "headers": { "content-type": "application/javascript" } });
+        return new Response(code || "", { "headers": { "content-type": "application/javascript" }, "status": errorStatus });
+    }
+
+    /**
+     * @param {Request} request
+     * @param {String} file
+     * @returns {Promise<Response>}
+     */
+    async _fileResponse(request, file)
+    {
+        const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+        this._addDefaultHeaders(request, response, file);
+        return response;
+    }
+
+    /**
+     * @param {String} opIdentifier
+     * @returns {String}
+     */
+    _getOpName(opIdentifier)
+    {
+        if (opsUtil.isOpId(opIdentifier)) return opsUtil.getOpNameById(opIdentifier);
+        return opIdentifier;
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Response}
+     */
+    apiGetCoreLib(req)
+    {
+        return this._jsResponse(this._getCoreLibCode(path.basename(req.params.name, ".js")));
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Response}
+     */
+    apiGetLib(req)
+    {
+        return this._jsResponse(this._getLibCode(req.params.name));
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Promise<Response>}
+     */
+    async apiGetOpLib(req)
+    {
+        const opName = this._getOpName(req.params.opIdentifier);
+        if (!opName) return this._jsResponse("", 404);
+        return this._fileResponse(req, path.join(opsUtil.getOpAbsolutePath(opName), req.params.name));
+    }
+
+    /**
+     * @returns {Response}
+     */
+    apiChangelog()
+    {
+        return new Response(JSON.stringify({ "ts": Date.now(), "items": [] }), {
+            "headers": { "content-type": "application/json" }
+        });
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Promise<Response>}
+     */
+    async getAvatar(req)
+    {
+        return this._fileResponse(req, this._getAvatarPlaceHolderFilename("user", req.params.userId));
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Promise<Response>}
+     */
+    async imageAvatar(req)
+    {
+        const currentUser = settings.getCurrentUser();
+        return this._fileResponse(req, this._getAvatarPlaceHolderFilename("team", req.params.teamId, currentUser.profile_theme));
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Response}
+     */
+    apiGetProjectOpsCode(req)
+    {
+        return new Response(this._getProjectOpsCode(req.query.preview), {
+            "headers": { "content-type": "application/json" }
+        });
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Response}
+     */
+    apiGetCollectionOpsCode(req)
+    {
+        const opName = this._getOpName(req.params.opIdentifier);
+        if (!opName) return this._jsResponse("", 404);
+        const opCode = this._getOpCode(opName, req.query.preview);
+        if (!opCode) doc.removeOpNameFromLookup(opName);
+        return this._jsResponse(opCode, 404);
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Response}
+     */
+    apiGetBaseOpsCode(req)
+    {
+        return this._jsResponse(this._getCoreOpsCode(req.query.preview));
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Response}
+     */
+    apiOpLayout(req)
+    {
+        const layoutSvg = opsUtil.getOpSVG(this._getOpName(req.params.opIdentifier));
+        return new Response(layoutSvg || "", {
+            "headers": { "content-type": "image/svg+xml" },
+            "status": layoutSvg ? 200 : 500
+        });
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Response}
+     */
+    apiGetOpCode(req)
+    {
+        const opName = this._getOpName(req.params.opIdentifier);
+        if (!opName || !opsUtil.opExists(opName, true)) return this._jsResponse("", 404);
+        const opCode = this._getOpCode(opName, req.query.preview);
+        if (!opCode) doc.removeOpNameFromLookup(opName);
+        return this._jsResponse(opCode, 404);
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Promise<Response>}
+     */
+    async viewOpScreenshot(req)
+    {
+        const file = path.join(opsUtil.getOpAbsolutePath(req.params.name), "screenshot.png");
+        try
+        {
+            return await this._fileResponse(req, file);
+        }
+        catch (e)
+        {
+            return this._fileResponse(req, path.resolve(cables.getAssetLibraryPath(), "../op_screenshot_placeholder.png"));
+        }
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Promise<Response>}
+     */
+    async viewEditProject(req)
+    {
+        let projectFile = null;
+        if (req.params.projectId) projectFile = settings.getRecentProjectFile(req.params.projectId);
+        if (projectFile)
+        {
+            await electronApp.openPatch(projectFile, true);
+        }
+        else
+        {
+            await electronApp.pickProjectFileDialog();
+        }
+        return new Response(null, { "status": 302 });
+    }
+
+    /**
+     * @param {Request} req
+     * @returns {Promise<Response>}
+     */
+    async openDir(req)
+    {
+        await shell.showItemInFolder(req.params[0]);
+        return new Response(null, { "status": 404 });
+    }
+
+    /**
+     * @returns {Response}
+     */
+    apiRoot()
+    {
+        return new Response(JSON.stringify({ "sandbox": true }), {
+            "headers": { "content-type": "application/json" }
         });
     }
 
@@ -403,9 +402,13 @@ class ElectronEndpoint
         });
     }
 
-    apiGetCoreOpsCode(req)
+    /**
+     *
+     * @param {Boolean} preview
+     * @returns {String}
+     */
+    _getCoreOpsCode(preview)
     {
-        const preview = req.query.preview;
         // newer versions of core ops can be in the op dirs of the project, leave out the old core version then
         const project = settings.getCurrentProject();
         const opDocs = doc.getOpDocs().concat(project ? projectsUtil.getOpDocsInProjectDirs(project) : []);
@@ -414,9 +417,13 @@ class ElectronEndpoint
         return code;
     }
 
-    apiGetProjectOpsCode(req)
+    /**
+     *
+     * @param {Boolean} preview
+     * @returns {String}
+     */
+    _getProjectOpsCode(preview)
     {
-        const preview = req.query.preview;
         const project = settings.getCurrentProject();
 
         let code = "";
@@ -450,9 +457,7 @@ class ElectronEndpoint
     }
 
     /**
-     * docs of all core ops that are part of the core ops code, see apiGetCoreOpsCode,
-     * old versions are left out, also if the newer version is in the op dirs of the project
-     *
+    *
      * @param {Object} project
      * @returns {import("cables-shared-client").OpDoc[]}
      */
@@ -475,7 +480,13 @@ class ElectronEndpoint
         });
     }
 
-    apiGetOpCode(opName, preview = false)
+    /**
+     *
+     * @param {String} opName
+     * @param {Boolean} [preview=false]
+     * @returns {String}
+     */
+    _getOpCode(opName, preview = false)
     {
         let code = "";
         const currentProject = settings.getCurrentProject();
@@ -533,9 +544,8 @@ class ElectronEndpoint
         }
     }
 
-    apiGetCoreLibs(req)
+    _getCoreLibCode(name)
     {
-        const name = req.params.name;
         const fn = path.join(cables.getCoreLibsPath(), name + ".js");
 
         if (fs.existsSync(fn))
@@ -549,9 +559,8 @@ class ElectronEndpoint
         }
     }
 
-    apiGetLibs(req)
+    _getLibCode(name)
     {
-        const name = req.params.name;
         const fn = path.join(cables.getLibsPath(), name);
         if (fs.existsSync(fn))
         {
@@ -562,20 +571,6 @@ class ElectronEndpoint
             this._log.error("COULD NOT FIND LIB FILE AT", fn);
             return "";
         }
-    }
-
-    apiGetChangelog()
-    {
-        return {
-            "ts": Date.now(),
-            "items": []
-        };
-    }
-
-    apiOpLayout(req)
-    {
-        const opName = req.params.opName;
-        return opsUtil.getOpSVG(opName);
     }
 
     /**
