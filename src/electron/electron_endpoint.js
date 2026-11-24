@@ -182,7 +182,11 @@ class ElectronEndpoint
             }
             else if (urlPath.startsWith("/api/avatar/"))
             {
-
+                const username = urlPath.split("/")[3];
+                const file = this._getAvatarPlaceHolderFilename("user", username);
+                const response = await net.fetch(helper.pathToFileURL(file), { "bypassCustomProtocolHandlers": true });
+                this._addDefaultHeaders(request, response, file);
+                return response;
             }
             else if (urlPath.startsWith("/api/ops/code/project/"))
             {
@@ -572,6 +576,34 @@ class ElectronEndpoint
     {
         const opName = req.params.opName;
         return opsUtil.getOpSVG(opName);
+    }
+
+    /**
+     *
+     * @param {"user"|"team"} type
+     * @param {String} id
+     * @param {"dark"|"light"} [theme="dark"]
+     * @returns {String}
+     */
+    _getAvatarPlaceHolderFilename(type, id, theme = "dark")
+    {
+        if (!theme) theme = "dark";
+
+        let source = "avatar-placeholder.png";
+
+        if (type === "user" && id)
+        {
+            let num = 0;
+            id.split("").forEach((e) => { num += e.charCodeAt(0); });
+            num %= 6;
+            source = "avatar-placeholder-" + num + ".png";
+        }
+
+        if (type === "team")
+        {
+            source = "teams-avatar-placeholder-" + theme + ".png";
+        }
+        return path.join(cables.getResourceAssetsPath(), source);
     }
 
     _addDefaultHeaders(request, response, existingFile)

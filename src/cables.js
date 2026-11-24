@@ -81,8 +81,13 @@ class CablesElectron extends Cables
 
     getAssetLibraryPath()
     {
-        if (!this._config.path.assets) path.join(this.getPublicPath(), "assets/library/");
+        if (!this._config.path.assets) return path.join(this.getPublicPath(), "assets/library/");
         return this._config.path.assets.startsWith("/") ? this._config.path.assets : path.join(this._dirname, this._config.path.assets, "library/");
+    }
+
+    getResourceAssetsPath()
+    {
+        return path.join(app.getAppPath(), "resources", "assets");
     }
 
     getExportAssetTargetPath()
