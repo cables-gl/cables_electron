@@ -180,6 +180,10 @@ class ElectronEndpoint
                     "headers": { "content-type": "application/json" }
                 });
             }
+            else if (urlPath.startsWith("/api/avatar/"))
+            {
+
+            }
             else if (urlPath.startsWith("/api/ops/code/project/"))
             {
                 const code = this.apiGetProjectOpsCode(req);

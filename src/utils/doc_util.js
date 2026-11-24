@@ -523,6 +523,30 @@ class DocUtil extends SharedDocUtil
     }
 
     /**
+     * @returns {Array}
+     */
+    getOpProblems()
+    {
+        const removedProblems = [];
+        this.opProblems = this.opProblems.filter((problem) =>
+        {
+            const opExists = fs.existsSync(path.join(problem.dir, problem.name + ".json"));
+            const usedOpExists = fs.existsSync(path.join(problem.usedDir, problem.usedName + ".json"));
+            if (opExists && usedOpExists) return true;
+            if (opExists) removedProblems.push(problem);
+            return false;
+        });
+
+        // the op that owned the id is gone, give the id to the other one again
+        removedProblems.forEach((problem) =>
+        {
+            this.removeOpNamesFromLookup([problem.usedName]);
+            this.addOpToLookup(problem.id, problem.name);
+        });
+        return this.opProblems;
+    }
+
+    /**
      *
      * @param {String} opName
      * @returns {OpDoc}

@@ -321,7 +321,7 @@ export default class CablesElectron
     {
         if (!problem || !this.editor) return;
         this.editor.editor(TalkerAPI.CMD_UI_LOG_ERROR, { "level": "warn", "message": problem.message });
-        this.editor.editor(TalkerAPI.CMD_UI_NOTIFY_ERROR, { "msg": "Duplicate op id:", "text": problem.usedName + ", see log for details", "options": { "timeout": 0, "closeable": true } });
+        this.editor.editor(TalkerAPI.CMD_UI_NOTIFY_ERROR, { "msg": "Duplicate op id:", "text": problem.usedName, "options": { "timeout": 0, "closeable": true } });
     }
 
     _logStartup(title)
