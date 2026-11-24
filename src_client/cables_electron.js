@@ -251,6 +251,12 @@ export default class CablesElectron
 
             this.CABLES.UI.DEFAULTOPNAMES.defaultOpFallback = this.CABLES.UI.DEFAULTOPNAMES.HttpRequest;
         }
+
+        this.editorWindow.addEventListener("dragenter", (event) =>
+        {
+            if (!event.dataTransfer || !event.dataTransfer.types.includes("Files")) return;
+            if (this.CABLES && this.CABLES.fileUploader) this.CABLES.fileUploader.bindUploadDragNDrop();
+        }, true);
     }
 
     _registerCommands()

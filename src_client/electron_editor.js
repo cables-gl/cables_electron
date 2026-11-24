@@ -251,7 +251,7 @@ export default class ElectronEditor
         this._talkerTopics[TalkerAPI.CMD_CREATE_NEW_PATCH] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_PROJECT_OPS] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_ALL_OPDOCS] = {};
-        this._talkerTopics[TalkerAPI.CMD_GET_OP_DOCS] = {};
+        this._talkerTopics[TalkerAPI.CMD_GET_OP_DOCS] = { "noErrorLog": true };
         this._talkerTopics[TalkerAPI.CMD_SAVE_OP_CODE] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_OP_CODE] = {};
         this._talkerTopics[TalkerAPI.CMD_GET_OP_ATTACHMENT] = {};
@@ -324,7 +324,7 @@ export default class ElectronEditor
                 window.ipcRenderer.invoke("talkerMessage", talkerTopic, data, topicConfig).then((r) =>
                 {
                     const error = r && r.hasOwnProperty("error") ? r : null;
-                    if (error) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
+                    if (error && !topicConfig.noErrorLog) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
                     next(error, r);
                 });
             });
@@ -344,7 +344,7 @@ export default class ElectronEditor
         window.ipcRenderer.invoke("talkerMessage", cmd, data, topicConfig).then((r) =>
         {
             const error = r && r.hasOwnProperty("error") ? r : null;
-            if (error) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
+            if (error && !(topicConfig && topicConfig.noErrorLog)) this._talker.send(TalkerAPI.CMD_UI_LOG_ERROR, { "level": error.level, "message": error.msg || error });
             next(error, r);
         });
     }
