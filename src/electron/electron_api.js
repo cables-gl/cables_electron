@@ -1159,12 +1159,7 @@ class ElectronApi
                 targetDir = projectOpDirs[0].dir;
             }
         }
-        if (targetDir === cables.getExtensionOpsPath())
-        {
-            let opNamespace = opsUtil.getNamespace(opName, true);
-            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
-            targetDir = path.join(targetDir, opNamespace);
-        }
+        targetDir = opsUtil.getCollectionTargetDir(targetDir, opName);
         const license = settings.getUserSetting("opLicense", "MIT");
         const result = opsUtil.createOp(opName, currentUser, data.code, opDocDefaults, data.attachments, targetDir, license);
         filesUtil.registerOpChangeListeners([opName]);
@@ -1237,12 +1232,7 @@ class ElectronApi
                 targetDir = projectOpDirs[0].dir;
             }
         }
-        if (targetDir === cables.getExtensionOpsPath())
-        {
-            let opNamespace = opsUtil.getNamespace(newName, true);
-            if (opNamespace.endsWith(".")) opNamespace = opNamespace.substring(0, opNamespace.length - 1);
-            targetDir = path.join(targetDir, opNamespace);
-        }
+        targetDir = opsUtil.getCollectionTargetDir(targetDir, newName);
         const cloned = opsUtil.cloneOp(oldName, newName, currentUser, targetDir);
         projectsUtil.invalidateProjectCaches();
         return this.success("OK", cloned, true);

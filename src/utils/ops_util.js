@@ -404,13 +404,57 @@ class OpsUtil extends SharedOpsUtil
         // we then put them into the op dir hierarchy
         const coreDir = path.join(this._cables.getCoreOpsPath(), "/");
         const extDir = path.join(this._cables.getExtensionOpsPath(), "/");
-        if (!oldOpDir.startsWith(coreDir) && !oldOpDir.startsWith(extDir)) return oldOpDir.replace(oldName, newName);
+        if (!oldOpDir.startsWith(coreDir) && !oldOpDir.startsWith(extDir))
+        {
+            let parentDir = path.dirname(path.normalize(oldOpDir));
+            // never write to other collection dir
+            const oldCollection = this.getCollectionName(oldName);
+            if (path.basename(parentDir) === oldCollection && oldCollection !== this.getCollectionName(newName)) parentDir = path.dirname(parentDir);
+            return path.join(this.getCollectionTargetDir(parentDir, newName), newName, "/");
+        }
         if (this.isCoreOp(newName) && oldOpDir.startsWith(coreDir)) return oldOpDir.replace(oldName, newName);
         if (this.isExtensionOp(newName)) return path.join(extDir, this.getCollectionName(newName), newName, "/");
 
         const opDirs = projectsUtil.getProjectOpDirs(settings.getCurrentProject(), false, false);
         if (opDirs.length === 0) return oldOpDir.replace(oldName, newName);
-        return path.join(opDirs[0], newName, "/");
+        return path.join(this.getCollectionTargetDir(opDirs[0], newName), newName, "/");
+    }
+
+    /**
+     * find if we are working with cables team/ or extensions/
+     *
+     * @param {String} dir
+     * @param {String} opName
+     * @returns {String}
+     */
+    getCollectionTargetDir(dir, opName)
+    {
+        if (!dir || !opName) return dir;
+        if (!this.isExtensionOp(opName) && !this.isTeamOp(opName)) return dir;
+        const collectionName = this.getCollectionName(opName);
+        if (path.basename(path.normalize(dir)) === collectionName) return dir;
+        if (path.normalize(dir) === path.normalize(this._cables.getExtensionOpsPath()) || this._hasCollectionDirs(dir)) return path.join(dir, collectionName);
+        return dir;
+    }
+
+    /**
+     * @param {String} dir
+     * @returns {Boolean}
+     */
+    _hasCollectionDirs(dir)
+    {
+        let entries = [];
+        try
+        {
+            entries = fs.readdirSync(dir, { "withFileTypes": true });
+        }
+        catch (e) {}
+        return entries.some((entry) =>
+        {
+            if (!entry.isDirectory()) return false;
+            if (!this.isExtension(entry.name) && !this.isTeamNamespace(entry.name)) return false;
+            return this.getCollectionName(entry.name) === entry.name;
+        });
     }
 
     renameToCoreOp(oldName, newName, currentUser, cb = null)
