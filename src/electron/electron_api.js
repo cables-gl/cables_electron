@@ -469,7 +469,9 @@ class ElectronApi
             coreOpDocs = coreOpDocs.concat(allOtherDirsDocs);
         }
 
-        const otherDirsDocs = projectsUtil.getOpDocsInProjectDirs(project, true, true);
+        // filter unused collections
+        const unusedCollections = projectsUtil.getUnusedCollectionsInProjectDirs(project);
+        const otherDirsDocs = projectsUtil.getOpDocsInProjectDirs(project, true, true).filter((opDoc) => { return !unusedCollections.includes(opsUtil.getCollectionName(opDoc.name)); });
         const otherDirsOps = otherDirsDocs.map((opDoc) => { return opDoc.name; });
         projectOps = projectOps.concat(otherDirsOps);
 
