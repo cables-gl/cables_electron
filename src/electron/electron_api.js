@@ -1151,6 +1151,7 @@ class ElectronApi
             "coreLibs": data.coreLibs
         };
         let targetDir = data.opTargetDir;
+        if (!targetDir) targetDir = cables.getProjectOpsPath(true);
         if (!targetDir)
         {
             const projectOpDirs = projectsUtil.getOpDirs(settings.getCurrentProject());
@@ -1258,7 +1259,7 @@ class ElectronApi
         let opNamespace = opsUtil.getNamespace(newName);
 
         const opDocs = doc.getOpDocs(false, false);
-        const renameResults = this._getFullRenameResponse(opDocs, newName, oldName, currentUser, currentProject, opsUtil.isPrivateOp(newName), true);
+        const renameResults = this._getFullRenameResponse(opDocs, newName, oldName, currentUser, currentProject, opsUtil.isPrivateOp(newName), true, data.opTargetDir);
         if (!oldName)
         {
             renameResults.problems.push("No name for source op given.");
@@ -1289,36 +1290,39 @@ class ElectronApi
         result.user = currentUser;
         result.showresult = true;
 
+        filesUtil.unregisterOpChangeListeners([oldName]);
         let renameSuccess = false;
         if (opsUtil.isUserOp(newName))
         {
-            renameSuccess = opsUtil.renameToUserOp(oldName, newName, currentUser);
+            renameSuccess = opsUtil.renameToUserOp(oldName, newName, currentUser, null, data.opTargetDir);
         }
         else if (opsUtil.isTeamOp(newName))
         {
-            renameSuccess = opsUtil.renameToTeamOp(oldName, newName, currentUser);
+            renameSuccess = opsUtil.renameToTeamOp(oldName, newName, currentUser, null, data.opTargetDir);
         }
         else if (opsUtil.isExtensionOp(newName))
         {
-            renameSuccess = opsUtil.renameToExtensionOp(oldName, newName, currentUser);
+            renameSuccess = opsUtil.renameToExtensionOp(oldName, newName, currentUser, null, data.opTargetDir);
         }
         else if (opsUtil.isPatchOp(newName))
         {
-            renameSuccess = opsUtil.renameToPatchOp(oldName, newName, currentUser, true, false);
+            renameSuccess = opsUtil.renameToPatchOp(oldName, newName, currentUser, true, false, null, data.opTargetDir);
         }
         else
         {
-            renameSuccess = opsUtil.renameToCoreOp(oldName, newName, currentUser);
+            renameSuccess = opsUtil.renameToCoreOp(oldName, newName, currentUser, null, data.opTargetDir);
         }
 
         projectsUtil.invalidateProjectCaches();
 
         if (!renameSuccess)
         {
+            filesUtil.registerOpChangeListeners([oldName]);
             return this.error("ERROR", 500);
         }
         else
         {
+            filesUtil.registerOpChangeListeners([newName]);
             this._log.verbose("*" + currentUser.username + " finished after " + Math.round((Date.now() - start) / 1000) + " seconds ");
             return this.success("OK", result);
         }
@@ -1690,6 +1694,12 @@ class ElectronApi
             {
                 dirInfo.selected = true;
                 hasSelected = true;
+            }
+
+            if (dirInfo.opNames)
+            {
+                dirInfo.opIds = {};
+                dirInfo.opNames.forEach((dirOpName) => { dirInfo.opIds[dirOpName] = opsUtil.getOpIdByObjName(dirOpName); });
             }
 
             if (!dirInfo.hasOwnProperty("numUsedOps")) dirInfo.numUsedOps = 0;
@@ -2421,7 +2431,7 @@ class ElectronApi
         return error;
     }
 
-    _getFullRenameResponse(opDocs, newName, oldName, currentUser, project = null, ignoreVersionGap = false, fromRename = false, targetDir = false)
+    _getFullRenameResponse(opDocs, newName, oldName, currentUser, project = null, ignoreVersionGap = false, fromRename = false, targetDir = null)
     {
         let opNamespace = opsUtil.getNamespace(newName, true);
         let oldOpNamespace = opsUtil.getNamespace(oldName, true);
@@ -2464,7 +2474,7 @@ class ElectronApi
             return result;
         }
 
-        if (fromRename) targetDir = opsUtil.getOpSourceDir(oldName);
+        if (fromRename && !targetDir) targetDir = opsUtil.getOpSourceDir(oldName);
         const problems = opsUtil.getOpRenameProblems(newName, oldName, currentUser, [], null, null, [], true, targetDir);
         const hints = {};
         const consequences = opsUtil.getOpRenameConsequences(newName, oldName, targetDir);

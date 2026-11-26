@@ -234,7 +234,7 @@ class OpsUtil extends SharedOpsUtil
      * @property {String} [source_does_not_exist]
      * @property {String} [overruled_by_other_op]
      * @property {String} [namespace_empty]
-     * @property {String} [patch_op_illegal_namespace]
+     * @property {String} [namespace_illegal_patch_op]
      * @property {String} [name_ends_with_dot]
      * @property {String} [name_ends_with_underscore]
      * @property {String} [name_not_op_namespace]
@@ -296,11 +296,11 @@ class OpsUtil extends SharedOpsUtil
             const oldSourceDir = this.getOpSourceDir(oldName);
             if (oldSourceDir !== targetDir)
             {
-                const newOpDir = path.join(targetDir, this.getOpTargetDir(newName, true), this.getOpFileName(newName));
+                const newOpDir = path.join(this.getCollectionTargetDir(targetDir, newName), this.getOpTargetDir(newName, true), this.getOpFileName(newName));
                 if (!fs.existsSync(newOpDir))
                 {
                     delete problems.target_exists;
-                    const opExists = this.opExists(newName, true);
+                    const opExists = newName !== oldName && this.opExists(newName, true);
                     if (opExists)
                     {
                         const existingOpDir = this.getOpSourceDir(newName);
@@ -308,6 +308,14 @@ class OpsUtil extends SharedOpsUtil
                     }
                 }
             }
+        }
+        if (newName === oldName)
+        {
+            // moving keeps the name, so the name and namespace rules do not apply
+            Object.keys(problems).forEach((key) =>
+            {
+                if (key.startsWith("name_") || key.startsWith("namespace_")) delete problems[key];
+            });
         }
         return problems;
     }
@@ -357,10 +365,12 @@ class OpsUtil extends SharedOpsUtil
      * @param {String} oldOpDir
      * @param {String} oldName
      * @param {String} newName
+     * @param {String} [targetDir]
      * @returns {String}
      */
-    _getRenamedOpDir(oldOpDir, oldName, newName)
+    _getRenamedOpDir(oldOpDir, oldName, newName, targetDir = null)
     {
+        if (targetDir) return path.join(this.getCollectionTargetDir(targetDir, newName), this.getOpTargetDir(newName, true));
         // renamed ops go next to their oldName, unless we rename core/extensions to teamops for example
         // we then put them into the op dir hierarchy
         const coreDir = path.join(this._cables.getCoreOpsPath(), "/");
@@ -391,7 +401,7 @@ class OpsUtil extends SharedOpsUtil
     getCollectionTargetDir(dir, opName)
     {
         if (!dir || !opName) return dir;
-        if (!this.isExtensionOp(opName) && !this.isTeamOp(opName)) return dir;
+        if (!this.isExtensionOp(opName) && !this.isTeamOp(opName) && !this.isUserOp(opName) && !this.isPatchOp(opName)) return dir;
         const collectionName = this.getCollectionName(opName);
         if (path.basename(path.normalize(dir)) === collectionName) return dir;
         if (path.normalize(dir) === path.normalize(this._cables.getExtensionOpsPath()) || this._hasCollectionDirs(dir)) return path.join(dir, collectionName);
@@ -413,43 +423,43 @@ class OpsUtil extends SharedOpsUtil
         return entries.some((entry) =>
         {
             if (!entry.isDirectory()) return false;
-            if (!this.isExtension(entry.name) && !this.isTeamNamespace(entry.name)) return false;
+            if (!this.isExtension(entry.name) && !this.isTeamNamespace(entry.name) && !this.isUserOp(entry.name) && !this.isPatchOp(entry.name)) return false;
             return this.getCollectionName(entry.name) === entry.name;
         });
     }
 
-    renameToCoreOp(oldName, newName, currentUser, cb = null)
+    renameToCoreOp(oldName, newName, currentUser, cb = null, targetDir = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName, targetDir);
         return this._renameOp(oldName, newName, currentUser, true, true, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToExtensionOp(oldName, newName, currentUser, cb = null)
+    renameToExtensionOp(oldName, newName, currentUser, cb = null, targetDir = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName, targetDir);
         return this._renameOp(oldName, newName, currentUser, true, true, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToTeamOp(oldName, newName, currentUser, cb = null)
+    renameToTeamOp(oldName, newName, currentUser, cb = null, targetDir = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName, targetDir);
         return this._renameOp(oldName, newName, currentUser, false, true, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToUserOp(oldName, newName, currentUser, cb = null)
+    renameToUserOp(oldName, newName, currentUser, cb = null, targetDir = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName, targetDir);
         return this._renameOp(oldName, newName, currentUser, false, true, false, oldOpDir, newOpDir, cb);
     }
 
-    renameToPatchOp(oldName, newName, currentUser, removeOld, newId, cb = null)
+    renameToPatchOp(oldName, newName, currentUser, removeOld, newId, cb = null, targetDir = null)
     {
         let oldOpDir = this.getOpSourceDir(oldName);
-        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName);
+        let newOpDir = this._getRenamedOpDir(oldOpDir, oldName, newName, targetDir);
         return this._renameOp(oldName, newName, currentUser, false, removeOld, newId, oldOpDir, newOpDir, cb);
     }
 
